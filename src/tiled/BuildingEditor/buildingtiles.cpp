@@ -631,11 +631,6 @@ Tiled::Tile *BuildingTilesMgr::tileFor(const QString &tileName)
     QString tilesetName;
     int index;
     parseTileName(tileName, tilesetName, index);
-#if 1
-    if (Tile *tile = TileRotation::instance()->tileFor(tilesetName, index)) {
-        return tile;
-    }
-#endif
     Tileset *tileset = TileMetaInfoMgr::instance()->tileset(tilesetName);
     if (!tileset)
         return mMissingTile;
@@ -648,11 +643,6 @@ Tile *BuildingTilesMgr::tileFor(BuildingTile *tile, int offset)
 {
     if (tile->isNone())
         return mNoneTiledTile;
-#if 1
-    if (Tile *tile1 = TileRotation::instance()->tileFor(tile->mTilesetName, tile->mIndex + offset)) {
-        return tile1;
-    }
-#endif
     Tileset *tileset = TileMetaInfoMgr::instance()->tileset(tile->mTilesetName);
     if (!tileset)
         return mMissingTile;

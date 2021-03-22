@@ -70,6 +70,7 @@ private:
 private:
     QString mError;
     QMap<QString, QSharedPointer<TileRotatedVisual>> mVisualLookup;
+    QMap<QString, TilesetRotated*> mTilesetByName;
     QList<TilesetRotated*> mTilesets;
 //    QMap<QString, QString> mMapping;
 };

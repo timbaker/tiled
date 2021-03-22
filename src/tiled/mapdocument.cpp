@@ -895,7 +895,8 @@ void MapDocument::setBlendEdgesEverywhere(bool enabled)
 
 /**
  * Before forwarding the signal, the objects are removed from the list of
- * selected objects, triggering a selectedObjectsChanged signal when * appropriate.
+ * selected objects, triggering a selectedObjectsChanged signal when
+ * appropriate.
  */
 void MapDocument::onObjectsRemoved(ObjectGroup *objectGroup, const QList<MapObject*> &objects)
 {

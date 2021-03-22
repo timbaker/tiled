@@ -174,8 +174,9 @@ void MapScene::setSelectedObjectItems(const QSet<MapObjectItem *> &items)
 #if QT_VERSION >= 0x040700
     selectedObjects.reserve(items.size());
 #endif
-    foreach (const MapObjectItem *item, items)
+    for (const MapObjectItem *item : items) {
         selectedObjects.append(item->mapObject());
+    }
     mMapDocument->setSelectedObjects(selectedObjects);
 }
 
@@ -184,8 +185,16 @@ MapObjectItem *MapScene::itemForObject(MapObject *object) const
     if (object == nullptr) {
         return nullptr;
     }
-    const LevelData &levelData = mLevelData[object->objectGroup()->level()];
-    return levelData.mObjectItems.value(object);
+    // FIXME: after removing a MapObject that is a Lot, onLotRemoved() is called which calls this.
+    // In that case, object has already been deleted.
+    for (const LevelData &levelData : mLevelData) {
+        if (MapObjectItem *item = levelData.mObjectItems.value(object)) {
+            return item;
+        }
+    }
+//    const LevelData &levelData = mLevelData[object->objectGroup()->level()];
+//    return levelData.mObjectItems.value(object);
+    return nullptr;
 }
 
 void MapScene::setSelectedTool(AbstractTool *tool)

@@ -498,7 +498,7 @@ MapInfo *MapManager::getPlaceholderMap(const QString &mapName, int width, int he
                        mapInfo->tileWidth(), mapInfo->tileHeight());
 
     for (int level = 0; level < 1; level++) {
-        TileLayer *tl = new TileLayer(tr("%1_Layer").arg(level), 0, 0, 300, 300);
+        TileLayer *tl = new TileLayer(QLatin1Literal("Tile Layer"), 0, 0, 300, 300);
         tl->setLevel(level);
         map->addLayer(tl);
     }

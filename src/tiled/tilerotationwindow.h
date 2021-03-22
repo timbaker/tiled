@@ -67,6 +67,9 @@ protected:
     void displayTileInTileset(BuildingEditor::BuildingTile *tile);
     void addVisual(QSharedPointer<Tiled::TileRotatedVisual> visual, int index);
     QSharedPointer<Tiled::TileRotatedVisual> removeVisual(int index);
+    void changeDataEdge(Tiled::TileRotatedVisualEdge edge);
+    void changeDataOffset(int x, int y);
+
     struct AssignedVisual
     {
         AssignedVisual(Tiled::TileRotated *tileR)
@@ -85,13 +88,11 @@ protected:
 
     AssignedVisual assignVisual(Tiled::TileRotated *tileR, QSharedPointer<Tiled::TileRotatedVisual> visual, Tiled::MapRotation mapRotation);
     Tiled::TileRotatedVisualData changeVisualData(QSharedPointer<Tiled::TileRotatedVisual> visual, Tiled::MapRotation mapRotation, const Tiled::TileRotatedVisualData& data);
-    Tiled::Tileset* getOrCreateTilesetForTilesetRotated(const QString tilesetNameR);
     Tiled::TileRotated *rotatedTileFor(Tiled::Tile *tileR);
-    Tiled::TileRotated *getOrCreateTileRotatedForTileReal(Tiled::Tile *tileReal, Tiled::MapRotation mapRotation);
-    Tiled::TileRotated *getTileRotatedForTileReal(Tiled::Tile *tileReal, Tiled::MapRotation mapRotation);
-    QString getTilesetRotatedName(const QString& tilesetName, Tiled::MapRotation mapRotation);
-    Tiled::TilesetRotated* getOrCreateTilesetRotated(const QString &tilesetName, Tiled::MapRotation mapRotation);
-    Tiled::TilesetRotated* getTilesetRotated(const QString &tilesetName, Tiled::MapRotation mapRotation);
+    Tiled::TileRotated *getOrCreateTileRotatedForTileReal(Tiled::Tile *tileReal);
+    Tiled::TileRotated *getTileRotatedForTileReal(Tiled::Tile *tileReal);
+    Tiled::TilesetRotated* getOrCreateTilesetRotated(const QString &tilesetName);
+    Tiled::TilesetRotated* getTilesetRotated(const QString &tilesetName);
     Tiled::TileRotated* getOrCreateTileRotated(Tiled::TilesetRotated *tilesetR, int tileID);
 
 protected slots:
@@ -119,6 +120,7 @@ protected slots:
     void tileDroppedOntoVisualView(QSharedPointer<Tiled::TileRotatedVisual> visual, Tiled::MapRotation mapRotation, const QString &tileName);
     void tileDroppedOntoVisualDataView(const QString &tilesetName, int tileID);
     void edgeComboActivated(int index);
+    void edgeRadioClicked(int id);
     void changeDataOffsetDX(bool dx);
     void changeDataOffsetDY(bool dy);
 
@@ -137,7 +139,7 @@ private:
     QList<QSharedPointer<Tiled::TileRotatedVisual>> mVisuals;
     QList<QSharedPointer<Tiled::TileRotatedVisual>> mUnassignedVisuals;
     QMap<QString, Tiled::Tileset*> mFakeTilesetLookup;
-    QMap<QString, Tiled::TilesetRotated*> mTilesetByNameRotated;
+    QMap<QString, Tiled::TilesetRotated*> mTilesetByName;
     bool mSynchingUI = false;
 
     friend class AssignVisual;

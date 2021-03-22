@@ -541,7 +541,7 @@ void BuildingIsoScene::setToolTiles(const FloorTileGrid *tiles,
     CompositeLayerGroup *layerGroup = item->layerGroup();
 
     TileLayer *layer = nullptr;
-    foreach (TileLayer *tl, layerGroup->layers()) {
+    for (TileLayer *tl : layerGroup->layers()) {
         if (layerName == MapComposite::layerNameWithoutPrefix(tl)) {
             layer = tl;
             break;
@@ -558,28 +558,21 @@ void BuildingIsoScene::setToolTiles(const FloorTileGrid *tiles,
 
     for (int x = 0; x < tiles->width(); x++) {
         for (int y = 0; y < tiles->height(); y++) {
-            QString tileName = tiles->at(x, y);
+            BuildingCell buildingCell = tiles->at(x, y);
             Tile *tile = nullptr;
-            if (!tileName.isEmpty()) {
+            MapRotation rotation = MapRotation::NotRotated;
+            if (!buildingCell.isEmpty()) {
                 tile = TilesetManager::instance()->missingTile();
                 QString tilesetName;
                 int index;
-                if (BuildingTilesMgr::parseTileName(tileName, tilesetName, index)) {
+                if (BuildingTilesMgr::parseTileName(buildingCell.tileName(), tilesetName, index)) {
                     if (tilesetByName.contains(tilesetName)) {
                         tile = tilesetByName[tilesetName]->tileAt(index);
+                        rotation = buildingCell.rotation();
                     }
-#if 1
-                    else if (Tile *tile1 = Tiled::TileRotation::instance()->tileFor(tilesetName, index)) {
-                        tile = tile1;
-                    }
-                    else
-                    {
-                        int dbg = 1;
-                    }
-#endif
                 }
             }
-            mToolTiles.setCell(x, y, Cell(tile));
+            mToolTiles.setCell(x, y, Cell(tile, rotation));
         }
     }
 
@@ -906,7 +899,7 @@ void BuildingIsoScene::currentLayerChanged()
         mNonEmptyLayer = layerName;
         mNonEmptyLayerGroupItem = item;
 
-        item->layerGroup()->setHighlightLayer(tr("%1_%2").arg(currentLevel()).arg(mNonEmptyLayer));
+        item->layerGroup()->setHighlightLayer(mNonEmptyLayer);
         item->update();
 
         if (bounds.isEmpty()) {

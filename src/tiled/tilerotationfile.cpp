@@ -101,7 +101,11 @@ bool TileRotationFile::read(const QString &path)
             if (tileset == nullptr) {
                 return false;
             }
+            if (mTilesetByName.contains(tileset->name())) {
+                continue;
+            }
             mTilesets += tileset;
+            mTilesetByName[tileset->name()] = tileset;
         } else {
             mError = tr("Unknown block name '%1'.\n%2")
                     .arg(block.name)
@@ -116,11 +120,9 @@ bool TileRotationFile::read(const QString &path)
 TilesetRotated *TileRotationFile::readTileset(const SimpleFileBlock &tilesetBlock)
 {
     TilesetRotated *tileset = new TilesetRotated();
-    tileset->mNameUnrotated = tilesetBlock.value("name");
+    tileset->mName = tilesetBlock.value("name");
     bool ok = false;
     tileset->mColumnCount =  int(tilesetBlock.value("columns").toUInt(&ok));
-    tileset->mRotation = parseRotation(tilesetBlock.value("rotation")); // FIXME: get this from _R90 etc in the name?
-    tileset->mNameRotated = tileset->mNameUnrotated + QLatin1Literal(MAP_ROTATION_SUFFIX[int(tileset->mRotation)]);
 
     for (const SimpleFileBlock& block : tilesetBlock.blocks) {
         if (block.name == QLatin1String("tile")) {
@@ -268,9 +270,8 @@ bool TileRotationFile::write(const QString &path, const QList<TilesetRotated *> 
     for (TilesetRotated *tileset : tilesets) {
         SimpleFileBlock tilesetBlock;
         tilesetBlock.name = QLatin1String("tileset");
-        tilesetBlock.addValue("name", tileset->nameUnrotated());
+        tilesetBlock.addValue("name", tileset->name());
         tilesetBlock.addValue("columns", QString::number(tileset->mColumnCount));
-        tilesetBlock.addValue("rotation", QLatin1Literal(MAP_ROTATION_NAMES[int(tileset->mRotation)]));
         for (TileRotated *tile : tileset->mTiles) {
             if (tile->mVisual == nullptr) {
                 continue;

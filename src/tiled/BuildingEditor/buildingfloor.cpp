@@ -52,17 +52,17 @@ FloorTileGrid::FloorTileGrid(int width, int height) :
 {
 }
 
-const QString &FloorTileGrid::at(int index) const
+const BuildingCell &FloorTileGrid::at(int index) const
 {
     if (mUseVector)
         return mCellsVector[index];
-    QHash<int,QString>::const_iterator it = mCells.find(index);
+    QHash<int,BuildingCell>::const_iterator it = mCells.find(index);
     if (it != mCells.end())
         return *it;
     return mEmptyCell;
 }
 
-void FloorTileGrid::replace(int index, const QString &tile)
+void FloorTileGrid::replace(int index, const BuildingCell &tile)
 {
     if (mUseVector) {
         if (!mCellsVector[index].isEmpty() && tile.isEmpty()) mCount--;
@@ -70,7 +70,7 @@ void FloorTileGrid::replace(int index, const QString &tile)
         mCellsVector[index] = tile;
         return;
     }
-    QHash<int,QString>::iterator it = mCells.find(index);
+    QHash<int,BuildingCell>::iterator it = mCells.find(index);
     if (it == mCells.end()) {
         if (tile.isEmpty())
             return;
@@ -83,17 +83,18 @@ void FloorTileGrid::replace(int index, const QString &tile)
         mCells.erase(it);
         mCount--;
     }
-    if (mCells.size() > 300 * 300 / 3)
+    if (mCells.size() > 300 * 300 / 3) {
         swapToVector();
+    }
 }
 
-void FloorTileGrid::replace(int x, int y, const QString &tile)
+void FloorTileGrid::replace(int x, int y, const BuildingCell &tile)
 {
     Q_ASSERT(contains(x, y));
     replace(y * mWidth + x, tile);
 }
 
-bool FloorTileGrid::replace(const QString &tile)
+bool FloorTileGrid::replace(const BuildingCell &tile)
 {
     bool changed = false;
     for (int x = 0; x < mWidth; x++) {
@@ -107,10 +108,10 @@ bool FloorTileGrid::replace(const QString &tile)
     return changed;
 }
 
-bool FloorTileGrid::replace(const QRegion &rgn, const QString &tile)
+bool FloorTileGrid::replace(const QRegion &rgn, const BuildingCell &tile)
 {
     bool changed = false;
-    foreach (QRect r2, rgn.rects()) {
+    for (QRect r2 : rgn.rects()) {
         r2 &= bounds();
         for (int x = r2.left(); x <= r2.right(); x++) {
             for (int y = r2.top(); y <= r2.bottom(); y++) {
@@ -129,11 +130,11 @@ bool FloorTileGrid::replace(const QRegion &rgn, const QPoint &p,
 {
     Q_ASSERT(other->bounds().translated(p).contains(rgn.boundingRect()));
     bool changed = false;
-    foreach (QRect r2, rgn.rects()) {
+    for (QRect r2 : rgn.rects()) {
         r2 &= bounds();
         for (int x = r2.left(); x <= r2.right(); x++) {
             for (int y = r2.top(); y <= r2.bottom(); y++) {
-                QString tile = other->at(x - p.x(), y - p.y());
+                BuildingCell tile = other->at(x - p.x(), y - p.y());
                 if (at(x, y) != tile) {
                     replace(x, y, tile);
                     changed = true;
@@ -144,7 +145,7 @@ bool FloorTileGrid::replace(const QRegion &rgn, const QPoint &p,
     return changed;
 }
 
-bool FloorTileGrid::replace(const QRect &r, const QString &tile)
+bool FloorTileGrid::replace(const QRect &r, const BuildingCell &tile)
 {
     bool changed = false;
     for (int x = r.left(); x <= r.right(); x++) {
@@ -164,7 +165,7 @@ bool FloorTileGrid::replace(const QPoint &p, const FloorTileGrid *other)
     bool changed = false;
     for (int x = r.left(); x <= r.right(); x++) {
         for (int y = r.top(); y <= r.bottom(); y++) {
-            QString tile = other->at(x - p.x(), y - p.y());
+            BuildingCell tile = other->at(x - p.x(), y - p.y());
             if (at(x, y) != tile) {
                 replace(x, y, tile);
                 changed = true;
@@ -203,7 +204,7 @@ FloorTileGrid *FloorTileGrid::clone(const QRect &r)
 FloorTileGrid *FloorTileGrid::clone(const QRect &r, const QRegion &rgn)
 {
     FloorTileGrid *klone = new FloorTileGrid(r.width(), r.height());
-    foreach (QRect r2, rgn.rects()) {
+    for (QRect r2 : rgn.rects()) {
         r2 &= bounds() & r;
         for (int x = r2.left(); x <= r2.right(); x++) {
             for (int y = r2.top(); y <= r2.bottom(); y++) {
@@ -218,7 +219,7 @@ void FloorTileGrid::swapToVector()
 {
     Q_ASSERT(!mUseVector);
     mCellsVector.resize(size());
-    QHash<int,QString>::const_iterator it = mCells.begin();
+    QHash<int,BuildingCell>::const_iterator it = mCells.begin();
     while (it != mCells.end()) {
         mCellsVector[it.key()] = (*it);
         ++it;
@@ -610,12 +611,12 @@ static bool canPlaceWallE(BuildingFloor *floor, int x, int y)
     if (x >= floor->width()) {
         return false;
     }
-    QString userTile1 = floor->grimeAt(QLatin1Literal("Wall"), x + 1, y);
-    if (!userTile1.isEmpty() && tileHasWallPropertyW(userTile1)) {
+    BuildingCell userTile1 = floor->grimeAt(QLatin1Literal("Wall"), x + 1, y);
+    if (!userTile1.isEmpty() && tileHasWallPropertyW(userTile1.tileName())) {
         return false;
     }
-    QString userTile2 = floor->grimeAt(QLatin1Literal("Wall2"), x + 1, y);
-    if (!userTile2.isEmpty() && tileHasWallPropertyW(userTile2)) {
+    BuildingCell userTile2 = floor->grimeAt(QLatin1Literal("Wall2"), x + 1, y);
+    if (!userTile2.isEmpty() && tileHasWallPropertyW(userTile2.tileName())) {
         return false;
     }
     return true;
@@ -627,12 +628,12 @@ static bool canPlaceWallS(BuildingFloor *floor, int x, int y)
     if (y >= floor->height()) {
         return false;
     }
-    QString userTile1 = floor->grimeAt(QLatin1Literal("Wall"), x, y + 1);
-    if (!userTile1.isEmpty() && tileHasWallPropertyN(userTile1)) {
+    BuildingCell userTile1 = floor->grimeAt(QLatin1Literal("Wall"), x, y + 1);
+    if (!userTile1.isEmpty() && tileHasWallPropertyN(userTile1.tileName())) {
         return false;
     }
-    QString userTile2 = floor->grimeAt(QLatin1Literal("Wall2"), x, y + 1);
-    if (!userTile2.isEmpty() && tileHasWallPropertyN(userTile2)) {
+    BuildingCell userTile2 = floor->grimeAt(QLatin1Literal("Wall2"), x, y + 1);
+    if (!userTile2.isEmpty() && tileHasWallPropertyN(userTile2.tileName())) {
         return false;
     }
     return true;
@@ -1366,8 +1367,7 @@ void BuildingFloor::LayoutToSquares()
         for (int y = 0; y < h; y++) {
             BuildingSquare &sq = squares[x][y];
 
-            if (x == 2 && y == 7)
-            {
+            if (x == 16 && y == 9 && level() == 0) {
                 int dbg = 1;
             }
 
@@ -1390,13 +1390,13 @@ void BuildingFloor::LayoutToSquares()
                 // Place exterior wall grime on level 0 only.
                 if (level() > 0)
                     continue;
-                QString userTileWall = userTilesWall ? userTilesWall->at(x, y) : QString();
-                QString userTileWall2 = userTilesWall2 ? userTilesWall2->at(x, y) : QString();
+                BuildingCell userTileWall = userTilesWall ? userTilesWall->at(x, y) : BuildingCell();
+                BuildingCell userTileWall2 = userTilesWall2 ? userTilesWall2->at(x, y) : BuildingCell();
                 BuildingTileEntry *grimeTile = building()->tile(Building::GrimeWall);
                 sq.ReplaceWallGrime(grimeTile, userTileWall, userTileWall2);
 
-                QString userTileWall3 = userTilesWall3 ? userTilesWall3->at(x, y) : QString();
-                QString userTileWall4 = userTilesWall4 ? userTilesWall4->at(x, y) : QString();
+                BuildingCell userTileWall3 = userTilesWall3 ? userTilesWall3->at(x, y) : BuildingCell();
+                BuildingCell userTileWall4 = userTilesWall4 ? userTilesWall4->at(x, y) : BuildingCell();
                 sq.ReplaceWallGrimeES(grimeTile, userTileWall3, userTileWall4);
             } else {
                 Room *room = GetRoomAt(x, y);
@@ -1404,13 +1404,13 @@ void BuildingFloor::LayoutToSquares()
                 sq.ReplaceFloorGrime(grimeTile);
                 sq.ReplaceFloorGrimeES(grimeTile);
 
-                QString userTileWall = userTilesWall ? userTilesWall->at(x, y) : QString();
-                QString userTileWall2 = userTilesWall2 ? userTilesWall2->at(x, y) : QString();
+                BuildingCell userTileWall = userTilesWall ? userTilesWall->at(x, y) : BuildingCell();
+                BuildingCell userTileWall2 = userTilesWall2 ? userTilesWall2->at(x, y) : BuildingCell();
                 grimeTile = room ? room->tile(Room::GrimeWall) : nullptr;
                 sq.ReplaceWallGrime(grimeTile, userTileWall, userTileWall2);
 
-                QString userTileWall3 = userTilesWall3 ? userTilesWall3->at(x, y) : QString();
-                QString userTileWall4 = userTilesWall4 ? userTilesWall4->at(x, y) : QString();
+                BuildingCell userTileWall3 = userTilesWall3 ? userTilesWall3->at(x, y) : BuildingCell();
+                BuildingCell userTileWall4 = userTilesWall4 ? userTilesWall4->at(x, y) : BuildingCell();
                 sq.ReplaceWallGrimeES(grimeTile, userTileWall3, userTileWall4);
             }
 
@@ -1660,11 +1660,11 @@ BuildingFloor *BuildingFloor::clone()
     return klone;
 }
 
-QString BuildingFloor::grimeAt(const QString &layerName, int x, int y) const
+BuildingCell BuildingFloor::grimeAt(const QString &layerName, int x, int y) const
 {
     if (mGrimeGrid.contains(layerName))
         return mGrimeGrid[layerName]->at(x, y);
-    return QString();
+    return BuildingCell();
 }
 
 FloorTileGrid *BuildingFloor::grimeAt(const QString &layerName, const QRect &r)
@@ -1700,7 +1700,7 @@ QMap<QString, FloorTileGrid *> BuildingFloor::setGrime(const QMap<QString,
 }
 
 void BuildingFloor::setGrime(const QString &layerName, int x, int y,
-                             const QString &tileName)
+                             const BuildingCell &tileName)
 {
     if (!mGrimeGrid.contains(layerName))
         mGrimeGrid[layerName] = new FloorTileGrid(width() + 1, height() + 1);
@@ -1717,7 +1717,7 @@ void BuildingFloor::setGrime(const QString &layerName, const QPoint &p,
 }
 
 void BuildingFloor::setGrime(const QString &layerName, const QRegion &rgn,
-                             const QString &tileName)
+                             const BuildingCell &tileName)
 {
     if (!mGrimeGrid.contains(layerName)) {
         if (tileName.isEmpty())
@@ -2360,7 +2360,7 @@ static bool tileHasGrimeProperties(BuildingTile *btile, GrimeProperties *props)
     return false;
 }
 
-void BuildingSquare::ReplaceWallGrime(BuildingTileEntry *grimeTile, const QString &userTileWall, const QString &userTileWall2)
+void BuildingSquare::ReplaceWallGrime(BuildingTileEntry *grimeTile, const BuildingCell &userTileWall, const BuildingCell &userTileWall2)
 {
     if (!grimeTile || grimeTile->isNone())
         return;
@@ -2472,7 +2472,7 @@ void BuildingSquare::ReplaceWallGrime(BuildingTileEntry *grimeTile, const QStrin
     }
 
     if (!userTileWall.isEmpty()) {
-        if (BuildingTile *btile = BuildingTilesMgr::instance()->get(userTileWall)) {
+        if (BuildingTile *btile = BuildingTilesMgr::instance()->get(userTileWall.tileName())) {
             if (tileHasGrimeProperties(btile, &props)) {
                 if (props.FullWindow) {
                     if (props.West) grimeEnumW = -1;
@@ -2503,7 +2503,7 @@ void BuildingSquare::ReplaceWallGrime(BuildingTileEntry *grimeTile, const QStrin
         }
     }
     if (!userTileWall2.isEmpty()) {
-        if (BuildingTile *btile = BuildingTilesMgr::instance()->get(userTileWall2)) {
+        if (BuildingTile *btile = BuildingTilesMgr::instance()->get(userTileWall2.tileName())) {
             if (tileHasGrimeProperties(btile, &props)) {
                 if (props.FullWindow) {
                     if (props.West) grimeEnumW = -1;
@@ -2558,7 +2558,7 @@ void BuildingSquare::ReplaceWallGrime(BuildingTileEntry *grimeTile, const QStrin
     }
 }
 
-void BuildingSquare::ReplaceWallGrimeES(BuildingTileEntry *grimeTile, const QString &userTileWall3, const QString &userTileWall4)
+void BuildingSquare::ReplaceWallGrimeES(BuildingTileEntry *grimeTile, const BuildingCell &userTileWall3, const BuildingCell &userTileWall4)
 {
     if (!grimeTile || grimeTile->isNone())
         return;
@@ -2669,7 +2669,7 @@ void BuildingSquare::ReplaceWallGrimeES(BuildingTileEntry *grimeTile, const QStr
     }
 
     if (!userTileWall3.isEmpty()) {
-        if (BuildingTile *btile = BuildingTilesMgr::instance()->get(userTileWall3)) {
+        if (BuildingTile *btile = BuildingTilesMgr::instance()->get(userTileWall3.tileName())) {
             if (tileHasGrimeProperties(btile, &props)) {
                 if (props.FullWindow) {
                     if (props.West) grimeEnumE = -1;
@@ -2700,7 +2700,7 @@ void BuildingSquare::ReplaceWallGrimeES(BuildingTileEntry *grimeTile, const QStr
         }
     }
     if (!userTileWall4.isEmpty()) {
-        if (BuildingTile *btile = BuildingTilesMgr::instance()->get(userTileWall4)) {
+        if (BuildingTile *btile = BuildingTilesMgr::instance()->get(userTileWall4.tileName())) {
             if (tileHasGrimeProperties(btile, &props)) {
                 if (props.FullWindow) {
                     if (props.West) grimeEnumE = -1;

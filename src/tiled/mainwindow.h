@@ -207,10 +207,12 @@ public slots:
 
     void editLayerProperties();
 
+#if 0
     void flipStampHorizontally();
     void flipStampVertically();
     void rotateStampLeft();
     void rotateStampRight();
+#endif
 
     void setStampBrush(const TileLayer *tiles);
     void updateStatusInfoLabel(const QString &statusInfo);

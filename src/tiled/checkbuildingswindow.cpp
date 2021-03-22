@@ -330,7 +330,7 @@ void CheckBuildingsWindow::check(BuildingMap *bmap, Building *building, Map *map
                             interiorFloor = true;
                         }
                     }
-                    if (layer->name().endsWith(QLatin1Literal("_Floor"))) {
+                    if (layer->name() == QLatin1Literal("Floor")) {
                         if (tile->tileset()->name().startsWith(QLatin1Literal("overlay_grime_"))) {
                             issue(Issue::Grime, "Grime in the floor layer", x, y, z);
                         }

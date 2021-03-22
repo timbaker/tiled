@@ -31,6 +31,8 @@
 namespace Tiled
 {
 
+class Cell;
+
 class TileRotationPrivate;
 
 // See TILE_ROTATE_NAMES in tilerotationfile.h
@@ -170,14 +172,9 @@ class TilesetRotated
 public:
     ~TilesetRotated();
 
-    QString nameUnrotated()
+    QString name()
     {
-        return mNameUnrotated;
-    }
-
-    QString nameRotated()
-    {
-        return mNameRotated;
+        return mName;
     }
 
     TileRotated *createTile(int tileID);
@@ -187,12 +184,10 @@ public:
         return (index >= 0 && index < mTileByID.size()) ? mTileByID[index] : nullptr;
     }
 
-    QString mNameUnrotated;
-    QString mNameRotated;
+    QString mName;
     int mColumnCount;
     QList<TileRotated*> mTiles;
     QVector<TileRotated*> mTileByID;
-    MapRotation mRotation;
 };
 
 class TileRotation : public QObject
@@ -210,21 +205,12 @@ public:
     QSharedPointer<TileRotatedVisual> allocVisual();
 
     void initRenderInfo(const QList<QSharedPointer<TileRotatedVisual>>& visuals);
-    void rotateTile(Tile* tile, MapRotation viewRotation, QVector<Tiled::ZTileRenderInfo>& tileInfos);
-    Tile *rotateTile(Tile* tile, MapRotation rotation);
-    Tile *tileFor(const QString& tilesetName, int tileID);
+    void rotateTile(const Cell &cell, MapRotation viewRotation, QVector<Tiled::ZTileRenderInfo>& tileInfos);
     bool hasTileRotated(const QString& tilesetName, int tileID);
 
     void reload();
 
-    Tile* getRotatedTileDX(const QString &tilesetName, int index);
-    Tile* getRotatedTileDY(const QString &tilesetName, int index);
-    Tile* getRotatedTile(const QString &tileName, QPoint& offset);
-
-    TileRotated *rotatedTileFor(Tile *tileR);
-    Tileset *rotatedTilesetFor(TilesetRotated* tilesetR);
-
-    QString unrotateTile(const QString &tileName, MapRotation viewRotation);
+    MapRotation unrotateTile(const QString &tileName, MapRotation viewRotation);
 
 private:
     static TileRotation *mInstance;

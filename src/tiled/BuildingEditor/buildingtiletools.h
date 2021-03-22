@@ -20,6 +20,8 @@
 
 #include "buildingtools.h"
 
+#include "maprotation.h"
+
 #include <QBrush>
 #include <QGraphicsPolygonItem>
 #include <QPen>
@@ -81,7 +83,7 @@ public:
     QString currentTile() const
     { return mTileName; }
 
-    QString unrotateTile(const QString &tileName);
+    Tiled::MapRotation unrotateTile(const QString &tileName);
 
     void setCaptureTiles(FloorTileGrid *tiles, const QRegion &rgn);
 

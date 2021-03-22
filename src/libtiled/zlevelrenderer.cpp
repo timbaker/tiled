@@ -301,7 +301,7 @@ void ZLevelRenderer::drawTileLayer(QPainter *painter,
                     qreal m22 = 1;      // Vertical scaling factor
                     qreal dx = offset.x() + x;
                     qreal dy = offset.y() + y - cell.tile->height();
-
+#if 0
                     if (cell.flippedAntiDiagonally) {
                         // Use shearing to swap the X/Y axis
                         m11 = 0;
@@ -324,7 +324,7 @@ void ZLevelRenderer::drawTileLayer(QPainter *painter,
                         dy += cell.flippedAntiDiagonally ? img.width()
                                                          : img.height();
                     }
-
+#endif
                     if (tileWidth == cell.tile->width() * 2) {
                         m11 *= qreal(2.0);
                         m22 *= qreal(2.0);

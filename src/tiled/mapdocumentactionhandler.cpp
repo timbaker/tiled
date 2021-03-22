@@ -290,9 +290,21 @@ void MapDocumentActionHandler::selectNextLayer()
 #else
 #include "mapcomposite.h"
 #include "objectgroup.h"
-static void switchToLevel(MapDocument *mMapDocument, int level) {
+static void switchToLevel(MapDocument *mMapDocument, int level)
+{
+    MapLevel *mapLevel = mMapDocument->map()->levelAt(level);
+    if (mapLevel == nullptr || mapLevel->layerCount() == 0)
+        return;
 
     if (Layer *layer = mMapDocument->currentLayer()) {
+        for (Layer *layer2 : mapLevel->layers()) {
+            if (layer2->name() != layer->name())
+                continue;
+            int index = mapLevel->layers().indexOf(layer2);
+            mMapDocument->setCurrentLevelAndLayer(level, index);
+            return;
+        }
+#if 0
         if (CompositeLayerGroup *layerGroup = mMapDocument->mapComposite()->tileLayersForLevel(level)) {
             // Try to switch to a layer with the same name in the new level
             QString name = MapComposite::layerNameWithoutPrefix(layer);
@@ -318,15 +330,10 @@ static void switchToLevel(MapDocument *mMapDocument, int level) {
                 }
             }
         }
+#endif
     }
-    int index = 0;
-    for (Layer *layer : mMapDocument->map()->layers()) {
-        if (layer->level() == level) {
-            mMapDocument->setCurrentLayerIndex(level, index);
-            return;
-        }
-        ++index;
-    }
+
+    mMapDocument->setCurrentLayerIndex(level, 0);
 }
 
 void MapDocumentActionHandler::selectPreviousLayer()

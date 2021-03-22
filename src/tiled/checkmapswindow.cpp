@@ -131,7 +131,7 @@ void CheckMapsWindow::checkCurrent()
 
 void CheckMapsWindow::itemActivated(QTreeWidgetItem *item, int column)
 {
-    if (item->parent() == 0)
+    if (item->parent() == nullptr)
         return;
     Issue &issue = mFiles[ui->treeWidget->indexOfTopLevelItem(item->parent())]->issues[item->parent()->indexOfChild(item)];
     MainWindow::instance()->openFile(issue.file->path);
@@ -377,7 +377,7 @@ void CheckMapsWindow::issue(Issue::Type type, const QString &detail, int x, int 
 void CheckMapsWindow::updateList(CheckMapsWindow::IssueFile *file)
 {
     QTreeWidgetItem *fileItem = ui->treeWidget->topLevelItem(mFiles.indexOf(file));
-    if (fileItem == 0) {
+    if (fileItem == nullptr) {
         fileItem = new QTreeWidgetItem(QStringList() << QFileInfo(file->path).fileName());
         ui->treeWidget->addTopLevelItem(fileItem);
         fileItem->setExpanded(true);
@@ -393,7 +393,7 @@ void CheckMapsWindow::updateList(CheckMapsWindow::IssueFile *file)
 void CheckMapsWindow::syncList(CheckMapsWindow::IssueFile *file)
 {
     int rowMin = 0, rowMax = mFiles.size() - 1;
-    if (file != 0)
+    if (file != nullptr)
         rowMin = rowMax = mFiles.indexOf(file);
     for (int row = rowMin; row <= rowMax; row++) {
         QTreeWidgetItem *fileItem = ui->treeWidget->topLevelItem(row);

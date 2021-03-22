@@ -327,10 +327,6 @@ bool CompositeLayerGroup::orderedTilesAt(const MapRenderer *renderer, const QPoi
     opacities.resize(0);
     orderedCellsAt(renderer, point, cells, opacities);
 
-    if (point.x() ==14 && point.y() == 20) {
-        int dbg = 1;
-    }
-
     tileInfos.clear();
 
     for (int i = 0; i < cells.size(); i++) {
@@ -338,7 +334,7 @@ bool CompositeLayerGroup::orderedTilesAt(const MapRenderer *renderer, const QPoi
         if (cell->isEmpty())
             continue;
         int j = tileInfos.size();
-        TileRotation::instance()->rotateTile(cells[i]->tile, renderer->rotation(), tileInfos);
+        TileRotation::instance()->rotateTile(*cells[i], renderer->rotation(), tileInfos);
         for (; j < tileInfos.size(); j++) {
             tileInfos[j].mOpacity = opacities[i];
         }
@@ -376,7 +372,7 @@ bool CompositeLayerGroup::orderedCellsAt2(const QPoint &pos, QVector<const Cell 
 
     bool cleared = false;
     int index = -1;
-    foreach (TileLayer *tl, mLayers) {
+    for (TileLayer *tl : mLayers) {
         ++index;
         TileLayer *tlBmpBlend = mBmpBlendLayers[index];
         MapNoBlend *noBlend = mNoBlends[index];
@@ -558,7 +554,7 @@ void CompositeLayerGroup::synch()
                 const QString name = MapComposite::layerNameWithoutPrefix(layerName);
                 if (!mLayersByName.contains(name))
                     continue;
-                foreach (Layer *layer, mLayersByName[name]) {
+                for (Layer *layer : mLayersByName[name]) {
                     int index = mLayers.indexOf(layer->asTileLayer());
                     Q_ASSERT(index != -1);
                     mVisibleLayers[index] = rootGroup->mVisibleLayers[rootIndex];
@@ -569,7 +565,7 @@ void CompositeLayerGroup::synch()
     }
 
     int index = 0;
-    foreach (TileLayer *tl, mLayers) {
+    for (TileLayer *tl : mLayers) {
         if (!isLayerEmpty(index)) {
             unionTileRects(r, tl->bounds().translated(mOwner->orientAdjustTiles() * mLevel), r);
             maxMargins(m, tl->drawMargins(), m);
@@ -577,8 +573,9 @@ void CompositeLayerGroup::synch()
         }
         if (!mLevel && (!mOwner->parent() || mOwner->isAdjacentMap()) &&
                 (index == mMaxFloorLayer + 1) &&
-                tl->name().startsWith(QLatin1String("Floor")))
+                tl->name().startsWith(sFloor)) {
             mMaxFloorLayer = index;
+        }
         ++index;
     }
 
@@ -587,7 +584,7 @@ void CompositeLayerGroup::synch()
     r = QRect();
     mVisibleSubMapLayers.resize(0);
 
-    foreach (MapComposite *subMap, mOwner->subMaps()) {
+    for (MapComposite *subMap : mOwner->subMaps()) {
         if (!subMap->isGroupVisible() || !subMap->isVisible())
             continue;
         int levelOffset = subMap->levelOffset();

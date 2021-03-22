@@ -43,6 +43,52 @@ class Room;
 class Stairs;
 class Window;
 
+// Equivalent of Tiled::Cell
+class BuildingCell
+{
+public:
+    BuildingCell()
+        : mRotation(Tiled::MapRotation::NotRotated)
+    {
+
+    }
+
+    BuildingCell(const QString &tileName, Tiled::MapRotation rotation)
+        : mTileName(tileName)
+        , mRotation(rotation)
+    {
+
+    }
+
+    bool isEmpty() const
+    {
+        return mTileName.isEmpty();
+    }
+
+    const QString& tileName() const
+    {
+        return mTileName;
+    }
+
+    Tiled::MapRotation rotation() const
+    {
+        return mRotation;
+    }
+
+    QString mTileName;
+    Tiled::MapRotation mRotation;
+};
+
+inline bool operator==(const BuildingCell& lhs, const BuildingCell& rhs)
+{
+    return lhs.mTileName == rhs.tileName() && lhs.mRotation == rhs.rotation();
+}
+
+inline bool operator!=(const BuildingCell& lhs, const BuildingCell& rhs)
+{
+    return !(lhs == rhs);
+}
+
 class FloorTileGrid
 {
 public:
@@ -57,20 +103,20 @@ public:
     QRect bounds() const
     { return QRect(0, 0, mWidth, mHeight); }
 
-    const QString &at(int index) const;
+    const BuildingCell &at(int index) const;
 
-    const QString &at(int x, int y) const
+    const BuildingCell &at(int x, int y) const
     {
         Q_ASSERT(contains(x, y));
         return at(x + y * mWidth);
     }
 
-    void replace(int index, const QString &tile);
-    void replace(int x, int y, const QString &tile);
-    bool replace(const QString &tile);
-    bool replace(const QRegion &rgn, const QString &tile);
+    void replace(int index, const BuildingCell &tile);
+    void replace(int x, int y, const BuildingCell &tile);
+    bool replace(const BuildingCell &tile);
+    bool replace(const QRegion &rgn, const BuildingCell &tile);
     bool replace(const QRegion &rgn, const QPoint &p, const FloorTileGrid *other);
-    bool replace(const QRect &r, const QString &tile);
+    bool replace(const QRect &r, const BuildingCell &tile);
     bool replace(const QPoint &p, const FloorTileGrid *other);
 
     bool isEmpty() const
@@ -90,10 +136,10 @@ private:
 
     int mWidth, mHeight;
     int mCount;
-    QHash<int,QString> mCells;
-    QVector<QString> mCellsVector;
+    QHash<int,BuildingCell> mCells;
+    QVector<BuildingCell> mCellsVector;
     bool mUseVector;
-    QString mEmptyCell;
+    const BuildingCell mEmptyCell;
 };
 
 class BuildingSquare
@@ -264,8 +310,8 @@ public:
     void ReplaceRoofTop(BuildingTileEntry *tile, int offset);
     void ReplaceFloorGrime(BuildingTileEntry *grimeTile);
     void ReplaceFloorGrimeES(BuildingTileEntry *grimeTile);
-    void ReplaceWallGrime(BuildingTileEntry *grimeTile, const QString &userTileWall, const QString &userTileWall2);
-    void ReplaceWallGrimeES(BuildingTileEntry *grimeTile, const QString &userTileWall3, const QString &userTileWall4);
+    void ReplaceWallGrime(BuildingTileEntry *grimeTile, const BuildingCell &userTileWall, const BuildingCell &userTileWall2);
+    void ReplaceWallGrimeES(BuildingTileEntry *grimeTile, const BuildingCell &userTileWall3, const BuildingCell &userTileWall4);
     void ReplaceWallTrim();
     void ReplaceWallTrimES();
 };
@@ -358,16 +404,16 @@ public:
     QStringList grimeLayers() const
     { return mGrimeGrid.keys(); }
 
-    QString grimeAt(const QString &layerName, int x, int y) const;
+    BuildingCell grimeAt(const QString &layerName, int x, int y) const;
     FloorTileGrid *grimeAt(const QString &layerName, const QRect &r);
     FloorTileGrid *grimeAt(const QString &layerName, const QRect &r, const QRegion &rgn);
 
     QMap<QString,FloorTileGrid*> grimeClone() const;
 
     QMap<QString,FloorTileGrid*> setGrime(const QMap<QString,FloorTileGrid*> &grime);
-    void setGrime(const QString &layerName, int x, int y, const QString &tileName);
+    void setGrime(const QString &layerName, int x, int y, const BuildingCell &tileName);
     void setGrime(const QString &layerName, const QPoint &p, const FloorTileGrid *other);
-    void setGrime(const QString &layerName, const QRegion &rgn, const QString &tileName);
+    void setGrime(const QString &layerName, const QRegion &rgn, const BuildingCell &tileName);
     void setGrime(const QString &layerName, const QRegion &rgn, const QPoint &pos, const FloorTileGrid *other);
 
     bool hasUserTiles() const;

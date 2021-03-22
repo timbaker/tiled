@@ -669,14 +669,14 @@ FloorTileGrid *FurnitureTile::toFloorTileGrid(QRegion &rgn)
 {
     rgn = QRegion();
     if (size().isNull() || isEmpty())
-        return 0;
+        return nullptr;
 
     FloorTileGrid *tiles = new FloorTileGrid(width(), height());
     for (int x = 0; x < width(); x++) {
         for (int y = 0; y < height(); y++) {
             if (BuildingTile *btile = tile(x, y)) {
                 if (!btile->isNone()) {
-                    tiles->replace(x, y, btile->name());
+                    tiles->replace(x, y, BuildingCell(btile->name(), Tiled::MapRotation::NotRotated));
                     rgn += QRect(x, y, 1, 1);
                 }
             }
@@ -684,7 +684,7 @@ FloorTileGrid *FurnitureTile::toFloorTileGrid(QRegion &rgn)
     }
     if (rgn.isEmpty()) {
         delete tiles;
-        return 0;
+        return nullptr;
     }
     return tiles;
 }

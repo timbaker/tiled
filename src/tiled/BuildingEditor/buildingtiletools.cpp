@@ -190,16 +190,19 @@ void DrawTileTool::mouseReleaseEvent(QGraphicsSceneMouseEvent *event)
             FloorTileGrid *tiles = floor()->grimeAt(layerName(), r);
             QRegion rgn;
             if (!mCaptureTiles) {
-#if 1
-                QString tileName = mErasing ? QString() : unrotateTile(mTileName);
-#else
-                QString tileName = mErasing ? QString() : mTileName;
-#endif
-                changed = tiles->replace(tileName);
+                QString tileName;
+                Tiled::MapRotation rotation;
+                if (mErasing) {
+                    rotation = Tiled::MapRotation::NotRotated;
+                } else {
+                    tileName = mTileName;
+                    rotation = unrotateTile(mTileName);
+                }
+                changed = tiles->replace(BuildingCell(tileName, rotation));
                 rgn = QRegion(r);
             } else if (mErasing) {
                 // Erase in the capture-tiles region
-                changed = tiles->replace(mCaptureTilesRgn, QString());
+                changed = tiles->replace(mCaptureTilesRgn, BuildingCell());
                 rgn = mCaptureTilesRgn.translated(mCursorTileBounds.topLeft()) & r;
             } else {
                 QRect clipRect = r.translated(-mCursorTileBounds.topLeft());
@@ -210,12 +213,13 @@ void DrawTileTool::mouseReleaseEvent(QGraphicsSceneMouseEvent *event)
                 delete clipped;
                 rgn = mCaptureTilesRgn.translated(mCursorTileBounds.topLeft()) & r;
             }
-            if (changed)
+            if (changed) {
                 undoStack()->push(new PaintFloorTiles(mEditor->document(), floor(),
                                                       layerName(), rgn, r.topLeft(),
                                                       tiles,
                                                       mErasing ? "Erase Tiles"
                                                                : "Draw Tiles"));
+            }
         }
         mMouseDown = false;
         mErasing = controlModifier();
@@ -240,47 +244,9 @@ void DrawTileTool::setTile(const QString &tileName)
     clearCaptureTiles();
 }
 
-QString DrawTileTool::unrotateTile(const QString &tileName)
+Tiled::MapRotation DrawTileTool::unrotateTile(const QString &tileName)
 {
-#if 1
     return Tiled::TileRotation::instance()->unrotateTile(tileName, document()->mapRotation());
-#else
-    QString tilesetName;
-    int tileIndex;
-    if (!BuildingTilesMgr::instance()->parseTileName(tileName, tilesetName, tileIndex)) {
-        return tileName;
-    }
-//    Tiled::Tile *tile = BuildingTilesMgr::instance()->tileFor(tilesetName, tileIndex);
-    int tileRotation = 0;
-    if (tilesetName.endsWith(QLatin1Literal("_R90"))) {
-        tileRotation = 90;
-    } else if (tilesetName.endsWith(QLatin1Literal("_R180"))) {
-        tileRotation = 180;
-    } else if (tilesetName.endsWith(QLatin1Literal("_R270"))) {
-        tileRotation = 270;
-    }
-    QString tileName1 = tileName;
-    Tiled::MapRotation mapRotation = document()->mapRotation();
-    switch (mapRotation) {
-    case Tiled::MapRotation::NotRotated:
-        break;
-    case Tiled::MapRotation::Clockwise90:
-        tileRotation += 270;
-        break;
-    case Tiled::MapRotation::Clockwise180:
-        tileRotation += 180;
-        break;
-    case Tiled::MapRotation::Clockwise270:
-        tileRotation += 90;
-        break;
-    }
-    tileRotation %= 360;
-    if (tileRotation != 0)
-    {
-        tileName1 = tilesetName + QLatin1Literal("_R") + QString::number(tileRotation) + QLatin1Literal("_") + QString::number(tileIndex);
-    }
-    return tileName1;
-#endif
 }
 
 void DrawTileTool::setCaptureTiles(FloorTileGrid *tiles, const QRegion &rgn)
@@ -394,16 +360,18 @@ void DrawTileTool::updateCursor(const QPointF &scenePos, bool force)
         // were painted at the current location.
         FloorTileGrid *tiles = floor()->grimeAt(layerName(), mCursorTileBounds);
         if (mErasing)
-            tiles->replace(mCaptureTilesRgn, QString());
+            tiles->replace(mCaptureTilesRgn, BuildingCell());
         else
             tiles->replace(mCaptureTilesRgn, QPoint(0, 0), mCaptureTiles);
         for (int x = 0; x < mCursorTileBounds.width(); x++) {
             for (int y = 0; y < mCursorTileBounds.height(); y++) {
                 // Building-generated tiles can't be replaced with nothing.
-                if (tiles->at(x, y).isEmpty())
-                    tiles->replace(x, y, mEditor->buildingTileAt(
-                                        mCursorTileBounds.x() + x,
-                                        mCursorTileBounds.y() + y));
+                if (tiles->at(x, y).isEmpty()) {
+                    QString tileName = mEditor->buildingTileAt(
+                                mCursorTileBounds.x() + x,
+                                mCursorTileBounds.y() + y);
+                    tiles->replace(x, y, BuildingCell(tileName, Tiled::MapRotation::NotRotated));
+                }
             }
         }
         mEditor->setToolTiles(tiles, mCursorTileBounds.topLeft(), layerName());
@@ -441,12 +409,14 @@ void DrawTileTool::updateCursor(const QPointF &scenePos, bool force)
     FloorTileGrid tiles(r.width(), r.height());
     if (mErasing) {
         for (int x = 0; x < r.width(); x++) {
-            for (int y = 0; y < r.height(); y++)
-                tiles.replace(x, y, mEditor->buildingTileAt(r.x() + x, r.y() + y));
+            for (int y = 0; y < r.height(); y++) {
+                QString tileName = mEditor->buildingTileAt(r.x() + x, r.y() + y);
+                tiles.replace(x, y, BuildingCell(tileName, Tiled::MapRotation::NotRotated));
+            }
         }
     } else {
 #if 1
-        tiles.replace(unrotateTile(mTileName));
+        tiles.replace(BuildingCell(mTileName, unrotateTile(mTileName)));
 #else
         tiles.replace(mTileName);
 #endif
@@ -648,7 +618,7 @@ void SelectTileTool::updateStatusText()
 
 /////
 
-PickTileTool *PickTileTool::mInstance = 0;
+PickTileTool *PickTileTool::mInstance = nullptr;
 
 PickTileTool *PickTileTool::instance()
 {

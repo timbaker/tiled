@@ -235,7 +235,7 @@ void ZLotManager::setMapInfo(MapObject *mapObject, MapInfo *mapInfo)
 
 void ZLotManager::setMapComposite(MapObject *mapObject, MapComposite *mapComposite)
 {
-    MapComposite *currLot = 0, *newLot = mapComposite;
+    MapComposite *currLot = nullptr, *newLot = mapComposite;
 
     if (mMapObjectToLot.contains(mapObject))
         currLot = mMapObjectToLot[mapObject];

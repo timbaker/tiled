@@ -1361,7 +1361,7 @@ void BuildingEditorWindow::editCut()
             mCurrentDocument->setClipboardTiles(tiles, selection.translated(-r.topLeft()));
 
             tiles = tiles->clone();
-            if (tiles->replace(selection.translated(-r.topLeft()), QString()))
+            if (tiles->replace(selection.translated(-r.topLeft()), BuildingCell()))
                 mCurrentDocument->undoStack()->push(
                             new PaintFloorTiles(mCurrentDocument, currentFloor(),
                                                 currentLayer(), selection,
@@ -1412,15 +1412,16 @@ void BuildingEditorWindow::editDelete()
         QRegion selection = currentDocument()->tileSelection();
         QRect r = selection.boundingRect();
         FloorTileGrid *tiles = currentFloor()->grimeAt(currentLayer(), r);
-        bool changed = tiles->replace(selection.translated(-r.topLeft()), QString());
-        if (changed)
+        bool changed = tiles->replace(selection.translated(-r.topLeft()), BuildingCell());
+        if (changed) {
             mCurrentDocument->undoStack()->push(
                         new PaintFloorTiles(mCurrentDocument, currentFloor(),
                                             currentLayer(), selection,
                                             r.topLeft(), tiles,
                                             "Delete Tiles"));
-        else
+        } else {
             delete tiles;
+        }
         return;
     }
     deleteObjects();
@@ -2049,11 +2050,11 @@ void BuildingEditorWindow::reportMissingTilesets()
                 missingTilesets.insert(btile->mTilesetName);
         }
     }
-    foreach (FurnitureTiles *ftiles, building->usedFurniture()) {
-        foreach (FurnitureTile *ftile, ftiles->tiles()) {
+    for (FurnitureTiles *ftiles : building->usedFurniture()) {
+        for (FurnitureTile *ftile : ftiles->tiles()) {
             if (!ftile || ftile->isEmpty())
                 continue;
-            foreach (BuildingTile *btile, ftile->tiles()) {
+            for (BuildingTile *btile : ftile->tiles()) {
                 if (!btile || btile->mTilesetName.isEmpty())
                     continue;
                 if (!TileMetaInfoMgr::instance()->tileset(btile->mTilesetName))
@@ -2061,16 +2062,17 @@ void BuildingEditorWindow::reportMissingTilesets()
             }
         }
     }
-    foreach (BuildingFloor *floor, building->floors()) {
-        foreach (QString layerName, floor->grimeLayers()) {
+    for (BuildingFloor *floor : building->floors()) {
+        for (QString layerName : floor->grimeLayers()) {
             for (int y = 0; y < floor->height(); y++) {
                 for (int x = 0; x < floor->width(); x++) {
-                    QString tileName = floor->grimeAt(layerName, x, y);
+                    BuildingCell buildingCell = floor->grimeAt(layerName, x, y);
                     QString tilesetName;
                     int tileIndex;
-                    if (!tileName.isEmpty() && BuildingTilesMgr::parseTileName(tileName, tilesetName, tileIndex)) {
-                        if (!TileMetaInfoMgr::instance()->tileset(tilesetName))
+                    if (!buildingCell.isEmpty() && BuildingTilesMgr::parseTileName(buildingCell.tileName(), tilesetName, tileIndex)) {
+                        if (!TileMetaInfoMgr::instance()->tileset(tilesetName)) {
                             missingTilesets.insert(tilesetName);
+                        }
                     }
                 }
             }

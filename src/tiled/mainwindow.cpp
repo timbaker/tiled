@@ -631,12 +631,12 @@ MainWindow::MainWindow(QWidget *parent, Qt::WindowFlags flags)
     QShortcut *switchToRightDocument1 = new QShortcut(tr("Ctrl+Tab"), this);
     connect(switchToRightDocument1, SIGNAL(activated()),
             mDocumentManager, SLOT(switchToRightDocument()));
-
+#if 0
     new QShortcut(tr("X"), this, SLOT(flipStampHorizontally()));
     new QShortcut(tr("Y"), this, SLOT(flipStampVertically()));
     new QShortcut(tr("Z"), this, SLOT(rotateStampRight()));
     new QShortcut(tr("Shift+Z"), this, SLOT(rotateStampLeft()));
-
+#endif
     QShortcut *copyPositionShortcut = new QShortcut(tr("Alt+C"), this);
     connect(copyPositionShortcut, SIGNAL(activated()),
             mActionHandler, SLOT(copyPosition()));
@@ -877,7 +877,7 @@ bool MainWindow::openFile(const QString &fileName,
 
 bool MainWindow::openFile(const QString &fileName)
 {
-    return openFile(fileName, 0);
+    return openFile(fileName, nullptr);
 }
 
 void MainWindow::openLastFiles()
@@ -909,7 +909,7 @@ void MainWindow::openLastFiles()
                 QLatin1String("selectedLayer")).toStringList();
 
 #ifdef ZOMBOID
-    PROGRESS *progress = lastOpenFiles.size() ? new PROGRESS(tr("Restoring session")) : 0;
+    PROGRESS *progress = lastOpenFiles.size() ? new PROGRESS(tr("Restoring session")) : nullptr;
 #endif
 
     for (int i = 0; i < lastOpenFiles.size(); i++) {
@@ -1095,7 +1095,7 @@ void MainWindow::openFile()
         return;
 
     // When a particular filter was selected, use the associated reader
-    MapReaderInterface *mapReader = 0;
+    MapReaderInterface *mapReader = nullptr;
     foreach (MapReaderInterface *reader, readers) {
         if (reader->nameFilters().contains(selectedFilter))
             mapReader = reader;
@@ -1246,7 +1246,7 @@ void MainWindow::exportAs()
 
     pref->setLastPath(Preferences::ExportedFile, QFileInfo(fileName).path());
 
-    MapWriterInterface *chosenWriter = 0;
+    MapWriterInterface *chosenWriter = nullptr;
 
     // If a specific filter was selected, use that writer
     foreach (MapWriterInterface *writer, writers)
@@ -1650,7 +1650,7 @@ void MainWindow::showBuildingEditor()
         mBuildingEditor->show();
         if (!mBuildingEditor->Startup()) {
             delete mBuildingEditor;
-            mBuildingEditor = 0;
+            mBuildingEditor = nullptr;
             return;
         }
 
@@ -2988,6 +2988,8 @@ void MainWindow::editLayerProperties()
         PropertiesDialog::showDialogFor(layer, mMapDocument, this);
 }
 
+#if 0
+
 void MainWindow::flipStampHorizontally()
 {
     if (TileLayer *stamp = mStampBrush->stamp()) {
@@ -3023,6 +3025,8 @@ void MainWindow::rotateStampRight()
         setStampBrush(stamp);
     }
 }
+
+#endif
 
 /**
  * Sets the stamp brush, which is used by both the stamp brush and the bucket

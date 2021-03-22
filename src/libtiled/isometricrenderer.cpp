@@ -281,7 +281,7 @@ void IsometricRenderer::drawTileLayer(QPainter *painter,
                     qreal m22 = 1;      // Vertical scaling factor
                     qreal dx = offset.x() + x;
                     qreal dy = offset.y() + y - img.height();
-
+#if 0
                     if (cell.flippedAntiDiagonally) {
                         // Use shearing to swap the X/Y axis
                         m11 = 0;
@@ -304,7 +304,7 @@ void IsometricRenderer::drawTileLayer(QPainter *painter,
                         dy += cell.flippedAntiDiagonally ? img.width()
                                                          : img.height();
                     }
-
+#endif
                     const QTransform transform(m11, m12, m21, m22, dx, dy);
                     painter->setTransform(transform * baseTransform);
 
@@ -428,7 +428,7 @@ void IsometricRenderer::drawTileLayerGroup(QPainter *painter, ZTileLayerGroup *l
                         qreal m22 = 1;      // Vertical scaling factor
                         qreal dx = offset.x() + x;
                         qreal dy = offset.y() + y - img.height();
-
+#if 0
                         if (cell->flippedAntiDiagonally) {
                             // Use shearing to swap the X/Y axis
                             m11 = 0;
@@ -451,7 +451,7 @@ void IsometricRenderer::drawTileLayerGroup(QPainter *painter, ZTileLayerGroup *l
                             dy += cell->flippedAntiDiagonally ? img.width()
                                                              : img.height();
                         }
-
+#endif
                         const QTransform transform(m11, m12, m21, m22, dx, dy);
                         painter->setTransform(transform * baseTransform);
 

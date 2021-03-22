@@ -242,9 +242,9 @@ bool BuildingTMX::readTxt()
     mRevision = simple.value("revision").toInt();
     mSourceRevision = simple.value("source_revision").toInt();
 
-    foreach (SimpleFileBlock block, simple.blocks) {
+    for (const SimpleFileBlock &block : simple.blocks) {
         if (block.name == QLatin1String("layers")) {
-            foreach (SimpleFileKeyValue kv, block.values) {
+            for (const SimpleFileKeyValue &kv : block.values) {
                 if (kv.name == QLatin1String("tile")) {
                     mLayers += LayerInfo(kv.value, LayerInfo::Tile);
                 } else if (kv.name == QLatin1String("object")) {
@@ -265,9 +265,9 @@ bool BuildingTMX::readTxt()
     }
 
     // Check that TMXConfig.txt contains all the required tile layers.
-    foreach (QString layerName, BuildingMap::requiredLayerNames()) {
+    for (const QString &layerName : BuildingMap::requiredLayerNames()) {
         bool match = false;
-        foreach (LayerInfo layerInfo, mLayers) {
+        for (LayerInfo layerInfo : mLayers) {
             if (layerInfo.mType == LayerInfo::Tile && layerInfo.mName == layerName) {
                 match = true;
                 break;

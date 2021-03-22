@@ -38,6 +38,8 @@
 #include "zlevelsmodel.h"
 #include "zlotmanager.h"
 
+#include "worlded/worldcell.h"
+
 #include <QGraphicsSceneMouseEvent>
 
 using namespace Tiled;
@@ -100,26 +102,26 @@ void CompositeLayerGroupItem::updateBounds()
 ZomboidScene::ZomboidScene(QObject *parent)
     : MapScene(parent)
     , mPendingActive(false)
-    , mDnDItem(0)
+    , mDnDItem(nullptr)
     , mWasHighlightCurrentLayer(false)
     , mMapBordersItem(new QGraphicsPolygonItem)
     , mMapBordersItem2(new QGraphicsPolygonItem)
     , mMapBuildings(new MapBuildings)
     , mMapBuildingsInvalid(true)
 {
-    connect(&mLotManager, SIGNAL(lotAdded(MapComposite*,Tiled::MapObject*)),
-        this, SLOT(onLotAdded(MapComposite*,Tiled::MapObject*)));
-    connect(&mLotManager, SIGNAL(lotRemoved(MapComposite*,Tiled::MapObject*)),
-        this, SLOT(onLotRemoved(MapComposite*,Tiled::MapObject*)));
-    connect(&mLotManager, SIGNAL(lotUpdated(MapComposite*,Tiled::MapObject*)),
-        this, SLOT(onLotUpdated(MapComposite*,Tiled::MapObject*)));
+    connect(&mLotManager, QOverload<MapComposite*,MapObject*>::of(&ZLotManager::lotAdded),
+        this, &ZomboidScene::onLotAdded);
+    connect(&mLotManager, QOverload<MapComposite*,MapObject*>::of(&ZLotManager::lotRemoved),
+        this, &ZomboidScene::onLotRemoved);
+    connect(&mLotManager, QOverload<MapComposite*,MapObject*>::of(&ZLotManager::lotUpdated),
+        this, QOverload<MapComposite*,MapObject*>::of(&ZomboidScene::onLotUpdated));
 
-    connect(&mLotManager, SIGNAL(lotAdded(MapComposite*,WorldCellLot*)),
-            SLOT(onLotUpdated(MapComposite*,WorldCellLot*)));
-    connect(&mLotManager, SIGNAL(lotRemoved(MapComposite*,WorldCellLot*)),
-            SLOT(onLotUpdated(MapComposite*,WorldCellLot*)));
-    connect(&mLotManager, SIGNAL(lotUpdated(MapComposite*,WorldCellLot*)),
-            SLOT(onLotUpdated(MapComposite*,WorldCellLot*)));
+    connect(&mLotManager, QOverload<MapComposite*,WorldCellLot*>::of(&ZLotManager::lotAdded),
+            this, QOverload<MapComposite*,WorldCellLot*>::of(&ZomboidScene::onLotUpdated));
+    connect(&mLotManager, QOverload<MapComposite*,WorldCellLot*>::of(&ZLotManager::lotRemoved),
+            this, QOverload<MapComposite*,WorldCellLot*>::of(&ZomboidScene::onLotUpdated));
+    connect(&mLotManager, QOverload<MapComposite*,WorldCellLot*>::of(&ZLotManager::lotUpdated),
+            this, QOverload<MapComposite*,WorldCellLot*>::of(&ZomboidScene::onLotUpdated));
 
     QPen pen(QColor(128, 128, 128, 128));
     pen.setWidth(28); // only good for isometric 64x32 tiles!

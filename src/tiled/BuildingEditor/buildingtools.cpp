@@ -674,7 +674,7 @@ void SelectMoveRoomsTool::updateMovingItems()
                         dragBmp->setPixel(x, y, qRgb(0,0,0));
                         dragGrid[x][y] = 0;
                         foreach (QString layerName, dragTiles.keys())
-                            dragTiles[layerName]->replace(x, y, QString());
+                            dragTiles[layerName]->replace(x, y, BuildingCell());
                     }
             }
 
@@ -814,7 +814,7 @@ void SelectMoveRoomsTool::finishMovingFloor(BuildingFloor *floor, bool objectsTo
         for (int x = src.left(); x <= src.right(); x++) {
             for (int y = src.top(); y <= src.bottom(); y++) {
                 foreach (FloorTileGrid *stg, grime.values())
-                    stg->replace(x, y, QString());
+                    stg->replace(x, y, BuildingCell());
             }
         }
     }

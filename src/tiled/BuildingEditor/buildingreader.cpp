@@ -58,6 +58,10 @@ using namespace BuildingEditor;
 
 #define VERSION_LATEST VERSION3
 
+static const uint RotateFlag90 = 0x80000000;
+static const uint RotateFlag180 = 0x40000000;
+static const uint RotateFlag270 = 0x20000000;
+
 namespace BuildingEditor {
 
 class FakeBuildingTilesMgr;
@@ -336,7 +340,7 @@ private:
     Room *getRoom(BuildingFloor *floor, int x, int y, int index);
 
     void decodeCSVTileData(BuildingFloor *floor, const QString &layerName, const QString &text);
-    QString getUserTile(BuildingFloor *floor, int x, int y, int index);
+    BuildingCell getUserTile(BuildingFloor *floor, int x, int y, int index);
 
     BuildingObject *readObject(BuildingFloor *floor);
 
@@ -1160,15 +1164,26 @@ void BuildingReaderPrivate::decodeCSVTileData(BuildingFloor *floor,
     }
 }
 
-QString BuildingReaderPrivate::getUserTile(BuildingFloor *floor, int x, int y, int index)
+BuildingCell BuildingReaderPrivate::getUserTile(BuildingFloor *floor, int x, int y, int index)
 {
     if (!index)
-        return QString();
-    if (index > 0 && index - 1 < mUserTiles.size())
-        return mUserTiles.at(index - 1);
+        return BuildingCell();
+
+    Tiled::MapRotation rotation = Tiled::MapRotation::NotRotated;
+    if (index & RotateFlag90)
+        rotation = Tiled::MapRotation::Clockwise90;
+    else if (index & RotateFlag180)
+        rotation = Tiled::MapRotation::Clockwise180;
+    else if (index & RotateFlag270)
+        rotation = Tiled::MapRotation::Clockwise270;
+    index &= ~(RotateFlag90 | RotateFlag180 | RotateFlag270);
+
+    if (index > 0 && index - 1 < mUserTiles.size()) {
+        return BuildingCell(mUserTiles.at(index - 1), rotation);
+    }
     xml.raiseError(tr("Invalid tile index at (%1,%2) on floor %3")
                    .arg(x).arg(y).arg(floor->level()));
-    return QString();
+    return BuildingCell();
 }
 
 void BuildingReaderPrivate::readUnknownElement()
@@ -1198,7 +1213,7 @@ Building *BuildingReader::read(const QString &fileName)
 {
     QtLockedFile file(fileName);
     if (!d->openFile(&file))
-        return 0;
+        return nullptr;
 
     return read(&file, QFileInfo(fileName).absolutePath());
 }

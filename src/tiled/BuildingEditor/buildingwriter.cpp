@@ -46,6 +46,10 @@ using namespace BuildingEditor;
 template class __declspec(dllimport) QMap<QString, QString>;
 #endif
 
+static const uint RotateFlag90 = 0x80000000;
+static const uint RotateFlag180 = 0x40000000;
+static const uint RotateFlag270 = 0x20000000;
+
 class BuildingEditor::BuildingWriterPrivate
 {
     Q_DECLARE_TR_FUNCTIONS(BuildingWriterPrivate)
@@ -250,20 +254,21 @@ public:
 
     void writeUserTiles(QXmlStreamWriter &w)
     {
-        foreach (BuildingFloor *floor, mBuilding->floors()) {
-            foreach (QString layerName, floor->grimeLayers()) {
+        for (BuildingFloor *floor : mBuilding->floors()) {
+            for (const QString &layerName : floor->grimeLayers()) {
                 for (int x = 0; x <= floor->width(); x++) {
                     for (int y = 0; y <= floor->height(); y++) {
-                        QString tileName = floor->grimeAt(layerName, x, y);
-                        if (!tileName.isEmpty() && !mUserTilesMap.contains(tileName))
-                            mUserTilesMap[tileName] = tileName;
+                        const BuildingCell &buildingCell = floor->grimeAt(layerName, x, y);
+                        if (!buildingCell.isEmpty() && !mUserTilesMap.contains(buildingCell.tileName())) {
+                            mUserTilesMap[buildingCell.tileName()] = buildingCell.tileName();
+                        }
                     }
                 }
             }
         }
 
         w.writeStartElement(QLatin1String("user_tiles"));
-        foreach (QString tileName, mUserTilesMap.values()) { // sorted
+        for (const QString &tileName : mUserTilesMap.values()) { // sorted
             w.writeStartElement(QLatin1String("tile"));
             w.writeAttribute(QLatin1String("tile"), tileName);
             w.writeEndElement(); // </tile>
@@ -277,7 +282,7 @@ public:
         w.writeStartElement(QLatin1String("floor"));
 //        w.writeAttribute(QLatin1String("level"), QString::number(floor->level()));
 
-        foreach (BuildingObject *object, floor->objects())
+        for (BuildingObject *object : floor->objects())
             writeObject(w, object);
 
         // Write room indices.
@@ -301,19 +306,35 @@ public:
         w.writeEndElement();
 
         // Write user tile indices.
-        foreach (QString layerName, floor->grimeLayers()) {
+        for (const QString &layerName : floor->grimeLayers()) {
             if (floor->grime()[layerName]->isEmpty())
                 continue;
             text.clear();
             text += newline;
-            count = 0, max = (floor->height() + 1) * (floor->width() + 1);
+            count = 0;
+            max = (floor->height() + 1) * (floor->width() + 1);
             for (int y = 0; y <= floor->height(); y++) {
                 for (int x = 0; x <= floor->width(); x++) {
-                    QString tileName = floor->grimeAt(layerName, x, y);
-                    if (tileName.isEmpty())
+                    const BuildingCell &buildingCell = floor->grimeAt(layerName, x, y);
+                    if (buildingCell.isEmpty()) {
                         text += zero;
-                    else
-                        text += QString::number(mUserTilesMap.values().indexOf(tileName) + 1);
+                    } else {
+                        uint gid = mUserTilesMap.values().indexOf(buildingCell.tileName()) + 1;
+                        switch (buildingCell.rotation()) {
+                        case Tiled::MapRotation::Clockwise90:
+                            gid |= RotateFlag90;
+                            break;
+                        case Tiled::MapRotation::Clockwise180:
+                            gid |= RotateFlag180;
+                            break;
+                        case Tiled::MapRotation::Clockwise270:
+                            gid |= RotateFlag270;
+                            break;
+                        default:
+                            break;
+                        }
+                        text += QString::number(gid);
+                    }
                     if (++count < max)
                         text += comma;
                 }

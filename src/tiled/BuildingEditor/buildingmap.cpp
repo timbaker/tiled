@@ -93,7 +93,7 @@ QString BuildingMap::buildingTileAt(int x, int y, int level, const QString &laye
 
     QString tileName;
 
-    foreach (TileLayer *tl, layerGroup->layers()) {
+    for (TileLayer *tl : layerGroup->layers()) {
         if (layerName == MapComposite::layerNameWithoutPrefix(tl)) {
             if (tl->contains(x, y)) {
                 Tile *tile = tl->cellAt(x, y).tile;
@@ -408,7 +408,7 @@ void BuildingMap::addRoomDefObjects(Map *map)
 void BuildingMap::addRoomDefObjects(Map *map, BuildingFloor *floor)
 {
     Building *building = floor->building();
-    ObjectGroup *objectGroup = new ObjectGroup(tr("%1_RoomDefs").arg(floor->level()),
+    ObjectGroup *objectGroup = new ObjectGroup(tr("RoomDefs"),
                                                0, 0, map->width(), map->height());
     map->addLayer(objectGroup);
 
@@ -534,7 +534,7 @@ void BuildingMap::BuildingToMap()
     mLayerToSection.clear();
     for (BuildingFloor *floor : mBuilding->floors()) {
         for (QString name : layerNames(floor->level())) {
-            QString layerName = tr("%1_%2").arg(floor->level()).arg(name);
+            QString layerName = name;
             TileLayer *tl = new TileLayer(layerName, 0, 0, mapSize.width(), mapSize.height());
             tl->setLevel(floor->level());
             mMap->addLayer(tl);
@@ -609,10 +609,11 @@ void BuildingMap::BuildingSquaresToTileLayers(BuildingFloor *floor,
                     continue;
                 }
                 const BuildingSquare &square = shadowFloor->squares[x][y];
+                MapRotation rotation = square.mRotation[section];
                 if (BuildingTile *btile = square.mTiles[section]) {
                     if (!btile->isNone()) {
                         if (Tiled::Tile *tile = BuildingTilesMgr::instance()->tileFor(btile)) {
-                            tl->setCell(x + offset, y + offset, Cell(tile));
+                            tl->setCell(x + offset, y + offset, Cell(tile, rotation));
                         }
                     }
                     continue;
@@ -624,6 +625,7 @@ void BuildingMap::BuildingSquaresToTileLayers(BuildingFloor *floor,
                     }
                     BuildingTile *buildingTile = entry->tile(tileOffset);
 #if 1
+#elif 0
                     if (square.mRotation[section] != MapRotation::NotRotated) {
                         if (TileRotation::instance()->hasTileRotated(buildingTile->mTilesetName, buildingTile->mIndex)) {
                             QString tileName = QString(QLatin1Literal("%1_R%2_%3")).arg(buildingTile->mTilesetName).arg(int(square.mRotation[section]) * 90).arg(buildingTile->mIndex);
@@ -645,7 +647,7 @@ void BuildingMap::BuildingSquaresToTileLayers(BuildingFloor *floor,
                     }
 #endif
                     if (Tiled::Tile *tile = BuildingTilesMgr::instance()->tileFor(buildingTile)) {
-                        tl->setCell(x + offset, y + offset, Cell(tile));
+                        tl->setCell(x + offset, y + offset, Cell(tile, rotation));
                     }
                 }
             }
@@ -675,7 +677,7 @@ void BuildingMap::userTilesToLayer(BuildingFloor *floor,
     }
 
     QMap<QString,Tileset*> tilesetByName;
-    foreach (Tileset *ts, mMap->tilesets())
+    for (Tileset *ts : mMap->tilesets())
         tilesetByName[ts->name()] = ts;
 
     QRegion suppress;
@@ -690,24 +692,21 @@ void BuildingMap::userTilesToLayer(BuildingFloor *floor,
                 layer->setCell(x, y, Cell());
                 continue;
             }
-            QString tileName = shadowFloor->grimeAt(layerName, x, y);
+            BuildingCell buildingCell = shadowFloor->grimeAt(layerName, x, y);
             Tile *tile = nullptr;
-            if (!tileName.isEmpty()) {
+            MapRotation rotation = MapRotation::NotRotated;
+            if (!buildingCell.isEmpty()) {
                 tile = TilesetManager::instance()->missingTile();
                 QString tilesetName;
                 int index;
-                if (BuildingTilesMgr::parseTileName(tileName, tilesetName, index)) {
+                if (BuildingTilesMgr::parseTileName(buildingCell.tileName(), tilesetName, index)) {
                     if (tilesetByName.contains(tilesetName)) {
                         tile = tilesetByName[tilesetName]->tileAt(index);
+                        rotation = buildingCell.rotation();
                     }
-#if 1
-                    else if (Tile* tile1 = TileRotation::instance()->tileFor(tilesetName, index)) {
-                        tile = tile1;
-                    }
-#endif
                 }
             }
-            layer->setCell(x, y, Cell(tile));
+            layer->setCell(x, y, Cell(tile, rotation));
         }
     }
 

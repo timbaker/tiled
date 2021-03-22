@@ -25,6 +25,7 @@
 #include "BuildingEditor/furnituregroups.h"
 
 #include "tile.h"
+#include "tilelayer.h"
 #include "tileset.h"
 
 #include <QDebug>
@@ -157,45 +158,24 @@ public:
         if (file.read(QLatin1Literal("D:\\pz\\TileRotation.txt"))) {
             mTilesetRotatedList = file.takeTilesets();
             mVisuals = file.takeVisuals();
-            mTilesetByNameRotated.clear();
+            mTilesetByName.clear();
             for (TilesetRotated *tilesetR : mTilesetRotatedList) {
-                mTilesetByNameRotated[tilesetR->nameRotated()] = tilesetR;
+                mTilesetByName[tilesetR->name()] = tilesetR;
             }
-//            mLookupR0.clear();
-//            mRenderInfo.clear();
-//            mRenderInfo90.clear();
-//            mRenderInfo180.clear();
-//            mRenderInfo270.clear();
             initRenderInfo(mVisuals);
         }
     }
 
-    bool isRotatedTile(Tile *tile)
+    void rotateTile(const Cell &cell, MapRotation viewRotation, QVector<Tiled::ZTileRenderInfo>& tileInfos)
     {
-        if (tile == nullptr) {
-            return false;
+        if (cell.isEmpty()) {
+            return;
         }
-        return mTilesetByNameRotated.contains(tile->tileset()->name());
-    }
+        Tile *tile = cell.tile;
 
-    void rotateTile(Tile *tile, MapRotation viewRotation, QVector<Tiled::ZTileRenderInfo>& tileInfos)
-    {
-        if (tile->tileset()->isMissing()) {
-            int dbg = 1;
-        }
         // FIXME: temporary lazy init
         if (mTilesetRotatedList.isEmpty()) {
             tempLazyInit();
-        }
-        // Is this a runtime fake tileset?
-        if (isRotatedTile(tile)) {
-            QString tilesetNameR = tile->tileset()->name();
-            TilesetRotated* tilesetR = mTilesetByNameRotated[tilesetNameR];
-            if (TileRotated *tileR = tilesetR->mTileByID[tile->id()]) {
-                int m = (int(viewRotation) + int(tilesetR->mRotation) + int(tileR->mRotation)) % MAP_ROTATION_COUNT;
-                tileInfos += tileR->mVisual->mData[m].mRenderInfo;
-            }
-            return;
         }
 
         // This is a real tile in an unrotated view.
@@ -204,17 +184,18 @@ public:
 //            return;
         }
 
-        // This is a real tile in a rotated view.
-        int m = int(viewRotation);
-        QString tilesetNameR = tile->tileset()->name() + QLatin1Literal("_R") + QString::number(m * 90);
-        if (mTilesetByNameRotated.contains(tilesetNameR)) {
-            TilesetRotated* tilesetR = mTilesetByNameRotated[tilesetNameR];
+        QString tilesetName = tile->tileset()->name();
+        if (mTilesetByName.contains(tilesetName)) {
+            TilesetRotated* tilesetR = mTilesetByName[tilesetName];
             if (TileRotated *tileR = tilesetR->tileAt(tile->id())) {
-                int m2 = (m + int(tileR->mRotation)) % MAP_ROTATION_COUNT;
-                tileInfos += tileR->mVisual->mData[m2].mRenderInfo;
-                return;
+                if (tileR->mVisual != nullptr) {
+                    int viewRotationInt = int(viewRotation);
+                    int cellRotationInt = int(cell.rotation);
+                    int m2 = (viewRotationInt + cellRotationInt + int(tileR->mRotation)) % MAP_ROTATION_COUNT;
+                    tileInfos += tileR->mVisual->mData[m2].mRenderInfo;
+                    return;
+                }
             }
-            return;
         }
 
         if (viewRotation == MapRotation::NotRotated) {
@@ -247,25 +228,10 @@ public:
         }
     }
 
-    Tile *tileFor(const QString &tilesetNameR, int tileID)
-    {
-        Tileset* tileset = getOrCreateFakeTileset(tilesetNameR);
-        if (tileset == nullptr)
-            return nullptr;
-        return tileset->tileAt(tileID);
-    }
-
     bool hasTileRotated(const QString &tilesetName, int tileID)
     {
-        if (mTilesetByNameRotated.contains(tilesetName)) {
-            if (TileRotated *tileR = mTilesetByNameRotated[tilesetName]->tileAt(tileID)) {
-                return tileR->mVisual != nullptr;
-            }
-            return false;
-        }
-        QString tilesetNameR = tilesetName + QLatin1Literal("_R0");
-        if (mTilesetByNameRotated.contains(tilesetNameR)) {
-            if (TileRotated *tileR = mTilesetByNameRotated[tilesetNameR]->tileAt(tileID)) {
+        if (mTilesetByName.contains(tilesetName)) {
+            if (TileRotated *tileR = mTilesetByName[tilesetName]->tileAt(tileID)) {
                 return tileR->mVisual != nullptr;
             }
             return false;
@@ -277,43 +243,13 @@ public:
     {
         qDeleteAll(mTilesetRotatedList);
         mTilesetRotatedList.clear();
-        mTilesetByNameRotated.clear();
-
-        // Don't delete mTilesetRotated, they may be in use.
-    }
-
-    Tileset* getOrCreateFakeTileset(const QString tilesetNameR)
-    {
-        if (!tilesetNameR.contains(QLatin1Literal("_R")))
-            return nullptr;
-        if (mTilesetByNameRotated.contains(tilesetNameR) == false) {
-            return nullptr;
-        }
-        Tileset *tileset = mFakeTilesets[tilesetNameR];
-        if (tileset == nullptr) {
-            tileset = new Tileset(tilesetNameR, 64, 128);
-            tileset->loadFromNothing(QSize(64 * 8, 128 * 16), tilesetNameR + QLatin1Literal(".png"));
-            mFakeTilesets[tilesetNameR] = tileset;
-        }
-        return tileset;
-    }
-
-    Tileset* getOrCreateFakeTileset(TilesetRotated* tilesetR)
-    {
-        return getOrCreateFakeTileset(tilesetR->nameRotated());
+        mTilesetByName.clear();
     }
 
     TileRotation& mOuter;
     QList<TilesetRotated*> mTilesetRotatedList;
-    QMap<QString, TilesetRotated*> mTilesetByNameRotated;
+    QMap<QString, TilesetRotated*> mTilesetByName;
     QList<QSharedPointer<TileRotatedVisual>> mVisuals;
-
-//    QMap<Tile*, Tile*> mLookupR0;
-//    QMap<Tile*, Tile*> mLookupR90;
-//    QMap<Tile*, Tile*> mLookupR180;
-//    QMap<Tile*, Tile*> mLookupR270;
-//    QMap<TileRotatedVisual*, QVector<ZTileRenderInfo>> mRenderInfo;
-    QMap<QString, Tileset*> mFakeTilesets;
 };
 
 // // // // //
@@ -343,7 +279,7 @@ TileRotated *TilesetRotated::createTile(int tileID)
 
 QString TileRotated::name() const
 {
-    return BuildingTilesMgr::instance()->nameForTile(mTileset->mNameRotated, mID);
+    return BuildingTilesMgr::instance()->nameForTile(mTileset->name(), mID);
 }
 
 // namespace Tiled
@@ -382,9 +318,9 @@ void TileRotation::readFile(const QString &filePath)
     qDeleteAll(mPrivate->mTilesetRotatedList);
     mPrivate->mTilesetRotatedList = file.takeTilesets();
     mPrivate->mVisuals = file.takeVisuals();
-    mPrivate->mTilesetByNameRotated.clear();
+    mPrivate->mTilesetByName.clear();
     for (TilesetRotated *tilesetR : mPrivate->mTilesetRotatedList) {
-        mPrivate->mTilesetByNameRotated[tilesetR->nameRotated()] = tilesetR;
+        mPrivate->mTilesetByName[tilesetR->name()] = tilesetR;
     }
     mPrivate->initRenderInfo(mPrivate->mVisuals);
 }
@@ -399,143 +335,31 @@ void TileRotation::initRenderInfo(const QList<QSharedPointer<TileRotatedVisual> 
     mPrivate->initRenderInfo(visuals);
 }
 
-Tile *TileRotation::tileFor(const QString &tilesetName, int tileID)
-{
-    return mPrivate->tileFor(tilesetName, tileID);
-}
-
 bool TileRotation::hasTileRotated(const QString &tilesetName, int tileID)
 {
     return mPrivate->hasTileRotated(tilesetName, tileID);
 }
 
-void TileRotation::rotateTile(Tile *tile, MapRotation viewRotation, QVector<Tiled::ZTileRenderInfo>& tileInfos)
+void TileRotation::rotateTile(const Cell &cell, MapRotation viewRotation, QVector<Tiled::ZTileRenderInfo>& tileInfos)
 {
-    mPrivate->rotateTile(tile, viewRotation, tileInfos);
+    mPrivate->rotateTile(cell, viewRotation, tileInfos);
 }
-
-#if 0
-Tile *TileRotation::rotateTile(Tile *tile, MapRotation rotation)
-{
-    return mPrivate->rotateTile(tile, rotation);
-}
-#endif
 
 void TileRotation::reload()
 {
     mPrivate->reload();
 }
 
-TileRotated *TileRotation::rotatedTileFor(Tile *tileR)
+MapRotation TileRotation::unrotateTile(const QString &tileName, MapRotation viewRotation)
 {
-    if (!mPrivate->mTilesetByNameRotated.contains(tileR->tileset()->name())) {
-        return nullptr;
+    switch (viewRotation) {
+    case MapRotation::NotRotated:
+        return MapRotation::NotRotated;
+    case MapRotation::Clockwise90:
+        return MapRotation::Clockwise270;
+    case MapRotation::Clockwise180:
+        return MapRotation::Clockwise180;
+    case MapRotation::Clockwise270:
+        return MapRotation::Clockwise90;
     }
-    auto* tilesetR = mPrivate->mTilesetByNameRotated[tileR->tileset()->name()];
-    if (tileR->id() >= tilesetR->mTileByID.size()) {
-        return nullptr;
-    }
-    return tilesetR->mTileByID[tileR->id()];
 }
-
-Tileset *TileRotation::rotatedTilesetFor(TilesetRotated *tilesetR)
-{
-    return mPrivate->getOrCreateFakeTileset(tilesetR);
-}
-
-static bool isRotatedTilesetName(const QString& tilesetName)
-{
-    return tilesetName.endsWith(QLatin1Literal("_R0")) ||
-            tilesetName.endsWith(QLatin1Literal("_R90")) ||
-            tilesetName.endsWith(QLatin1Literal("_R180")) ||
-            tilesetName.endsWith(QLatin1Literal("_R270"));
-}
-
-QString TileRotation::unrotateTile(const QString &tileName, MapRotation viewRotation)
-{
-    QString tilesetName;
-    int tileIndex;
-    if (!BuildingTilesMgr::instance()->parseTileName(tileName, tilesetName, tileIndex)) {
-        return tileName;
-    }
-    int tilesetRInt = int(viewRotation);
-    if (isRotatedTilesetName(tilesetName)) {
-        // Placing a runtime tile into the building.
-        // We can't do this yet, because only real tilesets are available to choose tiles from.
-    } else {
-        // Placing a real tile into the building.
-        // The given tileset is not R0 R90 R180 or R270, it's a real tileset.
-        QString tilesetNameR = tilesetName + QLatin1Literal("_R0"); // any _RN tileset will do, we just want the original tile's rotation.
-        if (mPrivate->mTilesetByNameRotated.contains(tilesetNameR)) {
-            TilesetRotated* tilesetR = mPrivate->mTilesetByNameRotated[tilesetNameR];
-            if (tileIndex >= tilesetR->mTileByID.size()) {
-                return tileName;
-            }
-            if (TileRotated *tileR = tilesetR->mTileByID[tileIndex]) {
-                // if viewRotation=0 then use tileset=0
-                // if viewRotation=90 then use tileset=0-90=270
-                // if viewRotation=180 then use tileset=0-180=180
-                // if viewRotation=270 then use tileset=0-270=90
-#if 1
-                switch (viewRotation) {
-                case MapRotation::NotRotated:
-                    // 4 - 4
-                    break;
-                case MapRotation::Clockwise90:
-                    // 4 - 1
-                    tilesetRInt = 3;
-                    break;
-                case MapRotation::Clockwise180:
-                    // 4 - 2
-                    tilesetRInt = 2;
-                    break;
-                case MapRotation::Clockwise270:
-                    // 4 - 3
-                    tilesetRInt = 1;
-                    break;
-                }
-#else
-                // This always gives R270
-                viewRotationInt = MAP_ROTATION_COUNT - 1 - ((viewRotationInt + int(tileR->mRotation)) % MAP_ROTATION_COUNT);
-#endif
-            }
-        }
-    }
-    QString tilesetNameR = tilesetName + QLatin1Literal("_R") +  QString::number(tilesetRInt * 90);
-    if (mPrivate->mTilesetByNameRotated.contains(tilesetNameR)) {
-        return BuildingTilesMgr::instance()->nameForTile(tilesetNameR, tileIndex);
-    }
-    return tileName;
-}
-
-#if 0
-Tile *TileRotation::getRotatedTileDX(const QString &tilesetName, int index)
-{
-    return mPrivate->getRotatedTileDX(tilesetName, index);
-}
-
-Tile *TileRotation::getRotatedTileDY(const QString &tilesetName, int index)
-{
-    return mPrivate->getRotatedTileDY(tilesetName, index);
-}
-Tile *TileRotation::getRotatedTile(const QString &tileName, QPoint &offset)
-{
-    offset = QPoint();
-    QString tilesetName;
-    int index;
-    if (BuildingTilesMgr::instance()->parseTileName(tileName, tilesetName, index) == false) {
-        return nullptr;
-    }
-    int floorWidth = 64;
-    int floorHeight = 32;
-    if (tilesetName.endsWith(QLatin1Literal("_DX"))) {
-        offset = QPoint(floorWidth / 2, floorHeight / 2);
-        return mPrivate->getRotatedTileDX(tilesetName.left(tilesetName.length() - 3), index);
-    }
-    if (tilesetName.endsWith(QLatin1Literal("_DY"))) {
-        offset = QPoint(-floorWidth / 2, floorHeight / 2);
-        return mPrivate->getRotatedTileDY(tilesetName.left(tilesetName.length() - 3), index);
-    }
-    return BuildingTilesMgr::instance()->tileFor(tilesetName, index);
-}
-#endif

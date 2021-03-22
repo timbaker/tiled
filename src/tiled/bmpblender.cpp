@@ -47,7 +47,6 @@ using namespace Tiled::Internal;
 #define VERSION_LATEST VERSION2
 
 static QString STR_Floor = QLatin1String("Floor");
-static QString STR_0Floor = QLatin1String("0_Floor");
 
 BmpBlender::BmpBlender(QObject *parent) :
     QObject(parent),

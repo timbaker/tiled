@@ -15,6 +15,8 @@
  * this program. If not, see <http://www.gnu.org/licenses/>.
  */
 
+#if 0
+
 #include "buildingfloorV1.h"
 
 #include "building.h"
@@ -1837,3 +1839,4 @@ int BuildingFloorV1::Square::getWallOffset()
     return offset;
 }
 
+#endif
