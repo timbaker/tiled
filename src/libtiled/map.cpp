@@ -53,7 +53,7 @@ Map::Map(Orientation orientation,
     mBmpVeg(mWidth, mHeight)
 #endif
 {
-    mLevels.resize(16);
+    mLevels.resize(8);
     for (int i = 0; i < mLevels.size(); i++) {
         mLevels[i] = new MapLevel(i);
     }

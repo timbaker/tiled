@@ -18,6 +18,7 @@
 #ifndef BUILDINGORTHOVIEW_H
 #define BUILDINGORTHOVIEW_H
 
+#include "buildingcell.h"
 #include "zlevelrenderer.h"
 
 #include <QGraphicsItem>
@@ -511,8 +512,8 @@ public:
     virtual void setToolTiles(const FloorTileGrid *tiles,
                       const QPoint &pos, const QString &layerName) = 0;
     virtual void clearToolTiles() = 0;
-    virtual QString buildingTileAt(int x, int y) = 0;
-    virtual QString tileUnderPoint(int x, int y) = 0;
+    virtual BuildingCell buildingTileAt(int x, int y) = 0;
+    virtual BuildingCell tileUnderPoint(int x, int y) = 0;
     virtual void drawTileSelection(QPainter *painter, const QRegion &region,
                                    const QColor &color, const QRectF &exposed,
                                    int level = 0) const = 0;
@@ -561,30 +562,30 @@ class BuildingOrthoScene : public BuildingBaseScene
 public:
 
     explicit BuildingOrthoScene(QObject *parent = nullptr);
-    ~BuildingOrthoScene();
+    ~BuildingOrthoScene() override;
 
-    bool eventFilter(QObject *watched, QEvent *event);
+    bool eventFilter(QObject *watched, QEvent *event) override;
 
-    void mouseDoubleClickEvent(QGraphicsSceneMouseEvent *event)
+    void mouseDoubleClickEvent(QGraphicsSceneMouseEvent *event) override
     { mousePressEvent(event); }
 
-    void mousePressEvent(QGraphicsSceneMouseEvent *event);
-    void mouseMoveEvent(QGraphicsSceneMouseEvent *event);
-    void mouseReleaseEvent(QGraphicsSceneMouseEvent *event);
+    void mousePressEvent(QGraphicsSceneMouseEvent *event) override;
+    void mouseMoveEvent(QGraphicsSceneMouseEvent *event) override;
+    void mouseReleaseEvent(QGraphicsSceneMouseEvent *event) override;
 
     void setDocument(BuildingDocument *doc);
     void clearDocument();
 
     void setToolTiles(const FloorTileGrid *tiles, const QPoint &pos,
-                      const QString &layerName);
-    void clearToolTiles();
+                      const QString &layerName) override;
+    void clearToolTiles() override;
 
-    QString buildingTileAt(int x, int y);
-    virtual QString tileUnderPoint(int x, int y);
+    BuildingCell buildingTileAt(int x, int y) override;
+    BuildingCell tileUnderPoint(int x, int y) override;
 
     void drawTileSelection(QPainter *painter, const QRegion &region,
                            const QColor &color, const QRectF &exposed,
-                           int level = 0) const;
+                           int level = 0) const override;
 
 private slots:
     void currentToolChanged(BaseTool *tool);
@@ -609,7 +610,7 @@ class BuildingOrthoView : public QGraphicsView
 {
     Q_OBJECT
 public:
-    BuildingOrthoView(QWidget *parent = 0);
+    BuildingOrthoView(QWidget *parent = nullptr);
 
     BuildingOrthoScene *scene() const
     { return dynamic_cast<BuildingOrthoScene*>(QGraphicsView::scene()); }

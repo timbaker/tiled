@@ -193,7 +193,7 @@ private:
 private:
     Q_DISABLE_COPY(PencilTool)
     static PencilTool *mInstance;
-    ~PencilTool() { mInstance = 0; }
+    ~PencilTool() { mInstance = nullptr; }
 
     bool mMouseDown;
     bool mErasing;
@@ -253,7 +253,7 @@ private:
 private:
     Q_DISABLE_COPY(SelectMoveRoomsTool)
     static SelectMoveRoomsTool *mInstance;
-    ~SelectMoveRoomsTool() { mInstance = 0; }
+    ~SelectMoveRoomsTool() { mInstance = nullptr; }
 
     Mode mMode;
     bool mMouseDown;
@@ -346,7 +346,7 @@ public:
 private:
     Q_DISABLE_COPY(WindowTool)
     static WindowTool *mInstance;
-    ~WindowTool() { mInstance = 0; }
+    ~WindowTool() { mInstance = nullptr; }
 };
 
 class StairsTool : public BaseObjectTool
@@ -363,7 +363,7 @@ public:
 private:
     Q_DISABLE_COPY(StairsTool)
     static StairsTool *mInstance;
-    ~StairsTool() { mInstance = 0; }
+    ~StairsTool() { mInstance = nullptr; }
 };
 
 class FurnitureTool : public BaseObjectTool
@@ -407,7 +407,7 @@ private:
 private:
     Q_DISABLE_COPY(FurnitureTool)
     static FurnitureTool *mInstance;
-    ~FurnitureTool() { mInstance = 0; }
+    ~FurnitureTool() { mInstance = nullptr; }
     FurnitureTile *mCurrentTile;
 };
 
@@ -448,7 +448,7 @@ private:
     static RoofTool *mInstance;
     Q_DISABLE_COPY(RoofTool)
 protected: // for RoofCornerTool
-    ~RoofTool() { mInstance = 0; }
+    ~RoofTool() { mInstance = nullptr; }
 private:
     RoofObject::RoofType mRoofType;
 
@@ -488,7 +488,7 @@ public:
 private:
     Q_DISABLE_COPY(RoofShallowTool)
     static RoofShallowTool *mInstance;
-    ~RoofShallowTool() { mInstance = 0; }
+    ~RoofShallowTool() { mInstance = nullptr; }
 };
 
 /////
@@ -503,7 +503,7 @@ public:
 private:
     Q_DISABLE_COPY(RoofCornerTool)
     static RoofCornerTool *mInstance;
-    ~RoofCornerTool() { mInstance = 0; }
+    ~RoofCornerTool() { mInstance = nullptr; }
 };
 
 /////
@@ -554,7 +554,7 @@ private:
 private:
     Q_DISABLE_COPY(SelectMoveObjectTool)
     static SelectMoveObjectTool *mInstance;
-    ~SelectMoveObjectTool() { mInstance = 0; }
+    ~SelectMoveObjectTool() { mInstance = nullptr; }
 
     Mode mMode;
     bool mMouseDown;
@@ -624,11 +624,12 @@ private:
     void updateHandle(const QPointF &scenePos);
     void updateStatusText();
     void resizeWall(int length);
+    bool isValidPos(const QPoint& pos, BuildingObject::Direction dir);
 
 private:
     Q_DISABLE_COPY(WallTool)
     static WallTool *mInstance;
-    ~WallTool() { mInstance = 0; }
+    ~WallTool() { mInstance = nullptr; }
 
     enum Mode {
         NoMode,
@@ -639,6 +640,7 @@ private:
 
     QPoint mStartTilePos;
     QPoint mCurrentTilePos;
+    BuildingObject::Direction mTileEdge;
     QPointF mScenePos;
     WallObject *mObject;
     GraphicsObjectItem *mItem;

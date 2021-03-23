@@ -713,6 +713,11 @@ BuildingTileEntry *BuildingTilesMgr::defaultCurtainsTile() const
     return mCatCurtains->defaultEntry();
 }
 
+BuildingTileEntry *BuildingTilesMgr::defaultShuttersTile() const
+{
+    return mCatShutters->defaultEntry();
+}
+
 BuildingTileEntry *BuildingTilesMgr::defaultStairsTile() const
 {
     return mCatStairs->defaultEntry();

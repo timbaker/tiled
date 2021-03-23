@@ -43,7 +43,7 @@ using namespace BuildingEditor;
 
 BaseTool::BaseTool() :
     QObject(ToolManager::instance()),
-    mEditor(0),
+    mEditor(nullptr),
     mHandCursor(HandNone)
 {
     ToolManager::instance()->addTool(this);
@@ -428,7 +428,7 @@ void PencilTool::updateStatusText()
 
 /////
 
-SelectMoveRoomsTool *SelectMoveRoomsTool::mInstance = 0;
+SelectMoveRoomsTool *SelectMoveRoomsTool::mInstance = nullptr;
 
 SelectMoveRoomsTool *SelectMoveRoomsTool::instance()
 {
@@ -442,7 +442,7 @@ SelectMoveRoomsTool::SelectMoveRoomsTool() :
     mMode(NoMode),
     mMouseDown(false),
     mMouseOverSelection(false),
-    mCursorItem(0)
+    mCursorItem(nullptr)
 {
     updateStatusText();
 }
@@ -592,7 +592,7 @@ void SelectMoveRoomsTool::deactivate()
 {
     if (mCursorItem) {
         delete mCursorItem;
-        mCursorItem = 0;
+        mCursorItem = nullptr;
     }
     mMouseOverSelection = false;
     BaseTool::deactivate();
@@ -672,7 +672,7 @@ void SelectMoveRoomsTool::updateMovingItems()
                 for (int x = r.left(); x <= r.right(); x++)
                     for (int y = r.top(); y <= r.bottom(); y++) {
                         dragBmp->setPixel(x, y, qRgb(0,0,0));
-                        dragGrid[x][y] = 0;
+                        dragGrid[x][y] = nullptr;
                         foreach (QString layerName, dragTiles.keys())
                             dragTiles[layerName]->replace(x, y, BuildingCell());
                     }
@@ -727,7 +727,7 @@ void SelectMoveRoomsTool::finishMoving(const QPointF &pos)
     foreach (BuildingFloor *floor, mEditor->building()->floors()) {
         GraphicsFloorItem *item = mEditor->itemForFloor(floor);
         delete item->dragBmp();
-        item->setDragBmp(0);
+        item->setDragBmp(nullptr);
         mEditor->resetFloorGrid(floor);
         mEditor->resetUserTiles(floor);
         foreach (BuildingObject *object, floor->objects()) {
@@ -762,7 +762,7 @@ void SelectMoveRoomsTool::cancelMoving()
     foreach (BuildingFloor *floor, mEditor->building()->floors()) {
         GraphicsFloorItem *item = mEditor->itemForFloor(floor);
         delete item->dragBmp();
-        item->setDragBmp(0);
+        item->setDragBmp(nullptr);
         mEditor->resetFloorGrid(floor);
         mEditor->resetUserTiles(floor);
         foreach (BuildingObject *object, floor->objects()) {
@@ -786,7 +786,7 @@ void SelectMoveRoomsTool::finishMovingFloor(BuildingFloor *floor, bool objectsTo
         src &= floorBounds;
         for (int x = src.left(); x <= src.right(); x++) {
             for (int y = src.top(); y <= src.bottom(); y++) {
-                grid[x][y] = 0;
+                grid[x][y] = nullptr;
             }
         }
     }
@@ -982,7 +982,7 @@ void BaseObjectTool::currentModifiersChanged(Qt::KeyboardModifiers modifiers)
             mEditor->views().at(0)->viewport()->setCursor(Qt::PointingHandCursor);
         } else {
             mEditor->views().at(0)->viewport()->unsetCursor();
-            mEditor->setMouseOverObject(0);
+            mEditor->setMouseOverObject(nullptr);
         }
     }
     updateCursorObject();
@@ -1047,7 +1047,7 @@ void BaseObjectTool::eyedrop(BuildingObject *object)
     if (FurnitureObject *fobj = object->asFurniture())
         FurnitureTool::instance()->setCurrentTile(fobj->furnitureTile());
 
-    BaseTool *tool = 0;
+    BaseTool *tool = nullptr;
     if (object->asDoor()) tool = DoorTool::instance();
     if (object->asFurniture()) tool = FurnitureTool::instance();
 //    if (object->asRoof()) tool = RoofTool::instance();
@@ -1062,7 +1062,7 @@ void BaseObjectTool::eyedrop(BuildingObject *object)
 
 /////
 
-DoorTool *DoorTool::mInstance = 0;
+DoorTool *DoorTool::mInstance = nullptr;
 
 DoorTool *DoorTool::instance()
 {
@@ -1101,14 +1101,13 @@ void DoorTool::updateCursorObject()
     int x = mTilePos.x(), y = mTilePos.y();
     BuildingObject::Direction dir = BuildingObject::Direction::N;
 
-    if (mTileEdge == TileEdge::W)
+    if (mTileEdge == TileEdge::W) {
         dir = BuildingObject::Direction::W;
-    else if (mTileEdge == TileEdge::E) {
-        x++;
-        dir = BuildingObject::Direction::W;
+    } else if (mTileEdge == TileEdge::E) {
+        dir = BuildingObject::Direction::E;
+    } else if (mTileEdge == TileEdge::S) {
+        dir = BuildingObject::Direction::S;
     }
-    else if (mTileEdge == TileEdge::S)
-        y++;
 
     if (!mCursorObject) {
         BuildingFloor *floor = nullptr; //floor();
@@ -1165,14 +1164,13 @@ void WindowTool::updateCursorObject()
     int x = mTilePos.x(), y = mTilePos.y();
     BuildingObject::Direction dir = BuildingObject::Direction::N;
 
-    if (mTileEdge == TileEdge::W)
+    if (mTileEdge == TileEdge::W) {
         dir = BuildingObject::Direction::W;
-    else if (mTileEdge == TileEdge::E) {
-        x++;
-        dir = BuildingObject::Direction::W;
+    } else if (mTileEdge == TileEdge::E) {
+        dir = BuildingObject::Direction::E;
+    } else if (mTileEdge == TileEdge::S) {
+        dir = BuildingObject::Direction::S;
     }
-    else if (mTileEdge == TileEdge::S)
-        y++;
 
     if (!mCursorObject) {
         BuildingFloor *floor = nullptr; //floor();
@@ -1256,7 +1254,7 @@ FurnitureTool *FurnitureTool::instance()
 
 FurnitureTool::FurnitureTool() :
     BaseObjectTool(),
-    mCurrentTile(0)
+    mCurrentTile(nullptr)
 {
     mPlaceOnRelease = true;
     updateStatusText();
@@ -1501,7 +1499,7 @@ void FurnitureTool::updateStatusText()
 
 /////
 
-RoofTool *RoofTool::mInstance = 0;
+RoofTool *RoofTool::mInstance = nullptr;
 
 RoofTool *RoofTool::instance()
 {
@@ -1514,12 +1512,12 @@ RoofTool::RoofTool() :
     BaseTool(),
     mRoofType(RoofObject::PeakNS),
     mMode(NoMode),
-    mObject(0),
-    mItem(0),
-    mCursorItem(0),
-    mObjectItem(0),
-    mHandleObject(0),
-    mHandleItem(0),
+    mObject(nullptr),
+    mItem(nullptr),
+    mCursorItem(nullptr),
+    mObjectItem(nullptr),
+    mHandleObject(nullptr),
+    mHandleItem(nullptr),
     mMouseOverHandle(false)
 {
 }
@@ -1595,17 +1593,17 @@ void RoofTool::mousePressEvent(QGraphicsSceneMouseEvent *event)
             mObjectItem->synchWithObject();
             mMode = NoMode;
             updateStatusText();
-            mEditor->setCursorObject(0);
+            mEditor->setCursorObject(nullptr);
             return;
         }
         if (mMode == Create) {
             delete mObject;
-            mObject = 0;
+            mObject = nullptr;
             delete mItem;
-            mItem = 0;
+            mItem = nullptr;
             mMode = NoMode;
             updateStatusText();
-            mEditor->setCursorObject(0);
+            mEditor->setCursorObject(nullptr);
             return;
         }
         if (mMode != NoMode)
@@ -1787,7 +1785,7 @@ void RoofTool::mouseReleaseEvent(QGraphicsSceneMouseEvent *event)
             undoStack()->push(new ResizeRoof(mEditor->document(), mHandleObject,
                                              width, height, halfDepth));
         }
-        mEditor->setCursorObject(0);
+        mEditor->setCursorObject(nullptr);
     }
 
     if (mMode == Create) {
@@ -1802,11 +1800,11 @@ void RoofTool::mouseReleaseEvent(QGraphicsSceneMouseEvent *event)
                                             floor->objectCount(), mObject));
         } else
             delete mObject;
-        mObject = 0;
+        mObject = nullptr;
         delete mItem;
-        mItem = 0;
+        mItem = nullptr;
 
-        mEditor->setCursorObject(0);
+        mEditor->setCursorObject(nullptr);
     }
 
     updateHandle(event->scenePos());
@@ -1831,20 +1829,20 @@ void RoofTool::deactivate()
         mHandleItem->setHighlight(false);
         mMouseOverHandle = false;
     }
-    mHandleObject = 0;
+    mHandleObject = nullptr;
     if (mObjectItem) {
         mObjectItem->setShowHandles(false);
         mObjectItem->setZValue(mObjectItem->object()->index());
-        mObjectItem = 0;
+        mObjectItem = nullptr;
     }
 
     if (mMode == Create) {
         delete mObject;
-        mObject = 0;
+        mObject = nullptr;
         delete mItem;
-        mItem = 0;
+        mItem = nullptr;
         mMode = NoMode;
-        mEditor->setCursorObject(0);
+        mEditor->setCursorObject(nullptr);
     }
 
     mMode = NoMode;
@@ -1853,8 +1851,8 @@ void RoofTool::deactivate()
 void RoofTool::objectAboutToBeRemoved(BuildingObject *object)
 {
     if (object == mHandleObject) {
-        mHandleObject = 0;
-        mObjectItem = 0;
+        mHandleObject = nullptr;
+        mObjectItem = nullptr;
         mMouseOverHandle = false;
         mMode = NoMode;
     }
@@ -1869,7 +1867,7 @@ RoofObject *RoofTool::topmostRoofAt(const QPointF &scenePos)
             }
         }
     }
-    return 0;
+    return nullptr;
 }
 
 void RoofTool::updateHandle(const QPointF &scenePos)
@@ -1881,7 +1879,7 @@ void RoofTool::updateHandle(const QPointF &scenePos)
         mMouseOverHandle = false;
         updateStatusText();
     }
-    mHandleItem = 0;
+    mHandleItem = nullptr;
     if (ro && (ro == mHandleObject)) {
         foreach (QGraphicsItem *item, mEditor->items(scenePos)) {
             if (GraphicsRoofHandleItem *handle = dynamic_cast<GraphicsRoofHandleItem*>(item)) {
@@ -1900,7 +1898,7 @@ void RoofTool::updateHandle(const QPointF &scenePos)
     if (mObjectItem) {
         mObjectItem->setShowHandles(false);
         mObjectItem->setZValue(mObjectItem->object()->index());
-        mObjectItem = 0;
+        mObjectItem = nullptr;
     }
 
     if (ro) {
@@ -1992,7 +1990,7 @@ void RoofTool::updateStatusText()
 
 /////
 
-RoofShallowTool *RoofShallowTool::mInstance = 0;
+RoofShallowTool *RoofShallowTool::mInstance = nullptr;
 
 RoofShallowTool *RoofShallowTool::instance()
 {
@@ -2009,7 +2007,7 @@ RoofShallowTool::RoofShallowTool()
 
 /////
 
-RoofCornerTool *RoofCornerTool::mInstance = 0;
+RoofCornerTool *RoofCornerTool::mInstance = nullptr;
 
 RoofCornerTool *RoofCornerTool::instance()
 {
@@ -2051,7 +2049,7 @@ private:
 
 /////
 
-SelectMoveObjectTool *SelectMoveObjectTool::mInstance = 0;
+SelectMoveObjectTool *SelectMoveObjectTool::mInstance = nullptr;
 
 SelectMoveObjectTool *SelectMoveObjectTool::instance()
 {
@@ -2066,9 +2064,9 @@ SelectMoveObjectTool::SelectMoveObjectTool() :
     mMouseDown(false),
     mMouseOverObject(false),
     mMouseOverSelection(false),
-    mClickedObject(0),
-    mHoverObject(0),
-    mSelectionRectItem(0)
+    mClickedObject(nullptr),
+    mHoverObject(nullptr),
+    mSelectionRectItem(nullptr)
 {
     updateStatusText();
 }
@@ -2096,7 +2094,7 @@ void SelectMoveObjectTool::mouseMoveEvent(QGraphicsSceneMouseEvent *event)
 
     if (!mMouseDown) {
         BuildingObject *object = mEditor->topmostObjectAt(pos);
-        bool mouseOverObject = object != 0;
+        bool mouseOverObject = object != nullptr;
         bool mouseOverSelection = object && mEditor->document()->selectedObjects().contains(object);
         if (mouseOverObject != mMouseOverObject ||
                 mouseOverSelection != mMouseOverSelection) {
@@ -2176,7 +2174,7 @@ void SelectMoveObjectTool::mouseReleaseEvent(QGraphicsSceneMouseEvent *event)
     }
 
     mMouseDown = false;
-    mClickedObject = 0;
+    mClickedObject = nullptr;
     mouseMoveEvent(event); // update mMouseOverXXX
     updateStatusText();
 }
@@ -2191,7 +2189,7 @@ void SelectMoveObjectTool::currentModifiersChanged(Qt::KeyboardModifiers modifie
             int index = floor()->objectCount();
             foreach (BuildingObject *object, objectsInOrder(mMovingObjects)) {
                 BuildingObject *clone = object->clone();
-                clone->setFloor(0);
+                clone->setFloor(nullptr);
                 GraphicsObjectItem *item = mEditor->createItemForObject(clone);
                 item->setSelected(true);
                 item->setDragging(true);
@@ -2279,7 +2277,7 @@ void SelectMoveObjectTool::updateSelection(const QPointF &pos,
 void SelectMoveObjectTool::startSelecting()
 {
     mMode = Selecting;
-    if (mSelectionRectItem == 0) {
+    if (mSelectionRectItem == nullptr) {
         mSelectionRectItem = new QGraphicsPolygonItem();
         mSelectionRectItem->setPen(QColor(0x33,0x99,0xff));
         mSelectionRectItem->setBrush(QBrush(QColor(0x33,0x99,0xff,255/8)));
@@ -2426,7 +2424,7 @@ QList<BuildingObject*> SelectMoveObjectTool::objectsInOrder(const QSet<BuildingO
 
 /////
 
-WallTool *WallTool::mInstance = 0;
+WallTool *WallTool::mInstance = nullptr;
 
 WallTool *WallTool::instance()
 {
@@ -2438,15 +2436,16 @@ WallTool *WallTool::instance()
 WallTool::WallTool() :
     BaseTool(),
     mMode(NoMode),
-    mObject(0),
-    mItem(0),
-    mCursorItem(0),
-    mObjectItem(0),
-    mHandleObject(0),
-    mHandleItem(0),
-    mMouseOverHandle(false),
+    mTileEdge(BuildingObject::Direction::Invalid),
+    mObject(nullptr),
+    mItem(nullptr),
+    mCursorItem(nullptr),
     mEyedrop(false),
     mMouseOverObject(false),
+    mObjectItem(nullptr),
+    mHandleObject(nullptr),
+    mHandleItem(nullptr),
+    mMouseOverHandle(false),
     mCurrentExteriorTile(BuildingTilesMgr::instance()->noneTileEntry()),
     mCurrentInteriorTile(BuildingTilesMgr::instance()->noneTileEntry()),
     mCurrentExteriorTrim(BuildingTilesMgr::instance()->noneTileEntry()),
@@ -2475,11 +2474,13 @@ void WallTool::mousePressEvent(QGraphicsSceneMouseEvent *event)
             mEditor->setCursorObject(mHandleObject);
             return;
         }
-        if (!floor()->bounds(1, 1).contains(mCurrentTilePos))
+
+        if (!isValidPos(mCurrentTilePos, mTileEdge))
             return;
+
         mObject = new WallObject(floor(),
                                  mStartTilePos.x(), mStartTilePos.y(),
-                                 BuildingObject::Direction::W,
+                                 mTileEdge,
                                  /*length=*/1);
         mItem = new GraphicsWallItem(mEditor, mObject);
         mItem->setZValue(mEditor->ZVALUE_CURSOR);
@@ -2497,12 +2498,12 @@ void WallTool::mousePressEvent(QGraphicsSceneMouseEvent *event)
     if (event->button() == Qt::RightButton) {
         if (mMode == Create) {
             delete mObject;
-            mObject = 0;
+            mObject = nullptr;
             delete mItem;
-            mItem = 0;
+            mItem = nullptr;
             mMode = NoMode;
             updateStatusText();
-            mEditor->setCursorObject(0);
+            mEditor->setCursorObject(nullptr);
             return;
         }
         if (mMode == Resize) {
@@ -2511,7 +2512,7 @@ void WallTool::mousePressEvent(QGraphicsSceneMouseEvent *event)
             mObjectItem->synchWithObject();
             mMode = NoMode;
             updateStatusText();
-            mEditor->setCursorObject(0);
+            mEditor->setCursorObject(nullptr);
             return;
         }
         if (mMode != NoMode)
@@ -2528,8 +2529,8 @@ void WallTool::mouseMoveEvent(QGraphicsSceneMouseEvent *event)
     if (mEyedrop) {
         BuildingObject *object = mEditor->topmostObjectAt(event->scenePos());
         if (object && (object->asRoof() /*|| object->asWall()*/))
-            object = 0;
-        bool mouseOverObject = object != 0;
+            object = nullptr;
+        bool mouseOverObject = object != nullptr;
         if (mouseOverObject != mMouseOverObject)
             mMouseOverObject = mouseOverObject;
         mEditor->setMouseOverObject(object);
@@ -2538,16 +2539,22 @@ void WallTool::mouseMoveEvent(QGraphicsSceneMouseEvent *event)
     mCurrentTilePos = mEditor->sceneToTile(event->scenePos(), mEditor->currentLevel());
     QPointF p = mEditor->sceneToTileF(event->scenePos(), mEditor->currentLevel());
     QPointF m(p.x() - int(p.x()), p.y() - int(p.y()));
+#if 0
     if (m.x() > 0.5)
         mCurrentTilePos.setX(mCurrentTilePos.x() + 1);
     if (m.y() >= 0.5)
         mCurrentTilePos.setY(mCurrentTilePos.y() + 1);
+#endif
+    qreal dW = m.x(), dN = m.y(), dE = 1.0 - dW, dS = 1.0 - dN;
+    if (dW < dE) {
+        mTileEdge = (dW < dN && dW < dS) ? BuildingObject::Direction::W : ((dN < dS) ? BuildingObject::Direction::N : BuildingObject::Direction::S);
+    } else {
+        mTileEdge = (dE < dN && dE < dS) ? BuildingObject::Direction::E : ((dN < dS) ? BuildingObject::Direction::N : BuildingObject::Direction::S);
+    }
 
     mScenePos = event->scenePos();
 
     updateCursor();
-
-
 }
 
 void WallTool::mouseReleaseEvent(QGraphicsSceneMouseEvent *event)
@@ -2570,7 +2577,7 @@ void WallTool::mouseReleaseEvent(QGraphicsSceneMouseEvent *event)
             undoStack()->endMacro();
             updateStatusText();
         }
-        mEditor->setCursorObject(0);
+        mEditor->setCursorObject(nullptr);
         return;
     }
 
@@ -2584,13 +2591,14 @@ void WallTool::mouseReleaseEvent(QGraphicsSceneMouseEvent *event)
             BuildingFloor *floor = this->floor();
             undoStack()->push(new AddObject(mEditor->document(), floor,
                                             floor->objectCount(), mObject));
-        } else
+        } else {
             delete mObject;
-        mObject = 0;
+        }
+        mObject = nullptr;
         delete mItem;
-        mItem = 0;
+        mItem = nullptr;
         updateStatusText();
-        mEditor->setCursorObject(0);
+        mEditor->setCursorObject(nullptr);
     }
 }
 
@@ -2603,7 +2611,7 @@ void WallTool::currentModifiersChanged(Qt::KeyboardModifiers modifiers)
             mEditor->views().at(0)->viewport()->setCursor(Qt::PointingHandCursor);
         } else {
             mEditor->views().at(0)->viewport()->unsetCursor();
-            mEditor->setMouseOverObject(0);
+            mEditor->setMouseOverObject(nullptr);
         }
     }
     updateCursor();
@@ -2623,7 +2631,7 @@ void WallTool::deactivate()
     BaseTool::deactivate();
     if (mEyedrop) {
         mEditor->views().at(0)->viewport()->unsetCursor();
-        mEditor->setMouseOverObject(0);
+        mEditor->setMouseOverObject(nullptr);
         mEyedrop = false;
     }
     if (mCursorItem)
@@ -2633,8 +2641,8 @@ void WallTool::deactivate()
 void WallTool::objectAboutToBeRemoved(BuildingObject *object)
 {
     if (object == mHandleObject) {
-        mHandleObject = 0;
-        mObjectItem = 0;
+        mHandleObject = nullptr;
+        mObjectItem = nullptr;
         mMouseOverHandle = false;
         mMode = NoMode;
     }
@@ -2649,7 +2657,7 @@ void WallTool::eyedrop(BuildingObject *object)
     if (FurnitureObject *fobj = object->asFurniture())
         FurnitureTool::instance()->setCurrentTile(fobj->furnitureTile());
 
-    BaseTool *tool = 0;
+    BaseTool *tool = nullptr;
     if (object->asDoor()) tool = DoorTool::instance();
     if (object->asFurniture()) tool = FurnitureTool::instance();
 //    if (object->asRoof()) tool = RoofTool::instance();
@@ -2664,14 +2672,14 @@ void WallTool::eyedrop(BuildingObject *object)
 
 WallObject *WallTool::topmostWallAt(const QPointF &scenePos)
 {
-    foreach (QGraphicsItem *item, mEditor->items(scenePos)) {
+    for (QGraphicsItem *item : mEditor->items(scenePos)) {
         if (GraphicsWallItem *wallItem = dynamic_cast<GraphicsWallItem*>(item)) {
             if (wallItem->object()->floor() == floor()) {
                 return wallItem->object()->asWall();
             }
         }
     }
-    return 0;
+    return nullptr;
 }
 
 void WallTool::updateCursor()
@@ -2684,12 +2692,29 @@ void WallTool::updateCursor()
             mEditor->addItem(mCursorItem);
         }
 
-        QRectF rect(mCurrentTilePos.x() - 6.0/30.0, mCurrentTilePos.y() - 6.0/30.0, 12.0/30.0, 12.0/30.0);
+        QRectF rect;
+        switch (mTileEdge) {
+        case BuildingObject::Direction::N:
+            rect.setRect(mCurrentTilePos.x() - 0.0/30.0, mCurrentTilePos.y() - 0.0/30.0, 30.0/30.0, 12.0/30.0);
+            break;
+        case BuildingObject::Direction::E:
+            rect.setRect(mCurrentTilePos.x() + 1 - 12.0/30.0, mCurrentTilePos.y() - 0.0/30.0, 12.0/30.0, 30.0/30.0);
+            break;
+        case BuildingObject::Direction::S:
+            rect.setRect(mCurrentTilePos.x() - 0.0/30.0, mCurrentTilePos.y() + 1 - 12.0/30.0, 30.0/30.0, 12.0/30.0);
+            break;
+        case BuildingObject::Direction::W:
+            rect.setRect(mCurrentTilePos.x() - 0.0/30.0, mCurrentTilePos.y() - 0.0/30.0, 12.0/30.0, 30.0/30.0);
+            break;
+        default:
+            Q_ASSERT(false);
+            break;
+        }
         mCursorItem->setPolygon(mEditor->tileToScenePolygonF(rect, mEditor->currentLevel()));
 
         updateHandle(mScenePos);
 
-        mCursorItem->setVisible(floor()->bounds(1, 1).contains(mCurrentTilePos) &&
+        mCursorItem->setVisible(isValidPos(mCurrentTilePos, mTileEdge) &&
                                 !mMouseOverHandle && !mEyedrop);
 
         // See NOTE-SCENE-CORRUPTION
@@ -2707,7 +2732,7 @@ void WallTool::updateCursor()
         QPoint start = mHandleObject->pos();
         QPoint end = mHandleObject->bounds().bottomRight();
         if (mHandleItem == mObjectItem->resizeHandle1()) {
-            if (mHandleObject->isN()) {
+            if (mHandleObject->isW() || mHandleObject->isE()) {
                 start.ry() = mCurrentTilePos.y();
                 if (start.y() < 0)
                     start.setY(0);
@@ -2725,15 +2750,15 @@ void WallTool::updateCursor()
                 resizeWall(end.x() - start.x() + 1);
             }
         } else {
-            if (mHandleObject->isN()) {
-                end.ry() = mCurrentTilePos.y() - 1;
+            if (mHandleObject->isW() || mHandleObject->isE()) {
+                end.ry() = mCurrentTilePos.y();
                 if (end.y() < start.y())
                     end.setY(start.y());
                 if (end.y() >= floor()->height())
                     end.setY(floor()->height() - 1);
                 resizeWall(end.y() - start.y() + 1);
             } else {
-                end.rx() = mCurrentTilePos.x() - 1;
+                end.rx() = mCurrentTilePos.x();
                 if (end.x() < start.x())
                     end.setX(start.x());
                 if (end.x() >= floor()->width())
@@ -2746,25 +2771,23 @@ void WallTool::updateCursor()
     }
 
     if (mMode == Create) {
-        if (!floor()->bounds(1, 1).contains(mCurrentTilePos))
+        if (!isValidPos(mCurrentTilePos, mObject->dir()))
             return;
 
         QPoint pos = mStartTilePos;
 
-        if (qAbs(diff.x()) >= qAbs(diff.y())) {
-            mObject->setDir(BuildingObject::Direction::W);
-            mObject->setLength(qMax(1, qAbs(diff.x())));
+        if (mObject->isN() || mObject->isS()) {
+            mObject->setLength(qAbs(diff.x()) + 1);
+            if (diff.x() < 0) {
+                pos.setX(mStartTilePos.x() - mObject->length() + 1);
+            }
         } else {
-            mObject->setDir(BuildingObject::Direction::N);
-            mObject->setLength(qMax(1, qAbs(diff.y())));
+            mObject->setLength(qAbs(diff.y()) + 1);
+            if (diff.y() < 0) {
+                pos.setY(mStartTilePos.y() - mObject->length() + 1);
+            }
         }
 
-        if (mObject->isW() && diff.x() < 0) {
-            pos.setX(mStartTilePos.x() - mObject->length());
-        }
-        if (mObject->isN() && diff.y() < 0) {
-            pos.setY(mStartTilePos.y() - mObject->length());
-        }
         mObject->setPos(pos);
 
         mItem->synchWithObject();
@@ -2778,16 +2801,16 @@ void WallTool::updateHandle(const QPointF &scenePos)
 {
     WallObject *wall = topmostWallAt(scenePos);
     if (mEyedrop)
-        wall = 0;
+        wall = nullptr;
 
     if (mMouseOverHandle) {
         mHandleItem->setHighlight(false);
         mMouseOverHandle = false;
         updateStatusText();
     }
-    mHandleItem = 0;
+    mHandleItem = nullptr;
     if (wall && (wall == mHandleObject)) {
-        foreach (QGraphicsItem *item, mEditor->items(scenePos)) {
+        for (QGraphicsItem *item : mEditor->items(scenePos)) {
             if (GraphicsWallHandleItem *handle = dynamic_cast<GraphicsWallHandleItem*>(item)) {
                 if (handle->parentItem() == mObjectItem) {
                     mHandleItem = handle;
@@ -2804,7 +2827,7 @@ void WallTool::updateHandle(const QPointF &scenePos)
     if (mObjectItem) {
         mObjectItem->setShowHandles(false);
         mObjectItem->setZValue(mObjectItem->object()->index());
-        mObjectItem = 0;
+        mObjectItem = nullptr;
     }
 
     if (wall) {
@@ -2843,7 +2866,27 @@ void WallTool::resizeWall(int length)
     }
 
     mEditor->itemForObject(wall)->synchWithObject();
-    mStartTilePos = wall->pos() + (wall ->isN()
+    mStartTilePos = wall->pos() + ((wall->isW() || wall->isE())
             ? QPoint(0, wall->length())
             : QPoint(wall->length(), 0));
+}
+
+bool WallTool::isValidPos(const QPoint &pos, BuildingObject::Direction dir)
+{
+    QRect rectValid = floor()->bounds();
+    switch (dir) {
+    case BuildingObject::Direction::N:
+        rectValid.adjust(0, 0, 0, 1);
+        break;
+    case BuildingObject::Direction::S:
+        break;
+    case BuildingObject::Direction::W:
+        rectValid.adjust(0, 0, 1, 0);
+        break;
+    case BuildingObject::Direction::E:
+        break;
+    default:
+        break;
+    }
+    return rectValid.contains(pos);
 }

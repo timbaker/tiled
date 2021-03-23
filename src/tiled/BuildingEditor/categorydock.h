@@ -113,7 +113,7 @@ private:
     BuildingTileCategory *categoryAt(int row);
     FurnitureGroup *furnitureGroupAt(int row);
 
-    void selectAndDisplay(BuildingTileEntry *entry);
+    void selectAndDisplay(BuildingTileCategory *category, BuildingTileEntry *entry);
     void selectAndDisplay(FurnitureTile *ftile);
 
 private:

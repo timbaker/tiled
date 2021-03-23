@@ -1148,7 +1148,7 @@ TileRotationWindow::TileRotationWindow(QWidget *parent) :
     setTilesetList();
     syncUI();
 
-#if 1
+#if 0
     InitFromBuildingTiles initFromBuildingTiles;
     initFromBuildingTiles.init(this);
     mTilesetRotatedList = initFromBuildingTiles.mTilesets;

@@ -432,6 +432,7 @@ static void ReplaceFurniture(int x, int y,
                              BuildingTile *btile,
                              BuildingSquare::SquareSection sectionMin,
                              BuildingSquare::SquareSection sectionMax,
+                             Tiled::MapRotation rotation,
                              int dw = 0, int dh = 0)
 {
     if (!btile)
@@ -439,7 +440,7 @@ static void ReplaceFurniture(int x, int y,
     Q_ASSERT(dw <= 1 && dh <= 1);
     QRect bounds(0, 0, squares.size() - 1 + dw, squares[0].size() - 1 + dh);
     if (bounds.contains(x, y)) {
-        squares[x][y].ReplaceFurniture(btile, sectionMin, sectionMax);
+        squares[x][y].ReplaceFurniture(btile, sectionMin, sectionMax, rotation);
     }
 }
 
@@ -605,7 +606,8 @@ static bool tileHasWallPropertyW(const QString &tileName)
     return false;
 }
 
-// Don't place east walls when there is a user-drawn west wall tile to the east
+// Don't place east walls when there is a user-drawn west wall tile on the west edge of the square to the east.
+// Don't place east walls when there is a WallObject on the west edge of the square to the east.
 static bool canPlaceWallE(BuildingFloor *floor, int x, int y)
 {
     if (x >= floor->width()) {
@@ -619,10 +621,14 @@ static bool canPlaceWallE(BuildingFloor *floor, int x, int y)
     if (!userTile2.isEmpty() && tileHasWallPropertyW(userTile2.tileName())) {
         return false;
     }
+    if (floor->GetWallObjectAt(x + 1, y, BuildingObject::Direction::W)) {
+        return false;
+    }
     return true;
 }
 
-// Don't place south walls when there is a user-drawn north wall tile to the south
+// Don't place south walls when there is a user-drawn north wall tile on the north edge of the square to the south.
+// Don't place south walls when there is a WallObject on the north edge of the square to the south.
 static bool canPlaceWallS(BuildingFloor *floor, int x, int y)
 {
     if (y >= floor->height()) {
@@ -634,6 +640,9 @@ static bool canPlaceWallS(BuildingFloor *floor, int x, int y)
     }
     BuildingCell userTile2 = floor->grimeAt(QLatin1Literal("Wall2"), x, y + 1);
     if (!userTile2.isEmpty() && tileHasWallPropertyN(userTile2.tileName())) {
+        return false;
+    }
+    if (floor->GetWallObjectAt(x, y + 1, BuildingObject::Direction::N)) {
         return false;
     }
     return true;
@@ -664,6 +673,15 @@ void BuildingFloor::LayoutToSquares()
         interiorWalls += room->tile(Room::InteriorWall);
         interiorWallTrim += room->tile(Room::InteriorWallTrim);
         floors += room->tile(Room::Floor);
+    }
+
+    for (BuildingObject *object : mObjects) {
+        QRect bounds = object->bounds() & this->bounds(1, 1);
+        for (int y = bounds.y(); y <= bounds.bottom(); y++) {
+            for (int x = bounds.x(); x <= bounds.right(); x++) {
+                squares[x][y].mObjects += object;
+            }
+        }
     }
 
     for (int x = 0; x < width(); x++) {
@@ -751,7 +769,7 @@ void BuildingFloor::LayoutToSquares()
     for (BuildingObject *object : mObjects) {
         if (WallObject *wall = object->asWall()) {
             int x = wall->x(), y = wall->y();
-            if (wall->isN()) {
+            if (wall->isW()) {
                 QRect r = wall->bounds() & bounds(1, 0);
                 for (y = r.top(); y <= r.bottom(); y++) {
                     squares[x][y].SetWallW(wall->tile(squares[x][y].mExterior
@@ -760,9 +778,18 @@ void BuildingFloor::LayoutToSquares()
                     squares[x][y].SetWallTrimW(wall->tile(squares[x][y].mExterior
                                                           ? WallObject::TileExteriorTrim
                                                           : WallObject::TileInteriorTrim));
-                    // TODO: exterior/interior on opposite squares
                 }
-            } else {
+            } else if (wall->isE()) {
+                QRect r = wall->bounds() & bounds(1, 0);
+                for (y = r.top(); y <= r.bottom(); y++) {
+                    squares[x][y].SetWallE(wall->tile(squares[x][y].mExterior
+                                                      ? WallObject::TileExterior
+                                                      : WallObject::TileInterior));
+                    squares[x][y].SetWallTrimE(wall->tile(squares[x][y].mExterior
+                                                          ? WallObject::TileExteriorTrim
+                                                          : WallObject::TileInteriorTrim));
+                }
+            } else if (wall->isN()) {
                 QRect r = wall->bounds() & bounds(0, 1);
                 for (x = r.left(); x <= r.right(); x++) {
                     squares[x][y].SetWallN(wall->tile(squares[x][y].mExterior
@@ -771,7 +798,16 @@ void BuildingFloor::LayoutToSquares()
                     squares[x][y].SetWallTrimN(wall->tile(squares[x][y].mExterior
                                                           ? WallObject::TileExteriorTrim
                                                           : WallObject::TileInteriorTrim));
-                    // TODO: exterior/interior on opposite squares
+                }
+            } else if (wall->isS()) {
+                QRect r = wall->bounds() & bounds(0, 1);
+                for (x = r.left(); x <= r.right(); x++) {
+                    squares[x][y].SetWallS(wall->tile(squares[x][y].mExterior
+                                                      ? WallObject::TileExterior
+                                                      : WallObject::TileInterior));
+                    squares[x][y].SetWallTrimS(wall->tile(squares[x][y].mExterior
+                                                          ? WallObject::TileExteriorTrim
+                                                          : WallObject::TileInteriorTrim));
                 }
             }
         }
@@ -880,13 +916,15 @@ void BuildingFloor::LayoutToSquares()
                     ReplaceFurniture(x, y + i, squares,
                                      stairs->tile()->tile(stairs->getOffset(x, y + i)),
                                      BuildingSquare::SectionFurniture,
-                                     BuildingSquare::SectionFurniture4);
+                                     BuildingSquare::SectionFurniture4,
+                                     Tiled::MapRotation::NotRotated);
             } else {
                 for (int i = 1; i <= 3; i++)
                     ReplaceFurniture(x + i, y, squares,
                                      stairs->tile()->tile(stairs->getOffset(x + i, y)),
                                      BuildingSquare::SectionFurniture,
-                                     BuildingSquare::SectionFurniture4);
+                                     BuildingSquare::SectionFurniture4,
+                                     Tiled::MapRotation::NotRotated);
             }
             mStairs += stairs;
         }
@@ -909,6 +947,7 @@ void BuildingFloor::LayoutToSquares()
                                          squares, ftile->tile(j, i),
                                          BuildingSquare::SectionRoofCap,
                                          BuildingSquare::SectionRoofCap2,
+                                         Tiled::MapRotation::NotRotated,
                                          dx, dy);
                         break;
                     }
@@ -944,7 +983,8 @@ void BuildingFloor::LayoutToSquares()
                         }
                         ReplaceFurniture(x + j, y + i, squares, ftile->tile(j, i),
                                          sectionMin,
-                                         sectionMax);
+                                         sectionMax,
+                                         Tiled::MapRotation::NotRotated);
                         break;
                     }
                     case FurnitureTiles::LayerWallFurniture: {
@@ -978,7 +1018,8 @@ void BuildingFloor::LayoutToSquares()
                         }
                         ReplaceFurniture(x + j, y + i, squares, ftile->tile(j, i),
                                          sectionMin,
-                                         sectionMax);
+                                         sectionMax,
+                                         Tiled::MapRotation::NotRotated);
                         break;
                     }
                     case FurnitureTiles::LayerFrames: {
@@ -989,6 +1030,7 @@ void BuildingFloor::LayoutToSquares()
                                          squares, ftile->tile(j, i),
                                          BuildingSquare::SectionFrame1,
                                          BuildingSquare::SectionFrame2,
+                                         Tiled::MapRotation::NotRotated,
                                          dx, dy);
                         break;
                     }
@@ -1000,18 +1042,21 @@ void BuildingFloor::LayoutToSquares()
                                          squares, ftile->tile(j, i),
                                          fo->furnitureTile()->isN() ? BuildingSquare::SectionDoor1 : BuildingSquare::SectionDoor2,
                                          fo->furnitureTile()->isN() ? BuildingSquare::SectionDoor1 : BuildingSquare::SectionDoor2,
+                                         Tiled::MapRotation::NotRotated,
                                          dx, dy);
                         break;
                     }
                     case FurnitureTiles::LayerFurniture:
                         ReplaceFurniture(x + j, y + i, squares, ftile->tile(j, i),
                                          BuildingSquare::SectionFurniture,
-                                         BuildingSquare::SectionFurniture4);
+                                         BuildingSquare::SectionFurniture4,
+                                         Tiled::MapRotation::NotRotated);
                         break;
                     case FurnitureTiles::LayerRoof:
                         ReplaceFurniture(x + j, y + i, squares, ftile->tile(j, i),
                                          BuildingSquare::SectionRoof,
-                                         BuildingSquare::SectionRoof2);
+                                         BuildingSquare::SectionRoof2,
+                                         Tiled::MapRotation::NotRotated);
                         break;
                     default:
                         Q_ASSERT(false);
@@ -1134,7 +1179,7 @@ void BuildingFloor::LayoutToSquares()
                 } else if (square.HasDoorS() || square.HasDoorFrameS() || (squareS != nullptr && (squareS->HasDoorN() || squareS->HasDoorFrameN()))) {
                     square.mEntryEnum[SectionWallS] = BTC_Walls::NorthDoor;
                     square.mRotation[SectionWallS] = Tiled::MapRotation::Clockwise180;
-                } else if (square.HasWindowN() || (squareS != nullptr && squareS->HasWindowN())) {
+                } else if (square.HasWindowS() || (squareS != nullptr && squareS->HasWindowN())) {
                     square.mEntryEnum[SectionWallS] = BTC_Walls::NorthWindow;
                     square.mRotation[SectionWallS] = Tiled::MapRotation::Clockwise180;
                 } else {
@@ -1145,19 +1190,29 @@ void BuildingFloor::LayoutToSquares()
         }
     }
 
+    bool FRAMES_ON_BOTH_SIDES = false;
+
     for (int x = 0; x < width() + 1; x++) {
         for (int y = 0; y < height() + 1; y++) {
             BuildingSquare& square = squares[x][y];
 
             if (square.HasDoorFrameN()) {
                 square.ReplaceFrame(square.mWallN.door->frameTile(), BuildingSquare::SquareSection::SectionFrame1, BTC_DoorFrames::North, Tiled::MapRotation::NotRotated);
+                if (FRAMES_ON_BOTH_SIDES && (y > 0) && !squares[x][y-1].HasDoorFrameS()) {
+                    squares[x][y-1].ReplaceFrame(square.mWallN.door->frameTile(), BuildingSquare::SquareSection::SectionFrame4, BTC_DoorFrames::North, Tiled::MapRotation::Clockwise180);
+                }
             }
             if (square.HasDoorFrameW()) {
                 square.ReplaceFrame(square.mWallW.door->frameTile(), BuildingSquare::SquareSection::SectionFrame2, BTC_DoorFrames::North, Tiled::MapRotation::Clockwise270);
+                if (FRAMES_ON_BOTH_SIDES && (x > 0) && !squares[x-1][y].HasDoorFrameE()) {
+                    squares[x-1][y].ReplaceFrame(square.mWallW.door->frameTile(), BuildingSquare::SquareSection::SectionFrame3, BTC_DoorFrames::North, Tiled::MapRotation::Clockwise90);
+                }
             }
             if (square.HasDoorFrameE()) {
+                square.ReplaceFrame(square.mWallE.door->frameTile(), BuildingSquare::SquareSection::SectionFrame3, BTC_DoorFrames::North, Tiled::MapRotation::Clockwise90);
             }
             if (square.HasDoorFrameS()) {
+                square.ReplaceFrame(square.mWallS.door->frameTile(), BuildingSquare::SquareSection::SectionFrame4, BTC_DoorFrames::North, Tiled::MapRotation::Clockwise180);
             }
 
             if (square.HasDoorN()) {
@@ -1167,8 +1222,10 @@ void BuildingFloor::LayoutToSquares()
                 square.ReplaceDoor(square.mWallW.door->tile(), BuildingSquare::SquareSection::SectionDoor2, BTC_Doors::North, Tiled::MapRotation::Clockwise270);
             }
             if (square.HasDoorE()) {
+                square.ReplaceDoor(square.mWallE.door->tile(), BuildingSquare::SquareSection::SectionDoor3, BTC_Doors::North, Tiled::MapRotation::Clockwise90);
             }
             if (square.HasDoorS()) {
+                square.ReplaceDoor(square.mWallS.door->tile(), BuildingSquare::SquareSection::SectionDoor4, BTC_Doors::North, Tiled::MapRotation::Clockwise180);
             }
 
             if (square.HasWindowN()) {
@@ -1178,8 +1235,10 @@ void BuildingFloor::LayoutToSquares()
                 square.ReplaceWindow(square.mWallW.window->tile(), BuildingSquare::SquareSection::SectionWindow2, BTC_Windows::North, Tiled::MapRotation::Clockwise270);
             }
             if (square.HasWindowE()) {
+                square.ReplaceWindow(square.mWallE.window->tile(), BuildingSquare::SquareSection::SectionWindow3, BTC_Doors::North, Tiled::MapRotation::Clockwise90);
             }
             if (square.HasWindowS()) {
+                square.ReplaceDoor(square.mWallS.window->tile(), BuildingSquare::SquareSection::SectionWindow4, BTC_Doors::North, Tiled::MapRotation::Clockwise180);
             }
 
             // Window curtains on exterior walls must be *inside* the room.
@@ -1241,18 +1300,32 @@ void BuildingFloor::LayoutToSquares()
             if (square.HasShuttersW()) {
                 if (square.mExterior) {
                     if (y > 0)
-                        squares[x][y - 1].ReplaceShutters(square.mWallW.window, true, Tiled::MapRotation::Clockwise270);
-                    squares[x][y].ReplaceShutters(square.mWallW.window, true, Tiled::MapRotation::Clockwise270);
+                        squares[x][y - 1].ReplaceShutters(square.mWallW.window, false, Tiled::MapRotation::Clockwise270);
                     squares[x][y].ReplaceShutters(square.mWallW.window, false, Tiled::MapRotation::Clockwise270);
+                    squares[x][y].ReplaceShutters(square.mWallW.window, true, Tiled::MapRotation::Clockwise270);
                     if (y < height() + 1)
-                        squares[x][y + 1].ReplaceShutters(square.mWallW.window, false, Tiled::MapRotation::Clockwise270);
+                        squares[x][y + 1].ReplaceShutters(square.mWallW.window, true, Tiled::MapRotation::Clockwise270);
                 }
             }
             if (square.HasShuttersE()) {
-
+                if (square.mExterior) {
+                    if (y > 0)
+                        squares[x][y - 1].ReplaceShutters(square.mWallE.window, true, Tiled::MapRotation::Clockwise90);
+                    squares[x][y].ReplaceShutters(square.mWallE.window, true, Tiled::MapRotation::Clockwise90);
+                    squares[x][y].ReplaceShutters(square.mWallE.window, false, Tiled::MapRotation::Clockwise90);
+                    if (y < height() + 1)
+                        squares[x][y + 1].ReplaceShutters(square.mWallE.window, false, Tiled::MapRotation::Clockwise90);
+                }
             }
             if (square.HasShuttersS()) {
-
+                if (square.mExterior) {
+                    if (x > 0)
+                        squares[x-1][y].ReplaceShutters(square.mWallS.window, false, Tiled::MapRotation::Clockwise180);
+                    squares[x][y].ReplaceShutters(square.mWallS.window, false, Tiled::MapRotation::Clockwise180);
+                    squares[x][y].ReplaceShutters(square.mWallS.window, true, Tiled::MapRotation::Clockwise180);
+                    if (x < width() + 1)
+                        squares[x + 1][y].ReplaceShutters(square.mWallS.window, true, Tiled::MapRotation::Clockwise180);
+                }
             }
         }
     }
@@ -1367,10 +1440,6 @@ void BuildingFloor::LayoutToSquares()
         for (int y = 0; y < h; y++) {
             BuildingSquare &sq = squares[x][y];
 
-            if (x == 16 && y == 9 && level() == 0) {
-                int dbg = 1;
-            }
-
             sq.ReplaceWallTrim();
             sq.ReplaceWallTrimES();
 
@@ -1388,16 +1457,16 @@ void BuildingFloor::LayoutToSquares()
 
             if (sq.mExterior) {
                 // Place exterior wall grime on level 0 only.
-                if (level() > 0)
-                    continue;
-                BuildingCell userTileWall = userTilesWall ? userTilesWall->at(x, y) : BuildingCell();
-                BuildingCell userTileWall2 = userTilesWall2 ? userTilesWall2->at(x, y) : BuildingCell();
-                BuildingTileEntry *grimeTile = building()->tile(Building::GrimeWall);
-                sq.ReplaceWallGrime(grimeTile, userTileWall, userTileWall2);
+                if (level() == 0) {
+                    BuildingCell userTileWall = userTilesWall ? userTilesWall->at(x, y) : BuildingCell();
+                    BuildingCell userTileWall2 = userTilesWall2 ? userTilesWall2->at(x, y) : BuildingCell();
+                    BuildingTileEntry *grimeTile = building()->tile(Building::GrimeWall);
+                    sq.ReplaceWallGrime(grimeTile, userTileWall, userTileWall2);
 
-                BuildingCell userTileWall3 = userTilesWall3 ? userTilesWall3->at(x, y) : BuildingCell();
-                BuildingCell userTileWall4 = userTilesWall4 ? userTilesWall4->at(x, y) : BuildingCell();
-                sq.ReplaceWallGrimeES(grimeTile, userTileWall3, userTileWall4);
+                    BuildingCell userTileWall3 = userTilesWall3 ? userTilesWall3->at(x, y) : BuildingCell();
+                    BuildingCell userTileWall4 = userTilesWall4 ? userTilesWall4->at(x, y) : BuildingCell();
+                    sq.ReplaceWallGrimeES(grimeTile, userTileWall3, userTileWall4);
+                }
             } else {
                 Room *room = GetRoomAt(x, y);
                 BuildingTileEntry *grimeTile = room ? room->tile(Room::GrimeFloor) : nullptr;
@@ -1491,6 +1560,23 @@ FurnitureObject *BuildingFloor::GetFurnitureAt(int x, int y)
             continue;
         if (FurnitureObject *fo = o->asFurniture())
             return fo;
+    }
+    return nullptr;
+}
+
+// This is only valid after the code to set BuildingSquare.mObjects in LayoutToSquares() has been called.
+WallObject *BuildingFloor::GetWallObjectAt(int x, int y, BuildingObject::Direction dir)
+{
+    if (!bounds(1, 1).contains(x, y)) {
+        return nullptr;
+    }
+    BuildingSquare &square = squares[x][y];
+    for (BuildingObject *o : square.mObjects) {
+        if (WallObject *wall = o->asWall()) {
+            if (wall->dir() == dir) {
+                return wall;
+            }
+        }
     }
     return nullptr;
 }
@@ -2012,13 +2098,12 @@ void BuildingSquare::ReplaceShutters(Window *window, bool first, Tiled::MapRotat
         return;
 
     if (mExterior) {
-        // TODO: East and West
-        if (window->isN()) {
+        /*if (window->isN() || window->isS())*/ {
             ReplaceFurniture(window->shuttersTile()->tile(first ? BTC_Shutters::NorthLeft : BTC_Shutters::NorthRight),
-                             SectionWallFurniture, SectionWallFurniture2);
-        } else {
-            ReplaceFurniture(window->shuttersTile()->tile(first ? BTC_Shutters::WestAbove : BTC_Shutters::WestBelow),
-                             SectionWallFurniture, SectionWallFurniture2);
+                             SectionWallFurniture, SectionWallFurniture2, rotation);
+//        } else {
+//            ReplaceFurniture(window->shuttersTile()->tile(first ? BTC_Shutters::WestAbove : BTC_Shutters::WestBelow),
+//                             SectionWallFurniture, SectionWallFurniture2, rotation);
         }
     }
 }
@@ -2040,22 +2125,26 @@ void BuildingSquare::ReplaceFurniture(BuildingTileEntry *tile, int offset)
 }
 
 void BuildingSquare::ReplaceFurniture(BuildingTile *btile,
-                                             SquareSection sectionMin,
-                                             SquareSection sectionMax)
+                                      SquareSection sectionMin,
+                                      SquareSection sectionMax,
+                                      Tiled::MapRotation rotation)
 {
     for (int s = sectionMin; s <= sectionMax; s++) {
         if (!mTiles[s] || mTiles[s]->isNone()) {
             mTiles[s] = btile;
             mEntryEnum[s] = 0;
+            mRotation[s] = rotation;
             return;
         }
     }
     for (int s = sectionMin + 1; s <= sectionMax; s++) {
         mTiles[s-1] = mTiles[s];
         mEntryEnum[s-1] = mEntryEnum[s];
+        mRotation[s - 1] = mRotation[s];
     }
     mTiles[sectionMax] = btile;
     mEntryEnum[sectionMax] = 0;
+    mRotation[sectionMax] = rotation;
 }
 
 void BuildingSquare::ReplaceRoof(BuildingTileEntry *tile, int offset)

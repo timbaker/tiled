@@ -62,9 +62,9 @@ void BuildingRoomDefecator::initWallObjects()
         if (WallObject *wall = object->asWall()) {
             if (wall->tile(WallObject::TileInterior)->isNone())
                 continue;
-            if (wall->isW()) // West->East makes north wall
+            if (wall->isN())
                 mNorthWalls += wall->bounds();
-            else // North->South makes west wall
+            else
                 mWestWalls += wall->bounds();
         }
     }

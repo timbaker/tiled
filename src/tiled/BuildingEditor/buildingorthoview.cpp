@@ -606,18 +606,18 @@ void BuildingOrthoScene::clearToolTiles()
 {
 }
 
-QString BuildingOrthoScene::buildingTileAt(int x, int y)
+BuildingCell BuildingOrthoScene::buildingTileAt(int x, int y)
 {
     Q_UNUSED(x)
     Q_UNUSED(y)
-    return QString();
+    return BuildingCell();
 }
 
-QString BuildingOrthoScene::tileUnderPoint(int x, int y)
+BuildingCell BuildingOrthoScene::tileUnderPoint(int x, int y)
 {
     Q_UNUSED(x)
     Q_UNUSED(y)
-    return QString();
+    return BuildingCell();
 }
 
 void BuildingOrthoScene::drawTileSelection(QPainter *painter, const QRegion &region,

@@ -761,6 +761,7 @@ public:
     BuildingTileCategory *catDoorFrames() const { return mCatDoorFrames; }
     BuildingTileCategory *catWindows() const { return mCatWindows; }
     BuildingTileCategory *catCurtains() const { return mCatCurtains; }
+    BuildingTileCategory *catShutters() const { return mCatShutters; }
     BuildingTileCategory *catStairs() const { return mCatStairs; }
     BuildingTileCategory *catRoofCaps() const { return mCatRoofCaps; }
     BuildingTileCategory *catRoofSlopes() const { return mCatRoofSlopes; }
@@ -779,6 +780,7 @@ public:
     BuildingTileEntry *defaultDoorFrameTile() const;
     BuildingTileEntry *defaultWindowTile() const;
     BuildingTileEntry *defaultCurtainsTile() const;
+    BuildingTileEntry *defaultShuttersTile() const;
     BuildingTileEntry *defaultStairsTile() const;
 
     BuildingTileEntry *defaultRoofCapTiles() const;

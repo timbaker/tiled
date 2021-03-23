@@ -87,34 +87,38 @@ BuildingMap::~BuildingMap()
         delete mShadowBuilding;
 }
 
-QString BuildingMap::buildingTileAt(int x, int y, int level, const QString &layerName)
+BuildingCell BuildingMap::buildingTileAt(int x, int y, int level, const QString &layerName)
 {
     CompositeLayerGroup *layerGroup = mBlendMapComposite->layerGroupForLevel(level);
 
-    QString tileName;
+    BuildingCell buildingCell;
 
     for (TileLayer *tl : layerGroup->layers()) {
         if (layerName == MapComposite::layerNameWithoutPrefix(tl)) {
             if (tl->contains(x, y)) {
-                Tile *tile = tl->cellAt(x, y).tile;
-                if (tile)
-                    tileName = BuildingTilesMgr::nameForTile(tile);
+                const Cell &cell = tl->cellAt(x, y);
+                if (!cell.isEmpty()) {
+                    buildingCell.mTileName = BuildingTilesMgr::nameForTile(cell.tile);
+                    buildingCell.mRotation = cell.rotation;
+                }
             }
             break;
         }
     }
 
-    return tileName;
+    return buildingCell;
 }
 
-QString BuildingMap::buildingTileAt(int x, int y, const QList<bool> visibleLevels)
+BuildingCell BuildingMap::buildingTileAt(int x, int y, const QList<bool> visibleLevels)
 {
     // x and y are scene coordinates
     // Perform per-pixel hit detection
     Tile *tile = nullptr;
+    MapRotation rotation = MapRotation::NotRotated;
 
     for (int level = 0; level < mBuilding->floorCount(); level++) {
-        if (!visibleLevels[level]) continue;
+        if (!visibleLevels[level])
+            continue;
         CompositeLayerGroup *lgBlend = mBlendMapComposite->layerGroupForLevel(level);
         CompositeLayerGroup *lg = mMapComposite->layerGroupForLevel(level);
         QPoint tilePos = mMapRenderer->pixelToTileCoordsInt(QPoint(x, y), level);
@@ -129,10 +133,14 @@ QString BuildingMap::buildingTileAt(int x, int y, const QList<bool> visibleLevel
                     QString layerName = MapComposite::layerNameWithoutPrefix(tl->name());
                     if (!mBuilding->floor(level)->layerVisibility(layerName))
                         continue;
-                    if (!tl->contains(tx, ty)) continue;
+                    if (!tl->contains(tx, ty))
+                        continue;
                     Tile *test = tl->cellAt(tx, ty).tile; // user tile
-                    if (!test)
+                    rotation = tl->cellAt(tx, ty).rotation;
+                    if (!test) {
                         test = tlBlend->cellAt(tx, ty).tile; // building tile
+                        rotation = tlBlend->cellAt(tx, ty).rotation;
+                    }
                     if (test) {
                         Tile *realTile = test;
                         if (test->image().isNull()) {
@@ -165,9 +173,10 @@ QString BuildingMap::buildingTileAt(int x, int y, const QList<bool> visibleLevel
         }
     }
 
-    if (tile)
-        return BuildingTilesMgr::nameForTile(tile);
-    return QString();
+    if (tile) {
+        return BuildingCell(BuildingTilesMgr::nameForTile(tile), rotation);
+    }
+    return BuildingCell();
 }
 
 // The order must match the BuildingFloor::Square::SquareSection constants.

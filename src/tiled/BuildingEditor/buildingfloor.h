@@ -18,6 +18,8 @@
 #ifndef BUILDINGFLOOR_H
 #define BUILDINGFLOOR_H
 
+#include "buildingcell.h"
+#include "buildingobjects.h"
 #include "maprotation.h"
 
 #include <QHash>
@@ -30,7 +32,6 @@
 
 namespace BuildingEditor {
 
-class BuildingObject;
 class Building;
 class BuildingTile;
 class BuildingTileEntry;
@@ -42,52 +43,6 @@ class RoofObject;
 class Room;
 class Stairs;
 class Window;
-
-// Equivalent of Tiled::Cell
-class BuildingCell
-{
-public:
-    BuildingCell()
-        : mRotation(Tiled::MapRotation::NotRotated)
-    {
-
-    }
-
-    BuildingCell(const QString &tileName, Tiled::MapRotation rotation)
-        : mTileName(tileName)
-        , mRotation(rotation)
-    {
-
-    }
-
-    bool isEmpty() const
-    {
-        return mTileName.isEmpty();
-    }
-
-    const QString& tileName() const
-    {
-        return mTileName;
-    }
-
-    Tiled::MapRotation rotation() const
-    {
-        return mRotation;
-    }
-
-    QString mTileName;
-    Tiled::MapRotation mRotation;
-};
-
-inline bool operator==(const BuildingCell& lhs, const BuildingCell& rhs)
-{
-    return lhs.mTileName == rhs.tileName() && lhs.mRotation == rhs.rotation();
-}
-
-inline bool operator!=(const BuildingCell& lhs, const BuildingCell& rhs)
-{
-    return !(lhs == rhs);
-}
 
 class FloorTileGrid
 {
@@ -226,6 +181,7 @@ public:
     bool mExterior;
     QVector<BuildingTile*> mTiles;
     QVector<Tiled::MapRotation> mRotation;
+    QVector<BuildingObject*> mObjects; // cached for faster lookup
 
     struct WallInfo {
         WallInfo(WallEdge edge) :
@@ -304,7 +260,7 @@ public:
     void ReplaceCurtains(Window *window, SquareSection section, int offset, Tiled::MapRotation rotation);
     void ReplaceShutters(Window *window, bool first, Tiled::MapRotation rotation);
     void ReplaceFurniture(BuildingTileEntry *tile, int offset = 0);
-    void ReplaceFurniture(BuildingTile *btile, SquareSection sectionMin, SquareSection sectionMax);
+    void ReplaceFurniture(BuildingTile *btile, SquareSection sectionMin, SquareSection sectionMax, Tiled::MapRotation rotation);
     void ReplaceRoof(BuildingTileEntry *tile, int offset = 0);
     void ReplaceRoofCap(BuildingTileEntry *tile, int offset = 0);
     void ReplaceRoofTop(BuildingTileEntry *tile, int offset);
@@ -360,6 +316,7 @@ public:
     Window *GetWindowAt(int x, int y);
     Stairs *GetStairsAt(int x, int y);
     FurnitureObject *GetFurnitureAt(int x, int y);
+    WallObject *GetWallObjectAt(int x, int y, BuildingObject::Direction dir);
 
     void SetRoomAt(int x, int y, Room *room);
 

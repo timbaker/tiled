@@ -367,10 +367,10 @@ void DrawTileTool::updateCursor(const QPointF &scenePos, bool force)
             for (int y = 0; y < mCursorTileBounds.height(); y++) {
                 // Building-generated tiles can't be replaced with nothing.
                 if (tiles->at(x, y).isEmpty()) {
-                    QString tileName = mEditor->buildingTileAt(
+                    BuildingCell buildingCell = mEditor->buildingTileAt(
                                 mCursorTileBounds.x() + x,
                                 mCursorTileBounds.y() + y);
-                    tiles->replace(x, y, BuildingCell(tileName, Tiled::MapRotation::NotRotated));
+                    tiles->replace(x, y, buildingCell);
                 }
             }
         }
@@ -410,8 +410,8 @@ void DrawTileTool::updateCursor(const QPointF &scenePos, bool force)
     if (mErasing) {
         for (int x = 0; x < r.width(); x++) {
             for (int y = 0; y < r.height(); y++) {
-                QString tileName = mEditor->buildingTileAt(r.x() + x, r.y() + y);
-                tiles.replace(x, y, BuildingCell(tileName, Tiled::MapRotation::NotRotated));
+                BuildingCell buildingCell = mEditor->buildingTileAt(r.x() + x, r.y() + y);
+                tiles.replace(x, y, buildingCell);
             }
         }
     } else {
@@ -448,7 +448,7 @@ void DrawTileTool::updateStatusText()
 
 /////
 
-SelectTileTool *SelectTileTool::mInstance = 0;
+SelectTileTool *SelectTileTool::mInstance = nullptr;
 
 SelectTileTool *SelectTileTool::instance()
 {
@@ -462,7 +462,7 @@ SelectTileTool::SelectTileTool() :
     mSelectionMode(Replace),
     mMouseDown(false),
     mMouseMoved(false),
-    mCursor(0)
+    mCursor(nullptr)
 {
     updateStatusText();
 }
@@ -635,10 +635,11 @@ PickTileTool::PickTileTool() :
 
 void PickTileTool::mousePressEvent(QGraphicsSceneMouseEvent *event)
 {
-    QString tileName = mEditor->tileUnderPoint(event->scenePos().x(),
+    BuildingCell buildingCell = mEditor->tileUnderPoint(event->scenePos().x(),
                                                event->scenePos().y());
-    if (!tileName.isEmpty())
-        emit tilePicked(tileName);
+    if (!buildingCell.isEmpty()) {
+        emit tilePicked(buildingCell.tileName());
+    }
 }
 
 void PickTileTool::mouseMoveEvent(QGraphicsSceneMouseEvent *event)

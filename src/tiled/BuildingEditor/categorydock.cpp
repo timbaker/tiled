@@ -184,16 +184,16 @@ void CategoryDock::currentDocumentChanged(BuildingDocument *doc)
     mCurrentDocument = doc;
 
     if (mCurrentDocument) {
-        connect(mCurrentDocument, SIGNAL(currentRoomChanged()),
-                SLOT(currentRoomChanged()));
-        connect(mCurrentDocument, SIGNAL(usedFurnitureChanged()),
-                SLOT(usedFurnitureChanged()));
-        connect(mCurrentDocument, SIGNAL(usedTilesChanged()),
-                SLOT(usedTilesChanged()));
-        connect(mCurrentDocument, SIGNAL(selectedObjectsChanged()),
-                SLOT(selectCurrentCategoryTile()));
-        connect(mCurrentDocument, SIGNAL(objectPicked(BuildingObject*)),
-                SLOT(objectPicked(BuildingObject*)));
+        connect(mCurrentDocument, &BuildingDocument::currentRoomChanged,
+                this, &CategoryDock::currentRoomChanged);
+        connect(mCurrentDocument, &BuildingDocument::usedFurnitureChanged,
+                this, &CategoryDock::usedFurnitureChanged);
+        connect(mCurrentDocument, &BuildingDocument::usedTilesChanged,
+                this, &CategoryDock::usedTilesChanged);
+        connect(mCurrentDocument, &BuildingDocument::selectedObjectsChanged,
+                this, &CategoryDock::selectCurrentCategoryTile);
+        connect(mCurrentDocument, &BuildingDocument::objectPicked,
+                this, &CategoryDock::objectPicked);
     }
 
     if (ui->categoryList->currentRow() < 2)
@@ -999,32 +999,46 @@ void CategoryDock::furnitureSelectionChanged()
 void CategoryDock::objectPicked(BuildingObject *object)
 {
     mPicking = true; // hack for alt-picking with WallTool
-    if (FurnitureObject *fobj = object->asFurniture())
+    if (Door *door = object->asDoor()) {
+        selectAndDisplay(BuildingTilesMgr::instance()->catDoorFrames(), door->frameTile());
+        selectAndDisplay(BuildingTilesMgr::instance()->catDoors(), door->tile());
+    } else if (FurnitureObject *fobj = object->asFurniture()) {
         selectAndDisplay(fobj->furnitureTile());
-    else if (WallObject *wobj = object->asWall()) {
-        selectAndDisplay(wobj->tile(WallObject::TileExterior));
-        selectAndDisplay(wobj->tile(WallObject::TileInterior));
-    } else
-        selectAndDisplay(object->tile());
+    } else if (WallObject *wobj = object->asWall()) {
+        selectAndDisplay(BuildingTilesMgr::instance()->catEWalls(), wobj->tile(WallObject::TileExterior));
+        selectAndDisplay(BuildingTilesMgr::instance()->catIWalls(), wobj->tile(WallObject::TileInterior));
+    } else if (Window *window = object->asWindow()) {
+        selectAndDisplay(BuildingTilesMgr::instance()->catCurtains(), window->curtainsTile());
+        selectAndDisplay(BuildingTilesMgr::instance()->catShutters(), window->shuttersTile());
+        selectAndDisplay(BuildingTilesMgr::instance()->catWindows(), window->tile());
+    } else if (object->tile()) {
+        selectAndDisplay(object->tile()->category(), object->tile());
+    }
     mPicking = false;
 }
 
-void CategoryDock::selectAndDisplay(BuildingTileEntry *entry)
+void CategoryDock::selectAndDisplay(BuildingTileCategory *category, BuildingTileEntry *entry)
 {
-    if (!entry)
-        return;
+    int row = mRowOfFirstCategory + BuildingTilesMgr::instance()->indexOf(category);
 
-    int row = mRowOfFirstCategory;
-    foreach (BuildingTileCategory *category, BuildingTilesMgr::instance()->categories()) {
-        if (category->entries().contains(entry)) {
+    if (!entry || entry->isNone()) {
+        if (category->canAssignNone()) {
             ui->categoryList->setCurrentRow(row);
             QModelIndex index = ui->tilesetView->model()->index((void*)entry);
             ui->tilesetView->setCurrentIndex(index);
             QMetaObject::invokeMethod(this, "scrollToNow", Qt::QueuedConnection,
                                       Q_ARG(int, 0), Q_ARG(QModelIndex, index));
-            return;
         }
-        ++row;
+        return;
+    }
+
+    if (category->entries().contains(entry)) {
+        ui->categoryList->setCurrentRow(row);
+        QModelIndex index = ui->tilesetView->model()->index((void*)entry);
+        ui->tilesetView->setCurrentIndex(index);
+        QMetaObject::invokeMethod(this, "scrollToNow", Qt::QueuedConnection,
+                                  Q_ARG(int, 0), Q_ARG(QModelIndex, index));
+        return;
     }
 
     ui->categoryList->setCurrentRow(0); // Used Tiles

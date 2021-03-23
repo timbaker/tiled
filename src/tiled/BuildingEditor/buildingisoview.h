@@ -158,16 +158,16 @@ class BuildingIsoScene : public BuildingBaseScene
     Q_OBJECT
 public:
     BuildingIsoScene(QObject *parent = nullptr);
-    ~BuildingIsoScene();
+    ~BuildingIsoScene() override;
 
     Tiled::MapRenderer *mapRenderer() const;
 
-    void mouseDoubleClickEvent(QGraphicsSceneMouseEvent *event)
+    void mouseDoubleClickEvent(QGraphicsSceneMouseEvent *event) override
     { mousePressEvent(event); }
 
-    void mousePressEvent(QGraphicsSceneMouseEvent *event);
-    void mouseMoveEvent(QGraphicsSceneMouseEvent *event);
-    void mouseReleaseEvent(QGraphicsSceneMouseEvent *event);
+    void mousePressEvent(QGraphicsSceneMouseEvent *event) override;
+    void mouseMoveEvent(QGraphicsSceneMouseEvent *event) override;
+    void mouseReleaseEvent(QGraphicsSceneMouseEvent *event) override;
 
     void setDocument(BuildingDocument *doc);
     void clearDocument();
@@ -177,39 +177,39 @@ public:
     bool currentFloorContains(const QPoint &tilePos, int dw = 0, int dh = 0);
 
     void setToolTiles(const FloorTileGrid *tiles,
-                      const QPoint &pos, const QString &layerName);
-    void clearToolTiles();
+                      const QPoint &pos, const QString &layerName) override;
+    void clearToolTiles() override;
 
-    QString buildingTileAt(int x, int y);
-    QString tileUnderPoint(int x, int y);
+    BuildingCell buildingTileAt(int x, int y) override;
+    BuildingCell tileUnderPoint(int x, int y) override;
 
     void drawTileSelection(QPainter *painter, const QRegion &region,
                            const QColor &color, const QRectF &exposed,
-                           int level = 0) const;
+                           int level = 0) const override;
 
-    void setHighlightRoomLock(bool lock)
+    void setHighlightRoomLock(bool lock) override
     { mHighlightRoomLock = lock; }
 
-    void setCursorObject(BuildingObject *object);
-    void dragObject(BuildingFloor *floor, BuildingObject *object, const QPoint &offset);
-    void resetDrag(BuildingFloor *floor, BuildingObject *object);
-    void changeFloorGrid(BuildingFloor *floor, const QVector<QVector<Room*> > &grid);
-    void resetFloorGrid(BuildingFloor *floor);
-    void changeUserTiles(BuildingFloor *floor, const QMap<QString,FloorTileGrid*> &tiles);
-    void resetUserTiles(BuildingFloor *floor);
+    void setCursorObject(BuildingObject *object) override;
+    void dragObject(BuildingFloor *floor, BuildingObject *object, const QPoint &offset) override;
+    void resetDrag(BuildingFloor *floor, BuildingObject *object) override;
+    void changeFloorGrid(BuildingFloor *floor, const QVector<QVector<Room*> > &grid) override;
+    void resetFloorGrid(BuildingFloor *floor) override;
+    void changeUserTiles(BuildingFloor *floor, const QMap<QString,FloorTileGrid*> &tiles) override;
+    void resetUserTiles(BuildingFloor *floor) override;
 
-    bool shouldShowFloorItem(BuildingFloor *floor) const;
-    bool shouldShowObjectItem(BuildingObject *object) const;
+    bool shouldShowFloorItem(BuildingFloor *floor) const override;
+    bool shouldShowObjectItem(BuildingObject *object) const override;
 
     void setShowBuildingTiles(bool show);
     void setShowUserTiles(bool show);
-    void setEditingTiles(bool editing);
+    void setEditingTiles(bool editing) override;
     bool editingTiles() const { return mEditingTiles; }
 
     void setCursorPosition(const QPoint &pos);
 
 protected:
-    void setRotationDerive()/* override*/;
+    void setRotationDerive() override;
 
 private:
     void BuildingToMap();

@@ -34,8 +34,18 @@
 using namespace BuildingEditor;
 
 #define VERSION1 1
+
+// version="2"
+// BuildingTileEntry rewrite
+// added FurnitureTiles::mCorners
 #define VERSION2 2
-#define VERSION_LATEST VERSION2
+
+// Renamed some layers
+// Reversed WallObject direction
+// user_tile index encodes rotation
+#define VERSION3 3
+
+#define VERSION_LATEST VERSION3
 
 #if defined(Q_OS_WIN) && (_MSC_VER >= 1600)
 // Hmmmm.  libtiled.dll defines the Properties class as so:
