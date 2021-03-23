@@ -142,8 +142,8 @@ void BaseTool::makeCurrent()
 
 void BaseTool::activate()
 {
-    connect(document(), SIGNAL(objectAboutToBeRemoved(BuildingObject*)),
-            SLOT(objectAboutToBeRemoved(BuildingObject*)));
+    connect(document(), &BuildingDocument::objectAboutToBeRemoved,
+            this, &BaseTool::objectAboutToBeRemoved);
 }
 
 void BaseTool::deactivate()
@@ -196,8 +196,8 @@ void ToolManager::activateTool(BaseTool *tool)
     mCurrentTool = tool;
 
     if (mCurrentTool) {
-        connect(mCurrentTool, SIGNAL(statusTextChanged()),
-                SLOT(currentToolStatusTextChanged()));
+        connect(mCurrentTool, &BaseTool::statusTextChanged,
+                this, &ToolManager::currentToolStatusTextChanged);
         Q_ASSERT(mCurrentEditor != nullptr);
         mCurrentTool->setEditor(mCurrentEditor);
         mCurrentTool->action()->setChecked(true);

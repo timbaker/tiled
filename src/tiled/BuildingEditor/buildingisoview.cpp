@@ -250,25 +250,25 @@ BuildingIsoScene::BuildingIsoScene(QObject *parent) :
     mDarkRectangle->setVisible(false);
     addItem(mDarkRectangle);
 
-    connect(BuildingTilesMgr::instance(), SIGNAL(tilesetAdded(Tiled::Tileset*)),
-            SLOT(tilesetAdded(Tiled::Tileset*)));
-    connect(BuildingTilesMgr::instance(), SIGNAL(tilesetAboutToBeRemoved(Tiled::Tileset*)),
-            SLOT(tilesetAboutToBeRemoved(Tiled::Tileset*)));
-    connect(BuildingTilesMgr::instance(), SIGNAL(tilesetRemoved(Tiled::Tileset*)),
-            SLOT(tilesetRemoved(Tiled::Tileset*)));
+    connect(BuildingTilesMgr::instance(), &BuildingTilesMgr::tilesetAdded,
+            this, &BuildingIsoScene::tilesetAdded);
+    connect(BuildingTilesMgr::instance(), &BuildingTilesMgr::tilesetAboutToBeRemoved,
+            this, &BuildingIsoScene::tilesetAboutToBeRemoved);
+    connect(BuildingTilesMgr::instance(), &BuildingTilesMgr::tilesetRemoved,
+            this, &BuildingIsoScene::tilesetRemoved);
 
-    connect(TilesetManager::instance(), SIGNAL(tilesetChanged(Tileset*)),
-            SLOT(tilesetChanged(Tileset*)));
+    connect(TilesetManager::instance(), &TilesetManager::tilesetChanged,
+            this, &BuildingIsoScene::tilesetChanged);
 
-    connect(prefs(), SIGNAL(highlightFloorChanged(bool)),
-            SLOT(highlightFloorChanged(bool)));
-    connect(prefs(), SIGNAL(highlightRoomChanged(bool)),
-            SLOT(highlightRoomChanged(bool)));
-    connect(prefs(), SIGNAL(showLowerFloorsChanged(bool)),
-            SLOT(showLowerFloorsChanged(bool)));
+    connect(prefs(), &BuildingPreferences::highlightFloorChanged,
+            this, &BuildingIsoScene::highlightFloorChanged);
+    connect(prefs(), &BuildingPreferences::highlightRoomChanged,
+            this, &BuildingIsoScene::highlightRoomChanged);
+    connect(prefs(), &BuildingPreferences::showLowerFloorsChanged,
+            this, &BuildingIsoScene::showLowerFloorsChanged);
 
-    connect(ToolManager::instance(), SIGNAL(currentToolChanged(BaseTool*)),
-            SLOT(currentToolChanged(BaseTool*)));
+    connect(ToolManager::instance(), &ToolManager::currentToolChanged,
+            this, &BuildingIsoScene::currentToolChanged);
 }
 
 BuildingIsoScene::~BuildingIsoScene()

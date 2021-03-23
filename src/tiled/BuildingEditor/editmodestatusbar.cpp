@@ -37,12 +37,12 @@ EditModeStatusBar::EditModeStatusBar(const QString &prefix, QObject *parent) :
     editorScaleComboBox->setObjectName(prefix + QLatin1String("editorScaleComboBox"));
     statusBarLayout->addWidget(editorScaleComboBox);
 
-    connect(BuildingDocumentMgr::instance(), SIGNAL(currentDocumentChanged(BuildingDocument*)),
-            SLOT(resizeCoordsLabel()));
-    connect(ToolManager::instance(), SIGNAL(statusTextChanged(BaseTool*)),
-            SLOT(updateToolStatusText()));
-    connect(ToolManager::instance(), SIGNAL(currentToolChanged(BaseTool*)),
-            SLOT(currentToolChanged(BaseTool*)));
+    connect(BuildingDocumentMgr::instance(), &BuildingDocumentMgr::currentDocumentChanged,
+            this, &EditModeStatusBar::resizeCoordsLabel);
+    connect(ToolManager::instance(), &ToolManager::statusTextChanged,
+            this, &EditModeStatusBar::updateToolStatusText);
+    connect(ToolManager::instance(), &ToolManager::currentToolChanged,
+            this, &EditModeStatusBar::currentToolChanged);
 }
 
 void EditModeStatusBar::resizeCoordsLabel()

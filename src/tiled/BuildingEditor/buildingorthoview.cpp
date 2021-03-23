@@ -1309,8 +1309,8 @@ BuildingOrthoScene::BuildingOrthoScene(QObject *parent) :
 
     setBackgroundBrush(Qt::black);
 
-    connect(ToolManager::instance(), SIGNAL(currentToolChanged(BaseTool*)),
-            SLOT(currentToolChanged(BaseTool*)));
+    connect(ToolManager::instance(), &ToolManager::currentToolChanged,
+            this, &BuildingOrthoScene::currentToolChanged);
 
     // Install an event filter so that we can get key events on behalf of the
     // active tool without having to have the current focus.
