@@ -289,7 +289,7 @@ void CategoryDock::categorySelectionChanged()
             // Sort by category + index
             QList<BuildingTileCategory*> categories;
             QMap<QString,BuildingTileEntry*> entryMap;
-            foreach (BuildingTileEntry *entry, currentBuilding()->usedTiles()) {
+            for (BuildingTileEntry *entry : currentBuilding()->usedTiles()) {
                 BuildingTileCategory *category = entry->category();
                 int categoryIndex = BuildingTilesMgr::instance()->indexOf(category);
                 int index = category->indexOf(entry) + 1;
@@ -300,7 +300,7 @@ void CategoryDock::categorySelectionChanged()
             }
 
             // Add "none" tile first in each category where it is allowed.
-            foreach (BuildingTileCategory *category, categories) {
+            for (BuildingTileCategory *category : categories) {
                 int categoryIndex = BuildingTilesMgr::instance()->indexOf(category);
                 QString key = paddedNumber(categoryIndex) + QLatin1String("_") + paddedNumber(0);
                 entryMap[key] = category->noneTileEntry();
@@ -323,13 +323,13 @@ void CategoryDock::categorySelectionChanged()
             ui->tilesetView->scrollToTop();
             ui->categoryStack->setCurrentIndex(0);
 
-            connect(mActionClearUsed, SIGNAL(triggered()), SLOT(resetUsedTiles()));
+            connect(mActionClearUsed, &QAction::triggered, this, &CategoryDock::resetUsedTiles);
             ui->tilesetView->setContextMenu(mUsedContextMenu);
         } else if (row == 1) { // Used Furniture
             if (!mCurrentDocument) return;
             QMap<QString,FurnitureTiles*> furnitureMap;
             int index = 0;
-            foreach (FurnitureTiles *ftiles, currentBuilding()->usedFurniture()) {
+            for (FurnitureTiles *ftiles : currentBuilding()->usedFurniture()) {
                 // Sort by category name + index
                 QString key = tr("<No Group>") + QString::number(index++);
                 if (FurnitureGroup *g = ftiles->group()) {
@@ -342,7 +342,7 @@ void CategoryDock::categorySelectionChanged()
             ui->furnitureView->scrollToTop();
             ui->categoryStack->setCurrentIndex(1);
 
-            connect(mActionClearUsed, SIGNAL(triggered()), SLOT(resetUsedFurniture()));
+            connect(mActionClearUsed, &QAction::triggered, this, &CategoryDock::resetUsedFurniture);
             ui->furnitureView->setContextMenu(mUsedContextMenu);
         } else if ((mCategory = categoryAt(row))) {
 #if 1
@@ -352,7 +352,7 @@ void CategoryDock::categorySelectionChanged()
             }
             QMap<QString,BuildingTileEntry*> entryMap;
             int i = 0;
-            foreach (BuildingTileEntry *entry, mCategory->entries()) {
+            for (BuildingTileEntry *entry : mCategory->entries()) {
                 QString key = entry->displayTile()->name() + QString::number(i++);
                 entryMap[key] = entry;
             }

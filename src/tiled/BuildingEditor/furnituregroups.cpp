@@ -17,7 +17,9 @@
 
 #include "furnituregroups.h"
 
+#ifndef WORLDED
 #include "buildingpreferences.h"
+#endif
 #include "buildingtiles.h"
 #include "buildingfloor.h"
 #include "simplefile.h"

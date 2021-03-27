@@ -1058,7 +1058,8 @@ TileRotationWindow::TileRotationWindow(QWidget *parent) :
     mCurrentVisualRotation(MapRotation::NotRotated),
     mCurrentTileset(nullptr),
     mUndoGroup(new QUndoGroup(this)),
-    mUndoStack(new QUndoStack(this))
+    mUndoStack(new QUndoStack(this)),
+    mTileContextMenu(new QMenu(this))
 {
     ui->setupUi(this);
 
@@ -1133,6 +1134,10 @@ TileRotationWindow::TileRotationWindow(QWidget *parent) :
     ui->tilesetTilesView->setDragEnabled(true);
 //    connect(ui->tilesetTilesView->selectionModel(), &QItemSelectionModel::selectionChanged, this, &TileRotationWindow::syncUI);
     connect(ui->tilesetTilesView, &MixedTilesetView::activated, this, &TileRotationWindow::tileActivated);
+
+    QAction *action1 = mTileContextMenu->addAction(tr("Add Floor"));
+    connect(action1, &QAction::triggered, this, &TileRotationWindow::tileContextMenu_AddFloor);
+    ui->tilesetTilesView->setContextMenu(mTileContextMenu);
 
     ui->visualDataView->setZoomable(mZoomable);
     ui->visualDataView->setAcceptDrops(true);
@@ -1651,6 +1656,42 @@ void TileRotationWindow::changeDataOffsetDY(bool dy)
     changeDataOffset(-1, dy ? 1 : 0);
 }
 
+void TileRotationWindow::tileContextMenu_AddFloor()
+{
+    QModelIndex tileIndex = ui->tilesetTilesView->currentIndex();
+    Tile *tile = ui->tilesetTilesView->model()->tileAt(tileIndex);
+    if (tile == nullptr)
+        return;
+
+    mUndoStack->beginMacro(tr("Add Floor"));
+    QSharedPointer<TileRotatedVisual> visual(new TileRotatedVisual());
+    visual->mUuid = QUuid::createUuid();
+
+    QString tileName = BuildingTilesMgr::instance()->nameForTile(tile);
+    TileRotatedVisualData &dataR0 = visual->mData[0];
+    dataR0.addTile(tileName);
+    dataR0.mEdges[0] = TileRotatedVisualEdge::Floor;
+
+    TileRotatedVisualData &dataR90 = visual->mData[1];
+    dataR90.addTile(tileName);
+    dataR90.mEdges[0] = TileRotatedVisualEdge::Floor;
+
+    TileRotatedVisualData &dataR180 = visual->mData[2];
+    dataR180.addTile(tileName);
+    dataR180.mEdges[0] = TileRotatedVisualEdge::Floor;
+
+    TileRotatedVisualData &dataR270 = visual->mData[3];
+    dataR270.addTile(tileName);
+    dataR270.mEdges[0] = TileRotatedVisualEdge::Floor;
+
+    mUndoStack->push(new CreateVisual(this, mVisuals.size(), visual));
+
+    TileRotated *tileR = getOrCreateTileRotatedForTileReal(tile);
+    mUndoStack->push(new AssignVisual(this, tileR, visual, Tiled::MapRotation::NotRotated));
+
+    mUndoStack->endMacro();
+}
+
 void TileRotationWindow::displayTileInTileset(Tiled::Tile *tile)
 {
     if (tile == nullptr)
@@ -1674,10 +1715,7 @@ void TileRotationWindow::setVisualList()
     QList<QSharedPointer<TileRotatedVisual>> visuals;
     if (mCurrentTileset != nullptr) {
         if (TilesetRotated *tilesetR = mTilesetByName[mCurrentTileset->name()]) {
-            for (int i = 0; i < tilesetR->mTileByID.size(); i++) {
-                TileRotated *tileR = tilesetR->mTileByID[i];
-                if (tileR == nullptr)
-                    continue;
+            for (TileRotated *tileR : tilesetR->mTiles) {
                 if (tileR->mVisual && !visualSet.contains(tileR->mVisual.data())) {
                     visuals += tileR->mVisual;
                     visualSet += tileR->mVisual.data();
@@ -1990,6 +2028,7 @@ TileRotationWindow::AssignedVisual TileRotationWindow::assignVisual(TileRotated 
         mUnassignedVisuals.removeAll(visual);
     }
     updateUsedTiles();
+    setVisualList();
     return old;
 }
 

@@ -131,8 +131,13 @@ void MapsDock::selectionChanged()
     }
     QModelIndex index = selectedRows.first();
     QString path = mMapsView->model()->filePath(index);
-    if (QFileInfo(path).isDir())
+    QFileInfo info(path);
+    if (info.isDir())
         return;
+#ifdef WORLDED
+    if (info.suffix() == QLatin1String("pzw"))
+        return;
+#endif
     MapImage *mapImage = MapImageManager::instance()->getMapImage(path);
     if (mapImage) {
         if (mapImage->isLoaded()) {

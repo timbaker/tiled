@@ -65,6 +65,10 @@ public:
     void prepareDrawing2();
     bool orderedCellsAt2(const QPoint &pos, QVector<const Tiled::Cell*>& cells) const;
 
+#ifdef WORLDED
+    void prepareDrawingNoBmpBlender(const Tiled::MapRenderer *renderer, const QRect &rect);
+#endif
+
     bool setLayerVisibility(const QString &layerName, bool visible);
     bool setLayerVisibility(Tiled::TileLayer *tl, bool visible);
     bool isLayerVisible(Tiled::TileLayer *tl);
@@ -210,6 +214,10 @@ public:
                          bool creating = false);
     void removeMap(MapComposite *subMap);
     void moveSubMap(MapComposite *subMap, const QPoint &pos);
+
+#ifdef WORLDED
+    void sortSubMaps(const QVector<MapComposite *> &order);
+#endif
 
     Tiled::Map *map() const { return mMap; }
     MapInfo *mapInfo() const { return mMapInfo; }

@@ -192,18 +192,6 @@ public:
         polygon << tileToPixelCoords(rect.topRight(), level);
         polygon << tileToPixelCoords(rect.bottomRight(), level);
         polygon << tileToPixelCoords(rect.bottomLeft(), level);
-#if 0
-        int n = 0;
-        for (int i = 0; i < polygon.size(); i++) {
-            const QPointF& p1 = polygon[i];
-            const QPointF& p2 = polygon[(i + 1) % polygon.size()];
-            n += (p2.x() - p1.x()) * (p2.y() + p1.y());
-        }
-        if (n < 0) {
-            // counter-clockwise -> closwise
-            std::reverse(polygon.begin(), polygon.end());
-        }
-#endif
         return polygon;
     }
 

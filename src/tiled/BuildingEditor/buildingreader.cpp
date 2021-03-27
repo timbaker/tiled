@@ -384,8 +384,6 @@ private:
 
     QSet<BuildingTileCategory*> deadCategories;
 
-//    void fixTileRotationLayerNames(Building *building);
-
     QXmlStreamReader xml;
 };
 
@@ -1289,8 +1287,6 @@ void BuildingReaderPrivate::fix(Building *building)
     qDeleteAll(deadFurniture);
     qDeleteAll(deadCategories);
     qDeleteAll(deadTiles);
-
-//    fixTileRotationLayerNames(building);
 }
 
 FurnitureTiles *BuildingReaderPrivate::fixFurniture(FurnitureTiles *ftiles)

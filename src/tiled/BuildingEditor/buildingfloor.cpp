@@ -472,16 +472,6 @@ static void SetDoor(Door *door, QVector<QVector<BuildingSquare> > &squares)
         Q_ASSERT(false);
         break;
     }
-#if 0
-    squares[x][y].ReplaceDoor(door->tile(),
-                              door->isW() ? BuildingSquare::SquareSection::SectionDoorW
-                                          : BuildingSquare::SquareSection::SectionDoorN,
-                              door->isW() ? BTC_Doors::West
-                                          : BTC_Doors::North);
-    squares[x][y].ReplaceFrame(door->frameTile(),
-                               door->isW() ? BTC_DoorFrames::West
-                                           : BTC_DoorFrames::North);
-#endif
 }
 
 static void SetWindow(Window *window, QVector<QVector<BuildingSquare> > &squares)
@@ -2328,7 +2318,7 @@ TileDefWatcher::TileDefWatcher() :
     tileDefFileChecked(false),
     watching(false)
 {
-    connect(mWatcher, SIGNAL(fileChanged(QString)), SLOT(fileChanged(QString)));
+    connect(mWatcher, &FileSystemWatcher::fileChanged, this, &TileDefWatcher::fileChanged);
 }
 
 

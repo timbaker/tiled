@@ -633,28 +633,6 @@ void BuildingMap::BuildingSquaresToTileLayers(BuildingFloor *floor,
                         continue;
                     }
                     BuildingTile *buildingTile = entry->tile(tileOffset);
-#if 1
-#elif 0
-                    if (square.mRotation[section] != MapRotation::NotRotated) {
-                        if (TileRotation::instance()->hasTileRotated(buildingTile->mTilesetName, buildingTile->mIndex)) {
-                            QString tileName = QString(QLatin1Literal("%1_R%2_%3")).arg(buildingTile->mTilesetName).arg(int(square.mRotation[section]) * 90).arg(buildingTile->mIndex);
-                            buildingTile = BuildingTilesMgr::instance()->get(tileName);
-                        }
-                    }
-#else
-                    // HACK
-                    if (!buildingTile->isNone()) {
-                        if (section == BuildingSquare::SquareSection::SectionWall3 ||
-                                section == BuildingSquare::SquareSection::SectionWall4 ||
-                                section == BuildingSquare::SquareSection::SectionWallTrim3 ||
-                                section == BuildingSquare::SquareSection::SectionWallTrim4) {
-                            if (TileRotation::instance()->hasTileRotated(buildingTile->mTilesetName, buildingTile->mIndex)) {
-                                QString tileName = buildingTile->mTilesetName + QLatin1Literal("_R180_") + QString::number(buildingTile->mIndex);
-                                buildingTile = BuildingTilesMgr::instance()->get(tileName);
-                            }
-                        }
-                    }
-#endif
                     if (Tiled::Tile *tile = BuildingTilesMgr::instance()->tileFor(buildingTile)) {
                         tl->setCell(x + offset, y + offset, Cell(tile, rotation));
                     }

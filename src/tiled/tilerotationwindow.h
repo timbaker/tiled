@@ -124,6 +124,8 @@ protected slots:
     void changeDataOffsetDX(bool dx);
     void changeDataOffsetDY(bool dy);
 
+    void tileContextMenu_AddFloor();
+
 private:
     Ui::TileRotationWindow *ui;
     QString mFileName;
@@ -140,6 +142,7 @@ private:
     QList<QSharedPointer<Tiled::TileRotatedVisual>> mUnassignedVisuals;
     QMap<QString, Tiled::Tileset*> mFakeTilesetLookup;
     QMap<QString, Tiled::TilesetRotated*> mTilesetByName;
+    QMenu *mTileContextMenu;
     bool mSynchingUI = false;
 
     friend class AssignVisual;

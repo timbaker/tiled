@@ -18,10 +18,14 @@
 #include "buildingtmx.h"
 
 #include "building.h"
+#ifndef WORLDED
 #include "buildingeditorwindow.h"
+#endif
 #include "buildingfloor.h"
 #include "buildingmap.h"
+#ifndef WORLDED
 #include "buildingpreferences.h"
+#endif
 #include "buildingtemplates.h"
 #include "simplefile.h"
 

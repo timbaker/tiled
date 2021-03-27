@@ -17,7 +17,11 @@
 
 #include "tilesetstxtfile.h"
 
+#ifdef WORLDED
+#include "simplefile.h"
+#else
 #include "BuildingEditor/simplefile.h"
+#endif
 
 #include <QFileInfo>
 #include <QSet>

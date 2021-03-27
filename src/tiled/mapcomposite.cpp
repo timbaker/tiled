@@ -97,10 +97,7 @@ CompositeLayerGroup::CompositeLayerGroup(MapComposite *owner, int level)
     , mAnyVisibleLayers(false)
     , mNeedsSynch(true)
     , mNoBlendCell(Tiled::Internal::TilesetManager::instance()->noBlendTile())
-#if 1 // ROAD_CRUD
-    , mRoadLayer0(0)
-    , mRoadLayer1(0)
-#endif // ROAD_CRUD
+
 {
 
 }
@@ -381,25 +378,6 @@ bool CompositeLayerGroup::orderedCellsAt2(const QPoint &pos, QVector<const Cell 
 #endif // BUILDINGED
         QPoint subPos = pos - mOwner->orientAdjustTiles() * mLevel;
         if (tl->contains(subPos)) {
-#if WORLDED // ROAD_CRUD
-            if (tl == mRoadLayer0 || tl == mRoadLayer1) {
-                const Cell *cell = (tl == mRoadLayer0)
-                        ? &mOwner->roadLayer0()->cellAt(subPos)
-                        : &mOwner->roadLayer1()->cellAt(subPos);
-                if (!cell->isEmpty()) {
-                    if (!cleared) {
-                        bool isFloor = !mLevel && !index && (tl->name() == sFloor);
-                        if (isFloor) root->mKeepFloorLayerCount = 0;
-                        cells.resize(root->mKeepFloorLayerCount);
-                        cleared = true;
-                    }
-                    cells.append(cell);
-                    if (mMaxFloorLayer >= index)
-                        mOwner->mKeepFloorLayerCount = cells.size();
-                    continue;
-                }
-            }
-#endif // ROAD_CRUD
             const Cell *cell = &tl->cellAt(subPos);
             if (tlBmpBlend && tlBmpBlend->contains(subPos) && !tlBmpBlend->cellAt(subPos).isEmpty()) {
                 if (!noBlend || !noBlend->get(subPos)) {
@@ -440,6 +418,25 @@ bool CompositeLayerGroup::orderedCellsAt2(const QPoint &pos, QVector<const Cell 
 
     return !cells.isEmpty();
 }
+
+#ifdef WORLDED
+void CompositeLayerGroup::prepareDrawingNoBmpBlender(const MapRenderer *renderer, const QRect &rect)
+{
+    mPreparedSubMapLayers.resize(0);
+    for (MapComposite *subMap : mOwner->subMaps()) {
+        int levelOffset = subMap->levelOffset();
+        CompositeLayerGroup *layerGroup = subMap->tileLayersForLevel(mLevel - levelOffset);
+        if (layerGroup == nullptr) {
+            continue;
+        }
+        QRectF bounds = layerGroup->boundingRect(renderer);
+        if ((bounds & rect).isValid()) {
+            mPreparedSubMapLayers.append(SubMapLayers(subMap, layerGroup));
+            layerGroup->prepareDrawingNoBmpBlender(renderer, rect);
+        }
+    }
+}
+#endif
 
 bool CompositeLayerGroup::isLayerEmpty(int index) const
 {
@@ -1045,8 +1042,8 @@ MapComposite::MapComposite(MapInfo *mapInfo, Map::Orientation orientRender,
                                                                           QFileInfo(mMapInfo->path()).absolutePath());
                     if (!subMapInfo) {
                         qDebug() << "failed to find sub-map" << object->type() << "inside map" << mMapInfo->path();
-#if 0 // FIXME: attempt to load this if mapsDirectory changes
-                        subMapInfo = MapManager::instance()->getPlaceholderMap(object->type(), mMap->orientation(),
+#ifdef WORLDED // FIXME: attempt to load this if mapsDirectory changes
+                        subMapInfo = MapManager::instance()->getPlaceholderMap(object->type(),
                                                                                32, 32); // FIXME: calculate map size
 #endif
                     }
@@ -1170,6 +1167,25 @@ void MapComposite::moveSubMap(MapComposite *subMap, const QPoint &pos)
     foreach (CompositeLayerGroup *layerGroup, mLayerGroups)
         layerGroup->setNeedsSynch(true);
 }
+
+#ifdef WORLDED
+void MapComposite::sortSubMaps(const QVector<MapComposite *> &order)
+{
+    std::sort(mSubMaps.begin(), mSubMaps.end(), [order,this](MapComposite *a, MapComposite *b) {
+        int indexA = order.indexOf(a);
+        int indexB = order.indexOf(b);
+        if (indexA == -1)
+            indexA = mSubMaps.indexOf(a);
+        if (indexB == -1)
+            indexB = mSubMaps.indexOf(b);
+        return indexA < indexB;
+    });
+
+    for (CompositeLayerGroup *layerGroup : mLayerGroups) {
+        layerGroup->setNeedsSynch(true);
+    }
+}
+#endif
 
 void MapComposite::layerAdded(int z, int index)
 {
@@ -1345,7 +1361,11 @@ QRectF MapComposite::boundingRect(MapRenderer *renderer, bool forceMapBounds) co
         // When setting the bounds of the scene, make sure the highest level is included
         // in the sceneRect() so the grid won't be cut off.
         int maxLevel = levelRecursive() + mMaxLevel;
+#ifdef WORLDED
+        if (mParent /*!mMapInfo->isBeingEdited()*/) {
+#else
         if (!mMapInfo->isBeingEdited()) {
+#endif
             maxLevel = levelRecursive();
             foreach (CompositeLayerGroup *layerGroup, mSortedLayerGroups) {
                 if (!layerGroup->bounds().isEmpty())
@@ -1669,8 +1689,8 @@ void MapComposite::recreate()
                                                                           true, MapManager::PriorityLow);
                     if (!subMapInfo) {
                         qDebug() << "failed to find sub-map" << object->type() << "inside map" << mMapInfo->path();
-#if 0 // FIXME: attempt to load this if mapsDirectory changes
-                        subMapInfo = MapManager::instance()->getPlaceholderMap(object->type(), mMap->orientation(),
+#ifdef WORLDED // FIXME: attempt to load this if mapsDirectory changes
+                        subMapInfo = MapManager::instance()->getPlaceholderMap(object->type(),
                                                                                32, 32); // FIXME: calculate map size
 #endif
                     }
