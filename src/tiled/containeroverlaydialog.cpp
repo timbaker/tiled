@@ -408,6 +408,10 @@ AbstractOverlayDialog::AbstractOverlayDialog(QWidget *parent) :
     connect(TilesetManager::instance(), SIGNAL(tilesetChanged(Tileset*)),
             SLOT(tilesetChanged(Tileset*)));
 
+    ui->tilesetFilter->setClearButtonEnabled(true);
+    ui->tilesetFilter->setEnabled(false);
+    connect(ui->tilesetFilter, &QLineEdit::textEdited, this, &AbstractOverlayDialog::filterEdited);
+
     ui->tilesetTilesView->setZoomable(mZoomable);
     ui->tilesetTilesView->setSelectionMode(QAbstractItemView::ExtendedSelection);
     connect(ui->tilesetTilesView->selectionModel(),
@@ -549,6 +553,7 @@ void AbstractOverlayDialog::removeEntry(AbstractOverlay *overlay, int index)
 void AbstractOverlayDialog::setTilesetList()
 {
     ui->tilesetList->clear();
+    ui->tilesetFilter->setEnabled(!TileMetaInfoMgr::instance()->tilesets().isEmpty());
     // Add the list of tilesets, and resize it to fit
     int width = 64;
     QFontMetrics fm = ui->tilesetList->fontMetrics();
@@ -562,6 +567,7 @@ void AbstractOverlayDialog::setTilesetList()
     }
     int sbw = ui->tilesetList->verticalScrollBar()->sizeHint().width();
     ui->tilesetList->setFixedWidth(width + 16 + sbw);
+    ui->tilesetFilter->setFixedWidth(ui->tilesetList->width());
 }
 
 bool AbstractOverlayDialog::isOverlayTileUsed(const QString &_tileName)
@@ -737,6 +743,51 @@ void AbstractOverlayDialog::overlayEntryHover(const QModelIndex &index, int entr
 void AbstractOverlayDialog::scrollToNow(const QModelIndex &index)
 {
     ui->tilesetTilesView->scrollTo(index);
+}
+
+void AbstractOverlayDialog::filterEdited(const QString &text)
+{
+    QListWidget* mTilesetNamesView = ui->tilesetList;
+
+    for (int row = 0; row < mTilesetNamesView->count(); row++) {
+        QListWidgetItem* item = mTilesetNamesView->item(row);
+        item->setHidden(text.trimmed().isEmpty() ? false : !item->text().contains(text));
+    }
+
+    QListWidgetItem* current = mTilesetNamesView->currentItem();
+    if (current != nullptr && current->isHidden()) {
+        // Select previous visible row.
+        int row = mTilesetNamesView->row(current) - 1;
+        while (row >= 0 && mTilesetNamesView->item(row)->isHidden()) {
+            row--;
+        }
+        if (row >= 0) {
+            current = mTilesetNamesView->item(row);
+            mTilesetNamesView->setCurrentItem(current);
+            mTilesetNamesView->scrollToItem(current);
+            return;
+        }
+
+        // Select next visible row.
+        row = mTilesetNamesView->row(current) + 1;
+        while (row < mTilesetNamesView->count() && mTilesetNamesView->item(row)->isHidden()) {
+            row++;
+        }
+        if (row < mTilesetNamesView->count()) {
+            current = mTilesetNamesView->item(row);
+            mTilesetNamesView->setCurrentItem(current);
+            mTilesetNamesView->scrollToItem(current);
+            return;
+        }
+
+        // All items hidden
+        mTilesetNamesView->setCurrentItem(nullptr);
+    }
+
+    current = mTilesetNamesView->currentItem();
+    if (current != nullptr) {
+        mTilesetNamesView->scrollToItem(current);
+    }
 }
 
 void AbstractOverlayDialog::tileActivated(const QModelIndex &index)

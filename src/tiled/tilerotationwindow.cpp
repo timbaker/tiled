@@ -1135,9 +1135,21 @@ TileRotationWindow::TileRotationWindow(QWidget *parent) :
 //    connect(ui->tilesetTilesView->selectionModel(), &QItemSelectionModel::selectionChanged, this, &TileRotationWindow::syncUI);
     connect(ui->tilesetTilesView, &MixedTilesetView::activated, this, &TileRotationWindow::tileActivated);
 
-    QAction *action1 = mTileContextMenu->addAction(tr("Add Floor"));
-    connect(action1, &QAction::triggered, this, &TileRotationWindow::tileContextMenu_AddFloor);
-    ui->tilesetTilesView->setContextMenu(mTileContextMenu);
+    {
+        QAction *action = mTileContextMenu->addAction(tr("Add Floor"));
+        connect(action, &QAction::triggered, this, &TileRotationWindow::tileContextMenu_AddFloor);
+
+        action = mTileContextMenu->addAction(tr("Add North And West Tiles"));
+        connect(action, &QAction::triggered, this, &TileRotationWindow::tileContextMenu_AddNorthAndWestTiles);
+
+        action = mTileContextMenu->addAction(tr("Add South And East Tiles"));
+        connect(action, &QAction::triggered, this, &TileRotationWindow::tileContextMenu_AddSouthAndEastTiles);
+
+        action = mTileContextMenu->addAction(tr("Add NorthWest Corner"));
+        connect(action, &QAction::triggered, this, &TileRotationWindow::tileContextMenu_AddNorthWestCorner);
+
+        ui->tilesetTilesView->setContextMenu(mTileContextMenu);
+    }
 
     ui->visualDataView->setZoomable(mZoomable);
     ui->visualDataView->setAcceptDrops(true);
@@ -1337,11 +1349,14 @@ void TileRotationWindow::clearVisual()
         return;
     }
 
+    QSharedPointer<TileRotatedVisual> currentVisual = mCurrentVisual;
+    Tiled::MapRotation currentRotation = mCurrentVisualRotation;
+
     mUndoStack->beginMacro(tr("Clear Tiles"));
 
     for (TilesetRotated *tilesetR : mTilesetRotatedList) {
         for (TileRotated *tileR : tilesetR->mTiles) {
-            if (tileR->mVisual != mCurrentVisual || tileR->mRotation != mCurrentVisualRotation) {
+            if (tileR->mVisual != currentVisual || tileR->mRotation != currentRotation) {
                 continue;
             }
             mUndoStack->push(new AssignVisual(this, tileR, nullptr, MapRotation::NotRotated));
@@ -1349,7 +1364,7 @@ void TileRotationWindow::clearVisual()
     }
 
     TileRotatedVisualData data;
-    mUndoStack->push(new ChangeTiles(this, mCurrentVisual, mCurrentVisualRotation, data));
+    mUndoStack->push(new ChangeTiles(this, currentVisual, currentRotation, data));
 
     mUndoStack->endMacro();
 }
@@ -1669,20 +1684,16 @@ void TileRotationWindow::tileContextMenu_AddFloor()
 
     QString tileName = BuildingTilesMgr::instance()->nameForTile(tile);
     TileRotatedVisualData &dataR0 = visual->mData[0];
-    dataR0.addTile(tileName);
-    dataR0.mEdges[0] = TileRotatedVisualEdge::Floor;
+    dataR0.addTileFloor(tileName);
 
     TileRotatedVisualData &dataR90 = visual->mData[1];
-    dataR90.addTile(tileName);
-    dataR90.mEdges[0] = TileRotatedVisualEdge::Floor;
+    dataR90.addTileFloor(tileName);
 
     TileRotatedVisualData &dataR180 = visual->mData[2];
-    dataR180.addTile(tileName);
-    dataR180.mEdges[0] = TileRotatedVisualEdge::Floor;
+    dataR180.addTileFloor(tileName);
 
     TileRotatedVisualData &dataR270 = visual->mData[3];
-    dataR270.addTile(tileName);
-    dataR270.mEdges[0] = TileRotatedVisualEdge::Floor;
+    dataR270.addTileFloor(tileName);
 
     mUndoStack->push(new CreateVisual(this, mVisuals.size(), visual));
 
@@ -1690,6 +1701,152 @@ void TileRotationWindow::tileContextMenu_AddFloor()
     mUndoStack->push(new AssignVisual(this, tileR, visual, Tiled::MapRotation::NotRotated));
 
     mUndoStack->endMacro();
+
+    QModelIndex index = ui->visualList->model()->index(visual, Tiled::MapRotation::NotRotated);
+    ui->visualList->selectionModel()->select(index, QItemSelectionModel::SelectCurrent);
+}
+
+void TileRotationWindow::tileContextMenu_AddNorthAndWestTiles()
+{
+    // Select North then West tiles.
+    QModelIndexList selection = ui->tilesetTilesView->selectionModel()->selectedIndexes();
+    if (selection.size() != 2)
+        return;
+
+    Tile *tileN = ui->tilesetTilesView->model()->tileAt(selection[0]);
+    if (tileN == nullptr)
+        return;
+
+    Tile *tileW = ui->tilesetTilesView->model()->tileAt(selection[1]);
+    if (tileW == nullptr)
+        return;
+
+    mUndoStack->beginMacro(tr("Add North and West Tiles"));
+    QSharedPointer<TileRotatedVisual> visual(new TileRotatedVisual());
+    visual->mUuid = QUuid::createUuid();
+
+    QString tileNameN = BuildingTilesMgr::instance()->nameForTile(tileN);
+    QString tileNameW = BuildingTilesMgr::instance()->nameForTile(tileW);
+
+    TileRotatedVisualData &dataR0 = visual->mData[0];
+    dataR0.addTileN(tileNameN);
+
+    TileRotatedVisualData &dataR90 = visual->mData[1];
+    dataR90.addTileE(tileNameW);
+
+    TileRotatedVisualData &dataR180 = visual->mData[2];
+    dataR180.addTileS(tileNameN);
+
+    TileRotatedVisualData &dataR270 = visual->mData[3];
+    dataR270.addTileW(tileNameW);
+
+    mUndoStack->push(new CreateVisual(this, mVisuals.size(), visual));
+
+    TileRotated *tileR0 = getOrCreateTileRotatedForTileReal(tileN);
+    mUndoStack->push(new AssignVisual(this, tileR0, visual, Tiled::MapRotation::NotRotated));
+
+    TileRotated *tileR270 = getOrCreateTileRotatedForTileReal(tileW);
+    mUndoStack->push(new AssignVisual(this, tileR270, visual, Tiled::MapRotation::Clockwise270));
+
+    mUndoStack->endMacro();
+
+    QModelIndex index = ui->visualList->model()->index(visual, Tiled::MapRotation::NotRotated);
+    ui->visualList->selectionModel()->select(index, QItemSelectionModel::SelectCurrent);
+}
+
+void TileRotationWindow::tileContextMenu_AddSouthAndEastTiles()
+{
+    // Select South then East tiles.
+    QModelIndexList selection = ui->tilesetTilesView->selectionModel()->selectedIndexes();
+    if (selection.size() != 2)
+        return;
+
+    Tile *tileS = ui->tilesetTilesView->model()->tileAt(selection[0]);
+    if (tileS == nullptr)
+        return;
+
+    Tile *tileE = ui->tilesetTilesView->model()->tileAt(selection[1]);
+    if (tileE == nullptr)
+        return;
+
+    mUndoStack->beginMacro(tr("Add South and East Tiles"));
+    QSharedPointer<TileRotatedVisual> visual(new TileRotatedVisual());
+    visual->mUuid = QUuid::createUuid();
+
+    QString tileNameS = BuildingTilesMgr::instance()->nameForTile(tileS);
+    QString tileNameE = BuildingTilesMgr::instance()->nameForTile(tileE);
+
+    TileRotatedVisualData &dataR90 = visual->mData[1];
+    dataR90.addTile(tileNameE, QPoint(), TileRotatedVisualEdge::East);
+
+    TileRotatedVisualData &dataR180 = visual->mData[2];
+    dataR180.addTile(tileNameS, QPoint(), TileRotatedVisualEdge::South);
+
+    mUndoStack->push(new CreateVisual(this, mVisuals.size(), visual));
+
+    TileRotated *tileR90 = getOrCreateTileRotatedForTileReal(tileE);
+    mUndoStack->push(new AssignVisual(this, tileR90, visual, Tiled::MapRotation::Clockwise90));
+
+    TileRotated *tileR180 = getOrCreateTileRotatedForTileReal(tileS);
+    mUndoStack->push(new AssignVisual(this, tileR180, visual, Tiled::MapRotation::Clockwise180));
+
+    mUndoStack->endMacro();
+
+    QModelIndex index = ui->visualList->model()->index(visual, Tiled::MapRotation::Clockwise90);
+    ui->visualList->selectionModel()->select(index, QItemSelectionModel::SelectCurrent);
+}
+
+void TileRotationWindow::tileContextMenu_AddNorthWestCorner()
+{
+    // Select NorthWest then North then West tiles.
+    QModelIndexList selection = ui->tilesetTilesView->selectionModel()->selectedIndexes();
+    if (selection.size() != 3)
+        return;
+
+    Tile *tileNW = ui->tilesetTilesView->model()->tileAt(selection[0]);
+    if (tileNW == nullptr)
+        return;
+
+    Tile *tileN = ui->tilesetTilesView->model()->tileAt(selection[1]);
+    if (tileN == nullptr)
+        return;
+
+    Tile *tileW = ui->tilesetTilesView->model()->tileAt(selection[2]);
+    if (tileW == nullptr)
+        return;
+
+    mUndoStack->beginMacro(tr("Add NorthWest Corner"));
+    QSharedPointer<TileRotatedVisual> visual(new TileRotatedVisual());
+    visual->mUuid = QUuid::createUuid();
+
+    QString tileNameNW = BuildingTilesMgr::instance()->nameForTile(tileNW);
+    QString tileNameN = BuildingTilesMgr::instance()->nameForTile(tileN);
+    QString tileNameW = BuildingTilesMgr::instance()->nameForTile(tileW);
+
+    TileRotatedVisualData &dataR0 = visual->mData[0];
+    dataR0.addTileN(tileNameNW);
+
+    TileRotatedVisualData &dataR90 = visual->mData[1];
+    dataR90.addTileN(tileNameN);
+    dataR90.addTileE(tileNameW);
+
+    TileRotatedVisualData &dataR180 = visual->mData[2];
+    dataR180.addTileE(tileNameW);
+    dataR180.addTileS(tileNameN);
+
+    TileRotatedVisualData &dataR270 = visual->mData[3];
+    dataR270.addTileW(tileNameW);
+    dataR270.addTileS(tileNameN);
+
+    mUndoStack->push(new CreateVisual(this, mVisuals.size(), visual));
+
+    TileRotated *tileR = getOrCreateTileRotatedForTileReal(tileNW);
+    mUndoStack->push(new AssignVisual(this, tileR, visual, Tiled::MapRotation::NotRotated));
+
+    mUndoStack->endMacro();
+
+    QModelIndex index = ui->visualList->model()->index(visual, Tiled::MapRotation::NotRotated);
+    ui->visualList->selectionModel()->select(index, QItemSelectionModel::SelectCurrent);
 }
 
 void TileRotationWindow::displayTileInTileset(Tiled::Tile *tile)
@@ -1944,6 +2101,9 @@ void TileRotationWindow::tileDroppedOntoVisualView(QSharedPointer<TileRotatedVis
     }
 
     mUndoStack->endMacro();
+
+    QModelIndex dataIndex = ui->visualList->model()->index(visual, mapRotation);
+    ui->visualList->selectionModel()->select(dataIndex, QItemSelectionModel::SelectionFlag::SelectCurrent);
 }
 
 void TileRotationWindow::tileDroppedOntoVisualDataView(const QString &tilesetName, int tileID)

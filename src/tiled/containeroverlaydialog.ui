@@ -35,6 +35,9 @@
         <item>
          <layout class="QVBoxLayout" name="verticalLayout_5">
           <item>
+           <widget class="QLineEdit" name="tilesetFilter"/>
+          </item>
+          <item>
            <widget class="QListWidget" name="tilesetList"/>
           </item>
           <item>

@@ -382,8 +382,12 @@ TileDefDialog::TileDefDialog(QWidget *parent) :
 
     connect(ui->actionUserGuide, SIGNAL(triggered()), SLOT(help()));
 
-    connect(TilesetManager::instance(), SIGNAL(tilesetChanged(Tileset*)),
-            SLOT(tilesetChanged(Tileset*)));
+    connect(TilesetManager::instance(), &TilesetManager::tilesetChanged,
+            this, &TileDefDialog::tilesetChanged);
+
+    ui->tilesetFilter->setClearButtonEnabled(true);
+    ui->tilesetFilter->setEnabled(false);
+    connect(ui->tilesetFilter, &QLineEdit::textEdited, this, &TileDefDialog::filterEdited);
 
     foreach (QObject *o, ui->propertySheet->children())
         if (o->isWidgetType())
@@ -690,6 +694,51 @@ static void debugHistory(QStringList &history, int index)
     }
     noise() << items.join(QLatin1String(" "));
 #endif
+}
+
+void TileDefDialog::filterEdited(const QString &text)
+{
+    QListWidget* mTilesetNamesView = ui->tilesets;
+
+    for (int row = 0; row < mTilesetNamesView->count(); row++) {
+        QListWidgetItem* item = mTilesetNamesView->item(row);
+        item->setHidden(text.trimmed().isEmpty() ? false : !item->text().contains(text));
+    }
+
+    QListWidgetItem* current = mTilesetNamesView->currentItem();
+    if (current != nullptr && current->isHidden()) {
+        // Select previous visible row.
+        int row = mTilesetNamesView->row(current) - 1;
+        while (row >= 0 && mTilesetNamesView->item(row)->isHidden()) {
+            row--;
+        }
+        if (row >= 0) {
+            current = mTilesetNamesView->item(row);
+            mTilesetNamesView->setCurrentItem(current);
+            mTilesetNamesView->scrollToItem(current);
+            return;
+        }
+
+        // Select next visible row.
+        row = mTilesetNamesView->row(current) + 1;
+        while (row < mTilesetNamesView->count() && mTilesetNamesView->item(row)->isHidden()) {
+            row++;
+        }
+        if (row < mTilesetNamesView->count()) {
+            current = mTilesetNamesView->item(row);
+            mTilesetNamesView->setCurrentItem(current);
+            mTilesetNamesView->scrollToItem(current);
+            return;
+        }
+
+        // All items hidden
+        mTilesetNamesView->setCurrentItem(nullptr);
+    }
+
+    current = mTilesetNamesView->currentItem();
+    if (current != nullptr) {
+        mTilesetNamesView->scrollToItem(current);
+    }
 }
 
 void TileDefDialog::currentTilesetChanged(int row)
@@ -1201,7 +1250,8 @@ void TileDefDialog::setTilesetList()
     int maxWidth = 128;
 
     ui->tilesets->clear();
-    foreach (Tileset *ts, mTilesetByName.values()) {
+    ui->tilesetFilter->setEnabled(!mTilesetByName.isEmpty());
+    for (Tileset *ts : mTilesetByName.values()) {
         QListWidgetItem *item = new QListWidgetItem(ts->name() + QString::fromLatin1(" (%1)").arg(mTileDefFile->tileset(ts->name())->mID));
         if (ts->isMissing())
             item->setForeground(Qt::red);
@@ -1210,6 +1260,7 @@ void TileDefDialog::setTilesetList()
     }
     ui->tilesets->setFixedWidth(maxWidth + 16 +
         ui->tilesets->verticalScrollBar()->sizeHint().width());
+    ui->tilesetFilter->setFixedWidth(ui->tilesets->width());
 }
 
 void TileDefDialog::setTilesList()

@@ -1121,19 +1121,19 @@ void BuildingFloor::LayoutToSquares()
                 if (square.mWallW.type == BuildingSquare::WallType::Pillar) {
                     square.mEntryEnum[SectionWallW] = BTC_Walls::SouthEast;
                 } else if (square.HasDoorW() || square.HasDoorFrameW() || (squareW != nullptr && (squareW->HasDoorE() || squareW->HasDoorFrameE()))) {
-                    square.mEntryEnum[SectionWallW] = BTC_Walls::NorthDoor;
-                    square.mRotation[SectionWallW] = Tiled::MapRotation::Clockwise270;
+                    square.mEntryEnum[SectionWallW] = BTC_Walls::WestDoor;
+                    square.mRotation[SectionWallW] = Tiled::MapRotation::NotRotated;
                 } else if (square.HasWindowW() || (squareW != nullptr && squareW->HasWindowE())) {
-                    square.mEntryEnum[SectionWallW] = BTC_Walls::NorthWindow;
-                    square.mRotation[SectionWallW] = Tiled::MapRotation::Clockwise270;
+                    square.mEntryEnum[SectionWallW] = BTC_Walls::WestWindow;
+                    square.mRotation[SectionWallW] = Tiled::MapRotation::NotRotated;
                 } else {
-                    square.mEntryEnum[SectionWallW] = BTC_Walls::North;
-                    square.mRotation[SectionWallW] = Tiled::MapRotation::Clockwise270;
+                    square.mEntryEnum[SectionWallW] = BTC_Walls::West;
+                    square.mRotation[SectionWallW] = Tiled::MapRotation::NotRotated;
                 }
             }
             if (entryN != nullptr && entryW != nullptr && entryN == entryW &&
                     square.mEntryEnum[SectionWallN] == BTC_Walls::North &&
-                    square.mEntryEnum[SectionWallW] == BTC_Walls::North) {
+                    square.mEntryEnum[SectionWallW] == BTC_Walls::West) {
                 square.mEntryEnum[SectionWallN] = BTC_Walls::NorthWest;
                 square.mEntries[SectionWallW] = nullptr;
                 square.mEntryEnum[SectionWallW] = 0;
@@ -1193,7 +1193,7 @@ void BuildingFloor::LayoutToSquares()
                 }
             }
             if (square.HasDoorFrameW()) {
-                square.ReplaceFrame(square.mWallW.door->frameTile(), BuildingSquare::SquareSection::SectionFrame2, BTC_DoorFrames::North, Tiled::MapRotation::Clockwise270);
+                square.ReplaceFrame(square.mWallW.door->frameTile(), BuildingSquare::SquareSection::SectionFrame2, BTC_DoorFrames::West, Tiled::MapRotation::NotRotated);
                 if (FRAMES_ON_BOTH_SIDES && (x > 0) && !squares[x-1][y].HasDoorFrameE()) {
                     squares[x-1][y].ReplaceFrame(square.mWallW.door->frameTile(), BuildingSquare::SquareSection::SectionFrame3, BTC_DoorFrames::North, Tiled::MapRotation::Clockwise90);
                 }
@@ -1209,7 +1209,7 @@ void BuildingFloor::LayoutToSquares()
                 square.ReplaceDoor(square.mWallN.door->tile(), BuildingSquare::SquareSection::SectionDoor1, BTC_Doors::North, Tiled::MapRotation::NotRotated);
             }
             if (square.HasDoorW()) {
-                square.ReplaceDoor(square.mWallW.door->tile(), BuildingSquare::SquareSection::SectionDoor2, BTC_Doors::North, Tiled::MapRotation::Clockwise270);
+                square.ReplaceDoor(square.mWallW.door->tile(), BuildingSquare::SquareSection::SectionDoor2, BTC_Doors::West, Tiled::MapRotation::NotRotated);
             }
             if (square.HasDoorE()) {
                 square.ReplaceDoor(square.mWallE.door->tile(), BuildingSquare::SquareSection::SectionDoor3, BTC_Doors::North, Tiled::MapRotation::Clockwise90);
@@ -1222,7 +1222,7 @@ void BuildingFloor::LayoutToSquares()
                 square.ReplaceWindow(square.mWallN.window->tile(), BuildingSquare::SquareSection::SectionWindow1, BTC_Windows::North, Tiled::MapRotation::NotRotated);
             }
             if (square.HasWindowW()) {
-                square.ReplaceWindow(square.mWallW.window->tile(), BuildingSquare::SquareSection::SectionWindow2, BTC_Windows::North, Tiled::MapRotation::Clockwise270);
+                square.ReplaceWindow(square.mWallW.window->tile(), BuildingSquare::SquareSection::SectionWindow2, BTC_Windows::West, Tiled::MapRotation::NotRotated);
             }
             if (square.HasWindowE()) {
                 square.ReplaceWindow(square.mWallE.window->tile(), BuildingSquare::SquareSection::SectionWindow3, BTC_Doors::North, Tiled::MapRotation::Clockwise90);
@@ -1237,7 +1237,7 @@ void BuildingFloor::LayoutToSquares()
                     int x1 = x;
                     int y1 = y - 1;
                     if ((x1 >= 0) && (y1 >= 0)) {
-                        squares[x1][y1].ReplaceCurtains(square.mWallN.window, BuildingSquare::SquareSection::SectionCurtains4, BTC_Curtains::North, Tiled::MapRotation::Clockwise180);
+                        squares[x1][y1].ReplaceCurtains(square.mWallN.window, BuildingSquare::SquareSection::SectionCurtains4, BTC_Curtains::South, Tiled::MapRotation::NotRotated);
                     }
                 } else {
                     square.ReplaceCurtains(square.mWallN.window, BuildingSquare::SquareSection::SectionCurtains1, BTC_Curtains::North, Tiled::MapRotation::NotRotated);
@@ -1248,10 +1248,10 @@ void BuildingFloor::LayoutToSquares()
                     int x1 = x - 1;
                     int y1 = y;
                     if ((x1 >= 0) && (y1 >= 0)) {
-                        squares[x1][y1].ReplaceCurtains(square.mWallW.window, BuildingSquare::SquareSection::SectionCurtains3, BTC_Curtains::North, Tiled::MapRotation::Clockwise90);
+                        squares[x1][y1].ReplaceCurtains(square.mWallW.window, BuildingSquare::SquareSection::SectionCurtains3, BTC_Curtains::East, Tiled::MapRotation::NotRotated);
                     }
                 } else {
-                    square.ReplaceCurtains(square.mWallW.window, BuildingSquare::SquareSection::SectionCurtains2, BTC_Curtains::North, Tiled::MapRotation::Clockwise270);
+                    square.ReplaceCurtains(square.mWallW.window, BuildingSquare::SquareSection::SectionCurtains2, BTC_Curtains::West, Tiled::MapRotation::NotRotated);
                 }
             }
             if (square.HasCurtainsE()) {
@@ -1259,10 +1259,10 @@ void BuildingFloor::LayoutToSquares()
                     int x1 = x + 1;
                     int y1 = y;
                     if (true) {
-                        squares[x1][y1].ReplaceCurtains(square.mWallE.window, BuildingSquare::SquareSection::SectionCurtains2, BTC_Curtains::North, Tiled::MapRotation::Clockwise270);
+                        squares[x1][y1].ReplaceCurtains(square.mWallE.window, BuildingSquare::SquareSection::SectionCurtains2, BTC_Curtains::West, Tiled::MapRotation::NotRotated);
                     }
                 } else {
-                    square.ReplaceCurtains(square.mWallE.window, BuildingSquare::SquareSection::SectionCurtains3, BTC_Curtains::North, Tiled::MapRotation::Clockwise90);
+                    square.ReplaceCurtains(square.mWallE.window, BuildingSquare::SquareSection::SectionCurtains3, BTC_Curtains::East, Tiled::MapRotation::NotRotated);
                 }
             }
             if (square.HasCurtainsS()) {
@@ -1273,48 +1273,48 @@ void BuildingFloor::LayoutToSquares()
                         squares[x1][y1].ReplaceCurtains(square.mWallS.window, BuildingSquare::SquareSection::SectionCurtains1, BTC_Curtains::North, Tiled::MapRotation::NotRotated);
                     }
                 } else {
-                    square.ReplaceCurtains(square.mWallS.window, BuildingSquare::SquareSection::SectionCurtains4, BTC_Curtains::North, Tiled::MapRotation::Clockwise180);
+                    square.ReplaceCurtains(square.mWallS.window, BuildingSquare::SquareSection::SectionCurtains4, BTC_Curtains::South, Tiled::MapRotation::NotRotated);
                 }
             }
 
             if (square.HasShuttersN()) {
                 if (square.mExterior) {
                     if (x > 0)
-                        squares[x-1][y].ReplaceShutters(square.mWallN.window, true, Tiled::MapRotation::NotRotated);
-                    squares[x][y].ReplaceShutters(square.mWallN.window, true, Tiled::MapRotation::NotRotated);
-                    squares[x][y].ReplaceShutters(square.mWallN.window, false, Tiled::MapRotation::NotRotated);
+                        squares[x-1][y].ReplaceShutters(square.mWallN.window, BTC_Shutters::NorthLeft, Tiled::MapRotation::NotRotated);
+                    squares[x][y].ReplaceShutters(square.mWallN.window, BTC_Shutters::NorthRight, Tiled::MapRotation::NotRotated);
+                    squares[x][y].ReplaceShutters(square.mWallN.window, BTC_Shutters::NorthLeft, Tiled::MapRotation::NotRotated);
                     if (x < width() + 1)
-                        squares[x + 1][y].ReplaceShutters(square.mWallN.window, false, Tiled::MapRotation::NotRotated);
+                        squares[x + 1][y].ReplaceShutters(square.mWallN.window, BTC_Shutters::NorthRight, Tiled::MapRotation::NotRotated);
                 }
             }
             if (square.HasShuttersW()) {
                 if (square.mExterior) {
                     if (y > 0)
-                        squares[x][y - 1].ReplaceShutters(square.mWallW.window, false, Tiled::MapRotation::Clockwise270);
-                    squares[x][y].ReplaceShutters(square.mWallW.window, false, Tiled::MapRotation::Clockwise270);
-                    squares[x][y].ReplaceShutters(square.mWallW.window, true, Tiled::MapRotation::Clockwise270);
+                        squares[x][y - 1].ReplaceShutters(square.mWallW.window, BTC_Shutters::WestBelow, Tiled::MapRotation::NotRotated);
+                    squares[x][y].ReplaceShutters(square.mWallW.window, BTC_Shutters::WestAbove, Tiled::MapRotation::NotRotated);
+                    squares[x][y].ReplaceShutters(square.mWallW.window, BTC_Shutters::WestBelow, Tiled::MapRotation::NotRotated);
                     if (y < height() + 1)
-                        squares[x][y + 1].ReplaceShutters(square.mWallW.window, true, Tiled::MapRotation::Clockwise270);
+                        squares[x][y + 1].ReplaceShutters(square.mWallW.window, BTC_Shutters::WestAbove, Tiled::MapRotation::NotRotated);
                 }
             }
             if (square.HasShuttersE()) {
                 if (square.mExterior) {
                     if (y > 0)
-                        squares[x][y - 1].ReplaceShutters(square.mWallE.window, true, Tiled::MapRotation::Clockwise90);
-                    squares[x][y].ReplaceShutters(square.mWallE.window, true, Tiled::MapRotation::Clockwise90);
-                    squares[x][y].ReplaceShutters(square.mWallE.window, false, Tiled::MapRotation::Clockwise90);
+                        squares[x][y - 1].ReplaceShutters(square.mWallE.window, BTC_Shutters::NorthLeft, Tiled::MapRotation::Clockwise90);
+                    squares[x][y].ReplaceShutters(square.mWallE.window, BTC_Shutters::NorthRight, Tiled::MapRotation::Clockwise90);
+                    squares[x][y].ReplaceShutters(square.mWallE.window, BTC_Shutters::NorthLeft, Tiled::MapRotation::Clockwise90);
                     if (y < height() + 1)
-                        squares[x][y + 1].ReplaceShutters(square.mWallE.window, false, Tiled::MapRotation::Clockwise90);
+                        squares[x][y + 1].ReplaceShutters(square.mWallE.window, BTC_Shutters::NorthRight, Tiled::MapRotation::Clockwise90);
                 }
             }
             if (square.HasShuttersS()) {
                 if (square.mExterior) {
                     if (x > 0)
-                        squares[x-1][y].ReplaceShutters(square.mWallS.window, false, Tiled::MapRotation::Clockwise180);
-                    squares[x][y].ReplaceShutters(square.mWallS.window, false, Tiled::MapRotation::Clockwise180);
-                    squares[x][y].ReplaceShutters(square.mWallS.window, true, Tiled::MapRotation::Clockwise180);
+                        squares[x-1][y].ReplaceShutters(square.mWallS.window, BTC_Shutters::NorthRight, Tiled::MapRotation::Clockwise180);
+                    squares[x][y].ReplaceShutters(square.mWallS.window, BTC_Shutters::NorthLeft, Tiled::MapRotation::Clockwise180);
+                    squares[x][y].ReplaceShutters(square.mWallS.window, BTC_Shutters::NorthRight, Tiled::MapRotation::Clockwise180);
                     if (x < width() + 1)
-                        squares[x + 1][y].ReplaceShutters(square.mWallS.window, true, Tiled::MapRotation::Clockwise180);
+                        squares[x + 1][y].ReplaceShutters(square.mWallS.window, BTC_Shutters::NorthLeft, Tiled::MapRotation::Clockwise180);
                 }
             }
         }
@@ -2082,19 +2082,13 @@ void BuildingSquare::ReplaceCurtains(Window *window, SquareSection section, int 
     mRotation[section] = rotation;
 }
 
-void BuildingSquare::ReplaceShutters(Window *window, bool first, Tiled::MapRotation rotation)
+void BuildingSquare::ReplaceShutters(Window *window, int offset, Tiled::MapRotation rotation)
 {
     if (!window->shuttersTile() || window->shuttersTile()->isNone())
         return;
 
     if (mExterior) {
-        /*if (window->isN() || window->isS())*/ {
-            ReplaceFurniture(window->shuttersTile()->tile(first ? BTC_Shutters::NorthLeft : BTC_Shutters::NorthRight),
-                             SectionWallFurniture, SectionWallFurniture2, rotation);
-//        } else {
-//            ReplaceFurniture(window->shuttersTile()->tile(first ? BTC_Shutters::WestAbove : BTC_Shutters::WestBelow),
-//                             SectionWallFurniture, SectionWallFurniture2, rotation);
-        }
+        ReplaceFurniture(window->shuttersTile()->tile(offset), SectionWallFurniture, SectionWallFurniture2, rotation);
     }
 }
 
@@ -2204,11 +2198,11 @@ void BuildingSquare::ReplaceFloorGrime(BuildingTileEntry *grimeTile)
     }
     if (wallTile2) {
         switch (mEntryEnum[SectionWall2]) {
-        case BTC_Walls::North:
-        case BTC_Walls::NorthWindow:
+        case BTC_Walls::West:
+        case BTC_Walls::WestWindow:
             grimeEnumW = BTC_GrimeFloor::West;
             break;
-        case BTC_Walls::NorthDoor:
+        case BTC_Walls::WestDoor:
             break;
         case BTC_Walls::NorthWest:
             Q_ASSERT(false);
@@ -2486,17 +2480,17 @@ void BuildingSquare::ReplaceWallGrime(BuildingTileEntry *grimeTile, const Buildi
     if (tileEntry2) {
         BuildingTile *btile = tileEntry2->tile(mEntryEnum[SectionWall2]);
         switch (mEntryEnum[SectionWall2]) {
-        case BTC_Walls::North:
+        case BTC_Walls::West:
             tileW = btile;
-            grimeEnumW = BTC_GrimeWall::North;
+            grimeEnumW = BTC_GrimeWall::West;
             break;
-        case BTC_Walls::NorthDoor:
+        case BTC_Walls::WestDoor:
             tileW = btile;
-            grimeEnumW = BTC_GrimeWall::NorthDoor;
+            grimeEnumW = BTC_GrimeWall::WestDoor;
             break;
-        case BTC_Walls::NorthWindow:
+        case BTC_Walls::WestWindow:
             tileW = btile;
-            grimeEnumW = BTC_GrimeWall::NorthWindow;
+            grimeEnumW = BTC_GrimeWall::WestWindow;
             break;
         case BTC_Walls::NorthWest:
             tileNW = btile;
@@ -2512,7 +2506,7 @@ void BuildingSquare::ReplaceWallGrime(BuildingTileEntry *grimeTile, const Buildi
 
     if (mWallW.furnitureBldgTile && !mWallW.furnitureBldgTile->isNone() && mWallW.furniture->resolved()->allowGrime()) {
         tileW = mWallW.furnitureBldgTile;
-        grimeEnumW = BTC_GrimeWall::North;
+        grimeEnumW = BTC_GrimeWall::West;
     }
     if (mWallN.furnitureBldgTile && !mWallN.furnitureBldgTile->isNone() && mWallN.furniture->resolved()->allowGrime()) {
         tileN = mWallN.furnitureBldgTile;
@@ -2533,11 +2527,11 @@ void BuildingSquare::ReplaceWallGrime(BuildingTileEntry *grimeTile, const Buildi
         if (props.FullWindow)
             grimeEnumW = -1;
         else if (props.Trim)
-            grimeEnumW = BTC_GrimeWall::NorthTrim;
+            grimeEnumW = BTC_GrimeWall::WestTrim;
         else if (props.DoubleLeft)
-            grimeEnumW = BTC_GrimeWall::NorthDoubleLeft;
+            grimeEnumW = BTC_GrimeWall::WestDoubleLeft;
         else if (props.DoubleRight)
-            grimeEnumW = BTC_GrimeWall::NorthDoubleRight;
+            grimeEnumW = BTC_GrimeWall::WestDoubleRight;
     }
     if (tileN && tileHasGrimeProperties(tileN, &props)) {
         if (props.FullWindow)
@@ -2592,20 +2586,20 @@ void BuildingSquare::ReplaceWallGrime(BuildingTileEntry *grimeTile, const Buildi
                         grimeEnumW = BTC_GrimeWall::NorthWestTrim;
                         grimeEnumN = -1;
                     } else if (props.West) {
-                        grimeEnumW = BTC_GrimeWall::NorthTrim;
+                        grimeEnumW = BTC_GrimeWall::WestTrim;
                     } else if (props.North) {
                         grimeEnumN = BTC_GrimeWall::NorthTrim;
                     } else if (props.SouthEast) {
                         grimeEnumW = BTC_GrimeWall::SouthEastTrim;
                     }
                 } else if (props.DoubleLeft) {
-                    if (props.West) grimeEnumW = BTC_GrimeWall::NorthDoubleLeft;
+                    if (props.West) grimeEnumW = BTC_GrimeWall::WestDoubleLeft;
                     else if (props.North) grimeEnumN = BTC_GrimeWall::NorthDoubleLeft;
                 } else if (props.DoubleRight) {
-                    if (props.West) grimeEnumW = BTC_GrimeWall::NorthDoubleRight;
+                    if (props.West) grimeEnumW = BTC_GrimeWall::WestDoubleRight;
                     else if (props.North) grimeEnumN = BTC_GrimeWall::NorthDoubleRight;
                 } else if (props.West) {
-                    grimeEnumW = BTC_GrimeWall::North;
+                    grimeEnumW = BTC_GrimeWall::West;
                 } else if (props.North) {
                     grimeEnumN = BTC_GrimeWall::North;
                 }
@@ -2615,7 +2609,7 @@ void BuildingSquare::ReplaceWallGrime(BuildingTileEntry *grimeTile, const Buildi
 
     // 2 different wall tiles in a NW corner can't use a single NW grime tile.
     if (grimeEnumW == BTC_GrimeWall::NorthWest && grimeEnumN >= 0) {
-        grimeEnumW = BTC_GrimeWall::North;
+        grimeEnumW = BTC_GrimeWall::West;
     }
     if (grimeEnumW == BTC_GrimeWall::NorthWestTrim && grimeEnumN >= 0) {
         grimeEnumW = BTC_GrimeWall::NorthTrim;
@@ -2627,7 +2621,7 @@ void BuildingSquare::ReplaceWallGrime(BuildingTileEntry *grimeTile, const Buildi
         mEntries[SectionWallGrime] = grimeTile;
         mEntryEnum[SectionWallGrime] = grimeEnumW;
         if (grimeEnumW != BTC_Walls::NorthWest && grimeEnumW != BTC_Walls::SouthEast) {
-            mRotation[SectionWallGrime] = Tiled::MapRotation::Clockwise270;
+            mRotation[SectionWallGrime] = Tiled::MapRotation::NotRotated;
         }
     }
     if (grimeEnumN >= 0) {
@@ -2859,7 +2853,7 @@ void BuildingSquare::ReplaceWallTrim()
     // SectionWall could be a north, or north-west wall
     if (wallTile1) {
         if (mEntryEnum[SectionWall] == BTC_Walls::NorthWest) {
-            enumW = BTC_Walls::North;
+            enumW = BTC_Walls::West;
             enumN = BTC_Walls::North;
         } else {
             enumN = mEntryEnum[SectionWall];
@@ -2870,12 +2864,11 @@ void BuildingSquare::ReplaceWallTrim()
     int sectionW = SectionWallTrim2;
     int sectionN = SectionWallTrim;
 
-    // 2 different wall tiles forming north-west corner
     if (wallTile2) {
         enumW = mEntryEnum[SectionWall2];
     }
 
-    if ((enumW == BTC_Walls::North && enumN == BTC_Walls::North) && (trimW == trimN)) {
+    if ((enumW == BTC_Walls::West && enumN == BTC_Walls::North) && (trimW == trimN)) {
         enumN = BTC_Walls::NorthWest;
         enumW = -1;
     }
@@ -2883,7 +2876,7 @@ void BuildingSquare::ReplaceWallTrim()
     if (enumW >= 0) {
         mEntries[sectionW] = trimW;
         mEntryEnum[sectionW] = enumW;
-        mRotation[sectionW] = Tiled::MapRotation::Clockwise270;
+        mRotation[sectionW] = Tiled::MapRotation::NotRotated;
     }
     if (enumN >= 0) {
         mEntries[sectionN] = trimN;

@@ -131,6 +131,9 @@
        <item>
         <layout class="QVBoxLayout" name="verticalLayout_5">
          <item>
+          <widget class="QLineEdit" name="tilesetFilter"/>
+         </item>
+         <item>
           <widget class="QListWidget" name="tilesetList"/>
          </item>
          <item>
@@ -341,8 +344,8 @@
   </customwidget>
  </customwidgets>
  <resources>
-  <include location="../tiled.qrc"/>
   <include location="buildingeditor.qrc"/>
+  <include location="../tiled.qrc"/>
  </resources>
  <connections>
   <connection>

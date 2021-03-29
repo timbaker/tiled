@@ -630,11 +630,15 @@ BuildingTilesDialog::BuildingTilesDialog(QWidget *parent) :
     connect(TilesetManager::instance(), SIGNAL(tilesetChanged(Tileset*)),
             SLOT(tilesetChanged(Tileset*)));
 
+    ui->tilesetFilter->setClearButtonEnabled(true);
+    ui->tilesetFilter->setEnabled(false);
+    connect(ui->tilesetFilter, &QLineEdit::textEdited, this, &BuildingTilesDialog::filterEdited);
+
     ui->tilesetTilesView->setZoomable(mZoomable);
     ui->tilesetTilesView->setSelectionMode(QAbstractItemView::ExtendedSelection);
     connect(ui->tilesetTilesView->selectionModel(),
-            SIGNAL(selectionChanged(QItemSelection,QItemSelection)),
-            SLOT(synchUI()));
+            &QItemSelectionModel::selectionChanged,
+            this, &BuildingTilesDialog::synchUI);
 
     ui->tilesetTilesView->setDragEnabled(true);
 
@@ -1131,10 +1135,11 @@ void BuildingTilesDialog::setFurnitureTiles()
 void BuildingTilesDialog::setTilesetList()
 {
     ui->tilesetList->clear();
+    ui->tilesetFilter->setEnabled(!TileMetaInfoMgr::instance()->tilesets().isEmpty());
     // Add the list of tilesets, and resize it to fit
     int width = 64;
     QFontMetrics fm = ui->tilesetList->fontMetrics();
-    foreach (Tileset *tileset, TileMetaInfoMgr::instance()->tilesets()) {
+    for (Tileset *tileset : TileMetaInfoMgr::instance()->tilesets()) {
         QListWidgetItem *item = new QListWidgetItem();
         item->setText(tileset->name());
         if (tileset->isMissing())
@@ -1144,6 +1149,7 @@ void BuildingTilesDialog::setTilesetList()
     }
     int sbw = ui->tilesetList->verticalScrollBar()->sizeHint().width();
     ui->tilesetList->setFixedWidth(width + 16 + sbw);
+    ui->tilesetFilter->setFixedWidth(ui->tilesetList->width());
 }
 
 void BuildingTilesDialog::saveSplitterSizes(QSplitter *splitter)
@@ -1298,6 +1304,51 @@ void BuildingTilesDialog::categoryChanged(int index)
         ui->categoryStack->setCurrentIndex(1);
     }
     synchUI();
+}
+
+void BuildingTilesDialog::filterEdited(const QString &text)
+{
+    QListWidget* mTilesetNamesView = ui->tilesetList;
+
+    for (int row = 0; row < mTilesetNamesView->count(); row++) {
+        QListWidgetItem* item = mTilesetNamesView->item(row);
+        item->setHidden(text.trimmed().isEmpty() ? false : !item->text().contains(text));
+    }
+
+    QListWidgetItem* current = mTilesetNamesView->currentItem();
+    if (current != nullptr && current->isHidden()) {
+        // Select previous visible row.
+        int row = mTilesetNamesView->row(current) - 1;
+        while (row >= 0 && mTilesetNamesView->item(row)->isHidden()) {
+            row--;
+        }
+        if (row >= 0) {
+            current = mTilesetNamesView->item(row);
+            mTilesetNamesView->setCurrentItem(current);
+            mTilesetNamesView->scrollToItem(current);
+            return;
+        }
+
+        // Select next visible row.
+        row = mTilesetNamesView->row(current) + 1;
+        while (row < mTilesetNamesView->count() && mTilesetNamesView->item(row)->isHidden()) {
+            row++;
+        }
+        if (row < mTilesetNamesView->count()) {
+            current = mTilesetNamesView->item(row);
+            mTilesetNamesView->setCurrentItem(current);
+            mTilesetNamesView->scrollToItem(current);
+            return;
+        }
+
+        // All items hidden
+        mTilesetNamesView->setCurrentItem(nullptr);
+    }
+
+    current = mTilesetNamesView->currentItem();
+    if (current != nullptr) {
+        mTilesetNamesView->scrollToItem(current);
+    }
 }
 
 void BuildingTilesDialog::tilesetSelectionChanged()

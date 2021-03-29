@@ -125,6 +125,9 @@ protected slots:
     void changeDataOffsetDY(bool dy);
 
     void tileContextMenu_AddFloor();
+    void tileContextMenu_AddNorthAndWestTiles();
+    void tileContextMenu_AddSouthAndEastTiles();
+    void tileContextMenu_AddNorthWestCorner();
 
 private:
     Ui::TileRotationWindow *ui;

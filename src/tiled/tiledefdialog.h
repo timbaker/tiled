@@ -87,6 +87,7 @@ private slots:
     void chooseTilesDirectory();
 #endif
 
+    void filterEdited(const QString &text);
     void currentTilesetChanged(int row);
     void goBack();
     void goForward();

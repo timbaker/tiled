@@ -82,6 +82,7 @@ protected slots:
     void overlayActivated(const QModelIndex &index);
     void overlayEntryHover(const QModelIndex &index, int entryIndex);
     void scrollToNow(const QModelIndex &index);
+    void filterEdited(const QString &text);
     void tileActivated(const QModelIndex &index);
     void tilesetSelectionChanged();
     void manageTilesets();
@@ -132,7 +133,7 @@ public:
     explicit ContainerOverlayDialog(QWidget *parent = nullptr);
 
 protected slots:
-    void tileDropped(AbstractOverlay *overlay, const QStringList &tileNames);
+    void tileDropped(AbstractOverlay *overlay, const QStringList &tileNames) override;
     void showContextMenu(const QModelIndex &index, int entryIndex, QContextMenuEvent *event);
 
 protected:
