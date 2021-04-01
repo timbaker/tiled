@@ -112,7 +112,7 @@ void ObjectTypesModel::removeObjectTypes(const QModelIndexList &indexes)
     foreach (const QModelIndex &index, indexes)
         rows.append(index.row());
 
-    qSort(rows);
+    std::sort(rows.begin(), rows.end());
 
     for (int i = rows.size() - 1; i >= 0; --i) {
         const int row = rows.at(i);

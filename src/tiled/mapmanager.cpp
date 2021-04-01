@@ -503,7 +503,7 @@ MapInfo *MapManager::getPlaceholderMap(const QString &mapName, int width, int he
                        mapInfo->tileWidth(), mapInfo->tileHeight());
 #ifndef WORLDED
     for (int level = 0; level < 1; level++) {
-        TileLayer *tl = new TileLayer(QLatin1Literal("Tile Layer"), 0, 0, 300, 300);
+        TileLayer *tl = new TileLayer(QLatin1String("Tile Layer"), 0, 0, 300, 300);
         tl->setLevel(level);
         map->addLayer(tl);
     }
@@ -757,7 +757,7 @@ void MapManager::buildingLoadedByThread(Building *building, MapInfo *mapInfo)
     QSet<Tileset*> usedTilesets = map->usedTilesets();
     usedTilesets.remove(TilesetManager::instance()->missingTileset());
 
-    TileMetaInfoMgr::instance()->loadTilesets(usedTilesets.toList());
+    TileMetaInfoMgr::instance()->loadTilesets(QList<Tileset*>(usedTilesets.constBegin(), usedTilesets.constEnd()));
 
     // The map references TileMetaInfoMgr's tilesets, but we add a reference
     // to them ourself below.

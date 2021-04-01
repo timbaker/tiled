@@ -55,7 +55,7 @@ ZLevelsDock::ZLevelsDock(QWidget *parent) :
 
     QWidget *widget = new QWidget(this);
     QVBoxLayout *layout = new QVBoxLayout(widget);
-    layout->setMargin(5);
+    layout->setContentsMargins(5, 5, 5, 5);
 
     QHBoxLayout *opacityLayout = new QHBoxLayout;
     mOpacitySlider->setRange(0, 100);

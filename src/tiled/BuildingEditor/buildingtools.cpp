@@ -667,8 +667,8 @@ void SelectMoveRoomsTool::updateMovingItems()
 
             // Erase the area being moved.
             QRect floorBounds = floor->bounds();
-            foreach (QRect r, selectedArea().rects()) {
-                r &= floorBounds;
+            for (const QRect &r1 : selectedArea()) {
+                QRect r = r1 & floorBounds;
                 for (int x = r.left(); x <= r.right(); x++)
                     for (int y = r.top(); y <= r.bottom(); y++) {
                         dragBmp->setPixel(x, y, qRgb(0,0,0));
@@ -679,8 +679,8 @@ void SelectMoveRoomsTool::updateMovingItems()
             }
 
             // Copy the moved area to its new location.
-            foreach (QRect src, selectedArea().rects()) {
-                src &= floorBounds;
+            for (const QRect &src1 : selectedArea()) {
+                QRect src = src1 & floorBounds;
                 for (int x = src.left(); x <= src.right(); x++) {
                     for (int y = src.top(); y <= src.bottom(); y++) {
                         QPoint p = QPoint(x, y) + mDragOffset;
@@ -782,8 +782,8 @@ void SelectMoveRoomsTool::finishMovingFloor(BuildingFloor *floor, bool objectsTo
     QVector<QVector<Room*> > grid = floor->grid();
 
     QRect floorBounds = floor->bounds();
-    foreach (QRect src, selectedArea().rects()) {
-        src &= floorBounds;
+    for (const QRect& src1 : selectedArea()) {
+        QRect src = src1 & floorBounds;
         for (int x = src.left(); x <= src.right(); x++) {
             for (int y = src.top(); y <= src.bottom(); y++) {
                 grid[x][y] = nullptr;
@@ -791,8 +791,8 @@ void SelectMoveRoomsTool::finishMovingFloor(BuildingFloor *floor, bool objectsTo
         }
     }
 
-    foreach (QRect src, selectedArea().rects()) {
-        src &= floorBounds;
+    for (const QRect& src1 : selectedArea()) {
+        QRect src = src1 & floorBounds;
         for (int x = src.left(); x <= src.right(); x++) {
             for (int y = src.top(); y <= src.bottom(); y++) {
                 QPoint p = QPoint(x, y) + mDragOffset;
@@ -809,8 +809,8 @@ void SelectMoveRoomsTool::finishMovingFloor(BuildingFloor *floor, bool objectsTo
     QMap<QString,FloorTileGrid*> grime = floor->grimeClone();
 
     floorBounds = floor->bounds(1, 1);
-    foreach (QRect src, selectedArea().rects()) {
-        src &= floorBounds;
+    for (const QRect& src1 : selectedArea()) {
+        QRect src = src1 & floorBounds;
         for (int x = src.left(); x <= src.right(); x++) {
             for (int y = src.top(); y <= src.bottom(); y++) {
                 foreach (FloorTileGrid *stg, grime.values())
@@ -819,8 +819,8 @@ void SelectMoveRoomsTool::finishMovingFloor(BuildingFloor *floor, bool objectsTo
         }
     }
 
-    foreach (QRect src, selectedArea().rects()) {
-        src &= floorBounds;
+    for (const QRect& src1 : selectedArea()) {
+        QRect src = src1 & floorBounds;
         for (int x = src.left(); x <= src.right(); x++) {
             for (int y = src.top(); y <= src.bottom(); y++) {
                 QPoint p = QPoint(x, y) + mDragOffset;

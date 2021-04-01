@@ -95,13 +95,13 @@ CategoryDock::CategoryDock(QWidget *parent) :
 
     QHBoxLayout *hbox = new QHBoxLayout;
     hbox->setObjectName(QLatin1String("CategoryDock.comboLayout"));
-    hbox->setMargin(0);
+    hbox->setContentsMargins(0, 0, 0, 0);
     hbox->addStretch(1);
     hbox->addWidget(ui->scaleComboBox);
 
     QVBoxLayout *vbox = new QVBoxLayout;
     vbox->setObjectName(QLatin1String("CategoryDock.contentsLayout"));
-    vbox->setMargin(2);
+    vbox->setContentsMargins(2, 2, 2, 2);
     vbox->addWidget(ui->categorySplitter);
     vbox->addLayout(hbox);
     QWidget *w = new QWidget;

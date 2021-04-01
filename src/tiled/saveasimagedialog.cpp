@@ -231,7 +231,7 @@ void SaveAsImageDialog::accept()
 
     if (scale != qreal(1)) {
         painter.setRenderHints(QPainter::SmoothPixmapTransform |
-                               QPainter::HighQualityAntialiasing);
+                               QPainter::Antialiasing);
         painter.setTransform(QTransform::fromScale(scale,
                                                    scale));
     }

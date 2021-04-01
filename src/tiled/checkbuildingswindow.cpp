@@ -53,7 +53,7 @@ CheckBuildingsWindow::CheckBuildingsWindow(QWidget *parent) :
     connect(ui->check2x, SIGNAL(clicked()), SLOT(syncList()));
 
     ui->dirEdit->setText(BuildingPreferences::instance()->mapsDirectory());
-//    ui->dirEdit->setText(QLatin1Literal("C:/Users/Tim/Desktop/ProjectZomboid/Buildings"));
+//    ui->dirEdit->setText(QLatin1String("C:/Users/Tim/Desktop/ProjectZomboid/Buildings"));
 
     ui->checkSwitches->setChecked(true);
     ui->checkInteriorOutside->setChecked(false);
@@ -177,7 +177,7 @@ void CheckBuildingsWindow::check(const QString &filePath)
         bmap.addRoomDefObjects(map);
         QSet<Tileset*> usedTilesets = map->usedTilesets();
         usedTilesets.remove(TilesetManager::instance()->missingTileset());
-        TileMetaInfoMgr::instance()->loadTilesets(usedTilesets.toList());
+        TileMetaInfoMgr::instance()->loadTilesets(QList<Tileset*>(usedTilesets.constBegin(), usedTilesets.constEnd()));
 //            TilesetManager::instance()->removeReferences(map->tilesets());
         check(&bmap, building, map, filePath);
         TilesetManager::instance()->removeReferences(map->tilesets());
@@ -218,11 +218,11 @@ void CheckBuildingsWindow::check(BuildingMap *bmap, Building *building, Map *map
             int x = bo->x(), y = bo->y();
             if (FurnitureObject *fo = bo->asFurniture()) {
                 for (BuildingTile *btile : fo->buildingTiles()) {
-                    if (btile->mTilesetName == QLatin1Literal("fixtures_sinks_01")) {
+                    if (btile->mTilesetName == QLatin1String("fixtures_sinks_01")) {
                         if (Room *room = floor->GetRoomAt(x, y))
                             roomWithSink |= room;
                     }
-                    if (btile->mTilesetName == QLatin1Literal("lighting_indoor_01")) {
+                    if (btile->mTilesetName == QLatin1String("lighting_indoor_01")) {
                         BuildingSquare &square = floor->squares[x][y];
                         if (btile->mIndex == NORTH_SWITCH || btile->mIndex == NORTH_SWITCH + 4) {
                             if (!square.HasWallN())
@@ -287,7 +287,7 @@ void CheckBuildingsWindow::check(BuildingMap *bmap, Building *building, Map *map
                     }
                     TileDefTileset *tdts = mTileDefFile.tileset(tile->tileset()->name());
 #if 0
-                    if (tile != 0 && tile->tileset()->name() == QLatin1Literal("lighting_indoor_01")) {
+                    if (tile != 0 && tile->tileset()->name() == QLatin1String("lighting_indoor_01")) {
                         if (tile->id() == NORTH_SWITCH) {
                             if (!square.IsWallOrient(BuildingSquare::WallOrientN) && !square.IsWallOrient(BuildingSquare::WallOrientNW))
                                 issue("NORTH SWITCH NOT ON A WALL", x, y, z);
@@ -324,23 +324,23 @@ void CheckBuildingsWindow::check(BuildingMap *bmap, Building *building, Map *map
                         }
                     }
 #endif
-                    if (tile->tileset()->name().startsWith(QLatin1Literal("floors_interior_"))) {
+                    if (tile->tileset()->name().startsWith(QLatin1String("floors_interior_"))) {
                         if (!interiorFloor && floor->GetRoomAt(x, y) == nullptr) {
                             issue(Issue::InteriorOutside, "Interior floor tile outside building", x, y, z);
                             interiorFloor = true;
                         }
                     }
-                    if (layer->name() == QLatin1Literal("Floor")) {
-                        if (tile->tileset()->name().startsWith(QLatin1Literal("overlay_grime_"))) {
+                    if (layer->name() == QLatin1String("Floor")) {
+                        if (tile->tileset()->name().startsWith(QLatin1String("overlay_grime_"))) {
                             issue(Issue::Grime, "Grime in the floor layer", x, y, z);
                         }
                     }
-                    if (tile->tileset()->name() == QLatin1Literal("vegetation_foliage_01")) {
+                    if (tile->tileset()->name() == QLatin1String("vegetation_foliage_01")) {
                         bool foundBlendsNatural = false;
                         for (TileLayer *tl2 : layers->layers()) {
                             if (tl2 == layer)
                                 break;
-                            if (!tl2->cellAt(x, y).isEmpty() && tl2->cellAt(x, y).tile->tileset()->name().startsWith(QLatin1Literal(""))) {
+                            if (!tl2->cellAt(x, y).isEmpty() && tl2->cellAt(x, y).tile->tileset()->name().startsWith(QLatin1String(""))) {
                                 foundBlendsNatural = true;
                                 break;
                             }
@@ -349,28 +349,28 @@ void CheckBuildingsWindow::check(BuildingMap *bmap, Building *building, Map *map
                             issue(Issue::Rearranged, tr("vegetation_foliage tile must be on blends_natural for erosion to work"), x, y, z);
                         }
                     }
-                    if (tile->tileset()->name() == QLatin1Literal("vegetation_walls_01")) {
+                    if (tile->tileset()->name() == QLatin1String("vegetation_walls_01")) {
                         issue(Issue::Rearranged, tr("Replace vegetation_walls_01 with f_wallvines_1"), x, y, z);
                     }
                     if (RearrangeTiles::instance()->isRearranged(tile)) {
                         issue(Issue::Rearranged, tr("Rearranged tile (%1)").arg(BuildingTilesMgr::instance()->nameForTile(tile)), x, y, z);
                     }
-                    if (tile->tileset()->name().startsWith(QLatin1Literal("fixtures_counters_01"))) {
+                    if (tile->tileset()->name().startsWith(QLatin1String("fixtures_counters_01"))) {
                         counters++;
                     }
                     if (tdts != nullptr) {
                         if (TileDefTile* tdt = tdts->tileAt(tile->id())) {
-                            if (tdt->mProperties.contains(QLatin1Literal("WallW")) && !tdt->mProperties.contains(QLatin1Literal("GarageDoor"))) {
+                            if (tdt->mProperties.contains(QLatin1String("WallW")) && !tdt->mProperties.contains(QLatin1String("GarageDoor"))) {
                                 bWallW = true;
                             }
-                            if (tdt->mProperties.contains(QLatin1Literal("WallN")) && !tdt->mProperties.contains(QLatin1Literal("GarageDoor"))) {
+                            if (tdt->mProperties.contains(QLatin1String("WallN")) && !tdt->mProperties.contains(QLatin1String("GarageDoor"))) {
                                 bWallN = true;
                             }
-                            if (tdt->mProperties.contains(QLatin1Literal("doorW"))) {
+                            if (tdt->mProperties.contains(QLatin1String("doorW"))) {
                                 doorTile = tile;
                                 bDoorW = true;
                             }
-                            if (tdt->mProperties.contains(QLatin1Literal("doorN"))) {
+                            if (tdt->mProperties.contains(QLatin1String("doorN"))) {
                                 doorTile = tile;
                                 bDoorN = true;
                             }
@@ -392,9 +392,9 @@ void CheckBuildingsWindow::check(BuildingMap *bmap, Building *building, Map *map
         }
 
         for (Room *room : roomSize.keys()) {
-            if (room->Name != QLatin1Literal("empty") && roomSize[room] > 4 && !roomWithSwitch.contains(room))
+            if (room->Name != QLatin1String("empty") && roomSize[room] > 4 && !roomWithSwitch.contains(room))
                 issue(Issue::RoomLight, QString::fromLatin1("Room without Light Switch (%1)").arg(room->Name), roomPos[room].x(), roomPos[room].y(), z);
-            if (!roomWithSink.contains(room) && (room->Name.toLower() == QLatin1Literal("kitchen") || room->Name.toLower() == QLatin1Literal("bathroom")))
+            if (!roomWithSink.contains(room) && (room->Name.toLower() == QLatin1String("kitchen") || room->Name.toLower() == QLatin1String("bathroom")))
                 issue(Issue::Sinks, QString::fromLatin1("Room without Sink (%1)").arg(room->Name), roomPos[room].x(), roomPos[room].y(), z);
         }
 

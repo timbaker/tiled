@@ -137,14 +137,14 @@ void TileDefCompare::compare()
 
     ui->textBrowser->insertHtml(QLatin1String("<br><b>Properties differences:</b><br>"));
     QSet<QString> shared = in1 & in2;
-    QStringList sorted3 = shared.toList();
+    QStringList sorted3(shared.constBegin(), shared.constEnd());
     sorted3.sort();
     foreach (QString tsName, sorted3) {
         TileDefTileset *ts1 = mPackFile1.tileset(tsName);
         TileDefTileset *ts2 = mPackFile2.tileset(tsName);
         for (int i = 0; i < qMin(ts1->mTiles.size(), ts2->mTiles.size()); i++) {
             if (ts1->mTiles[i]->mProperties != ts2->mTiles[i]->mProperties) {
-                ui->textBrowser->insertPlainText(QString(QLatin1String("%1 %2\n")).arg(tsName).arg(i));
+                ui->textBrowser->insertPlainText(QStringLiteral("%1 %2\n").arg(tsName).arg(i));
                 QString s1 = propertiesString(1, ts1->mTiles[i]);
                 QString s2 = propertiesString(2, ts2->mTiles[i]);
                 ui->textBrowser->insertPlainText(s1 + QLatin1String("\n"));

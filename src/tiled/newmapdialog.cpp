@@ -31,6 +31,7 @@
 #include <QSettings>
 #ifdef ZOMBOID
 #include <QDateTime>
+#include <QRandomGenerator>
 #endif
 
 static const char * const ORIENTATION_KEY = "Map/Orientation";
@@ -117,8 +118,9 @@ MapDocument *NewMapDialog::createMap()
 #endif
 
 #ifdef ZOMBOID
-    qsrand(QDateTime().toTime_t());
-    int seed1 = qrand(), seed2 = qrand();
+    QRandomGenerator prng(QDateTime().toSecsSinceEpoch());
+    quint32 seed1 = prng.generate();
+    quint32 seed2 = prng.generate();
     map->rbmp(0).rrands().setSeed(seed1);
     map->rbmp(1).rrands().setSeed(seed2);
 #endif

@@ -1305,7 +1305,7 @@ void MainWindow::exportNewBinary()
     QString filter = tr("Project Zomboid Map Binary (*.pzby)");
     QString selectedFilter;
     QString fileName = QFileDialog::getSaveFileName(this, tr("Export As..."),
-                                                    QLatin1Literal("test.pzby"),
+                                                    QLatin1String("test.pzby"),
                                                     filter, &selectedFilter);
     if (fileName.isEmpty())
         return;
@@ -2089,7 +2089,7 @@ static QList<QRect> cleanupRegion(QRegion region)
 {
     // Clean up the region by merging vertically-adjacent rectangles of the
     // same width.
-    QVector<QRect> rects = region.rects();
+    QVector<QRect> rects(region.cbegin(), region.cend());
     for (int i = 0; i < rects.size(); i++) {
         QRect r = rects[i];
         if (!r.isValid()) continue;
@@ -2805,8 +2805,8 @@ void MainWindow::updateActions()
         QString name = layer->name();
         if (name.isEmpty())
             name = tr("<no name>");
-        else
-            name = MapComposite::layerNameWithoutPrefix(name);
+//        else
+//            name = MapComposite::layerNameWithoutPrefix(name);
         mCurrentLayerButton->setText(tr("Layer: %1 ").arg(name));
     } else {
         mCurrentLevelButton->setText(tr("Level: <none> "));
@@ -2863,8 +2863,8 @@ void MainWindow::resizeStatusInfoLabel()
         height = qMax(height, mMapDocument->map()->height());
     }
     QFontMetrics fm = mStatusInfoLabel->fontMetrics();
-    QString coordString = QString(QLatin1String("%1,%2")).arg(width).arg(height);
-    mStatusInfoLabel->setMinimumWidth(fm.width(coordString) + 8);
+    QString coordString = QStringLiteral("%1,%2").arg(width).arg(height);
+    mStatusInfoLabel->setMinimumWidth(fm.horizontalAdvance(coordString) + 8);
 }
 
 void MainWindow::aboutToShowLevelMenu()
@@ -2938,21 +2938,21 @@ void MainWindow::triggeredLevelMenu(QAction *action)
     if (CompositeLayerGroup *layerGroup = mMapDocument->mapComposite()->tileLayersForLevel(level)) {
         if (Layer *layer = mMapDocument->currentLayer()) {
             // Try to switch to a layer with the same name in the new level
-            QString name = MapComposite::layerNameWithoutPrefix(layer);
+            QString name = layer->name(); // MapComposite::layerNameWithoutPrefix(layer);
             if (layer->isTileLayer()) {
                 for (TileLayer *tl : layerGroup->layers()) {
-                    QString name2 = MapComposite::layerNameWithoutPrefix(tl);
+                    QString name2 = tl->name(); // MapComposite::layerNameWithoutPrefix(tl);
                     if (name == name2) {
-                        int index = mMapDocument->map()->layers().indexOf(tl);
+                        int index = mapLevel->layers().indexOf(tl);
                         mMapDocument->setCurrentLevelAndLayer(level, index);
                         return;
                     }
                 }
             } else if (layer->isObjectGroup()) {
                 for (ObjectGroup *og : mapLevel->objectGroups()) {
-                    QString name2 = MapComposite::layerNameWithoutPrefix(og);
+                    QString name2 = og->name(); // MapComposite::layerNameWithoutPrefix(og);
                     if (name == name2) {
-                        int index = mMapDocument->map()->layers().indexOf(og);
+                        int index = mapLevel->layers().indexOf(og);
                         mMapDocument->setCurrentLevelAndLayer(level, index);
                         return;
                     }

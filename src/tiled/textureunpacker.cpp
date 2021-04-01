@@ -123,7 +123,7 @@ bool TextureUnpacker::readTxt(const QString &fileName)
             int n = line.indexOf(QLatin1Char('='));
             QString tileName = line.left(n).trimmed();
             QString xy = line.mid(n + 1).trimmed();
-            QStringList xyList = xy.split(QLatin1Char(' '), QString::SkipEmptyParts);
+            QStringList xyList = xy.split(QLatin1Char(' '), Qt::SkipEmptyParts);
             if (xyList.size() != 8)
                 return false;
             TxtEntry e;

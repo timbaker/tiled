@@ -118,7 +118,7 @@ bool PaintTileLayer::mergeWith(const QUndoCommand *other)
     mSource->merge(pos, o->mSource);
 
     // Copy the newly erased tiles from the other command over
-    foreach (const QRect &rect, newRegion.rects())
+    for (const QRect &rect : newRegion)
         for (int y = rect.top(); y <= rect.bottom(); ++y)
             for (int x = rect.left(); x <= rect.right(); ++x)
                 mErased->setCell(x - mX,

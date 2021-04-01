@@ -109,7 +109,7 @@ protected slots:
     void syncUI();
 
 protected:
-    virtual QString defaultWindowTitle() const { return QLatin1Literal("Overlays"); }
+    virtual QString defaultWindowTitle() const { return QLatin1String("Overlays"); }
     virtual AbstractOverlay *createOverlay(Tiled::Tile *tile) = 0;
     virtual AbstractOverlayEntry *createEntry(AbstractOverlay* parent) = 0;
 

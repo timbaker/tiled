@@ -34,7 +34,7 @@
 // I found the solution here:
 // http://www.archivum.info/qt-interest@trolltech.com/2005-12/00242/RE-Linker-Problem-while-using-QMap.html
 template class __declspec(dllimport) QMap<QString, QString>;
-template class __declspec(dllimport) QVector<QVector<int> >;
+template class __declspec(dllimport) QVector<QVector<quint32> >;
 #endif
 
 using namespace BuildingEditor;

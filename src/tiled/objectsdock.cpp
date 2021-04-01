@@ -78,7 +78,7 @@ ObjectsDock::ObjectsDock(QWidget *parent)
 
     QWidget *widget = new QWidget(this);
     QVBoxLayout *layout = new QVBoxLayout(widget);
-    layout->setMargin(5);
+    layout->setContentsMargins(5, 5, 5, 5);
     layout->addWidget(mObjectsView);
 
     MapDocumentActionHandler *handler = MapDocumentActionHandler::instance();

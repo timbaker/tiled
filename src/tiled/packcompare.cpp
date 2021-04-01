@@ -22,6 +22,7 @@
 
 #include <QFileDialog>
 #include <QMessageBox>
+#include <QSet>
 
 PackCompare::PackCompare(QWidget *parent) :
     QMainWindow(parent),

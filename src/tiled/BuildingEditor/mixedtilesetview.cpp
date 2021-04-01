@@ -283,10 +283,11 @@ void MixedTilesetView::mouseReleaseEvent(QMouseEvent *event)
 
 void MixedTilesetView::wheelEvent(QWheelEvent *event)
 {
-    if (event->modifiers() & Qt::ControlModifier
-        && event->orientation() == Qt::Vertical)
+    QPoint numDegrees = event->angleDelta() / 8;
+    if ((event->modifiers() & Qt::ControlModifier) && (numDegrees.y() != 0))
     {
-        mZoomable->handleWheelDelta(event->delta());
+        QPoint numSteps = numDegrees / 15;
+        mZoomable->handleWheelDelta(numSteps.y() * 120);
         return;
     }
 
@@ -336,7 +337,7 @@ void MixedTilesetView::setTiles(const QList<Tile *> &tiles,
     mMaxHeaderWidth = 0;
     if (model()->columnCount() == 1) {
         foreach (QString header, headers) {
-            int width = fontMetrics().width(header);
+            int width = fontMetrics().horizontalAdvance(header);
             mMaxHeaderWidth = qMax(mMaxHeaderWidth, width);
         }
     }

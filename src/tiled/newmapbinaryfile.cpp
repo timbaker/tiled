@@ -171,7 +171,7 @@ bool NewMapBinaryFile::generateHeader(MapComposite *mapComposite)
 
     mJumboTreeTileset = nullptr;
     if (mJumboTreeTileset == nullptr) {
-        mJumboTreeTileset = new Tiled::Tileset(QLatin1Literal("jumbo_tree_01"), 64, 128);
+        mJumboTreeTileset = new Tiled::Tileset(QLatin1String("jumbo_tree_01"), 64, 128);
         mJumboTreeTileset->loadFromNothing(QSize(64, 128), QLatin1String("jumbo_tree_01"));
     }
     tilesets += mJumboTreeTileset;

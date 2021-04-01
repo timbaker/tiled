@@ -54,7 +54,7 @@ void EditModeStatusBar::resizeCoordsLabel()
     }
     QFontMetrics fm = coordLabel->fontMetrics();
     QString coordString = QString(QLatin1String("%1,%2")).arg(width).arg(height);
-    coordLabel->setMinimumWidth(fm.width(coordString) + 8);
+    coordLabel->setMinimumWidth(fm.horizontalAdvance(coordString) + 8);
 }
 
 void EditModeStatusBar::mouseCoordinateChanged(const QPoint &tilePos)

@@ -441,7 +441,7 @@ bool CommandDataModel::move(int commandIndex, int newIndex)
 
     if (commandIndex - newIndex == 1 || newIndex - commandIndex == 1)
         // Swapping is probably more efficient than removing/inserting
-        mCommands.swap(commandIndex, newIndex);
+        mCommands.swapItemsAt(commandIndex, newIndex);
     else {
         const Command command = mCommands.at(commandIndex);
         mCommands.removeAt(commandIndex);

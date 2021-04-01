@@ -177,12 +177,12 @@ void StyleHelper::verticalGradient(QPainter *painter, const QRect &spanRect, con
     if (StyleHelper::usePixmapCache()) {
         QString key;
         QColor keyColor = baseColor(lightColored);
-        key.sprintf("mh_vertical %d %d %d %d %d",
+        key.asprintf("mh_vertical %d %d %d %d %d",
             spanRect.width(), spanRect.height(), clipRect.width(),
             clipRect.height(), keyColor.rgb());;
 
         QPixmap pixmap;
-        if (!QPixmapCache::find(key, pixmap)) {
+        if (!QPixmapCache::find(key, &pixmap)) {
             pixmap = QPixmap(clipRect.size());
             QPainter p(&pixmap);
             QRect rect(0, 0, clipRect.width(), clipRect.height());
@@ -235,12 +235,12 @@ void StyleHelper::horizontalGradient(QPainter *painter, const QRect &spanRect, c
     if (StyleHelper::usePixmapCache()) {
         QString key;
         QColor keyColor = baseColor(lightColored);
-        key.sprintf("mh_horizontal %d %d %d %d %d %d",
+        key.asprintf("mh_horizontal %d %d %d %d %d %d",
             spanRect.width(), spanRect.height(), clipRect.width(),
             clipRect.height(), keyColor.rgb(), spanRect.x());
 
         QPixmap pixmap;
-        if (!QPixmapCache::find(key, pixmap)) {
+        if (!QPixmapCache::find(key, &pixmap)) {
             pixmap = QPixmap(clipRect.size());
             QPainter p(&pixmap);
             QRect rect = QRect(0, 0, clipRect.width(), clipRect.height());
@@ -275,11 +275,11 @@ void StyleHelper::drawArrow(QStyle::PrimitiveElement element, QPainter *painter,
     int size = qMin(r.height(), r.width());
     QPixmap pixmap;
     QString pixmapName;
-    pixmapName.sprintf("arrow-%s-%d-%d-%d-%lld",
+    pixmapName.asprintf("arrow-%s-%d-%d-%d-%lld",
                        "$qt_ia",
                        uint(option->state), element,
                        size, option->palette.cacheKey());
-    if (!QPixmapCache::find(pixmapName, pixmap)) {
+    if (!QPixmapCache::find(pixmapName, &pixmap)) {
         int border = size/5;
         int sqsize = 2*(size/2);
         QImage image(sqsize, sqsize, QImage::Format_ARGB32);
@@ -347,12 +347,12 @@ void StyleHelper::menuGradient(QPainter *painter, const QRect &spanRect, const Q
 {
     if (StyleHelper::usePixmapCache()) {
         QString key;
-        key.sprintf("mh_menu %d %d %d %d %d",
+        key.asprintf("mh_menu %d %d %d %d %d",
             spanRect.width(), spanRect.height(), clipRect.width(),
             clipRect.height(), StyleHelper::baseColor().rgb());
 
         QPixmap pixmap;
-        if (!QPixmapCache::find(key, pixmap)) {
+        if (!QPixmapCache::find(key, &pixmap)) {
             pixmap = QPixmap(clipRect.size());
             QPainter p(&pixmap);
             QRect rect = QRect(0, 0, clipRect.width(), clipRect.height());
@@ -374,7 +374,7 @@ void StyleHelper::drawIconWithShadow(const QIcon &icon, const QRect &rect,
     QPixmap cache;
     QString pixmapName = QString::fromLatin1("icon %0 %1 %2").arg(icon.cacheKey()).arg(iconMode).arg(rect.height());
 
-    if (!QPixmapCache::find(pixmapName, cache)) {
+    if (!QPixmapCache::find(pixmapName, &cache)) {
         QPixmap px = icon.pixmap(rect.size());
         cache = QPixmap(px.size() + QSize(radius * 2, radius * 2));
         cache.fill(Qt::transparent);

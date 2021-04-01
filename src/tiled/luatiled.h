@@ -93,6 +93,11 @@ public:
     LuaRegion() : QRegion() {}
     LuaRegion(const QRegion &rgn) : QRegion(rgn) {}
 
+    QVector<QRect> rects() const
+    {
+        return QVector<QRect>(cbegin(), cend());
+    }
+
     void unite(int x, int y, int w, int h) { *this += QRect(x, y, w, h); }
     void unite(QRect &rect) { *this += rect; }
     void unite(LuaRegion &rgn) { *this += rgn; }

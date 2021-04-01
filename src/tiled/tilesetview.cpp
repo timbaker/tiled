@@ -279,10 +279,11 @@ bool TilesetView::showLayerNames() const
  */
 void TilesetView::wheelEvent(QWheelEvent *event)
 {
-    if (event->modifiers() & Qt::ControlModifier
-        && event->orientation() == Qt::Vertical)
+    QPoint numDegrees = event->angleDelta() / 8;
+    if ((event->modifiers() & Qt::ControlModifier) && (numDegrees.y() != 0))
     {
-        mZoomable->handleWheelDelta(event->delta());
+        QPoint numSteps = numDegrees / 15;
+        mZoomable->handleWheelDelta(numSteps.y() * 120);
         return;
     }
 
@@ -381,7 +382,7 @@ void TilesetView::contextMenuEvent(QContextMenuEvent *event)
         QSet<QString> set;
         foreach (TileLayer *tl, mMapDocument->map()->tileLayers()) {
             if (tl->group()) {
-                QString name = MapComposite::layerNameWithoutPrefix(tl);
+                QString name = tl->name(); // MapComposite::layerNameWithoutPrefix(tl);
                 set.insert(name);
             }
         }
@@ -393,7 +394,7 @@ void TilesetView::contextMenuEvent(QContextMenuEvent *event)
             if (!layerName.isEmpty())
                 set.insert(layerName);
         }
-        layerNames = QStringList::fromSet(set);
+        layerNames = QStringList(set.constBegin(), set.constEnd());
         layerNames.sort();
 
         QMenu *layersMenu = menu.addMenu(QLatin1String("Default Layer"));

@@ -853,7 +853,7 @@ TilesetDock::TilesetDock(QWidget *parent):
 
     QVBoxLayout *tilesetLayout = new QVBoxLayout();
     tilesetLayout->setSpacing(5);
-    tilesetLayout->setMargin(0);
+    tilesetLayout->setContentsMargins(0, 0, 0, 0);
     tilesetLayout->addWidget(mTilesetView);
     tilesetLayout->addLayout(tilesetToolBarLayout);
 
@@ -934,7 +934,7 @@ TilesetDock::TilesetDock(QWidget *parent):
 
     QVBoxLayout *tilesetNamesLayout = new QVBoxLayout();
     tilesetNamesLayout->setSpacing(5);
-    tilesetNamesLayout->setMargin(0);
+    tilesetNamesLayout->setContentsMargins(0, 0, 0, 0);
     QToolBar *toolbar = new QToolBar();
     toolbar->setIconSize(QSize(16, 16));
     toolbar->addAction(mActionTilesetUp);
@@ -957,7 +957,7 @@ TilesetDock::TilesetDock(QWidget *parent):
     QWidget *outer = new QWidget(this);
     QHBoxLayout *outerLayout = new QHBoxLayout(outer);
     outerLayout->setSpacing(5);
-    outerLayout->setMargin(5);
+    outerLayout->setContentsMargins(5, 5, 5, 5);
     outerLayout->addLayout(tilesetNamesLayout);
     outerLayout->addLayout(tilesetLayout);
     setWidget(outer);
@@ -1005,7 +1005,7 @@ void TilesetDock::setMapDocument(MapDocument *mapDocument)
 
         QString cacheName = mCurrentTilesets.take(mMapDocument);
         if (mTilesetByName.contains(cacheName)) {
-            int row = mTilesets.indexOf(mTilesetByName[cacheName]);
+            int row = mTilesets.indexOf(mTilesetByName.values(cacheName).first());
             mTilesetNamesView->setCurrentRow(row);
         }
     }
@@ -1019,7 +1019,7 @@ void TilesetDock::tilePicked(Tile *tile)
         return;
 
     if (mTilesetByName.contains(tile->tileset()->name())) {
-        int row = mTilesets.indexOf(mTilesetByName[tile->tileset()->name()]);
+        int row = mTilesets.indexOf(mTilesetByName.values(tile->tileset()->name()).first());
         mTilesetNamesView->setCurrentRow(row);
         row = tile->id() / tile->tileset()->columnCount();
         int col = tile->id() % tile->tileset()->columnCount();
@@ -1426,7 +1426,7 @@ void TilesetDock::switchLayerForTile(Tile *tile)
         if (TileLayer *tl = currentLayer->asTileLayer()) { // FIXME: ObjectGroup too?
             if (tl->group()) {
                 for (TileLayer *tl1 : tl->group()->layers()) {
-                    QString name = MapComposite::layerNameWithoutPrefix(tl1);
+                    QString name = tl1->name(); // MapComposite::layerNameWithoutPrefix(tl1);
                     if (name == layerName) {
                         int layerIndex = mMapDocument->map()->layers().indexOf(tl1);
                         if (tl1->level() != mMapDocument->currentLevelIndex() || layerIndex != mMapDocument->currentLayerIndex())
@@ -1490,12 +1490,12 @@ void TilesetDock::setTilesetNamesList()
     if (mMapDocument && mMapDocument->map()->tilesets().size()) {
         if (Preferences::instance()->sortTilesets()) {
             foreach (Tileset *ts, mMapDocument->map()->tilesets())
-                mTilesetByName.insertMulti(ts->name(), ts);
+                mTilesetByName.insert(ts->name(), ts);
             mTilesets = mTilesetByName.values();
         } else {
             mTilesets = mMapDocument->map()->tilesets();
             foreach (Tileset *ts, mTilesets)
-                mTilesetByName.insertMulti(ts->name(), ts);
+                mTilesetByName.insert(ts->name(), ts);
         }
 
         int maxWidth = 64;
@@ -1506,7 +1506,7 @@ void TilesetDock::setTilesetNamesList()
                 item->setForeground(Qt::red);
             item->setFlags(item->flags() | Qt::ItemIsEditable);
             mTilesetNamesView->addItem(item);
-            maxWidth = qMax(maxWidth, fm.width(ts->name()));
+            maxWidth = qMax(maxWidth, fm.horizontalAdvance(ts->name()));
         }
         mTilesetNamesView->setFixedWidth(maxWidth + 16 +
             mTilesetNamesView->verticalScrollBar()->sizeHint().width());

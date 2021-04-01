@@ -148,7 +148,9 @@ CommandProcess::CommandProcess(const Command &command, bool inTerminal)
 
     connect(this, SIGNAL(finished(int)), SLOT(deleteLater()));
 
-    start(mFinalCommand);
+    // FIXME Qt 5.15
+    QStringList arguments;
+    start(mFinalCommand, arguments);
 }
 
 void CommandProcess::handleError(QProcess::ProcessError error)

@@ -401,7 +401,7 @@ void LuaTileLayer::fill(const QRect &r, Tile *tile)
 
 void LuaTileLayer::fill(const LuaRegion &rgn, Tile *tile)
 {
-    foreach (QRect r, rgn.rects()) {
+    for (const QRect &r : rgn) {
         fill(r, tile);
     }
 }
@@ -713,7 +713,7 @@ Tileset *LuaMap::tilesetAt(int index)
 void LuaMap::replaceTilesByName(const char *names)
 {
     QString ss = QString::fromLatin1(names);
-    QStringList _names = ss.split(QLatin1Char(';'), QString::SkipEmptyParts);
+    QStringList _names = ss.split(QLatin1Char(';'), Qt::SkipEmptyParts);
     if (_names.size() % 2)
         return; // error
 
@@ -920,7 +920,7 @@ QList<QString> LuaMap::blendLayers()
     QSet<QString> ret;
     foreach (LuaBmpBlend *blend, mBlends)
         ret += blend->mBlend->targetLayer;
-    return ret.toList();
+    return QList<QString>(ret.constBegin(), ret.constEnd());
 }
 
 LuaMapNoBlend *LuaMap::noBlend(const char *layerName)
@@ -1021,7 +1021,7 @@ void LuaMapBmp::fill(const QRect &r, const LuaColor &c)
 
 void LuaMapBmp::fill(const LuaRegion &rgn, const LuaColor &c)
 {
-    foreach (QRect r, rgn.rects())
+    for (const QRect &r : rgn)
         fill(r, c);
 }
 
@@ -1229,7 +1229,7 @@ void LuaMapNoBlend::set(int x, int y, bool noblend)
 
 void LuaMapNoBlend::set(const LuaRegion &rgn, bool noblend)
 {
-    foreach (QRect r, rgn.rects())
+    for (const QRect &r : rgn)
         for (int y = r.top(); y <= r.bottom(); y++)
             for (int x = r.left(); x <= r.right(); x++)
                 set(x, y, noblend);

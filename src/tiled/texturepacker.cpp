@@ -109,7 +109,7 @@ bool TexturePacker::pack(const TexturePackSettings &settings)
                             imageTranslation[key] = tln;
                             if (tdts) {
                                 if (TileDefTile *tdt = tdts->tileAt(x + y * cols)) {
-                                    if (tdt->mProperties.contains(QLatin1Literal("solidfloor")))
+                                    if (tdt->mProperties.contains(QLatin1String("solidfloor")))
                                         toPackFloor += key;
                                     else
                                         toPack += key;
@@ -785,7 +785,7 @@ bool TexturePacker::LoadTileNamesFile(QString imageName, int columns)
             continue;
         if (line.startsWith(QLatin1String("//")))
             continue;
-        QStringList ss = line.split(re, QString::SkipEmptyParts);
+        QStringList ss = line.split(re, Qt::SkipEmptyParts);
         if (ss.size() != 3) {
             mError = tr("\"col row name\" expected on line %1\n%2").arg(lineNumber).arg(imageName);
             return false;

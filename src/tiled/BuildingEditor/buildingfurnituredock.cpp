@@ -76,7 +76,7 @@ BuildingFurnitureDock::BuildingFurnitureDock(QWidget *parent) :
     QHBoxLayout *outerLayout = new QHBoxLayout(outer);
     outerLayout->setObjectName(QLatin1String("FurnitureDock.contentsLayout"));
     outerLayout->setSpacing(5);
-    outerLayout->setMargin(5);
+    outerLayout->setContentsMargins(5, 5, 5, 5);
     outerLayout->addWidget(splitter);
     setWidget(outer);
 

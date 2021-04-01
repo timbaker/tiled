@@ -466,7 +466,7 @@ void TileMetaInfoDialog::setTilesetList()
         if (ts->isMissing())
             item->setForeground(Qt::red);
         ui->tilesets->addItem(item);
-        maxWidth = qMax(maxWidth, fm.width(ts->name()));
+        maxWidth = qMax(maxWidth, fm.horizontalAdvance(ts->name()));
     }
     ui->tilesets->setFixedWidth(maxWidth + 16 +
         ui->tilesets->verticalScrollBar()->sizeHint().width());

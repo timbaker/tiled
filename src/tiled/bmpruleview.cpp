@@ -184,7 +184,7 @@ void BmpRuleDelegate::paint(QPainter *painter,
         QPen oldPen = painter->pen();
         painter->setPen(Qt::blue);
         painter->setFont(mLabelFont);
-        labelWidth = mLabelFontMetrics.width(rule->label) + 6;
+        labelWidth = mLabelFontMetrics.horizontalAdvance(rule->label) + 6;
         painter->drawText(option.rect.left() + extra, option.rect.top() + extra,
                           option.rect.width() - extra * 2, labelHeight, Qt::AlignLeft, rule->label);
         painter->setFont(font);
@@ -601,10 +601,11 @@ void BmpRuleView::mouseDoubleClickEvent(QMouseEvent *event)
 
 void BmpRuleView::wheelEvent(QWheelEvent *event)
 {
-    if (event->modifiers() & Qt::ControlModifier
-        && event->orientation() == Qt::Vertical)
+    QPoint numDegrees = event->angleDelta() / 8;
+    if ((event->modifiers() & Qt::ControlModifier) && (numDegrees.y() != 0))
     {
-        mZoomable->handleWheelDelta(event->delta());
+        QPoint numSteps = numDegrees / 15;
+        mZoomable->handleWheelDelta(numSteps.y() * 120);
         return;
     }
 
@@ -650,7 +651,7 @@ void BmpRuleView::setRules(const Map *map)
             }
         }
     }
-    TileMetaInfoMgr::instance()->loadTilesets(tilesets.toList());
+    TileMetaInfoMgr::instance()->loadTilesets(QList<Tileset*>(tilesets.constBegin(), tilesets.constEnd()));
 
     model()->setRules(map);
 }

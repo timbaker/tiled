@@ -712,7 +712,7 @@ void ZomboidScene::bmpPainted(int bmpIndex, const QRegion &region)
     const MapRenderer *renderer = mMapDocument->renderer();
     const QMargins margins = mMapDocument->map()->drawMargins();
 
-    foreach (const QRect &r, region.rects()) {
+    for (const QRect &r : region) {
         update(renderer->boundingRect(r, 0).adjusted(-margins.left(),
                                                      -margins.top(),
                                                      margins.right(),

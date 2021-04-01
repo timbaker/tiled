@@ -291,7 +291,7 @@ TileEditMode::TileEditMode(QObject *parent) :
 
     QVBoxLayout *vbox = new QVBoxLayout;
     vbox->setObjectName(QLatin1String("TileEditMode.VBox"));
-    vbox->setMargin(0);
+    vbox->setContentsMargins(0, 0, 0, 0);
 //    vbox->addWidget(mToolBar);
     vbox->addWidget(mTabWidget);
     vbox->setStretchFactor(mTabWidget, 1);

@@ -79,7 +79,7 @@ private:
         QStringList ss = entry->usage().split(QLatin1Char(';'));
         for (QString s : ss) {
             s = s.trimmed();
-            if (s.startsWith(QLatin1Literal("alpha="))) {
+            if (s.startsWith(QLatin1String("alpha="))) {
                 bool ok;
                 float alpha = s.remove(0, 6).toFloat(&ok);
                 return ok ? alpha : 1.0f;
@@ -149,7 +149,7 @@ void ContainerOverlayDelegate::paint(QPainter *painter,
                 painter->drawImage(r.adjusted(margins.left(), margins.top(), -margins.right(), -margins.bottom()), baseTile->image());
             }
             if (!tileName.isEmpty()) {
-                Tile *tile = (tileName == QLatin1Literal("none")) ?
+                Tile *tile = (tileName == QLatin1String("none")) ?
                             BuildingEditor::BuildingTilesMgr::instance()->noneTiledTile() :
                             BuildingEditor::BuildingTilesMgr::instance()->tileFor(tileName);
                 if (tile) {
@@ -292,6 +292,8 @@ QWidget *ContainerOverlayDelegate::createEditor(QWidget *parent, const QStyleOpt
         editor->installEventFilter(const_cast<ContainerOverlayDelegate*>(this));
         return editor;
     }
+    default:
+        return nullptr;
     }
 }
 
@@ -755,10 +757,11 @@ void ContainerOverlayView::mouseDoubleClickEvent(QMouseEvent *event)
 
 void ContainerOverlayView::wheelEvent(QWheelEvent *event)
 {
-    if (event->modifiers() & Qt::ControlModifier
-        && event->orientation() == Qt::Vertical)
+    QPoint numDegrees = event->angleDelta() / 8;
+    if ((event->modifiers() & Qt::ControlModifier) && (numDegrees.y() != 0))
     {
-        mZoomable->handleWheelDelta(event->delta());
+        QPoint numSteps = numDegrees / 15;
+        mZoomable->handleWheelDelta(numSteps.y() * 120);
         return;
     }
 

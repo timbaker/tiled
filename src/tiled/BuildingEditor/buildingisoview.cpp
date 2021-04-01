@@ -415,7 +415,7 @@ QStringList BuildingIsoScene::layerNames() const
     int level = mDocument->currentLevel();
     if (CompositeLayerGroup *lg = mBuildingMap->mapComposite()->layerGroupForLevel(level)) {
         foreach (TileLayer *tl, lg->layers())
-            ret += MapComposite::layerNameWithoutPrefix(tl);
+            ret += tl->name(); /*MapComposite::layerNameWithoutPrefix(tl)*/;
     }
     return ret;
 }
@@ -543,7 +543,7 @@ void BuildingIsoScene::setToolTiles(const FloorTileGrid *tiles,
 
     TileLayer *layer = nullptr;
     for (TileLayer *tl : layerGroup->layers()) {
-        if (layerName == MapComposite::layerNameWithoutPrefix(tl)) {
+        if (layerName == tl->name() /*MapComposite::layerNameWithoutPrefix(tl)*/) {
             layer = tl;
             break;
         }
@@ -748,9 +748,9 @@ void BuildingIsoScene::setCursorPosition(const QPoint &pos)
         BuildingRoomDefecator rd(currentFloor(), room);
         rd.defecate();
         QVector<QRect> rects;
-        foreach (QRegion rgn, rd.mRegions) {
+        for (const QRegion &rgn : rd.mRegions) {
             if (rgn.contains(pos)) {
-                rects += rgn.rects();
+                rects += QVector<QRect>(rgn.cbegin(), rgn.cend());
                 break;
             }
         }
@@ -1199,7 +1199,7 @@ void BuildingIsoScene::layersUpdated(int level, const QRegion &rgn)
                 mDarkRectangle->setRect(sceneRect);
             }
         }
-        for (const QRect& r : rgn.rects())
+        for (const QRect& r : rgn)
             item->update(mapRenderer()->boundingRect(r, level).adjusted(0,-(128-32)*2,0,0));
     }
 }
@@ -1282,7 +1282,7 @@ void BuildingIsoView::hideEvent(QHideEvent *event)
 
 void BuildingIsoView::mousePressEvent(QMouseEvent *event)
 {
-    if (event->button() == Qt::MidButton) {
+    if (event->button() == Qt::MiddleButton) {
         setHandScrolling(true);
         return;
     }
@@ -1322,7 +1322,7 @@ void BuildingIsoView::mouseMoveEvent(QMouseEvent *event)
 
 void BuildingIsoView::mouseReleaseEvent(QMouseEvent *event)
 {
-    if (event->button() == Qt::MidButton) {
+    if (event->button() == Qt::MiddleButton) {
         setHandScrolling(false);
         return;
     }
@@ -1335,13 +1335,15 @@ void BuildingIsoView::mouseReleaseEvent(QMouseEvent *event)
  */
 void BuildingIsoView::wheelEvent(QWheelEvent *event)
 {
-    if (event->modifiers() & Qt::ControlModifier
-        && event->orientation() == Qt::Vertical)
+    QPoint numDegrees = event->angleDelta() / 8;
+    if ((event->modifiers() & Qt::ControlModifier) && (numDegrees.y() != 0))
     {
+        QPoint numSteps = numDegrees / 15;
+
         // No automatic anchoring since we'll do it manually
         setTransformationAnchor(QGraphicsView::NoAnchor);
 
-        mZoomable->handleWheelDelta(event->delta());
+        mZoomable->handleWheelDelta(numSteps.y() * 120);
 
         // Place the last known mouse scene pos below the mouse again
         QWidget *view = viewport();

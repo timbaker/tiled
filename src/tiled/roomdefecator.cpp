@@ -219,7 +219,7 @@ void RoomDefecator::addTile(int x, int y)
     fill.floodFillScanlineStack(x, y);
     // Ignore the region if cells touching an edge of the map/bounds have no walls.
     // This will strip away any "outer" region.
-    foreach (QRect r, fill.mRegion.rects()) {
+    for (const QRect &r : fill.mRegion) {
 #if 1
         for (int y = r.top(); y <= r.bottom(); y++) {
             for (int x = r.left(); x <= r.right(); x++) {

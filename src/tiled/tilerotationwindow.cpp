@@ -30,6 +30,7 @@
 #include "BuildingEditor/buildingtiles.h"
 #include "BuildingEditor/furnituregroups.h"
 
+#include <QButtonGroup>
 #include <QCloseEvent>
 #include <QFileDialog>
 #include <QMessageBox>
@@ -1093,7 +1094,7 @@ TileRotationWindow::TileRotationWindow(QWidget *parent) :
     radioEdgeGroup->setId(ui->radioEdgeS, 3);
     radioEdgeGroup->setId(ui->radioEdgeW, 4);
 
-    connect(radioEdgeGroup, QOverload<int>::of(&QButtonGroup::buttonClicked), this, &TileRotationWindow::edgeRadioClicked);
+    connect(radioEdgeGroup, &QButtonGroup::idClicked, this, &TileRotationWindow::edgeRadioClicked);
 
     connect(ui->checkBoxDX, &QCheckBox::toggled, this, &TileRotationWindow::changeDataOffsetDX);
     connect(ui->checkBoxDY, &QCheckBox::toggled, this, &TileRotationWindow::changeDataOffsetDY);
@@ -1439,7 +1440,7 @@ void TileRotationWindow::updateWindowTitle()
         QString fileName = QDir::toNativeSeparators(mFileName);
         setWindowTitle(tr("[*]%1 - Tile Rotation").arg(fileName));
     } else {
-        setWindowTitle(QLatin1Literal("Tile Rotation"));
+        setWindowTitle(QLatin1String("Tile Rotation"));
     }
     setWindowModified(!mUndoStack->isClean());
 }
@@ -1942,7 +1943,7 @@ void TileRotationWindow::setTilesetList()
             item->setForeground(Qt::red);
         }
         ui->tilesetList->addItem(item);
-        width = qMax(width, fm.width(tileset->name()));
+        width = qMax(width, fm.horizontalAdvance(tileset->name()));
     }
     int sbw = ui->tilesetList->verticalScrollBar()->sizeHint().width();
     ui->tilesetList->setFixedWidth(width + 16 + sbw);

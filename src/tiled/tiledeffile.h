@@ -743,7 +743,7 @@ public:
             foreach (QString s, prop->knownPropertyNames())
                 ret.insert(s);
         }
-        return ret.toList();
+        return QStringList(ret.constBegin(), ret.constEnd());
     }
 
     void copy(const UIProperties &other)

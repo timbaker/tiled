@@ -158,7 +158,7 @@ private:
 
 #include <QDockWidget>
 #include <QLineEdit>
-#include <QMap>
+#include <QMultiMap>
 #include <QIcon>
 
 class QAction;
@@ -278,7 +278,7 @@ private:
 
     MapDocument *mMapDocument;
     QList<Tileset*> mTilesets;
-    QMap<QString,Tileset*> mTilesetByName;
+    QMultiMap<QString,Tileset*> mTilesetByName;
     QToolBar *mToolBar;
     Tileset *mCurrentTileset;
     Tile *mCurrentTile;

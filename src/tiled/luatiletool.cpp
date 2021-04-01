@@ -843,7 +843,7 @@ void LuaTileTool::setToolTile(const char *layer, int x, int y, Tile *tile)
 
 void LuaTileTool::setToolTile(const char *layer, const QRegion &rgn, Tile *tile)
 {
-    foreach (QRect r, rgn.rects())
+    for (const QRect &r : rgn)
         for (int y = r.top(); y <= r.bottom(); y++)
             for (int x = r.left(); x <= r.right(); x++)
                 setToolTile(layer, x, y, tile);
@@ -903,7 +903,7 @@ void LuaTileTool::setToolNoBlend(const char *layer, int x, int y, bool noBlend)
 
 void LuaTileTool::setToolNoBlend(const char *layer, const QRegion &rgn, bool noBlend)
 {
-    foreach (QRect r, rgn.rects())
+    for (const QRect &r : rgn)
         for (int y = r.top(); y <= r.bottom(); y++)
             for (int x = r.left(); x <= r.right(); x++)
                 setToolNoBlend(layer, x, y, noBlend);

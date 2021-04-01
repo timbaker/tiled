@@ -323,7 +323,7 @@ TileLayer *BucketFillTool::getRandomTileLayer(const QRegion &region) const
     if (region.isEmpty() || mRandomList.empty())
         return result;
 
-    foreach (const QRect &rect, region.rects()) {
+    for (const QRect &rect : region) {
         for (int _x = rect.left(); _x <= rect.right(); ++_x) {
             for (int _y = rect.top(); _y <= rect.bottom(); ++_y) {
 

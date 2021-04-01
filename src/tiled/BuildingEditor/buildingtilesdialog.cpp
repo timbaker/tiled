@@ -658,7 +658,7 @@ BuildingTilesDialog::BuildingTilesDialog(QWidget *parent) :
 
     // Create UI for adjusting BuildingTileEntry offset
     QHBoxLayout *hbox = new QHBoxLayout;
-    hbox->setMargin(0);
+    hbox->setContentsMargins(0, 0, 0, 0);
 
     QLabel *label = new QLabel(tr("Tile Offset"));
     hbox->addWidget(label);
@@ -689,7 +689,7 @@ BuildingTilesDialog::BuildingTilesDialog(QWidget *parent) :
     // Create UI for choosing furniture layer
     {
     QHBoxLayout *hbox = new QHBoxLayout;
-    hbox->setMargin(0);
+    hbox->setContentsMargins(0, 0, 0, 0);
 
     QLabel *label = new QLabel(tr("Layer:"));
     hbox->addWidget(label);
@@ -1145,7 +1145,7 @@ void BuildingTilesDialog::setTilesetList()
         if (tileset->isMissing())
             item->setForeground(Qt::red);
         ui->tilesetList->addItem(item);
-        width = qMax(width, fm.width(tileset->name()));
+        width = qMax(width, fm.horizontalAdvance(tileset->name()));
     }
     int sbw = ui->tilesetList->verticalScrollBar()->sizeHint().width();
     ui->tilesetList->setFixedWidth(width + 16 + sbw);

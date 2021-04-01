@@ -1281,7 +1281,7 @@ void BuildingEditorWindow::exportNewBinary()
         return;
     QFileInfo fileInfo(mCurrentDocument->fileName());
     QString dir = fileInfo.dir().path();
-    QString fileName = fileInfo.dir().filePath(fileInfo.baseName() + QLatin1Literal(".pzby"));
+    QString fileName = fileInfo.dir().filePath(fileInfo.baseName() + QLatin1String(".pzby"));
     fileName = QFileDialog::getSaveFileName(this, tr("Export New Binary"), fileName, tr("Project Zomboid Map Binary (*.pzby)"));
     if (fileName.isEmpty())
         return;
@@ -1441,7 +1441,7 @@ void BuildingEditorWindow::selectAll()
                     new ChangeRoomSelection(mCurrentDocument, currentFloor()->bounds()));
         return;
     }
-    QSet<BuildingObject*> objects = currentFloor()->objects().toSet();
+    QSet<BuildingObject*> objects(currentFloor()->objects().constBegin(), currentFloor()->objects().constEnd());
     mCurrentDocument->setSelectedObjects(objects);
 }
 

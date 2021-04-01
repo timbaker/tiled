@@ -115,7 +115,7 @@ void CompositeLayerGroup::addTileLayer(TileLayer *layer, int index)
 #endif
 
     // Remember the names of layers (without the N_ prefix)
-    const QString name = MapComposite::layerNameWithoutPrefix(layer);
+    const QString name = layer->name(); // MapComposite::layerNameWithoutPrefix(layer);
     mLayersByName[name].append(layer);
 
     index = mLayers.indexOf(layer);
@@ -165,7 +165,7 @@ void CompositeLayerGroup::removeTileLayer(TileLayer *layer)
         layer->setGroup(oldGroup);
 #endif
 
-    const QString name = MapComposite::layerNameWithoutPrefix(layer);
+    const QString name = layer->name(); // MapComposite::layerNameWithoutPrefix(layer);
     index = mLayersByName[name].indexOf(layer);
     mLayersByName[name].remove(index);
 }
@@ -548,7 +548,7 @@ void CompositeLayerGroup::synch()
             // FIXME: this doesn't properly handle multiple layers with the same name.
             for (int rootIndex = 0; rootIndex < rootGroup->mLayers.size(); rootIndex++) {
                 QString layerName = rootGroup->mLayers[rootIndex]->name();
-                const QString name = MapComposite::layerNameWithoutPrefix(layerName);
+                const QString name = layerName; // MapComposite::layerNameWithoutPrefix(layerName);
                 if (!mLayersByName.contains(name))
                     continue;
                 for (Layer *layer : mLayersByName[name]) {
@@ -649,7 +649,7 @@ bool CompositeLayerGroup::setBmpBlendLayers(const QList<TileLayer *> &layers)
 #ifdef BUILDINGED
 bool CompositeLayerGroup::setLayerNonEmpty(const QString &layerName, bool force)
 {
-    const QString name = MapComposite::layerNameWithoutPrefix(layerName);
+    const QString name = layerName; // MapComposite::layerNameWithoutPrefix(layerName);
     if (!mLayersByName.contains(name))
         return false;
     foreach (Layer *layer, mLayersByName[name])
@@ -851,7 +851,7 @@ void CompositeLayerGroup::layerRenamed(TileLayer *layer)
         }
     }
 
-    const QString name = MapComposite::layerNameWithoutPrefix(layer);
+    const QString name = layer->name(); // MapComposite::layerNameWithoutPrefix(layer);
     mLayersByName[name].append(layer);
 }
 

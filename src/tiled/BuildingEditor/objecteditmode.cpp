@@ -35,6 +35,7 @@
 #include "zoomable.h"
 
 #include <QAction>
+#include <QAbstractItemView>
 #include <QComboBox>
 #include <QDir>
 #include <QMainWindow>
@@ -255,7 +256,7 @@ void ObjectEditModeToolBar::updateRoomComboBox()
             mRoomComboBox->setItemIcon(index, QPixmap::fromImage(image));
             index++;
 
-            minWidth = qMax(minWidth, 20 + mRoomComboBox->view()->fontMetrics().width(room->Name) + scrollBarWidth + 20);
+            minWidth = qMax(minWidth, 20 + mRoomComboBox->view()->fontMetrics().horizontalAdvance(room->Name) + scrollBarWidth + 20);
         }
 
         index = currentBuilding()->indexOf(currentRoom);
@@ -599,7 +600,7 @@ ObjectEditMode::ObjectEditMode(QObject *parent) :
 
     QVBoxLayout *vbox = new QVBoxLayout;
     vbox->setObjectName(QLatin1String("ObjectEditMode.VBox"));
-    vbox->setMargin(0);
+    vbox->setContentsMargins(0, 0, 0, 0);
 //    vbox->addWidget(mToolBar);
     vbox->addWidget(mTabWidget);
     vbox->addLayout(mStatusBar->statusBarLayout);

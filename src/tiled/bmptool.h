@@ -533,7 +533,7 @@ public:
     void merge(const QPoint &pos, const ResizableImage *other, const QRegion &otherRegion)
     {
         QRegion region = otherRegion.translated(pos - otherRegion.boundingRect().topLeft()) & QRect(0, 0, width(), height());
-        foreach (QRect area, region.rects()) {
+        for (const QRect &area : region) {
             for (int y = area.top(); y <= area.bottom(); ++y) {
                 for (int x = area.left(); x <= area.right(); ++x) {
                     setPixel(x, y, other->pixel(x - pos.x(), y - pos.y()));

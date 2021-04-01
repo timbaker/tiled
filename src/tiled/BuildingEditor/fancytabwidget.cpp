@@ -108,7 +108,7 @@ QSize FancyTabBar::tabSizeHint(bool minimum) const
     int width = 60 + spacing + 2;
     int maxLabelwidth = 0;
     for (int tab=0 ; tab<count() ;++tab) {
-        int width = fm.width(tabText(tab));
+        int width = fm.horizontalAdvance(tabText(tab));
         if (width > maxLabelwidth)
             maxLabelwidth = width;
     }
@@ -390,11 +390,11 @@ FancyTabWidget::FancyTabWidget(QWidget *parent)
     m_selectionWidget = new QWidget(this);
     QVBoxLayout *selectionLayout = new QVBoxLayout;
     selectionLayout->setSpacing(0);
-    selectionLayout->setMargin(0);
+    selectionLayout->setContentsMargins(0, 0, 0, 0);
 
     Utils::StyledBar *bar = new Utils::StyledBar;
     QHBoxLayout *layout = new QHBoxLayout(bar);
-    layout->setMargin(0);
+    layout->setContentsMargins(0, 0, 0, 0);
     layout->setSpacing(0);
     layout->addWidget(new FancyColorButton(this));
     selectionLayout->addWidget(bar);
@@ -409,7 +409,7 @@ FancyTabWidget::FancyTabWidget(QWidget *parent)
 
     QVBoxLayout *cornerWidgetLayout = new QVBoxLayout;
     cornerWidgetLayout->setSpacing(0);
-    cornerWidgetLayout->setMargin(0);
+    cornerWidgetLayout->setContentsMargins(0, 0, 0, 0);
     cornerWidgetLayout->addStretch();
     m_cornerWidgetContainer->setLayout(cornerWidgetLayout);
 
@@ -420,13 +420,13 @@ FancyTabWidget::FancyTabWidget(QWidget *parent)
     m_statusBar->setSizePolicy(QSizePolicy::Ignored, QSizePolicy::Fixed);
 
     QVBoxLayout *vlayout = new QVBoxLayout;
-    vlayout->setMargin(0);
+    vlayout->setContentsMargins(0, 0, 0, 0);
     vlayout->setSpacing(0);
     vlayout->addLayout(m_modesStack);
     vlayout->addWidget(m_statusBar);
 
     QHBoxLayout *mainLayout = new QHBoxLayout;
-    mainLayout->setMargin(0);
+    mainLayout->setContentsMargins(0, 0, 0, 0);
     mainLayout->setSpacing(1);
     mainLayout->addWidget(m_selectionWidget);
     mainLayout->addLayout(vlayout);

@@ -152,11 +152,13 @@ QSize RearrangeTilesView::sizeHint() const
 
 void RearrangeTilesView::wheelEvent(QWheelEvent *event)
 {
-    if (event->modifiers() & Qt::ControlModifier && event->orientation() == Qt::Vertical) {
-        mZoomable->handleWheelDelta(event->delta());
+    QPoint numDegrees = event->angleDelta() / 8;
+    if ((event->modifiers() & Qt::ControlModifier) && (numDegrees.y() != 0))
+    {
+        QPoint numSteps = numDegrees / 15;
+        mZoomable->handleWheelDelta(numSteps.y() * 120);
         return;
     }
-
     QTableView::wheelEvent(event);
 }
 
@@ -609,7 +611,7 @@ void RearrangeTiles::setTilesetList()
             continue;
         QListWidgetItem *item = new QListWidgetItem(fileInfo.baseName());
         ui->tilesets->addItem(item);
-        maxWidth = qMax(maxWidth, fm.width(item->text()));
+        maxWidth = qMax(maxWidth, fm.horizontalAdvance(item->text()));
     }
     ui->tilesets->setFixedWidth(maxWidth + 16 +
                                 ui->tilesets->verticalScrollBar()->sizeHint().width());
@@ -806,7 +808,7 @@ bool RearrangeFile::write(const QString &fileName, const QList<RearrangeTileset*
 
 bool RearrangeFile::parse2Ints(const QString &s, int *pa, int *pb)
 {
-    QStringList coords = s.split(QLatin1Char(','), QString::SkipEmptyParts);
+    QStringList coords = s.split(QLatin1Char(','), Qt::SkipEmptyParts);
     if (coords.size() != 2)
         return false;
     bool ok;

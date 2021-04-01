@@ -28,7 +28,7 @@ TileOverlayDialog::TileOverlayDialog(QWidget* parent)
     : AbstractOverlayDialog(parent)
 {
     ui->overlayView->setMoreThan2Tiles(true);
-    setWindowTitle(QLatin1Literal("Tile Overlays"));
+    setWindowTitle(QLatin1String("Tile Overlays"));
 
     connect(ui->overlayView, &ContainerOverlayView::showContextMenu, this, &TileOverlayDialog::showContextMenu);
 }

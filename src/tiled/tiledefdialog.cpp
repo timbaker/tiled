@@ -1256,7 +1256,7 @@ void TileDefDialog::setTilesetList()
         if (ts->isMissing())
             item->setForeground(Qt::red);
         ui->tilesets->addItem(item);
-        maxWidth = qMax(maxWidth, fm.width(item->text()));
+        maxWidth = qMax(maxWidth, fm.horizontalAdvance(item->text()));
     }
     ui->tilesets->setFixedWidth(maxWidth + 16 +
         ui->tilesets->verticalScrollBar()->sizeHint().width());
@@ -1311,7 +1311,8 @@ void TileDefDialog::setToolTipEtc(int tileID)
 
     // Use a different background color for tiles that have unknown property names.
     QColor color; // invalid means use default color
-    QSet<QString> known = defTile->mPropertyUI.knownPropertyNames().toSet(); // FIXME: same for every tile
+    QStringList knownPropertyNames = defTile->mPropertyUI.knownPropertyNames();
+    QSet<QString> known(knownPropertyNames.constBegin(), knownPropertyNames.constEnd()); // FIXME: same for every tile
     QStringList unknown;
     foreach (QString name, defTile->mProperties.keys()) {
         if (!known.contains(name))
@@ -1500,7 +1501,7 @@ void TileDefDialog::initStringComboBoxValues()
             if (values.contains(p->mName)) {
                 if (QComboBox *w = mComboBoxes[p->mName]) {
                     w->clear();
-                    QStringList names(values[p->mName].toList());
+                    QStringList names(values[p->mName].constBegin(), values[p->mName].constEnd());
                     names.sort();
                     w->addItems(names);
                     w->clearEditText();
@@ -1637,7 +1638,7 @@ void TileDefDialog::tilesDirChanged()
     mTilesetByName.clear();
 
     QDir dir(tilesDir());
-    QDir dir2x(tilesDir() + QLatin1Literal("/2x"));
+    QDir dir2x(tilesDir() + QLatin1String("/2x"));
 
     QList<ResizedTileset> resized;
 

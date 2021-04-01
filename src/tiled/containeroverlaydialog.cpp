@@ -563,7 +563,7 @@ void AbstractOverlayDialog::setTilesetList()
         if (tileset->isMissing())
             item->setForeground(Qt::red);
         ui->tilesetList->addItem(item);
-        width = qMax(width, fm.width(tileset->name()));
+        width = qMax(width, fm.horizontalAdvance(tileset->name()));
     }
     int sbw = ui->tilesetList->verticalScrollBar()->sizeHint().width();
     ui->tilesetList->setFixedWidth(width + 16 + sbw);
@@ -913,7 +913,7 @@ void AbstractOverlayDialog::tileDropped(AbstractOverlay *overlay, const QStringL
             continue;
         }
         if (isEmptySprite(tileName)) {
-            tileName = QLatin1Literal("none");
+            tileName = QLatin1String("none");
         }
         mUndoStack->push(new SetBaseTile(this, overlay, tileName));
         break; // <---------
@@ -926,7 +926,7 @@ void AbstractOverlayDialog::tileDropped(AbstractOverlayEntry *entry, int index, 
         if (ui->overlayView->model()->moreThan2Tiles()) {
             for (QString tileName : tileNames) {
                 if (isEmptySprite(tileName)) {
-                    tileName = QLatin1Literal("none");
+                    tileName = QLatin1String("none");
                 }
                 mUndoStack->push(new AddEntryTile(this, entry, tileName));
             }
@@ -935,7 +935,7 @@ void AbstractOverlayDialog::tileDropped(AbstractOverlayEntry *entry, int index, 
     }
     QString tileName = tileNames[0];
     if (isEmptySprite(tileName)) {
-        tileName = QLatin1Literal("none");
+        tileName = QLatin1String("none");
     }
     mUndoStack->push(new SetEntryTile(this, entry, index, tileName));
 }

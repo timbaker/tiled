@@ -537,10 +537,11 @@ void LayersPanelView::mouseDoubleClickEvent(QMouseEvent *event)
 
 void LayersPanelView::wheelEvent(QWheelEvent *event)
 {
-    if (event->modifiers() & Qt::ControlModifier
-        && event->orientation() == Qt::Vertical)
+    QPoint numDegrees = event->angleDelta() / 8;
+    if ((event->modifiers() & Qt::ControlModifier) && (numDegrees.y() != 0))
     {
-        mZoomable->handleWheelDelta(event->delta());
+        QPoint numSteps = numDegrees / 15;
+        mZoomable->handleWheelDelta(numSteps.y() * 120);
         return;
     }
 
@@ -563,7 +564,7 @@ void LayersPanelView::clear()
 
 void LayersPanelView::prependLayer(const QString &layerName, Tile *tile, int layerIndex)
 {
-    int width = fontMetrics().width(layerName);
+    int width = fontMetrics().horizontalAdvance(layerName);
     mMaxHeaderWidth = qMax(mMaxHeaderWidth, width);
 
     model()->prependLayer(layerName, tile, layerIndex);
@@ -694,7 +695,7 @@ void TileLayersPanel::setList()
 
     int index = 0;
     for (TileLayer *tl : lg->layers()) {
-        QString layerName = MapComposite::layerNameWithoutPrefix(tl);
+        QString layerName = tl->name(); // MapComposite::layerNameWithoutPrefix(tl);
         Tile *tile = tl->contains(mTilePos) ? tl->cellAt(mTilePos).tile : nullptr;
         TileLayer *blendLayer = lg->bmpBlendLayers().at(index);
         if (blendLayer && blendLayer->contains(mTilePos)) {
@@ -800,7 +801,7 @@ void TileLayersPanel::layerChanged(int z, int index)
     if (layer->asTileLayer() && (layer->level() == mDocument->currentLevelIndex())) {
         QModelIndex mi = mView->model()->index(index);
         if (mi.isValid()) {
-            QString name = MapComposite::layerNameWithoutPrefix(layer);
+            QString name = layer->name(); // MapComposite::layerNameWithoutPrefix(layer);
             mView->model()->setData(mi, name, Qt::DecorationRole);
             QBrush brush(layer->isVisible() ? Qt::white : Qt::lightGray);
             mView->model()->setData(mi, brush, Qt::BackgroundRole);

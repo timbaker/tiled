@@ -303,7 +303,7 @@ void MiniMapRenderWorker::work()
     QPainter painter(&mImage);
 
     painter.setRenderHints(QPainter::SmoothPixmapTransform |
-                           QPainter::HighQualityAntialiasing);
+                           QPainter::Antialiasing);
     QTransform xform = QTransform::fromScale(scale, scale)
             .translate(-sceneRect.left(), -sceneRect.top());
     painter.setTransform(xform);
@@ -883,7 +883,7 @@ void MiniMapItem::regionAltered(const QRegion &region, Layer *layer)
     QRect br = clipped.boundingRect();
     if (layer->asTileLayer() && (br.width() * br.height() > 50)) {
         c->mTileLayer.resize(br.size(), QPoint());
-        for (const QRect &r : clipped.rects()) {
+        for (const QRect &r : clipped) {
             for (int y = r.y(); y <= r.bottom(); y++) {
                 for (int x = r.x(); x <= r.right(); x++) {
                     c->mTileLayer.setCell(x-br.x(), y-br.y(),
@@ -893,7 +893,7 @@ void MiniMapItem::regionAltered(const QRegion &region, Layer *layer)
         }
         c->mTileLayer.setPosition(br.topLeft());
     } else {
-        for (const QRect &r : clipped.rects()) {
+        for (const QRect &r : clipped) {
             for (int y = r.y(); y <= r.bottom(); y++) {
                 for (int x = r.x(); x <= r.right(); x++) {
                     c->mCells += MapChange::CellEntry(x, y, layer->asTileLayer()->cellAt(x, y));
