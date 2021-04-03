@@ -285,7 +285,7 @@ void ZLevelsModel::setMapDocument(MapDocument *mapDocument)
 QList<int> ZLevelsModel::levels() const
 {
     QList<int> ret;
-    for (Item *item : mRootItem->children) {
+    for (Item *item : qAsConst(mRootItem->children)) {
         ret += item->level;
     }
     return ret;
@@ -389,7 +389,7 @@ ZLevelsModel::Item *ZLevelsModel::toItem(CompositeLayerGroup *g) const
 {
     if (!mRootItem)
         return nullptr;
-    for (Item *item : mRootItem->children)
+    for (Item *item : qAsConst(mRootItem->children))
         if (item->level == g->level())
             return item;
     return nullptr;
@@ -399,7 +399,7 @@ ZLevelsModel::Item *ZLevelsModel::toItem(int level) const
 {
     if (!mRootItem)
         return nullptr;
-    for (Item *item : mRootItem->children)
+    for (Item *item : qAsConst(mRootItem->children))
         if (item->level == level)
             return item;
     return nullptr;
@@ -410,7 +410,7 @@ ZLevelsModel::Item *ZLevelsModel::toItem(Layer *layer) const
     if (!mRootItem)
         return nullptr;
     Item *parent = toItem(layer->level());
-    for (Item *item : parent->children)
+    for (Item *item : qAsConst(parent->children))
         if (item->layer == layer)
             return item;
     return nullptr;

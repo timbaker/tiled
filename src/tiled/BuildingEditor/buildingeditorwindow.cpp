@@ -238,7 +238,7 @@ void EditorWindowPerDocumentStuff::autoSaveTimeout()
             do {
                 fileName = QString::fromLatin1("%1/untitled%2.tbx").arg(dir).arg(n);
                 ++n;
-            } while (QFileInfo(fileName + suffix).exists());
+            } while (QFileInfo::exists(fileName + suffix));
         }
         fileName += suffix;
         mAutoSaveFileName = fileName;
@@ -1280,7 +1280,7 @@ void BuildingEditorWindow::exportNewBinary()
     if (mCurrentDocument == nullptr)
         return;
     QFileInfo fileInfo(mCurrentDocument->fileName());
-    QString dir = fileInfo.dir().path();
+//    QString dir = fileInfo.dir().path();
     QString fileName = fileInfo.dir().filePath(fileInfo.baseName() + QLatin1String(".pzby"));
     fileName = QFileDialog::getSaveFileName(this, tr("Export New Binary"), fileName, tr("Project Zomboid Map Binary (*.pzby)"));
     if (fileName.isEmpty())
@@ -1768,8 +1768,8 @@ void BuildingEditorWindow::resizeBuilding()
     undoStack->beginMacro(tr("Resize Building"));
 
     // Calculate offset+resized room+tile grids.
-    QMap<BuildingFloor*, QVector<QVector<Room*> > > grids;
-    QMap<BuildingFloor*, QMap<QString,FloorTileGrid*> > grimes;
+    QHash<BuildingFloor*, QVector<QVector<Room*> > > grids;
+    QHash<BuildingFloor*, QMap<QString,FloorTileGrid*> > grimes;
     foreach (BuildingFloor *floor, mCurrentDocument->building()->floors()) {
 
         // Rooms
@@ -2063,7 +2063,8 @@ void BuildingEditorWindow::reportMissingTilesets()
         }
     }
     for (BuildingFloor *floor : building->floors()) {
-        for (QString layerName : floor->grimeLayers()) {
+        const QStringList grimeLayers = floor->grimeLayers();
+        for (const QString &layerName : grimeLayers) {
             for (int y = 0; y < floor->height(); y++) {
                 for (int x = 0; x < floor->width(); x++) {
                     BuildingCell buildingCell = floor->grimeAt(layerName, x, y);

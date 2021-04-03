@@ -366,7 +366,7 @@ void ObjectsView::selectionChanged(const QItemSelection &selected,
     if (!mMapDocument || mSynching)
         return;
 
-    QModelIndexList selectedRows = selectionModel()->selectedRows();
+    const QModelIndexList selectedRows = selectionModel()->selectedRows();
     int currentLevelIndex = -1;
     int currentLayerIndex = -1;
 

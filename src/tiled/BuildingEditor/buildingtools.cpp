@@ -652,7 +652,7 @@ void SelectMoveRoomsTool::updateMovingItems()
     bool allFloors = controlModifier();
     bool objectsToo = shiftModifier();
 
-    foreach (BuildingFloor *floor, mEditor->building()->floors()) {
+    for (BuildingFloor *floor : mEditor->building()->floors()) {
         GraphicsFloorItem *floorItem = mEditor->itemForFloor(floor);
         QImage *bmp = floorItem->bmp();
         QImage *dragBmp = floorItem->dragBmp();
@@ -673,7 +673,7 @@ void SelectMoveRoomsTool::updateMovingItems()
                     for (int y = r.top(); y <= r.bottom(); y++) {
                         dragBmp->setPixel(x, y, qRgb(0,0,0));
                         dragGrid[x][y] = nullptr;
-                        foreach (QString layerName, dragTiles.keys())
+                        for (const QString &layerName : dragTiles.keys())
                             dragTiles[layerName]->replace(x, y, BuildingCell());
                     }
             }
@@ -687,7 +687,7 @@ void SelectMoveRoomsTool::updateMovingItems()
                         if (floorBounds.contains(p)) {
                             dragBmp->setPixel(p, bmp->pixel(x, y));
                             dragGrid[p.x()][p.y()] = floor->GetRoomAt(x, y);
-                            foreach (QString layerName, dragTiles.keys())
+                            for (const QString &layerName : dragTiles.keys())
                                 dragTiles[layerName]->replace(p.x(), p.y(), floor->grimeAt(layerName, x, y));
                         }
                     }
@@ -813,7 +813,7 @@ void SelectMoveRoomsTool::finishMovingFloor(BuildingFloor *floor, bool objectsTo
         QRect src = src1 & floorBounds;
         for (int x = src.left(); x <= src.right(); x++) {
             for (int y = src.top(); y <= src.bottom(); y++) {
-                foreach (FloorTileGrid *stg, grime.values())
+                for (FloorTileGrid *stg : grime.values())
                     stg->replace(x, y, BuildingCell());
             }
         }
@@ -825,7 +825,7 @@ void SelectMoveRoomsTool::finishMovingFloor(BuildingFloor *floor, bool objectsTo
             for (int y = src.top(); y <= src.bottom(); y++) {
                 QPoint p = QPoint(x, y) + mDragOffset;
                 if (floorBounds.contains(p)) {
-                    foreach (QString key, grime.keys())
+                    for (const QString &key : grime.keys())
                         grime[key]->replace(p.x(), p.y(), floor->grimeAt(key, x, y));
                 }
             }
@@ -2672,7 +2672,8 @@ void WallTool::eyedrop(BuildingObject *object)
 
 WallObject *WallTool::topmostWallAt(const QPointF &scenePos)
 {
-    for (QGraphicsItem *item : mEditor->items(scenePos)) {
+    const QList<QGraphicsItem*> items = mEditor->items(scenePos);
+    for (QGraphicsItem *item : items) {
         if (GraphicsWallItem *wallItem = dynamic_cast<GraphicsWallItem*>(item)) {
             if (wallItem->object()->floor() == floor()) {
                 return wallItem->object()->asWall();
@@ -2707,8 +2708,8 @@ void WallTool::updateCursor()
             rect.setRect(mCurrentTilePos.x() - 0.0/30.0, mCurrentTilePos.y() - 0.0/30.0, 12.0/30.0, 30.0/30.0);
             break;
         default:
-            Q_ASSERT(false);
-            break;
+            //Q_ASSERT(false);
+            return;
         }
         mCursorItem->setPolygon(mEditor->tileToScenePolygonF(rect, mEditor->currentLevel()));
 
@@ -2810,7 +2811,8 @@ void WallTool::updateHandle(const QPointF &scenePos)
     }
     mHandleItem = nullptr;
     if (wall && (wall == mHandleObject)) {
-        for (QGraphicsItem *item : mEditor->items(scenePos)) {
+        const QList<QGraphicsItem*> items = mEditor->items(scenePos);
+        for (QGraphicsItem *item : items) {
             if (GraphicsWallHandleItem *handle = dynamic_cast<GraphicsWallHandleItem*>(item)) {
                 if (handle->parentItem() == mObjectItem) {
                     mHandleItem = handle;

@@ -629,26 +629,23 @@ void BmpRuleView::setRules(const Map *map)
 {
     QSet<Tileset*> tilesets;
     QMap<QString,BmpAlias*> aliasByName;
-    foreach (BmpAlias *alias, map->bmpSettings()->aliases())
+    for (BmpAlias *alias : map->bmpSettings()->aliases())
         aliasByName[alias->name] = alias;
-    QList<BmpRule*> rules = map->bmpSettings()->rules();
-    foreach (BmpRule *rule, rules) {
+    const QList<BmpRule*> rules = map->bmpSettings()->rules();
+    for (BmpRule *rule : rules) {
         QStringList tileChoices;
-        foreach (QString tileName, rule->tileChoices) {
+        for (const QString &tileName : qAsConst(rule->tileChoices)) {
             if (aliasByName.contains(tileName))
                 tileChoices += aliasByName[tileName]->tiles;
             else
                 tileChoices += tileName;
         }
-        foreach (QString tileName, tileChoices) {
-            Tile *tile;
+        for (const QString &tileName : qAsConst(tileChoices)) {
             if (tileName.isEmpty())
-                tile = BuildingTilesMgr::instance()->noneTiledTile();
-            else {
-                tile = BuildingTilesMgr::instance()->tileFor(tileName);
-                if (tile && TileMetaInfoMgr::instance()->indexOf(tile->tileset()) != -1)
-                    tilesets += tile->tileset();
-            }
+                continue;
+            Tile *tile = BuildingTilesMgr::instance()->tileFor(tileName);
+            if (tile && TileMetaInfoMgr::instance()->indexOf(tile->tileset()) != -1)
+                tilesets += tile->tileset();
         }
     }
     TileMetaInfoMgr::instance()->loadTilesets(QList<Tileset*>(tilesets.constBegin(), tilesets.constEnd()));

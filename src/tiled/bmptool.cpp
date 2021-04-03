@@ -582,7 +582,7 @@ void BmpBrushTool::paint()
     if (!mErasing && mColor == qRgb(0, 0, 0))
         return;
 
-    QRect mapBounds(QPoint(), mapDocument()->map()->size());
+//    QRect mapBounds(QPoint(), mapDocument()->map()->size());
 
     QRegion tileRgn = brushItem()->tileRegion();
     if (restrictToSelection()) {
@@ -1735,7 +1735,8 @@ void NoBlendTool::tilePositionChanged(const QPoint &tilePos)
             }
             // Shift key affects all blend layers.
             if (qApp->keyboardModifiers() & Qt::ShiftModifier) {
-                for (const QString layerName : doc->mapComposite()->bmpBlender()->blendLayers()) {
+                const QStringList blendLayerNames = doc->mapComposite()->bmpBlender()->blendLayers();
+                for (const QString &layerName : blendLayerNames) {
                     int n = doc->map()->levelAt(0)->indexOfLayer(layerName, Layer::TileLayerType);
                     if (n >= 0) {
                         TileLayer *tl = doc->map()->levelAt(0)->layerAt(n)->asTileLayer();
@@ -2070,7 +2071,8 @@ BmpToLayers::BmpToLayers(MapDocument *mapDocument, const QRegion &region, bool m
 
     // Put the blender's tiles into the map's tile layers.
     BmpBlender *blender = mMapDocument->mapComposite()->bmpBlender();
-    for (TileLayer *tl : blender->tileLayers()) {
+    const QList<TileLayer*> tileLayers = blender->tileLayers();
+    for (TileLayer *tl : tileLayers) {
         int n = mMapDocument->map()->levelAt(0)->indexOfLayer(tl->name(), Layer::TileLayerType);
         if (n >= 0) {
             TileLayer *target = mMapDocument->map()->levelAt(0)->layerAt(n)->asTileLayer();

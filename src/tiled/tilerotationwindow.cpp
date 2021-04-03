@@ -498,7 +498,7 @@ public:
     {
         const QList<FurnitureGroup*> furnitureGroups = FurnitureGroups::instance()->groups();
         for (FurnitureGroup* furnitureGroup : furnitureGroups) {
-            for (FurnitureTiles* furnitureTiles : furnitureGroup->mTiles) {
+            for (FurnitureTiles* furnitureTiles : qAsConst(furnitureGroup->mTiles)) {
                 FurnitureTile* ft[4];
                 ft[0] = furnitureTiles->tile(FurnitureTile::FurnitureN);
                 ft[1] = furnitureTiles->tile(FurnitureTile::FurnitureE);
@@ -1254,7 +1254,7 @@ void TileRotationWindow::fileOpen(const QString &fileName)
 
     mTilesetRotatedList = tilesets;
     mVisuals = visuals;
-    for (TilesetRotated *tileset : mTilesetRotatedList) {
+    for (TilesetRotated *tileset : qAsConst(mTilesetRotatedList)) {
         mTilesetByName[tileset->name()] = tileset;
     }
     mCurrentVisual = nullptr;
@@ -1355,8 +1355,8 @@ void TileRotationWindow::clearVisual()
 
     mUndoStack->beginMacro(tr("Clear Tiles"));
 
-    for (TilesetRotated *tilesetR : mTilesetRotatedList) {
-        for (TileRotated *tileR : tilesetR->mTiles) {
+    for (TilesetRotated *tilesetR : qAsConst(mTilesetRotatedList)) {
+        for (TileRotated *tileR : qAsConst(tilesetR->mTiles)) {
             if (tileR->mVisual != currentVisual || tileR->mRotation != currentRotation) {
                 continue;
             }
@@ -1387,8 +1387,8 @@ void TileRotationWindow::deleteVisual()
     }
     // Un-assign from all tiles
     mUndoStack->beginMacro(tr("Delete Visual"));
-    for (TilesetRotated *tilesetR : mTilesetRotatedList) {
-        for (TileRotated *tileR : tilesetR->mTiles) {
+    for (TilesetRotated *tilesetR : qAsConst(mTilesetRotatedList)) {
+        for (TileRotated *tileR : qAsConst(tilesetR->mTiles)) {
             if (tileR->mVisual != visual) {
                 continue;
             }
@@ -1516,7 +1516,7 @@ void TileRotationWindow::tileActivated(const QModelIndex &index)
     Tile *tile = ui->tilesetTilesView->model()->tileAt(index);
     if (tile == nullptr)
         return;
-    QString tileName = BuildingTilesMgr::nameForTile(tile);
+//    QString tileName = BuildingTilesMgr::nameForTile(tile);
     if (TileRotated *tileR = getTileRotatedForTileReal(tile)) {
         if (tileR->mVisual == nullptr) {
             return;
@@ -1593,8 +1593,8 @@ void TileRotationWindow::visualActivated(const QModelIndex &index)
 {
     MapRotation mapRotation;
     auto visual = ui->visualList->model()->visualAt(index, mapRotation);
-    for (auto* tilesetR : mTilesetRotatedList) {
-        for (auto *tileR : tilesetR->mTiles) {
+    for (auto* tilesetR : qAsConst(mTilesetRotatedList)) {
+        for (auto *tileR : qAsConst(tilesetR->mTiles)) {
             if (tileR->mVisual == visual) {
                 auto& data = tileR->mVisual->mData[int(mapRotation)];
                 if (data.mTileNames.isEmpty()) {
@@ -1873,7 +1873,7 @@ void TileRotationWindow::setVisualList()
     QList<QSharedPointer<TileRotatedVisual>> visuals;
     if (mCurrentTileset != nullptr) {
         if (TilesetRotated *tilesetR = mTilesetByName[mCurrentTileset->name()]) {
-            for (TileRotated *tileR : tilesetR->mTiles) {
+            for (TileRotated *tileR : qAsConst(tilesetR->mTiles)) {
                 if (tileR->mVisual && !visualSet.contains(tileR->mVisual.data())) {
                     visuals += tileR->mVisual;
                     visualSet += tileR->mVisual.data();
@@ -1883,7 +1883,7 @@ void TileRotationWindow::setVisualList()
     }
 
     // Also display any created but unassigned visuals.
-    for (QSharedPointer<TileRotatedVisual> visual : mUnassignedVisuals) {
+    for (const QSharedPointer<TileRotatedVisual>& visual : qAsConst(mUnassignedVisuals)) {
         visuals += visual;
     }
 #if 0
@@ -1913,7 +1913,8 @@ void TileRotationWindow::setVisualDataList()
     QModelIndex index = ui->visualList->selectionModel()->selectedIndexes().first();
     ui->visualList->model()->visualAt(index, mapRotation);
     QList<Tile*> tiles;
-    for (const QString &tileName : mCurrentVisual->mData[int(mapRotation)].mTileNames) {
+    const QStringList tileNames = mCurrentVisual->mData[int(mapRotation)].mTileNames;
+    for (const QString &tileName : tileNames) {
         if (Tile *tile = BuildingTilesMgr::instance()->tileFor(tileName)) {
             tiles += tile;
         }
@@ -1936,7 +1937,8 @@ void TileRotationWindow::setTilesetList()
     // Add the list of tilesets, and resize it to fit
     int width = 64;
     QFontMetrics fm = ui->tilesetList->fontMetrics();
-    for (Tileset *tileset : TileMetaInfoMgr::instance()->tilesets()) {
+    const QList<Tileset*> tilesets = TileMetaInfoMgr::instance()->tilesets();
+    for (Tileset *tileset : tilesets) {
         QListWidgetItem *item = new QListWidgetItem();
         item->setText(tileset->name());
         if (tileset->isMissing()) {

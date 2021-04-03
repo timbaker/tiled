@@ -348,7 +348,7 @@ void BmpToolDialog::importRules()
     QSettings settings;
     settings.beginGroup(QLatin1String("BmpToolDialog"));
     QString initialDir = settings.value(QLatin1String("RulesFile")).toString();
-    if (initialDir.isEmpty() || !QFileInfo(initialDir).exists())
+    if (initialDir.isEmpty() || !QFileInfo::exists(initialDir))
         initialDir = QApplication::applicationDirPath() + QLatin1String("/WorldEd/Rules.txt");
     settings.endGroup();
 
@@ -408,7 +408,7 @@ void BmpToolDialog::importBlends()
     QSettings settings;
     settings.beginGroup(QLatin1String("BmpToolDialog"));
     QString initialDir = settings.value(QLatin1String("BlendsFile")).toString();
-    if (initialDir.isEmpty() || !QFileInfo(initialDir).exists())
+    if (initialDir.isEmpty() || !QFileInfo::exists(initialDir))
         initialDir = QApplication::applicationDirPath() + QLatin1String("/WorldEd/Blends.txt");
     settings.endGroup();
 
@@ -622,7 +622,8 @@ void BmpToolDialog::toggleOverlayLayers()
     Map *map = mDocument->map();
     int visible = -1;
     MapLevel *mapLevel = map->levelAt(0);
-    for (const QString& layerName : mDocument->mapComposite()->bmpBlender()->blendLayers()) {
+    const QStringList blendLayerNames = mDocument->mapComposite()->bmpBlender()->blendLayers();
+    for (const QString& layerName : blendLayerNames) {
         int index = mapLevel->indexOfLayer(layerName);
         if (index != -1) {
             Layer *layer = mapLevel->layerAt(index);

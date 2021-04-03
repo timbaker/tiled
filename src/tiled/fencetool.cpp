@@ -101,7 +101,7 @@ void FenceTool::mouseMoved(const QPointF &pos, Qt::KeyboardModifiers modifiers)
         mToolTiles.erase();
     }
     QPoint topLeft;
-    QVector<QVector<Cell> > toolTiles;
+//    QVector<QVector<Cell> > toolTiles;
 
     if (!mInitialClick) {
         QPolygonF polyN = renderer->tileToPixelCoords(QRectF(tilePos.x(), tilePos.y(), 1, 0.25), layer->level());

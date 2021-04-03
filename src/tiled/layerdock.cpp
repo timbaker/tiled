@@ -326,12 +326,15 @@ void LayerView::currentRowChanged(const QModelIndex &index)
 
 void LayerView::currentLayerIndexChanged(int levelIndex, int layerIndex)
 {
-    if (layerIndex > -1) {
-        const LayerModel *layerModel = mMapDocument->layerModel();
-        QModelIndex index = layerModel->toIndex(levelIndex, layerIndex);
+    const LayerModel *layerModel = mMapDocument->layerModel();
+    if (levelIndex == -1) {
+        setCurrentIndex(QModelIndex());
+    } else if (layerIndex == -1) {
+        QModelIndex index = layerModel->toIndex(levelIndex);
         setCurrentIndex(index);
     } else {
-        setCurrentIndex(QModelIndex());
+        QModelIndex index = layerModel->toIndex(levelIndex, layerIndex);
+        setCurrentIndex(index);
     }
 }
 

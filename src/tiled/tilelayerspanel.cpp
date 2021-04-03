@@ -110,7 +110,7 @@ void LayersPanelDelegate::paint(QPainter *painter,
 
     // Draw the tile image
     if (tile != 0) {
-        const QVariant display = index.model()->data(index, Qt::DisplayRole);
+//        const QVariant display = index.model()->data(index, Qt::DisplayRole);
         const QPixmap tileImage = QPixmap::fromImage(tile->image()); //display.value<QPixmap>();
         const int tileWidth = qCeil(tile->tileset()->tileWidth() * mView->zoomable()->scale());
 

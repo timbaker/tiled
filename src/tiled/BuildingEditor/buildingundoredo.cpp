@@ -330,7 +330,7 @@ SwapFloorGrime::SwapFloorGrime(BuildingDocument *doc, BuildingFloor *floor,
 
 SwapFloorGrime::~SwapFloorGrime()
 {
-    qDeleteAll(mGrid.values());
+    qDeleteAll(mGrid);
 }
 
 void SwapFloorGrime::swap()

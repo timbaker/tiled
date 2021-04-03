@@ -436,14 +436,14 @@ void MapScene::mapChanged()
 
     for (int z = 0; z < mLevelData.size(); z++) {
         LevelData &levelData = mLevelData[z];
-        for (QGraphicsItem *item : levelData.mLayerItems) {
+        for (QGraphicsItem *item : qAsConst(levelData.mLayerItems)) {
             if (TileLayerItem *tli = dynamic_cast<TileLayerItem*>(item)) {
                 tli->syncWithTileLayer();
             }
         }
 #ifdef ZOMBOID
         // BUG: create object layer, add items, resize map much larger, try to select the objects
-        for (MapObjectItem *item : levelData.mObjectItems) {
+        for (MapObjectItem *item : qAsConst(levelData.mObjectItems)) {
             item->syncWithMapObject();
         }
 #endif
@@ -538,7 +538,7 @@ void MapScene::objectsAdded(const QList<MapObject*> &objects)
 
         // Find the object group item for the map object's object group
         LevelData &levelData = mLevelData[og->level()];
-        for (QGraphicsItem *item : levelData.mLayerItems) {
+        for (QGraphicsItem *item : qAsConst(levelData.mLayerItems)) {
             if (ObjectGroupItem *ogi = dynamic_cast<ObjectGroupItem*>(item)) {
                 if (ogi->objectGroup() == og) {
                     ogItem = ogi;
@@ -604,9 +604,11 @@ void MapScene::updateSelectedObjectItems()
     }
 
     // Update the editable state of the items
-    for (MapObjectItem *item : mSelectedObjectItems - items)
+    const QSet<MapObjectItem*> items1 = mSelectedObjectItems - items;
+    for (MapObjectItem *item : items1)
         item->setEditable(false);
-    for (MapObjectItem *item : items - mSelectedObjectItems)
+    const QSet<MapObjectItem*> items2 = items - mSelectedObjectItems;
+    for (MapObjectItem *item : items2)
         item->setEditable(true);
 
     mSelectedObjectItems = items;
@@ -616,7 +618,7 @@ void MapScene::updateSelectedObjectItems()
 void MapScene::syncAllObjectItems()
 {
     for (LevelData &levelData : mLevelData) {
-        for (MapObjectItem *item : levelData.mObjectItems) {
+        for (MapObjectItem *item : qAsConst(levelData.mObjectItems)) {
             item->syncWithMapObject();
         }
     }

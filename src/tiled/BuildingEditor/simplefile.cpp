@@ -291,7 +291,7 @@ SimpleFileBlock SimpleFileBlock::block(const QString &name)
     return SimpleFileBlock();
 }
 
-QString SimpleFileBlock::toString(int depth)
+QString SimpleFileBlock::toString(int depth) const
 {
     QString result;
     QTextStream ts(&result);
@@ -299,7 +299,7 @@ QString SimpleFileBlock::toString(int depth)
     return result;
 }
 
-void SimpleFileBlock::write(QTextStream &ts, int depth)
+void SimpleFileBlock::write(QTextStream &ts, int depth) const
 {
     INDENT indent(depth);
     foreach (SimpleFileKeyValue kv, values) {

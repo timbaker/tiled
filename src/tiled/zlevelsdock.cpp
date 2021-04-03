@@ -261,7 +261,8 @@ void ZLevelsDock::updateActions()
 void ZLevelsDock::saveExpandedLevels(MapDocument *mapDoc)
 {
     mExpandedLevels[mapDoc].clear();
-    for (int level : mView->model()->levels()) {
+    const QList<int> levelInts = mView->model()->levels();
+    for (int level : levelInts) {
         if (mView->isExpanded(mView->model()->index(level))) {
             mExpandedLevels[mapDoc].append(level);
         }
@@ -271,7 +272,7 @@ void ZLevelsDock::saveExpandedLevels(MapDocument *mapDoc)
 void ZLevelsDock::restoreExpandedLevels(MapDocument *mapDoc)
 {
     if (mExpandedLevels.contains(mapDoc)) {
-        for (int level : mExpandedLevels[mapDoc]) {
+        for (int level : qAsConst(mExpandedLevels[mapDoc])) {
             mView->setExpanded(mView->model()->index(level), true);
         }
         mExpandedLevels[mapDoc].clear();

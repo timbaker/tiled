@@ -66,7 +66,8 @@ QList<Tileset *> TextureUnpacker::createTilesets()
 {
     QList<Tileset*> ret;
 
-    foreach (QString tilesetName, mTilesetImages.keys()) {
+    const QStringList tilesetNames = mTilesetImages.keys();
+    for (const QString &tilesetName : mTilesetImages.keys()) {
         QSize tileSize = mTilesetSize[tilesetName];
         Tileset *ts = new Tileset(tilesetName, tileSize.width(), tileSize.height());
 //        ts->setTransparentColor(QColor(254,254,254)); // not pure white???
@@ -103,7 +104,8 @@ void TextureUnpacker::createImages()
 
 void TextureUnpacker::writeImages(const QString &dirName)
 {
-    foreach (QString tilesetName, mTilesetImages.keys()) {
+    const QStringList tilesetNames = mTilesetImages.keys();
+    for (const QString &tilesetName : tilesetNames) {
         mTilesetImages[tilesetName].save(dirName + QLatin1String("/") + tilesetName + QLatin1String(".png"));
     }
 }

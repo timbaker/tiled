@@ -789,7 +789,7 @@ public:
         , mOldName(oldName)
         , mNewName(newName)
     {
-        redo();
+//        redo();
     }
 
     void undo()
@@ -1005,7 +1005,8 @@ void TilesetDock::setMapDocument(MapDocument *mapDocument)
 
         QString cacheName = mCurrentTilesets.take(mMapDocument);
         if (mTilesetByName.contains(cacheName)) {
-            int row = mTilesets.indexOf(mTilesetByName.values(cacheName).first());
+            const QList<Tileset*> tilesets = mTilesetByName.values(cacheName);
+            int row = mTilesets.indexOf(tilesets.first());
             mTilesetNamesView->setCurrentRow(row);
         }
     }
@@ -1019,7 +1020,8 @@ void TilesetDock::tilePicked(Tile *tile)
         return;
 
     if (mTilesetByName.contains(tile->tileset()->name())) {
-        int row = mTilesets.indexOf(mTilesetByName.values(tile->tileset()->name()).first());
+        const QList<Tileset*> tilesets = mTilesetByName.values(tile->tileset()->name());
+        int row = mTilesets.indexOf(tilesets.first());
         mTilesetNamesView->setCurrentRow(row);
         row = tile->id() / tile->tileset()->columnCount();
         int col = tile->id() % tile->tileset()->columnCount();
@@ -1239,7 +1241,8 @@ void TilesetDock::removeTileset(int index)
     if (inUse) {
         // Remove references to tiles in this tileset from the current map
         undoStack->beginMacro(remove->text());
-        for (Layer *layer : mMapDocument->map()->layers()) {
+        const QList<Layer*> layers = mMapDocument->map()->layers();
+        for (Layer *layer : layers) {
             if (TileLayer *tileLayer = layer->asTileLayer()) {
                 const QRegion refs = tileLayer->tilesetReferences(tileset);
                 if (!refs.isEmpty()) {

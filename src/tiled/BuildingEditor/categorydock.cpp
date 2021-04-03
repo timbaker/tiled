@@ -300,7 +300,7 @@ void CategoryDock::categorySelectionChanged()
             }
 
             // Add "none" tile first in each category where it is allowed.
-            for (BuildingTileCategory *category : categories) {
+            for (BuildingTileCategory *category : qAsConst(categories)) {
                 int categoryIndex = BuildingTilesMgr::instance()->indexOf(category);
                 QString key = paddedNumber(categoryIndex) + QLatin1String("_") + paddedNumber(0);
                 entryMap[key] = category->noneTileEntry();

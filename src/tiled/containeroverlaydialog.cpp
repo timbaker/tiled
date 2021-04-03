@@ -557,7 +557,8 @@ void AbstractOverlayDialog::setTilesetList()
     // Add the list of tilesets, and resize it to fit
     int width = 64;
     QFontMetrics fm = ui->tilesetList->fontMetrics();
-    for (Tileset *tileset : TileMetaInfoMgr::instance()->tilesets()) {
+    const QList<Tileset*> tilesets = TileMetaInfoMgr::instance()->tilesets();
+    for (Tileset *tileset : tilesets) {
         QListWidgetItem *item = new QListWidgetItem();
         item->setText(tileset->name());
         if (tileset->isMissing())
@@ -573,7 +574,7 @@ void AbstractOverlayDialog::setTilesetList()
 bool AbstractOverlayDialog::isOverlayTileUsed(const QString &_tileName)
 {
     QString tileName = BuildingEditor::BuildingTilesMgr::normalizeTileName(_tileName);
-    for (AbstractOverlay *overlay : mOverlays) {
+    for (AbstractOverlay *overlay : qAsConst(mOverlays)) {
         if (overlay->tileName() == tileName) {
             return true;
         }
@@ -584,7 +585,7 @@ bool AbstractOverlayDialog::isOverlayTileUsed(const QString &_tileName)
 bool AbstractOverlayDialog::isEntryTileUsed(const QString &_tileName)
 {
     QString tileName = BuildingEditor::BuildingTilesMgr::normalizeTileName(_tileName);
-    for (AbstractOverlay *overlay : mOverlays) {
+    for (AbstractOverlay *overlay : qAsConst(mOverlays)) {
         for (int i = 0; i < overlay->entryCount(); i++) {
             AbstractOverlayEntry *entry = overlay->entry(i);
             if (entry->tiles().contains(tileName)) {
@@ -599,7 +600,7 @@ void AbstractOverlayDialog::addOverlay()
 {
     QModelIndexList selection = ui->tilesetTilesView->selectionModel()->selectedIndexes();
     QList<Tile*> tiles;
-    for (QModelIndex index : selection) {
+    for (QModelIndex index : qAsConst(selection)) {
         Tile *tile = ui->tilesetTilesView->model()->tileAt(index);
         if (!tile) {
             continue;
@@ -618,11 +619,11 @@ void AbstractOverlayDialog::addOverlay()
         mUndoStack->beginMacro(tr("Add %n Overlays", "", tiles.size()));
     }
     QList<AbstractOverlay*> overlays;
-    for (Tile *tile : tiles) {
+    for (Tile *tile : qAsConst(tiles)) {
         AbstractOverlay *overlay = createOverlay(tile);
 
         QMap<QString, AbstractOverlay*> map;
-        for (AbstractOverlay *overlay : mOverlays) {
+        for (AbstractOverlay *overlay : qAsConst(mOverlays)) {
             map[overlay->tileName()] = overlay;
         }
         map[overlay->tileName()] = overlay;
@@ -638,7 +639,7 @@ void AbstractOverlayDialog::addOverlay()
         mUndoStack->endMacro();
     }
     ui->overlayView->selectionModel()->clear();
-    for (AbstractOverlay *overlay : overlays) {
+    for (AbstractOverlay *overlay : qAsConst(overlays)) {
         QModelIndex index = ui->overlayView->model()->index(overlay);
         ui->overlayView->selectionModel()->select(index, QItemSelectionModel::Select);
     }
@@ -648,7 +649,7 @@ void AbstractOverlayDialog::addEntry()
 {
     QModelIndexList selection = ui->overlayView->selectionModel()->selectedIndexes();
     QList<AbstractOverlayEntry*> entries;
-    for (QModelIndex index : selection) {
+    for (QModelIndex index : qAsConst(selection)) {
         AbstractOverlay *overlay = ui->overlayView->model()->overlayAt(index);
         if (!overlay) {
             continue;
@@ -662,7 +663,7 @@ void AbstractOverlayDialog::addEntry()
     if (entries.size() > 1) {
         mUndoStack->beginMacro(tr("Add %n Rooms", "", entries.size()));
     }
-    for (AbstractOverlayEntry *entry : entries) {
+    for (AbstractOverlayEntry *entry : qAsConst(entries)) {
         AbstractOverlay *overlay = entry->parent();
         mUndoStack->push(new InsertEntry(this, overlay, overlay->entryCount(), entry));
     }
@@ -670,7 +671,7 @@ void AbstractOverlayDialog::addEntry()
         mUndoStack->endMacro();
     }
     ui->overlayView->selectionModel()->clear();
-    for (AbstractOverlayEntry *entry : entries) {
+    for (AbstractOverlayEntry *entry : qAsConst(entries)) {
         QModelIndex index = ui->overlayView->model()->index(entry);
         ui->overlayView->selectionModel()->select(index, QItemSelectionModel::Select);
     }
@@ -691,7 +692,7 @@ void AbstractOverlayDialog::setToNone()
     if (commands.size() > 1) {
         mUndoStack->beginMacro(QLatin1String("Set To None"));
     }
-    for (QUndoCommand *uc : commands) {
+    for (QUndoCommand *uc : qAsConst(commands)) {
         mUndoStack->push(uc);
     }
     if (commands.size() > 1) {
@@ -796,7 +797,7 @@ void AbstractOverlayDialog::tileActivated(const QModelIndex &index)
     if (tile == nullptr)
         return;
 
-    for (AbstractOverlay *overlay : mOverlays) {
+    for (AbstractOverlay *overlay : qAsConst(mOverlays)) {
         if (BuildingEditor::BuildingTilesMgr::normalizeTileName(overlay->tileName()) == BuildingEditor::BuildingTilesMgr::nameForTile(tile)) {
             ui->overlayView->setCurrentIndex(ui->overlayView->model()->index(overlay));
             return;
@@ -804,7 +805,8 @@ void AbstractOverlayDialog::tileActivated(const QModelIndex &index)
 
         for (int i = 0; i < overlay->entryCount(); i++) {
             AbstractOverlayEntry *entry = overlay->entry(i);
-            for (QString tileName : entry->tiles()) {
+            const QStringList tileNames = entry->tiles();
+            for (const QString &tileName : tileNames) {
                 if (BuildingEditor::BuildingTilesMgr::normalizeTileName(tileName) == BuildingEditor::BuildingTilesMgr::nameForTile(tile)) {
                     ui->overlayView->setCurrentIndex(ui->overlayView->model()->index(entry));
                     return;
@@ -948,13 +950,13 @@ void AbstractOverlayDialog::entryRoomNameEdited(AbstractOverlayEntry *entry, con
         return;
     }
     QList<AbstractOverlayEntry*> entries;
-    for (QModelIndex index : selection) {
+    for (QModelIndex index : qAsConst(selection)) {
         if (AbstractOverlayEntry* entry1 = ui->overlayView->model()->entryAt(index)) {
             entries += entry1;
         }
     }
     mUndoStack->beginMacro(tr("Set Usage on %n Rooms", "", entries.size()));
-    for (AbstractOverlayEntry* entry1 : entries) {
+    for (AbstractOverlayEntry* entry1 : qAsConst(entries)) {
         mUndoStack->push(new SetEntryRoomName(this, entry1, roomName));
     }
     mUndoStack->endMacro();
@@ -968,13 +970,13 @@ void AbstractOverlayDialog::entryUsageEdited(AbstractOverlayEntry *entry, const 
         return;
     }
     QList<AbstractOverlayEntry*> entries;
-    for (QModelIndex index : selection) {
+    for (QModelIndex index : qAsConst(selection)) {
         if (AbstractOverlayEntry* entry1 = ui->overlayView->model()->entryAt(index)) {
             entries += entry1;
         }
     }
     mUndoStack->beginMacro(tr("Set Usage on %n Rooms", "", entries.size()));
-    for (AbstractOverlayEntry* entry1 : entries) {
+    for (AbstractOverlayEntry* entry1 : qAsConst(entries)) {
         mUndoStack->push(new SetEntryUsage(this, entry1, usage));
     }
     mUndoStack->endMacro();
@@ -985,13 +987,13 @@ void AbstractOverlayDialog::entryChanceEdited(AbstractOverlayEntry *entry, int c
 {
     QModelIndexList selection = ui->overlayView->selectionModel()->selectedIndexes();
     QList<AbstractOverlayEntry*> entries;
-    for (QModelIndex index : selection) {
+    for (QModelIndex index : qAsConst(selection)) {
         if (AbstractOverlayEntry* entry1 = ui->overlayView->model()->entryAt(index)) {
             entries += entry1;
         }
     }
     mUndoStack->beginMacro(tr("Set Chance on %n Rooms", "", entries.size()));
-    for (AbstractOverlayEntry* entry1 : entries) {
+    for (AbstractOverlayEntry* entry1 : qAsConst(entries)) {
         mUndoStack->push(new SetEntryChance(this, entry1, chance));
     }
     mUndoStack->endMacro();
@@ -1219,10 +1221,10 @@ void AbstractOverlayDialog::remove()
         multiple = false;
     }
 
-    for (AbstractOverlay *overlay : overlays) {
+    for (AbstractOverlay *overlay : qAsConst(overlays)) {
            mUndoStack->push(new RemoveOverlay(this, mOverlays.indexOf(overlay), overlay));
     }
-    for (AbstractOverlayEntry *entry : entries) {
+    for (AbstractOverlayEntry *entry : qAsConst(entries)) {
         mUndoStack->push(new RemoveEntry(this, entry->indexOf(), entry));
     }
 
@@ -1284,7 +1286,8 @@ bool ContainerOverlayDialog::fileOpen(const QString &fileName, QList<AbstractOve
     }
 
     overlays.clear();
-    for (ContainerOverlay* overlay : cof.takeOverlays()) {
+    const QList<ContainerOverlay*> containerOverlays = cof.takeOverlays();
+    for (ContainerOverlay* overlay : containerOverlays) {
         overlays << overlay;
     }
     return true;

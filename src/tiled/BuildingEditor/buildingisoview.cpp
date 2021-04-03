@@ -748,7 +748,7 @@ void BuildingIsoScene::setCursorPosition(const QPoint &pos)
         BuildingRoomDefecator rd(currentFloor(), room);
         rd.defecate();
         QVector<QRect> rects;
-        for (const QRegion &rgn : rd.mRegions) {
+        for (const QRegion &rgn : qAsConst(rd.mRegions)) {
             if (rgn.contains(pos)) {
                 rects += QVector<QRect>(rgn.cbegin(), rgn.cend());
                 break;

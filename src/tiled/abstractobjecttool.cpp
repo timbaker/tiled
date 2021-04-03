@@ -107,7 +107,8 @@ ObjectGroup *AbstractObjectTool::currentObjectGroup() const
 
 MapObjectItem *AbstractObjectTool::topMostObjectItemAt(QPointF pos) const
 {
-    for (QGraphicsItem *item : mMapScene->items(pos)) {
+    const QList<QGraphicsItem*> items = mMapScene->items(pos);
+    for (QGraphicsItem *item : items) {
         if (MapObjectItem *objectItem = dynamic_cast<MapObjectItem*>(item)) {
             return objectItem;
         }
@@ -134,7 +135,8 @@ void AbstractObjectTool::showContextMenu(MapObjectItem *clickedObjectItem,
     const QList<MapObject*> selectedObjects = mapDocument()->selectedObjects();
 
     QList<ObjectGroup*> objectGroups;
-    for (Layer *layer : mapDocument()->map()->layers(Layer::Type::ObjectGroupType)) {
+    const QList<Layer*> layers = mapDocument()->map()->layers(Layer::Type::ObjectGroupType);
+    for (Layer *layer : layers) {
         if (ObjectGroup *objectGroup = layer->asObjectGroup()) {
             objectGroups.append(objectGroup);
         }
@@ -179,7 +181,7 @@ void AbstractObjectTool::showContextMenu(MapObjectItem *clickedObjectItem,
         menu.addSeparator();
         openAction = menu.addAction(tiledIcon, tr("Open in TileZed"));
         QString fileName = clickedObjectItem->mapObject()->type();
-        openAction->setEnabled(QFileInfo(fileName).exists());
+        openAction->setEnabled(QFileInfo::exists(fileName));
     }
 #endif // ZOMBOID
 
@@ -199,9 +201,9 @@ void AbstractObjectTool::showContextMenu(MapObjectItem *clickedObjectItem,
     }
 
     MoveToLayerActionMap::const_iterator i =
-            moveToLayerActions.find(selectedAction);
+            moveToLayerActions.constFind(selectedAction);
 
-    if (i != moveToLayerActions.end()) {
+    if (i != moveToLayerActions.constEnd()) {
         ObjectGroup *objectGroup = i.value();
         moveObjectsToGroup(selectedObjects, objectGroup);
     }

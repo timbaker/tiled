@@ -369,7 +369,7 @@ void WorldEdDock::selectionChanged()
 void WorldEdDock::activated(const QModelIndex &index)
 {
     if (WorldCellLot *lot = ui->view->model()->toLot(index)) {
-        if (QFileInfo(lot->mapName()).exists())
+        if (QFileInfo::exists(lot->mapName()))
             MainWindow::instance()->openFile(lot->mapName());
     }
 }
@@ -408,7 +408,7 @@ void WorldEdDock::selectedLotsChanged()
 {
     const QSet<WorldCellLot*> &selected = WorldEd::WorldEdMgr::instance()->selectedLots();
     if (selected.size() == 1) {
-        QModelIndex index = ui->view->model()->index(selected.values().first());
+        QModelIndex index = ui->view->model()->index(*selected.begin());
         if (index.isValid()) {
             mSynching = true;
             ui->view->setCurrentIndex(index);

@@ -126,7 +126,7 @@ void WorldLotTool::mousePressed(QGraphicsSceneMouseEvent *event)
             QIcon tiledIcon(QLatin1String(":images/tiled-icon-16.png"));
             QAction *openAction = menu.addAction(tiledIcon, tr("Open in TileZed"));
             QString fileName = mHoverLot->mapName();
-            openAction->setEnabled(QFileInfo(fileName).exists());
+            openAction->setEnabled(QFileInfo::exists(fileName));
 
             if (mHoverLot->cell() != mCell)
                 hideAction->setVisible(false);
@@ -144,7 +144,7 @@ void WorldLotTool::mousePressed(QGraphicsSceneMouseEvent *event)
             QIcon tiledIcon(QLatin1String(":images/tiled-icon-16.png"));
             QAction *openAction = menu.addAction(tiledIcon, tr("Open in TileZed"));
             QString fileName = cell->mapFilePath();
-            openAction->setEnabled(QFileInfo(fileName).exists());
+            openAction->setEnabled(QFileInfo::exists(fileName));
 
             mShowingContextMenu = true;
             QAction *selected = menu.exec(event->screenPos());

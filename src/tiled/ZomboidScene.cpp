@@ -40,6 +40,7 @@
 
 #include "worlded/worldcell.h"
 
+#include <QDebug>
 #include <QGraphicsSceneMouseEvent>
 
 using namespace Tiled;
@@ -302,11 +303,16 @@ void ZomboidScene::updateCurrentLayerHighlight()
     if (!mMapDocument)
         return;
 
-    Layer *currentLayer = mMapDocument->currentLayer();
-    int currentLayerIndex = mMapDocument->currentLayerIndex();
+    MapLevel *currentMapLevel = mMapDocument->currentMapLevel();
+//    Layer *currentLayer = mMapDocument->currentLayer();
+    int currentLevelIndex = mMapDocument->currentLevelIndex();
+//    int currentLayerIndex = mMapDocument->currentLayerIndex();
 
-    if (currentLayer) {
-        int level = currentLayer->level();
+    if ((currentMapLevel != nullptr) && (currentMapLevel->layerCount() > 0)) {
+//        currentLayer = currentMapLevel->layerAt(0);
+//        currentLayerIndex = 0;
+#if 0
+        int level = currentMapLevel->z();
         if (mTileLayerGroupItems.contains(level)) {
             CompositeLayerGroup *layerGroup = mTileLayerGroupItems[level]->layerGroup();
             if (layerGroup->layerCount()) {
@@ -315,58 +321,79 @@ void ZomboidScene::updateCurrentLayerHighlight()
                 currentLayerIndex = mapLevel->layers().indexOf(currentLayer);
             }
         }
+#endif
     }
 
-    if (!mHighlightCurrentLayer || !currentLayer) {
+    if (!mHighlightCurrentLayer || (currentMapLevel == nullptr)) {
         mDarkRectangle->setVisible(false);
 
         // Restore visibility for all non-ZTileLayerGroupItem layers
-        for (int z = 0; z < mLevelData.size(); z++) {
+        for (int z = 0; z < int(mLevelData.size()); z++) {
             LevelData &levelData = mLevelData[z];
+            MapLevel *mapLevel = mMapDocument->map()->levelAt(z);
             for (int i = 0; i < levelData.mLayerItems.size(); ++i) {
-                const Layer *layer = mMapDocument->map()->levelAt(z)->layerAt(i);
+                const Layer *layer = mapLevel->layerAt(i);
                 levelData.mLayerItems.at(i)->setVisible(layer->isVisible());
             }
         }
 
         // Restore visibility for all ZTileLayerGroupItem layers
-        for (CompositeLayerGroupItem *item : mTileLayerGroupItems) {
+        for (CompositeLayerGroupItem *item : qAsConst(mTileLayerGroupItems)) {
             item->setVisible(item->layerGroup()->isVisible());
         }
 
         return;
     }
 
-    LevelData &levelData = mLevelData[currentLayer->level()];
+#if 1
+    QGraphicsItem *lowestVisibleItem = nullptr;
+#else
+    LevelData &levelData = mLevelData[currentLevelIndex];
     QGraphicsItem *currentItem = levelData.mLayerItems[currentLayerIndex];
     if (currentLayer->asTileLayer() && currentLayer->asTileLayer()->group()) {
         Q_ASSERT(mTileLayerGroupItems.contains(currentLayer->level()));
         if (mTileLayerGroupItems.contains(currentLayer->level()))
             currentItem = mTileLayerGroupItems[currentLayer->level()];
     }
-
-    // Hide items above the current item
-    for (int z = 0; z < mLevelData.size(); z++) {
+#endif
+    // Hide items above the current level
+    for (int z = 0; z < int(mLevelData.size()); z++) {
         LevelData &levelData2 = mLevelData[z];
         MapLevel *mapLevel = mMapDocument->map()->levelAt(z);
         for (int index = 0; index < levelData2.mLayerItems.size(); index++) {
             QGraphicsItem *item = levelData2.mLayerItems[index];
             Layer *layer = mapLevel->layerAt(index);
-            bool visible = layer->isVisible() && (layer->level() <= currentLayer->level());
-            if (layer->isObjectGroup() && (layer->level() != currentLayer->level())) {
+            bool visible = layer->isVisible() && (z <= currentLevelIndex);
+            if (layer->isObjectGroup() && (z != currentLevelIndex)) {
+                visible = false;
+            }
+            if (layer->isTileLayer()) {
+                // Tile layers are in a single QGraphicsItem.
                 visible = false;
             }
             item->setVisible(visible);
+            if (visible && (z == currentLevelIndex) && ((lowestVisibleItem == nullptr) || (lowestVisibleItem->zValue() > item->zValue()))) {
+                lowestVisibleItem = item;
+            }
         }
     }
-    for (CompositeLayerGroupItem *item : mTileLayerGroupItems) {
-        bool visible = item->layerGroup()->isVisible() && (item->layerGroup()->level() <= currentLayer->level());
+    for (CompositeLayerGroupItem *item : qAsConst(mTileLayerGroupItems)) {
+        int z = item->layerGroup()->level();
+        bool visible = item->layerGroup()->isVisible() && (z <= currentLevelIndex);
         item->setVisible(visible);
+        if (visible && (z == currentLevelIndex) && ((lowestVisibleItem == nullptr) || (lowestVisibleItem->zValue() > item->zValue()))) {
+            lowestVisibleItem = item;
+        }
     }
 
     // Darken layers below the current item
-    mDarkRectangle->setZValue(currentItem->zValue() - 0.5);
+    if (lowestVisibleItem == nullptr) {
+        mDarkRectangle->setZValue(20);
+    } else {
+        mDarkRectangle->setZValue(lowestVisibleItem->zValue() - 0.5);
+    }
     mDarkRectangle->setVisible(true);
+    qDebug() << "mDarkRectangle z = " << mDarkRectangle->zValue();
 }
 
 void ZomboidScene::layerAdded(int z, int index)
@@ -575,16 +602,19 @@ void ZomboidScene::doLater(PendingFlags flags)
 // Determine sane Z-order for layers in and out of TileLayerGroups
 void ZomboidScene::setGraphicsSceneZOrder()
 {
-    MapComposite::ZOrderList zorder = mMapDocument->mapComposite()->zOrder();
+    const MapComposite::ZOrderList zorder = mMapDocument->mapComposite()->zOrder();
     int z = 0;
-    for (MapComposite::ZOrderItem zo : zorder) {
+    for (const MapComposite::ZOrderItem &zo : zorder) {
         if (zo.group) {
             int level = zo.group->level();
             if (mTileLayerGroupItems.contains(level))
                 mTileLayerGroupItems[level]->setZValue(z);
-        } else if (mLevelData[zo.layer->level()].mLayerItems.size() > zo.layerIndex) {
-            if (QGraphicsItem * layerItem = mLevelData[zo.layer->level()].mLayerItems[zo.layerIndex]) {
-                layerItem->setZValue(z);
+        } else {
+            LevelData &levelData = mLevelData[zo.layer->level()];
+            if (levelData.mLayerItems.size() > zo.layerIndex) {
+                if (QGraphicsItem * layerItem = levelData.mLayerItems[zo.layerIndex]) {
+                    layerItem->setZValue(z);
+                }
             }
         }
         ++z;

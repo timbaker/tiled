@@ -89,7 +89,9 @@ TilesetManager::TilesetManager():
         mImageReaderThreads[i]->start();
     }
 
+#ifndef WORLDED
     mReloadTilesetsOnChange = Preferences::instance()->reloadTilesetsOnChange();
+#endif
 #endif
 
     connect(mWatcher, SIGNAL(fileChanged(QString)),
@@ -249,7 +251,7 @@ bool TilesetManager::getTilesetFileName(const QString &tilesetName, QString &pat
     }
 
     QFileInfoList infoList = dir2x.entryInfoList(QDir::AllDirs | QDir::NoDotAndDotDot);
-    for (const QFileInfo &dirInfo : infoList) {
+    for (const QFileInfo &dirInfo : qAsConst(infoList)) {
         QDir dir = QDir(dirInfo.filePath());
         QString try2x = dir.filePath(fileName);
         if (QImageReader(try2x).size().isValid()) {
@@ -260,7 +262,7 @@ bool TilesetManager::getTilesetFileName(const QString &tilesetName, QString &pat
     }
 
     infoList = dir1x.entryInfoList(QDir::AllDirs | QDir::NoDotAndDotDot);
-    for (const QFileInfo &dirInfo : infoList) {
+    for (const QFileInfo &dirInfo : qAsConst(infoList)) {
         QDir dir = QDir(dirInfo.filePath());
         QString try1x = dir.filePath(fileName);
         if (QImageReader(try1x).size().isValid()) {
@@ -466,7 +468,7 @@ void TilesetManager::waitForTilesets(const QList<Tileset *> &tilesets)
 {
     while (true) {
         bool busy = false;
-        for (TilesetImageReaderWorker *worker : mImageReaderWorkers) {
+        for (TilesetImageReaderWorker *worker : qAsConst(mImageReaderWorkers)) {
             if (worker->busy()) {
                 busy = true;
                 break;
@@ -485,11 +487,11 @@ void TilesetManager::waitForTilesets(const QList<Tileset *> &tilesets)
         // Missing tilesets aren't in mTilesetImageCache
         if (ts->isMissing())
             continue;
-        // There may be a thread already reading or about to read this image.
-        QImage *image = new QImage(ts->imageSource2x().isEmpty() ? ts->imageSource() : ts->imageSource2x());
         Tileset *cached = mTilesetImageCache->findMatch(ts, ts->imageSource(), ts->imageSource2x());
         Q_ASSERT(cached != nullptr && !cached->isLoaded());
         if (cached) {
+            // There may be a thread already reading or about to read this image.
+            QImage *image = new QImage(ts->imageSource2x().isEmpty() ? ts->imageSource() : ts->imageSource2x());
             imageLoaded(image, cached); // deletes image
         }
     }
@@ -633,7 +635,7 @@ public:
         Q_ASSERT(xml.isStartElement() && xml.name() == QLatin1String("tileset"));
 
         const QXmlStreamAttributes atts = xml.attributes();
-        const QString tilesetName = atts.value(QLatin1String("name")).toString();
+//        const QString tilesetName = atts.value(QLatin1String("name")).toString();
         uint columns = atts.value(QLatin1String("columns")).toString().toUInt();
         uint rows = atts.value(QLatin1String("rows")).toString().toUInt();
 

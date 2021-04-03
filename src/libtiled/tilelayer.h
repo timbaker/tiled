@@ -170,8 +170,8 @@ private:
     {
         Q_ASSERT(!mUseVector);
         mCellsVector.resize(size());
-        QHash<int,Cell>::const_iterator it = mCells.begin();
-        while (it != mCells.end()) {
+        QHash<int,Cell>::const_iterator it = mCells.constBegin();
+        while (it != mCells.constEnd()) {
             mCellsVector[it.key()] = (*it);
             ++it;
         }

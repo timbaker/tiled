@@ -95,7 +95,7 @@ void PackViewer::openPack()
     mPackDirectory = QFileInfo(fileName).absolutePath();
     writeSettings();
 
-    PROGRESS *progress = new PROGRESS(tr("Loading %1").arg(QFileInfo(fileName).completeBaseName()), this);
+    QScopedPointer<PROGRESS> progress(new PROGRESS(tr("Loading %1").arg(QFileInfo(fileName).completeBaseName()), this));
 
     if (!mPackFile.read(fileName))
         return;
@@ -111,7 +111,7 @@ void PackViewer::openPack()
 
     ui->label->setText(QString::fromLatin1("%1 images").arg(numImages));
 
-    delete progress;
+    delete progress.take();
     qApp->processEvents(QEventLoop::ExcludeUserInputEvents);
     raise();
     activateWindow();
@@ -192,7 +192,7 @@ void PackImageItem::hoverMoveEvent(QGraphicsSceneHoverEvent *event)
     qreal x = event->scenePos().x();
     qreal y = event->scenePos().y();
 
-    for (PackSubTexInfo info : mPackPage.mInfo) {
+    for (const PackSubTexInfo &info : qAsConst(mPackPage.mInfo)) {
         if (x >= info.x && x < info.x + info.w &&
                 y >= info.y && y < info.y + info.h) {
 //            setToolTip(info.name);

@@ -124,7 +124,7 @@ public:
     /**
      * Returns all open map documents.
      */
-    QList<MapDocument*> documents() const { return mDocuments; }
+    const QList<MapDocument*> &documents() const { return mDocuments; }
 
     /**
      * Centers the current map on the tile coordinates \a x, \a y.

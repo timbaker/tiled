@@ -690,7 +690,7 @@ void EnflatulatorTool::setShape(EnflatulatorShape *shape)
     mSelectedFaceItem = 0;
 
     qreal x = 16, y = 16;
-    foreach (EnflatulatorFace *face, shape->mFaces) {
+    for (EnflatulatorFace *face : qAsConst(shape->mFaces)) {
 #if 0
         mFaceItems += new EnflatulatorFaceItem(this, face);
 #else

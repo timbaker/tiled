@@ -360,8 +360,8 @@ MainWindow::MainWindow(QWidget *parent, Qt::WindowFlags flags)
     mLayerMenu->addAction(mActionHandler->actionRemoveLayer());
     mLayerMenu->addAction(mActionHandler->actionRenameLayer());
     mLayerMenu->addSeparator();
-    mLayerMenu->addAction(mActionHandler->actionSelectPreviousLayer());
-    mLayerMenu->addAction(mActionHandler->actionSelectNextLayer());
+    mLayerMenu->addAction(mActionHandler->actionSelectPreviousLevel());
+    mLayerMenu->addAction(mActionHandler->actionSelectNextLevel());
     mLayerMenu->addAction(mActionHandler->actionMoveLayerUp());
     mLayerMenu->addAction(mActionHandler->actionMoveLayerDown());
     mLayerMenu->addSeparator();
@@ -584,10 +584,10 @@ MainWindow::MainWindow(QWidget *parent, Qt::WindowFlags flags)
 #ifdef ZOMBOID
     mCurrentLevelButton->setObjectName(QLatin1String("currentLevelButton"));
     mCurrentLayerButton->setObjectName(QLatin1String("currentLayerButton"));
-    connect(mCurrentLevelMenu, SIGNAL(aboutToShow()), SLOT(aboutToShowLevelMenu()));
-    connect(mCurrentLayerMenu, SIGNAL(aboutToShow()), SLOT(aboutToShowLayerMenu()));
-    connect(mCurrentLevelMenu, SIGNAL(triggered(QAction*)), SLOT(triggeredLevelMenu(QAction*)));
-    connect(mCurrentLayerMenu, SIGNAL(triggered(QAction*)), SLOT(triggeredLayerMenu(QAction*)));
+    connect(mCurrentLevelMenu, &QMenu::aboutToShow, this, &MainWindow::aboutToShowLevelMenu);
+    connect(mCurrentLayerMenu, &QMenu::aboutToShow, this, &MainWindow::aboutToShowLayerMenu);
+    connect(mCurrentLevelMenu, &QMenu::triggered, this, &MainWindow::triggeredLevelMenu);
+    connect(mCurrentLayerMenu, &QMenu::triggered, this, &MainWindow::triggeredLayerMenu);
     mCurrentLevelButton->setMenu(mCurrentLevelMenu);
     mCurrentLayerButton->setMenu(mCurrentLayerMenu);
     mCurrentLevelButton->setPopupMode(QToolButton::InstantPopup);
@@ -1001,9 +1001,9 @@ bool MainWindow::InitConfigFiles()
 
     foreach (QString configFile, configFiles) {
         QString fileName = configPath + QLatin1Char('/') + configFile;
-        if (!QFileInfo(fileName).exists()) {
+        if (!QFileInfo::exists(fileName)) {
             QString source = Preferences::instance()->appConfigPath(configFile);
-            if (QFileInfo(source).exists()) {
+            if (QFileInfo::exists(source)) {
                 if (!QFile::copy(source, fileName)) {
                     QMessageBox::critical(this, tr("It's no good, Jim!"),
                                           tr("Failed to copy file:\nFrom: %1\nTo: %2")
@@ -1793,7 +1793,8 @@ void MainWindow::containerOverlayDialog()
     mContainerOverlayDialog->raise();
 
     TileMetaInfoMgr *mgr = TileMetaInfoMgr::instance();
-    for (Tileset *ts : mgr->tilesets()) {
+    const QList<Tileset*> tilesets = mgr->tilesets();
+    for (Tileset *ts : tilesets) {
         if (ts->isMissing()) {
             PROGRESS progress(tr("Loading Tilesets.txt tilesets"), this);
             mgr->loadTilesets(true);
@@ -1812,7 +1813,8 @@ void MainWindow::tileOverlayDialog()
     mTileOverlayDialog->raise();
 
     TileMetaInfoMgr *mgr = TileMetaInfoMgr::instance();
-    for (Tileset *ts : mgr->tilesets()) {
+    const QList<Tileset*> tilesets = mgr->tilesets();
+    for (Tileset *ts : tilesets) {
         if (ts->isMissing()) {
             PROGRESS progress(tr("Loading Tilesets.txt tilesets"), this);
             mgr->loadTilesets(true);
@@ -1841,7 +1843,7 @@ void MainWindow::launchWorldEd()
 #endif
     path = QDir::cleanPath(path);
     path = QDir::toNativeSeparators(path);
-    if (QFileInfo(path).exists()) {
+    if (QFileInfo::exists(path)) {
         QProcess::startDetached(path, QStringList());
     } else {
         QMessageBox::warning(this, tr("Error launching WorldEd"),
@@ -1951,9 +1953,8 @@ void MainWindow::convertToLot()
         mapWidth += offset;
         mapHeight += offset;
     }
-    Map *clone = new Map(mapOrient, mapWidth, mapHeight,
-                     map->tileWidth(), map->tileHeight());
-    foreach (Tileset *ts, map->tilesets())
+    QScopedPointer<Map> clone(new Map(mapOrient, mapWidth, mapHeight, map->tileWidth(), map->tileHeight()));
+    for (Tileset *ts : map->tilesets())
         clone->addTileset(ts);
 
     QUndoStack *undoStack = mMapDocument->undoStack();
@@ -1961,7 +1962,8 @@ void MainWindow::convertToLot()
 
     QRegion oldSelection = mMapDocument->tileSelection();
 
-    for (Layer *layer : map->layers()) {
+    const QList<Layer*> layers = map->layers();
+    for (Layer *layer : layers) {
         if (TileLayer *tl = layer->asTileLayer()) {
             int level = tl->level();
             if (level > maxLevel)
@@ -2039,17 +2041,17 @@ void MainWindow::convertToLot()
     }
 
     TmxMapWriter writer;
-    if (!writer.write(clone, dialog.filePath())) {
+    if (!writer.write(clone.data(), dialog.filePath())) {
         QMessageBox::critical(this, tr("Error Saving Map"),
                               writer.errorString());
         if (oldSelection != mMapDocument->tileSelection())
             undoStack->push(new ChangeTileSelection(mMapDocument, oldSelection));
         undoStack->endMacro();
-        delete clone; // FIXME: release tilesets?
+//        delete clone; // FIXME: release tilesets?
         return;
     }
 
-    delete clone; // FIXME: release tilesets?
+    // delete clone; // FIXME: release tilesets?
 
     if (ObjectGroup *og = dialog.objectGroup()) {
         QString lotName = dialog.filePath();
@@ -2154,7 +2156,8 @@ void MainWindow::RoomDefGo()
             Layer *topLayerOfSameTypeInSameLevel = nullptr;
             Layer *bottomLayerOfSameTypeInGreaterLevel = nullptr;
             Layer *topLayerOfSameTypeInLesserLevel = nullptr;
-            for (Layer *layer : mapLevel->layers(Layer::ObjectGroupType)) {
+            const QList<Layer*> layers = mapLevel->layers(Layer::ObjectGroupType);
+            for (Layer *layer : layers) {
                 if ((layer->level() > level) && !bottomLayerOfSameTypeInGreaterLevel)
                     bottomLayerOfSameTypeInGreaterLevel = layer;
                 if (layer->level() < level)
@@ -2178,12 +2181,12 @@ void MainWindow::RoomDefGo()
         }
 
         int i = 1;
-        for (const QRegion &rgn : rd.mRegions) {
+        for (const QRegion &rgn : qAsConst(rd.mRegions)) {
             QList<QRect> rects = cleanupRegion(rgn);
             QString suffix;
             if (rects.size() > 1)
                 suffix = QLatin1String("#");
-            for (const QRect &r : rects) {
+            for (const QRect &r : qAsConst(rects)) {
                 MapObject *object = new MapObject(QString::fromLatin1("room%1%2").arg(i).arg(suffix),
                                                   QLatin1String("room"),
                                                   r.topLeft(), r.size());
@@ -2284,7 +2287,7 @@ void MainWindow::RoomDefRemove()
         return;
 
     mMapDocument->undoStack()->beginMacro(tr("Remove RoomDefs"));
-    for (MapObject *o : remove)
+    for (MapObject *o : qAsConst(remove))
         mMapDocument->undoStack()->push(
                     new RemoveMapObject(mMapDocument, o));
     mMapDocument->undoStack()->endMacro();
@@ -2402,7 +2405,7 @@ void MainWindow::ApplyScriptChanges(MapDocument *doc, const QString &undoText, L
     // Map resizing.
 
     // Tilesets added.
-    for (Tileset *lts : mMap->mNewTilesets) {
+    for (Tileset *lts : qAsConst(mMap->mNewTilesets)) {
         bool found = false;
         for (Tileset *ts : doc->map()->tilesets()) {
             if (ts->name() == lts->name()) {
@@ -2419,7 +2422,7 @@ void MainWindow::ApplyScriptChanges(MapDocument *doc, const QString &undoText, L
     }
 
     // Handle deleted layers
-    for (Lua::LuaLayer *ll : mMap->mRemovedLayers) {
+    for (Lua::LuaLayer *ll : qAsConst(mMap->mRemovedLayers)) {
         if (ll->mOrig) {
             MapLevel *mapLevel = doc->map()->levelAt(ll->mOrig->level());
             int index = mapLevel->layers().indexOf(ll->mOrig);
@@ -2430,7 +2433,7 @@ void MainWindow::ApplyScriptChanges(MapDocument *doc, const QString &undoText, L
     }
 
     // Layers may have been added, moved, deleted, and/or edited.
-    for (Lua::LuaLayer *ll : mMap->mLayers) {
+    for (Lua::LuaLayer *ll : qAsConst(mMap->mLayers)) {
         if (Layer *layer = ll->mOrig) {
             // This layer exists (somewhere) in the original map.
             int oldIndex = doc->map()->layers().indexOf(layer);
@@ -2453,7 +2456,7 @@ void MainWindow::ApplyScriptChanges(MapDocument *doc, const QString &undoText, L
     if (!doc->tileSelection().isEmpty())
         us->push(new ChangeTileSelection(doc, QRegion()));
 
-    for (Lua::LuaLayer *ll : mMap->mLayers) {
+    for (Lua::LuaLayer *ll : qAsConst(mMap->mLayers)) {
         // Apply changes to tile layers.
         if (Lua::LuaTileLayer *tl = ll->asTileLayer()) {
             if (tl->mOrig == nullptr)
@@ -2468,7 +2471,8 @@ void MainWindow::ApplyScriptChanges(MapDocument *doc, const QString &undoText, L
         }
         // Add/Remove/Delete objects
         if (Lua::LuaObjectGroup *og = ll->asObjectGroup()) {
-            for (Lua::LuaMapObject *o : og->objects()) {
+            QList<Lua::LuaMapObject*> objects = og->objects();
+            for (Lua::LuaMapObject *o : objects) {
                 if (og->mOrig) {
 
                 } else {
@@ -2796,12 +2800,18 @@ void MainWindow::updateActions()
 
     Layer *layer = mMapDocument ? mMapDocument->currentLayer() : nullptr;
 #ifdef ZOMBOID
-    if (layer) {
+    MapLevel *mapLevel = mMapDocument ? mMapDocument->currentMapLevel() : nullptr;
+    if (mapLevel == nullptr) {
+        mCurrentLevelButton->setEnabled(false);
+        mCurrentLevelButton->setText(tr("Level: <none> "));
+    } else {
         mCurrentLevelButton->setEnabled(true);
-        mCurrentLayerButton->setEnabled(true);
         // The extra space at the end is deliberate so the toolbutton arrow
         // doesn't overlap the text.
-        mCurrentLevelButton->setText(tr("Level: %1 ").arg(layer->level()));
+        mCurrentLevelButton->setText(tr("Level: %1 ").arg(mapLevel->z()));
+    }
+    if (layer) {
+        mCurrentLayerButton->setEnabled(true);
         QString name = layer->name();
         if (name.isEmpty())
             name = tr("<no name>");
@@ -2809,9 +2819,7 @@ void MainWindow::updateActions()
 //            name = MapComposite::layerNameWithoutPrefix(name);
         mCurrentLayerButton->setText(tr("Layer: %1 ").arg(name));
     } else {
-        mCurrentLevelButton->setText(tr("Level: <none> "));
         mCurrentLayerButton->setText(tr("Layer: <none> "));
-        mCurrentLevelButton->setEnabled(false);
         mCurrentLayerButton->setEnabled(false);
     }
 #else
@@ -2872,14 +2880,9 @@ void MainWindow::aboutToShowLevelMenu()
     if (!mMapDocument) return;
     mCurrentLevelMenu->clear();
     QStringList items;
-    items.prepend(QString::number(0));
-    for (CompositeLayerGroup *layerGroup : mMapDocument->mapComposite()->sortedLayerGroups()) {
-        if (!layerGroup->level()) continue;
-        items.prepend(QString::number(layerGroup->level()));
-    }
-    for (const QString &item : items) {
-        QAction *action = mCurrentLevelMenu->addAction(item);
-        if (item.toInt() == mMapDocument->currentLevelIndex()) {
+    for (int z = mMapDocument->map()->levelCount() - 1; z >= 0; z--) {
+        QAction *action = mCurrentLevelMenu->addAction(QString::number(z));
+        if (z == mMapDocument->currentLevelIndex()) {
             action->setCheckable(true);
             action->setChecked(true);
             action->setEnabled(false);
@@ -2898,7 +2901,8 @@ void MainWindow::aboutToShowLayerMenu()
     QIcon tileIcon(QLatin1String(":/images/16x16/layer-tile.png"));
 
     QAction *before = nullptr;
-    for (TileLayer *tl : mapLevel->tileLayers()) {
+    const QList<TileLayer*> tileLayers = mapLevel->tileLayers();
+    for (TileLayer *tl : tileLayers) {
         QAction *action = new QAction(tl->name(), mCurrentLayerMenu);
         action->setData(QVariant::fromValue(tl));
         mCurrentLayerMenu->insertAction(before, action);
@@ -2912,7 +2916,8 @@ void MainWindow::aboutToShowLayerMenu()
     }
 
     QIcon objectIcon(QLatin1String(":/images/16x16/layer-object.png"));
-    for (ObjectGroup *og : mapLevel->objectGroups()) {
+    const QList<ObjectGroup*> objectGroups = mapLevel->objectGroups();
+    for (ObjectGroup *og : objectGroups) {
         QAction *action = new QAction(og->name(), mCurrentLayerMenu);
         action->setData(QVariant::fromValue(og));
         mCurrentLayerMenu->insertAction(before, action);
@@ -2934,7 +2939,21 @@ void MainWindow::triggeredLevelMenu(QAction *action)
 
     int level = action->text().toInt();
     MapLevel *mapLevel = mMapDocument->map()->levelAt(level);
+    if (mapLevel == nullptr)
+        return;
 
+#if 1
+    if (Layer *layer = mMapDocument->currentLayer()) {
+        // Try to switch to a layer with the same name in the new level
+        for (Layer *layer2 : mapLevel->layers()) {
+            if (layer2->name() == layer->name()) {
+                int index = mapLevel->layers().indexOf(layer2);
+                mMapDocument->setCurrentLevelAndLayer(level, index);
+                return;
+            }
+        }
+    }
+#else
     if (CompositeLayerGroup *layerGroup = mMapDocument->mapComposite()->tileLayersForLevel(level)) {
         if (Layer *layer = mMapDocument->currentLayer()) {
             // Try to switch to a layer with the same name in the new level
@@ -2949,7 +2968,8 @@ void MainWindow::triggeredLevelMenu(QAction *action)
                     }
                 }
             } else if (layer->isObjectGroup()) {
-                for (ObjectGroup *og : mapLevel->objectGroups()) {
+                const QList<ObjectGroup*> objectGroups = mapLevel->objectGroups();
+                for (ObjectGroup *og : objectGroups) {
                     QString name2 = og->name(); // MapComposite::layerNameWithoutPrefix(og);
                     if (name == name2) {
                         int index = mapLevel->layers().indexOf(og);
@@ -2960,10 +2980,8 @@ void MainWindow::triggeredLevelMenu(QAction *action)
             }
         }
     }
-    if (mapLevel->layerCount() > 0) {
-        mMapDocument->setCurrentLayerIndex(level, 0);
-        return;
-    }
+#endif
+    mMapDocument->setCurrentLayerIndex(level, mapLevel->layerCount() > 0 ? 0 : -1);
 }
 
 void MainWindow::triggeredLayerMenu(QAction *action)
@@ -3202,7 +3220,7 @@ void MainWindow::initLuaTileTools()
     // Load the user's LuaTools.txt.
     Lua::LuaToolFile file1;
     QString fileName = Preferences::instance()->configPath(QLatin1String("LuaTools.txt"));
-    if (QFileInfo(fileName).exists()) {
+    if (QFileInfo::exists(fileName)) {
         if (file1.read(fileName)) {
             toolsInfo += file1.takeTools();
 //            mTxtModifiedTime1 = QFileInfo(fileName).lastModified();
@@ -3215,7 +3233,7 @@ void MainWindow::initLuaTileTools()
     // Load the application's LuaTools.txt.
     Lua::LuaToolFile file2;
     fileName = Preferences::instance()->appConfigPath(QLatin1String("LuaTools.txt"));
-    if (QFileInfo(fileName).exists()) {
+    if (QFileInfo::exists(fileName)) {
         if (file2.read(fileName)) {
             toolsInfo += file2.takeTools();
 //            mTxtModifiedTime2 = QFileInfo(fileName).lastModified();

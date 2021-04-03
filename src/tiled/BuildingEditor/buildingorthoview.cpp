@@ -398,7 +398,7 @@ void BuildingBaseScene::buildingRotated()
 
 void BuildingBaseScene::mapResized()
 {
-    for (GraphicsFloorItem *item : mFloorItems)
+    for (GraphicsFloorItem *item : qAsConst(mFloorItems))
         item->mapResized();
 
     if (mRoomSelectionItem)
@@ -573,7 +573,7 @@ bool BuildingBaseScene::shouldShowObjectItem(BuildingObject *object) const
 
 void BuildingBaseScene::synchObjectItemVisibility()
 {
-    for (GraphicsFloorItem *item : mFloorItems)
+    for (GraphicsFloorItem *item : qAsConst(mFloorItems))
         item->synchVisibility();
 }
 
@@ -583,7 +583,7 @@ void BuildingBaseScene::setRotation(MapRotation rotation)
         return;
     mRenderer->setRotation(rotation);
     setRotationDerive();
-    for (GraphicsFloorItem *item : mFloorItems)
+    for (GraphicsFloorItem *item : qAsConst(mFloorItems))
         item->sceneRotationChanged();
     emit sceneRotationChanged();
     invalidate();
@@ -715,7 +715,7 @@ void GraphicsFloorItem::synchWithFloor()
     delete mBmp;
     mBmp = new QImage(mFloor->width(), mFloor->height(), QImage::Format_RGB32);
 
-    for (GraphicsObjectItem *item : mObjectItems)
+    for (GraphicsObjectItem *item : qAsConst(mObjectItems))
         item->synchWithObject();
 }
 
@@ -725,7 +725,7 @@ void GraphicsFloorItem::mapResized()
     // BuildingMap::mMap has been resized to match the building size.  When the
     // map is finally resized, we must update the GraphicsObjectItems again.
     // This also needs doing when the max level changes.
-    for (GraphicsObjectItem *item : mObjectItems)
+    for (GraphicsObjectItem *item : qAsConst(mObjectItems))
         item->synchWithObject();
 }
 
@@ -768,13 +768,13 @@ void GraphicsFloorItem::setDragBmp(QImage *bmp)
 void GraphicsFloorItem::synchVisibility()
 {
     setVisible(mEditor->shouldShowFloorItem(mFloor));
-    for (GraphicsObjectItem *item : mObjectItems)
+    for (GraphicsObjectItem *item : qAsConst(mObjectItems))
         item->setVisible(mEditor->shouldShowObjectItem(item->object()));
 }
 
 void GraphicsFloorItem::sceneRotationChanged()
 {
-    for (GraphicsObjectItem *item : mObjectItems)
+    for (GraphicsObjectItem *item : qAsConst(mObjectItems))
         item->synchWithObject();
 }
 

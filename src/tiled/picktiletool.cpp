@@ -46,12 +46,14 @@ PickTileTool::PickTileTool(QObject *parent) :
 void PickTileTool::activate(MapScene *scene)
 {
     AbstractTileTool::activate(scene);
-    scene->views().first()->setCursor(Qt::PointingHandCursor);
+    const QList<QGraphicsView*> views = scene->views();
+    views.first()->setCursor(Qt::PointingHandCursor);
 }
 
 void PickTileTool::deactivate(MapScene *scene)
 {
-    scene->views().first()->unsetCursor();
+    const QList<QGraphicsView*> views = scene->views();
+    views.first()->unsetCursor();
     AbstractTileTool::deactivate(scene);
 }
 

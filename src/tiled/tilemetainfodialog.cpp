@@ -425,11 +425,12 @@ void TileMetaInfoDialog::updateUI()
     ui->enums->setEnabled(mSelectedTiles.size() > 0);
 
     QSet<QString> enums;
-    foreach (Tile *tile, mSelectedTiles)
+    for (Tile *tile : qAsConst(mSelectedTiles))
          enums.insert(TileMetaInfoMgr::instance()->tileEnum(tile)); // could be nil
 
     if (enums.size() == 1) {
-        QString enumName = enums.values()[0];
+        QStringList enumNames = enums.values();
+        QString enumName = enumNames[0];
         int index = TileMetaInfoMgr::instance()->enumNames().indexOf(enumName);
         ui->enums->setCurrentIndex(index + 1);
     } else {

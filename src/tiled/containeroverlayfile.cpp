@@ -170,14 +170,14 @@ ContainerOverlayFile::ContainerOverlayFile()
 bool ContainerOverlayFile::readV0(LuaTable* table)
 {
     QMap<QString,ContainerOverlay*> map;
-    for (LuaTableKeyValue *kv : table->kv) {
+    for (LuaTableKeyValue *kv : qAsConst(table->kv)) {
         ContainerOverlay *overlay = new ContainerOverlay;
         overlay->mTileName = BuildingEditor::BuildingTilesMgr::normalizeTileName(kv->key);
-        for (LuaTableKeyValue *kv2 : kv->t->kv) {
+        for (LuaTableKeyValue *kv2 : qAsConst(kv->t->kv)) {
             ContainerOverlayEntry *entry = new ContainerOverlayEntry;
             entry->mParent = overlay;
             entry->mRoomName = kv2->key;
-            for (LuaTableKeyValue *kv3 : kv2->t->kv) {
+            for (LuaTableKeyValue *kv3 : qAsConst(kv2->t->kv)) {
                 QString tileName = kv3->s;
                 if (tileName != QLatin1String("none")) {
                     tileName = BuildingEditor::BuildingTilesMgr::normalizeTileName(tileName);
@@ -203,7 +203,7 @@ bool ContainerOverlayFile::readV0(LuaTable* table)
 bool ContainerOverlayFile::readV1(LuaTable* table)
 {
     QMap<QString,ContainerOverlay*> map;
-    for (LuaTableKeyValue *overlayKV : table->kv) {
+    for (LuaTableKeyValue *overlayKV : qAsConst(table->kv)) {
         LuaTable* overlayTable = overlayKV->t;
         if (overlayTable == nullptr) {
             Q_ASSERT(overlayKV->key == QLatin1String("VERSION"));
@@ -211,7 +211,7 @@ bool ContainerOverlayFile::readV1(LuaTable* table)
         }
         ContainerOverlay *overlay = new ContainerOverlay;
         overlay->mTileName = BuildingEditor::BuildingTilesMgr::normalizeTileName(overlayKV->key);
-        for (LuaTableKeyValue *roomKV : overlayTable->kv) {
+        for (LuaTableKeyValue *roomKV : qAsConst(overlayTable->kv)) {
             LuaTable* roomTable = roomKV->t;
             if (roomTable == nullptr) {
                 // FIXME: delete 'map'
@@ -231,7 +231,7 @@ bool ContainerOverlayFile::readV1(LuaTable* table)
                 mError = QString::fromUtf8("expected tiles table");
                 return false;
             }
-            for (LuaTableKeyValue *tileKV : tileTable->kv) {
+            for (LuaTableKeyValue *tileKV : qAsConst(tileTable->kv)) {
                 QString tileName = tileKV->s;
                 if (tileName != QLatin1String("none")) {
                     tileName = BuildingEditor::BuildingTilesMgr::normalizeTileName(tileName);
@@ -301,13 +301,14 @@ bool ContainerOverlayFile::write(const QString &filePath, const QList<ContainerO
         bool prev = false;
         // sort by room name
         QMap<QString,QList<ContainerOverlayEntry*>> entryMap;
-        for (ContainerOverlayEntry *entry : overlay->mEntries) {
+        for (ContainerOverlayEntry *entry : qAsConst(overlay->mEntries)) {
             entryMap[entry->mRoomName] += entry;
         }
-        for (QList<ContainerOverlayEntry *> entries : entryMap.values()) {
+        const QList<QList<ContainerOverlayEntry *>> entryLists = entryMap.values();
+        for (const QList<ContainerOverlayEntry *> &entries : entryLists) {
             for (ContainerOverlayEntry* entry : entries) {
                 QString tiles;
-                for (QString tileName : entry->mTiles) {
+                for (const QString &tileName : qAsConst(entry->mTiles)) {
                     if (tileName.isEmpty()) {
                         continue;
                     }

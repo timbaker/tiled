@@ -254,12 +254,16 @@ void MapDocument::setCurrentLayerIndex(int levelIndex, int layerIndex)
 {
     MapLevel *level = mMap->levelAt(levelIndex);
     if (level == nullptr) {
-        return;
-    }
-
-    Q_ASSERT(layerIndex >= -1 && layerIndex < level->layerCount());
-    if (layerIndex < 0 || layerIndex >= level->layerCount()) {
-        return;
+        levelIndex = 0;
+        layerIndex = -1;
+    } else {
+//        Q_ASSERT(layerIndex >= -1 && layerIndex < level->layerCount());
+        if (layerIndex == -1) {
+            // Selected an empty level in the Layers view.
+        } else if ((layerIndex < 0) || (layerIndex >= level->layerCount())) {
+            Q_ASSERT(false);
+            layerIndex = -1;
+        }
     }
 
     mCurrentLevelIndex = levelIndex;
@@ -371,7 +375,8 @@ void MapDocument::offsetMap(const QList<int> &layerIndexes,
         // Don't offset the MapRands.
         bool allBMPLayers = true;
         MapLevel *mapLevel = map()->levelAt(0);
-        for (const QString &layerName : mapComposite()->bmpBlender()->tileLayerNames()) {
+        const QStringList layerNames = mapComposite()->bmpBlender()->tileLayerNames();
+        for (const QString &layerName : layerNames) {
             int layerIndex = mapLevel->indexOfLayer(layerName, Layer::TileLayerType);
             if (layerIndex >= 0 && !layerIndexes.contains(layerIndex)) {
                 allBMPLayers = false;
@@ -381,7 +386,8 @@ void MapDocument::offsetMap(const QList<int> &layerIndexes,
         if (allBMPLayers) {
             mUndoStack->push(new OffsetBmpImage(this, 0, offset, bounds, wrapX, wrapY));
             mUndoStack->push(new OffsetBmpImage(this, 1, offset, bounds, wrapX, wrapY));
-            for (MapNoBlend *noBlend : map()->noBlends()) {
+            const QList<MapNoBlend*> noBlends = map()->noBlends();
+            for (MapNoBlend *noBlend : noBlends) {
                 mUndoStack->push(new OffsetNoBlend(this, noBlend, offset, bounds, wrapX, wrapY));
             }
         }
@@ -1002,7 +1008,8 @@ void MapDocument::onMapChanged(MapInfo *mapInfo)
 void MapDocument::bmpBlenderRegionAltered(const QRegion &region)
 {
     MapLevel *mapLevel = mMap->levelAt(0);
-    for (const QString &layerName : mapComposite()->bmpBlender()->tileLayerNames()) {
+    const QStringList layerNames = mapComposite()->bmpBlender()->tileLayerNames();
+    for (const QString &layerName : layerNames) {
         int index = mapLevel->indexOfLayer(layerName, Layer::TileLayerType);
         if (index == -1)
             continue;

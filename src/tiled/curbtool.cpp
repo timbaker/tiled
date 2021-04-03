@@ -324,7 +324,8 @@ void CurbTool::drawEdge(const QPointF &start, Corner cornerStart,
     int levelIndex = mapDocument()->currentLevelIndex();
     MapLevel *mapLevel = mapDocument()->map()->levelAt(levelIndex);
 
-    for (const QString &layerName : eraseRgn.keys()) {
+    const QStringList layerNames1 = eraseRgn.keys();
+    for (const QString &layerName : layerNames1) {
         int index = mapLevel->indexOfLayer(layerName, Layer::TileLayerType);
         if (index >= 0) {
             TileLayer *tl = mapLevel->layerAt(index)->asTileLayer();
@@ -333,7 +334,8 @@ void CurbTool::drawEdge(const QPointF &start, Corner cornerStart,
         }
     }
 
-    for (const QString &layerName : noBlendRgn.keys()) {
+    const QStringList layerNames2 = noBlendRgn.keys();
+    for (const QString &layerName : layerNames2) {
         QRegion rgn = noBlendRgn[layerName];
         QRect r = rgn.boundingRect();
         MapNoBlend *noBlend = mapDocument()->map()->noBlend(layerName);
@@ -476,7 +478,8 @@ void CurbTool::drawEdgeTile(const QPoint &origin, int x, int y, Edge edge, bool 
     int levelIndex = mapDocument()->currentLevelIndex();
     MapLevel *mapLevel = mapDocument()->map()->levelAt(levelIndex);
 
-    for (const QString &layerName : mapDocument()->mapComposite()->bmpBlender()->blendLayers()) {
+    const QStringList layerNames = mapDocument()->mapComposite()->bmpBlender()->blendLayers();
+    for (const QString &layerName : layerNames) {
         int index = mapLevel->indexOfLayer(layerName, Layer::TileLayerType);
         if (index >= 0) {
             TileLayer *tl = mapLevel->layerAt(index)->asTileLayer();
@@ -518,7 +521,8 @@ void CurbTool::raiseLower(const QPointF &start, const QPointF &end)
     int levelIndex = mapDocument()->currentLevelIndex();
     MapLevel *mapLevel = mapDocument()->map()->levelAt(levelIndex);
 
-    for (const QString &layerName : eraseRgn.keys()) {
+    const QStringList layerNames = eraseRgn.keys();
+    for (const QString &layerName : layerNames) {
         int index = mapLevel->indexOfLayer(layerName, Layer::TileLayerType);
         if (index >= 0) {
             TileLayer *tl = mapLevel->layerAt(index)->asTileLayer();

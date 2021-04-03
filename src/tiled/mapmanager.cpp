@@ -598,7 +598,8 @@ Map *MapManager::convertOrientation(Map *map, Tiled::Map::Orientation orient)
         newMap->setOrientation(orient);
         QPoint offset(3, 3);
         if (orient0 == Map::Isometric && orient1 == Map::LevelIsometric) {
-            for (Layer *layer : newMap->layers()) {
+            const QList<Layer*> layers = newMap->layers();
+            for (Layer *layer : layers) {
                 int level = layer->level();
                 if (level > 0)
                     layer->offset(offset * level, layer->bounds(), false, false);
@@ -606,12 +607,14 @@ Map *MapManager::convertOrientation(Map *map, Tiled::Map::Orientation orient)
         }
         if (orient0 == Map::LevelIsometric && orient1 == Map::Isometric) {
             int maxLevel = 0;
-            for (Layer *layer : map->layers()) {
+            const QList<Layer*> layers1 = map->layers();
+            for (Layer *layer : layers1) {
                 maxLevel = qMax(maxLevel, layer->level());
             }
             newMap->setWidth(map->width() + maxLevel * 3);
             newMap->setHeight(map->height() + maxLevel * 3);
-            for (Layer *layer : newMap->layers()) {
+            const QList<Layer*> layers2 = newMap->layers();
+            for (Layer *layer : layers2) {
                 layer->resize(newMap->size(), offset * (maxLevel - layer->level()));
             }
         }

@@ -305,7 +305,7 @@ public:
         , mOldName(oldName)
         , mNewName(newName)
     {
-        redo();
+//        redo();
     }
 
     void undo()
@@ -429,7 +429,7 @@ void TilesetView::contextMenuEvent(QContextMenuEvent *event)
         int index = layerActions.indexOf(action);
         QString layerName = index ? layerNames[index - 1] : QString();
         QModelIndexList indexes = selectionModel()->selectedIndexes();
-        QMap<Tile*,QString> changed;
+        QHash<Tile*,QString> changed;
         foreach (QModelIndex index, indexes) {
             tile = m->tileAt(index);
             QString oldName = TilesetManager::instance()->layerName(tile);
@@ -440,7 +440,8 @@ void TilesetView::contextMenuEvent(QContextMenuEvent *event)
             return;
         QUndoStack *undoStack = mMapDocument->undoStack();
         undoStack->beginMacro(tr("Change Tile Layer Name (x%n)", "", changed.size()));
-        foreach (Tile *tile, changed.keys()) {
+        const QList<Tile*> tiles = changed.keys();
+        for (Tile *tile : tiles) {
             ChangeTileLayerName *undo =
                     new ChangeTileLayerName(mMapDocument, tile,
                                             changed[tile], layerName);

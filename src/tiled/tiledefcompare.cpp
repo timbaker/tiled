@@ -213,8 +213,9 @@ void TileDefCompare::currentRowChanged(int row)
 
 QString TileDefCompare::propertiesString(int fileIndex, TileDefTile *tdt)
 {
-    QString s1 = QString::fromLatin1("%1: ").arg(fileIndex);
-    foreach (QString prop, tdt->mProperties.keys())
+    QString s1 = QStringLiteral("%1: ").arg(fileIndex);
+    const QStringList propertyNames = tdt->mProperties.keys();
+    for (const QString prop : propertyNames)
         s1 += QString::fromLatin1("%1=%2, ").arg(prop).arg(tdt->mProperties[prop]);
     return s1;
 }

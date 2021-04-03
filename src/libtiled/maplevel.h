@@ -66,6 +66,9 @@ public:
 
     Layer *layerAt(int index) const
     {
+        if (index < 0 || index >= mLayers.size()) {
+            return nullptr;
+        }
         return mLayers.at(index);
     }
 

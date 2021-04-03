@@ -189,7 +189,7 @@ void BmpBlendDelegate::paint(QPainter *painter,
         QPen oldPen = painter->pen();
         painter->setPen(Qt::blue);
         painter->setFont(mLabelFont);
-        labelWidth = mLabelFontMetrics.horizontalAdvance(label) + 6;
+//        labelWidth = mLabelFontMetrics.horizontalAdvance(label) + 6;
         painter->drawText(option.rect.left() + extra, option.rect.top() + extra,
                           option.rect.width() - extra * 2, labelHeight, Qt::AlignLeft, label);
         painter->setFont(font);

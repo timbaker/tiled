@@ -21,7 +21,7 @@ LuaTableKeyValue::~LuaTableKeyValue() { delete t; }
 
 LuaTableKeyValue *LuaTable::find(const QString &key)
 {
-    for (LuaTableKeyValue* keyValue : kv) {
+    for (LuaTableKeyValue* keyValue : qAsConst(kv)) {
         if (keyValue->key == key) {
             return keyValue;
         }

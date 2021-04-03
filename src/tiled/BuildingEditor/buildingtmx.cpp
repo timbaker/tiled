@@ -118,7 +118,7 @@ bool BuildingTMX::exportTMX(Building *building, const QString &fileName)
         }
     }
 
-    foreach (BuildingFloor *floor, building->floors()) {
+    for (BuildingFloor *floor : qAsConst(building->floors())) {
 
         // The given map has layers required by the editor, i.e., Floors, Walls,
         // Doors, etc.  The TMXConfig.txt file may specify extra layer names.
@@ -127,7 +127,7 @@ bool BuildingTMX::exportTMX(Building *building, const QString &fileName)
         // to level N, otherwise it is added to every level.  Object layers are
         // added above *all* the tile layers in the map.
         int previousExistingLayer = -1;
-        for (const LayerInfo &layerInfo : mLayers) {
+        for (const LayerInfo &layerInfo : qAsConst(mLayers)) {
             QString layerName = layerInfo.mName;
             int level;
             if (MapComposite::levelForLayer(layerName, &level)) {
@@ -269,9 +269,10 @@ bool BuildingTMX::readTxt()
     }
 
     // Check that TMXConfig.txt contains all the required tile layers.
-    for (const QString &layerName : BuildingMap::requiredLayerNames()) {
+    const QStringList requiredLayerNames = BuildingMap::requiredLayerNames();
+    for (const QString &layerName : requiredLayerNames) {
         bool match = false;
-        for (LayerInfo layerInfo : mLayers) {
+        for (const LayerInfo &layerInfo : qAsConst(mLayers)) {
             if (layerInfo.mType == LayerInfo::Tile && layerInfo.mName == layerName) {
                 match = true;
                 break;
@@ -351,7 +352,7 @@ bool BuildingTMX::upgradeTxt()
         int index = userFile.findBlock(QLatin1String("tilesets"));
         if (index >= 0) {
             SimpleFileBlock tilesetsBlock = userFile.blocks[index];
-            for (const SimpleFileKeyValue &kv : tilesetsBlock.values) {
+            for (const SimpleFileKeyValue &kv : qAsConst(tilesetsBlock.values)) {
                 QString tilesetName = QFileInfo(kv.value).completeBaseName();
                 if (TileMetaInfoMgr::instance()->tileset(tilesetName) == nullptr) {
                     Tileset *ts = new Tileset(tilesetName, 64, 128);

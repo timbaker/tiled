@@ -340,7 +340,8 @@ TileDefDialog::TileDefDialog(QWidget *parent) :
 
     /////
 
-    QAction *a = ui->menuEdit->actions().first();
+    const QList<QAction*> actions = ui->menuEdit->actions();
+    QAction *a = actions.first();
     ui->menuEdit->insertAction(a, undoAction);
     ui->menuEdit->insertAction(a, redoAction);
 
@@ -1251,7 +1252,8 @@ void TileDefDialog::setTilesetList()
 
     ui->tilesets->clear();
     ui->tilesetFilter->setEnabled(!mTilesetByName.isEmpty());
-    for (Tileset *ts : mTilesetByName.values()) {
+    const QList<Tileset*> tilesets = mTilesetByName.values();
+    for (Tileset *ts : tilesets) {
         QListWidgetItem *item = new QListWidgetItem(ts->name() + QString::fromLatin1(" (%1)").arg(mTileDefFile->tileset(ts->name())->mID));
         if (ts->isMissing())
             item->setForeground(Qt::red);
@@ -1304,7 +1306,8 @@ void TileDefDialog::setToolTipEtc(int tileID)
     defTile->mPropertyUI.ToProperties(properties);
     if (properties.size()) {
         tooltip += QLatin1String("\nOutput:");
-        foreach (QString name, properties.keys()) {
+        const QStringList propertyNames = properties.keys();
+        for (const QString &name : propertyNames) {
             tooltip += tr("%1 = %2").arg(name).arg(properties[name]);
         }
     }
@@ -1314,7 +1317,8 @@ void TileDefDialog::setToolTipEtc(int tileID)
     QStringList knownPropertyNames = defTile->mPropertyUI.knownPropertyNames();
     QSet<QString> known(knownPropertyNames.constBegin(), knownPropertyNames.constEnd()); // FIXME: same for every tile
     QStringList unknown;
-    foreach (QString name, defTile->mProperties.keys()) {
+    const QStringList propertyNames = defTile->mProperties.keys();
+    for (const QString &name : propertyNames) {
         if (!known.contains(name))
             unknown += tr("%1 = %2").arg(name).arg(defTile->mProperties[name]);
     }
@@ -1522,8 +1526,9 @@ Tileset *TileDefDialog::tileset(const QString &name) const
 
 Tileset *TileDefDialog::tileset(int row) const
 {
-    if (row >= 0 && row < mTilesetByName.size())
+    if (row >= 0 && row < mTilesetByName.size()) {
         return mTilesetByName.values().at(row);
+    }
     return 0;
 }
 
@@ -1645,7 +1650,7 @@ void TileDefDialog::tilesDirChanged()
     foreach (TileDefTileset *tsDef, mTileDefFile->tilesets()) {
         QString imageSource = dir.filePath(tsDef->mImageSource);
         QString imageSource2x = dir2x.filePath(tsDef->mImageSource);
-        if (QFileInfo(imageSource2x).exists()) {
+        if (QFileInfo::exists(imageSource2x)) {
             imageSource2x = QFileInfo(imageSource2x).canonicalFilePath();
             QImageReader ir(imageSource2x);
             if (ir.size().isValid()) {
@@ -1658,10 +1663,10 @@ void TileDefDialog::tilesDirChanged()
                     tsDef->resize(columns, rows);
                 }
             }
-            if (QFileInfo(imageSource).exists()) {
+            if (QFileInfo::exists(imageSource)) {
                imageSource = QFileInfo(imageSource).canonicalFilePath();
             }
-        } else if (QFileInfo(imageSource).exists()) {
+        } else if (QFileInfo::exists(imageSource)) {
             imageSource = QFileInfo(imageSource).canonicalFilePath();
             QImageReader ir(imageSource);
             if (ir.size().isValid()) {

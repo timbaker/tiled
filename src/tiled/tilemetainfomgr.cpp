@@ -131,7 +131,7 @@ QString TileMetaInfoMgr::txtPath()
 #if 1
 bool TileMetaInfoMgr::readTxt()
 {
-#ifdef WORLDED
+#ifdef WORLDEDxxx
     // Make sure the user has chosen the Tiles directory.
     QString tilesDirectory = this->tilesDirectory();
     QDir dir(tilesDirectory);
@@ -169,12 +169,12 @@ bool TileMetaInfoMgr::readTxt()
     mRevision = reader.mRevision;
     mSourceRevision = reader.mSourceRevision;
 
-    for (const TilesetsTxtFile::MetaEnum& metaEnum : reader.mEnums) {
+    for (const TilesetsTxtFile::MetaEnum& metaEnum : qAsConst(reader.mEnums)) {
         mEnumNames += metaEnum.mName;
         mEnums.insert(metaEnum.mName, metaEnum.mValue);
     }
 
-    for (const TilesetsTxtFile::Tileset* fileTileset : reader.mTilesets) {
+    for (const TilesetsTxtFile::Tileset* fileTileset : qAsConst(reader.mTilesets)) {
         Tileset *tileset = new Tileset(fileTileset->mName, 64, 128);
 
         // Don't load the tilesets yet because the user might not have
@@ -199,9 +199,10 @@ bool TileMetaInfoMgr::readTxt()
         mTilesetInfo[fileTileset->mName] = info;
     }
 
-    for (const QString& enumName : mEnumNames) {
+    const QList<int> enumInts = mEnums.values();
+    for (const QString& enumName : qAsConst(mEnumNames)) {
         if (isEnumWest(enumName) || isEnumNorth(enumName)) {
-            if (mEnums.values().contains(mEnums[enumName] + 1)) {
+            if (enumInts.contains(mEnums[enumName] + 1)) {
                 QString enumImplicit = enumName;
                 enumImplicit.replace(
                             QLatin1Char(isEnumWest(enumName) ? 'W' : 'N'),
@@ -225,12 +226,13 @@ bool TileMetaInfoMgr::writeTxt()
     QList<TilesetsTxtFile::Tileset*> fileTilesets;
     QList<TilesetsTxtFile::MetaEnum> fileMetaEnums;
 
-    for (const QString& name : mEnumNames) {
+    for (const QString& name : qAsConst(mEnumNames)) {
         fileMetaEnums += TilesetsTxtFile::MetaEnum(name, mEnums[name]);
     }
 
     QDir tilesDir(tilesDirectory());
-    for (Tiled::Tileset *tileset : tilesets()) {
+    const QList<Tileset*> tilesets1 = tilesets();
+    for (Tiled::Tileset *tileset : tilesets1) {
         QString relativePath = tilesDir.relativeFilePath(tileset->imageSource());
         relativePath.truncate(relativePath.length() - 4); // remove .png
         TilesetsTxtFile::Tileset* fileTileset = new TilesetsTxtFile::Tileset();
@@ -247,8 +249,9 @@ bool TileMetaInfoMgr::writeTxt()
         fileTileset->mRows = rows;
 
         if (mTilesetInfo.contains(tileset->name())) {
-            QMap<QString,TileMetaInfo> &info = mTilesetInfo[tileset->name()]->mInfo;
-            for (const QString& key : info.keys()) {
+            const QMap<QString,TileMetaInfo> &info = mTilesetInfo[tileset->name()]->mInfo;
+            const QStringList tilesetNames = info.keys();
+            for (const QString& key : tilesetNames) {
                 Q_ASSERT(info[key].mMetaGameEnum.isEmpty() == false);
                 if (info[key].mMetaGameEnum.isEmpty())
                     continue;
@@ -273,17 +276,6 @@ bool TileMetaInfoMgr::writeTxt()
 #else
 bool TileMetaInfoMgr::readTxt()
 {
-#ifdef WORLDED
-    // Make sure the user has chosen the Tiles directory.
-    QString tilesDirectory = this->tilesDirectory();
-    QDir dir(tilesDirectory);
-    if (tilesDirectory.isEmpty() || !dir.exists()) {
-        mError = tr("The Tiles directory specified in the preferences doesn't exist!\n%1")
-                .arg(tilesDirectory);
-        return false;
-    }
-#endif
-
     QFileInfo info(txtPath());
     if (!info.exists()) {
         mError = tr("The %1 file doesn't exist.").arg(txtName());
@@ -491,6 +483,7 @@ bool TileMetaInfoMgr::upgradeTxt()
 bool TileMetaInfoMgr::mergeTxt()
 {
 #ifdef WORLDED
+    // There isn't a source Tilesets.txt in WorldEd.
     return true;
 #endif
     QString userPath = txtPath();

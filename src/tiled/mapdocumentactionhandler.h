@@ -60,9 +60,9 @@ public:
     QAction *actionMergeLayerDown() const { return mActionMergeLayerDown; }
     QAction *actionRemoveLayer() const { return mActionRemoveLayer; }
     QAction *actionRenameLayer() const { return mActionRenameLayer; }
-    QAction *actionSelectPreviousLayer() const
-    { return mActionSelectPreviousLayer; }
-    QAction *actionSelectNextLayer() const { return mActionSelectNextLayer; }
+    QAction *actionSelectPreviousLevel() const
+    { return mActionSelectPreviousLevel; }
+    QAction *actionSelectNextLevel() const { return mActionSelectNextLevel; }
     QAction *actionMoveLayerUp() const { return mActionMoveLayerUp; }
     QAction *actionMoveLayerDown() const { return mActionMoveLayerDown; }
     QAction *actionToggleOtherLayers() const
@@ -85,8 +85,8 @@ public slots:
     void addImageLayer();
     void duplicateLayer();
     void mergeLayerDown();
-    void selectPreviousLayer();
-    void selectNextLayer();
+    void selectPreviousLevel();
+    void selectNextLevel();
     void moveLayerUp();
     void moveLayerDown();
     void removeLayer();
@@ -109,8 +109,8 @@ private:
     QAction *mActionMergeLayerDown;
     QAction *mActionRemoveLayer;
     QAction *mActionRenameLayer;
-    QAction *mActionSelectPreviousLayer;
-    QAction *mActionSelectNextLayer;
+    QAction *mActionSelectPreviousLevel;
+    QAction *mActionSelectNextLevel;
     QAction *mActionMoveLayerUp;
     QAction *mActionMoveLayerDown;
     QAction *mActionToggleOtherLayers;

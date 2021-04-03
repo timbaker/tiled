@@ -554,7 +554,7 @@ void TileRotatedVisualModel::setVisuals(const QList<QSharedPointer<TileRotatedVi
     mVisuals.clear();
 
     QString header;
-    for (QSharedPointer<TileRotatedVisual> visual : visuals) {
+    for (const QSharedPointer<TileRotatedVisual>& visual : visuals) {
         QString label = QLatin1String("<TODO: Label>");
         if (mShowHeaders && (label != header)) {
             while (mItems.count() % columnCount())

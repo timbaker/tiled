@@ -65,7 +65,7 @@ LinkItem::LinkItem(const QString &text1, const QString &text2, QGraphicsItem *pa
         QGraphicsTextItem *item2 = new QGraphicsTextItem(this);
         QString s = QFontMetrics(item2->font()).elidedText(text2, Qt::ElideRight, 400 - 40);
         item2->setPlainText(s);
-        item2->setDefaultTextColor(QColor("#6b6b6b"));
+        item2->setDefaultTextColor(QColor(0x6b, 0x6b, 0x6b));
         item2->setPos(0, item1->boundingRect().height());
 
         mFilePath = text2;
@@ -102,7 +102,8 @@ void LinkItem::mousePressEvent(QGraphicsSceneMouseEvent *event)
 
 void LinkItem::hoverEnterEvent(QGraphicsSceneHoverEvent *)
 {
-    childItems().first()->setVisible(true);
+    const QList<QGraphicsItem*> children = childItems();
+    children.first()->setVisible(true);
     if (mRemoveItem != 0)
         mRemoveItem->setVisible(true);
     emit hovered(true);
@@ -121,7 +122,8 @@ void LinkItem::hoverMoveEvent(QGraphicsSceneHoverEvent *event)
 
 void LinkItem::hoverLeaveEvent(QGraphicsSceneHoverEvent *)
 {
-    childItems().first()->setVisible(false);
+    const QList<QGraphicsItem*> children = childItems();
+    children.first()->setVisible(false);
     if (mRemoveItem != 0) {
         mRemoveBGItem->setVisible(false);
         mRemoveItem->setVisible(false);

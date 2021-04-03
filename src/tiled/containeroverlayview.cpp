@@ -76,9 +76,9 @@ public:
 private:
     float parseAlpha(AbstractOverlayEntry* entry) const
     {
-        QStringList ss = entry->usage().split(QLatin1Char(';'));
-        for (QString s : ss) {
-            s = s.trimmed();
+        const QStringList ss = entry->usage().split(QLatin1Char(';'));
+        for (const QString &s1 : ss) {
+            QString s = s1.trimmed();
             if (s.startsWith(QLatin1String("alpha="))) {
                 bool ok;
                 float alpha = s.remove(0, 6).toFloat(&ok);

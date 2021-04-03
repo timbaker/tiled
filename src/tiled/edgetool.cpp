@@ -327,7 +327,8 @@ void EdgeTool::drawEdge(const QPointF &start, const QPointF &end, Edge edge)
     int levelIndex = currentTileLayer()->level();
     MapLevel *mapLevel = mapDocument()->map()->levelAt(levelIndex);
 
-    for (QString layerName : eraseRgn.keys()) {
+    const QStringList layerNames1 = eraseRgn.keys();
+    for (const QString &layerName : layerNames1) {
         int index = mapLevel->indexOfLayer(layerName, Layer::TileLayerType);
         if (index >= 0) {
             TileLayer *tl = mapLevel->layerAt(index)->asTileLayer();
@@ -336,7 +337,8 @@ void EdgeTool::drawEdge(const QPointF &start, const QPointF &end, Edge edge)
         }
     }
 
-    for (QString layerName : noBlendRgn.keys()) {
+    const QStringList layerNames2 = noBlendRgn.keys();
+    for (const QString &layerName : layerNames2) {
         QRegion rgn = noBlendRgn[layerName];
         QRect r = rgn.boundingRect();
         MapNoBlend *noBlend = mapDocument()->map()->noBlend(layerName);
@@ -495,7 +497,8 @@ void EdgeTool::drawEdgeTile(const QPoint &origin, int x, int y, EdgeTool::Edge e
 
     MapLevel *mapLevel = mapDocument()->map()->levelAt(0);
 
-    for (const QString &layerName : mapDocument()->mapComposite()->bmpBlender()->blendLayers()) {
+    const QStringList layerNames = mapDocument()->mapComposite()->bmpBlender()->blendLayers();
+    for (const QString &layerName : layerNames) {
         int index = mapLevel->indexOfLayer(layerName, Layer::TileLayerType);
         if (index >= 0) {
             TileLayer *tl = mapLevel->layerAt(index)->asTileLayer();

@@ -63,6 +63,25 @@ public:
             qDeleteAll(mChildren);
         }
 
+        void insertLayer(int layerIndex)
+        {
+            Item *child = new LayerModelPrivate::Item(this, layerIndex);
+            int index = mChildren.size() + 1 - layerIndex - 1;
+            mChildren.insert(index, child);
+            for (int i = index - 1; i >= 0; i--) {
+                mChildren[i]->mLayerIndex++;
+            }
+        }
+
+        void removeLayer(int layerIndex)
+        {
+            int index = mChildren.size() - layerIndex - 1;
+            delete mChildren.takeAt(index);
+            for (int i = index - 1; i >= 0; i--) {
+                mChildren[i]->mLayerIndex--;
+            }
+        }
+
         int mLevelIndex;
         int mLayerIndex;
         Item *mParent;
@@ -332,9 +351,10 @@ void LayerModel::insertLayer(int index, Layer *layer)
 {
     const int row = layerIndexToRow(layer->level(), index) + 1;
     QModelIndex parent = toIndex(layer->level());
+    LayerModelPrivate::Item *parentItem = mPrivate->toItem(parent);
     beginInsertRows(parent, row, row);
     mMap->insertLayer(index, layer);
-    mPrivate->setMap(mMap);
+    parentItem->insertLayer(index);
     endInsertRows();
     emit layerAdded(layer->level(), index);
 }
@@ -343,10 +363,11 @@ Layer *LayerModel::takeLayerAt(int z, int index)
 {
     emit layerAboutToBeRemoved(z, index);
     QModelIndex parent = toIndex(z);
+    LayerModelPrivate::Item *parentItem = mPrivate->toItem(parent);
     const int row = layerIndexToRow(z, index);
     beginRemoveRows(parent, row, row);
     Layer *layer = mMap->takeLayerAt(z, index);
-    mPrivate->setMap(mMap);
+    parentItem->removeLayer(index);
     endRemoveRows();
     emit layerRemoved(z, index);
     return layer;

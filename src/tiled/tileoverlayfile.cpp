@@ -168,7 +168,7 @@ TileOverlayFile::TileOverlayFile()
 bool TileOverlayFile::readV1(LuaTable* table)
 {
     QMap<QString,TileOverlay*> map;
-    for (LuaTableKeyValue *overlayKV : table->kv) {
+    for (LuaTableKeyValue *overlayKV : qAsConst(table->kv)) {
         LuaTable* overlayTable = overlayKV->t;
         if (overlayTable == nullptr) {
             Q_ASSERT(overlayKV->key == QLatin1String("VERSION"));
@@ -176,7 +176,7 @@ bool TileOverlayFile::readV1(LuaTable* table)
         }
         TileOverlay *overlay = new TileOverlay;
         overlay->mTileName = BuildingEditor::BuildingTilesMgr::normalizeTileName(overlayKV->key);
-        for (LuaTableKeyValue *roomKV : overlayTable->kv) {
+        for (LuaTableKeyValue *roomKV : qAsConst(overlayTable->kv)) {
             LuaTable* roomTable = roomKV->t;
             if (roomTable == nullptr) {
                 // FIXME: delete 'map'
@@ -213,7 +213,7 @@ bool TileOverlayFile::readV1(LuaTable* table)
                 mError = QString::fromUtf8("expected tiles table");
                 return false;
             }
-            for (LuaTableKeyValue *tileKV : tileTable->kv) {
+            for (LuaTableKeyValue *tileKV : qAsConst(tileTable->kv)) {
                 QString tileName = tileKV->s;
                 if (tileName != QLatin1String("none")) {
                     tileName = BuildingEditor::BuildingTilesMgr::normalizeTileName(tileName);
@@ -285,13 +285,14 @@ bool TileOverlayFile::write(const QString &filePath, const QList<TileOverlay*> &
         bool prev = false;
         // sort by room name
         QMap<QString,QList<TileOverlayEntry*>> entryMap;
-        for (TileOverlayEntry *entry : overlay->mEntries) {
+        for (TileOverlayEntry *entry : qAsConst(overlay->mEntries)) {
             entryMap[entry->mRoomName] += entry;
         }
-        for (QList<TileOverlayEntry *> entries : entryMap.values()) {
+        QList<QList<TileOverlayEntry*>> entryLists = entryMap.values();
+        for (const QList<TileOverlayEntry *> &entries : entryLists) {
             for (TileOverlayEntry* entry : entries) {
                 QString tiles;
-                for (QString tileName : entry->mTiles) {
+                for (const QString &tileName : qAsConst(entry->mTiles)) {
                     if (tileName.isEmpty())
                         continue;
 //                    if (tileName == QLatin1String("none") && !tiles.isEmpty()) {

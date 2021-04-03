@@ -625,8 +625,8 @@ void LuaTileTool::setToolOptions()
         mSaveOptionValue = false;
         QSettings settings;
         settings.beginGroup(QLatin1String("LuaTileTool/Tool/")+QFileInfo(mFileName).completeBaseName());
-        QMap<LuaToolOption*,QVariant> current;
-        foreach (LuaToolOption *option, mOptions.mOptions) {
+        QHash<LuaToolOption*,QVariant> current;
+        for (LuaToolOption *option : qAsConst(mOptions.mOptions)) {
             if (BooleanLuaToolOption *o = option->asBoolean())
                 current[option] = settings.value(o->mName, o->mDefault);
             else if (EnumLuaToolOption *o = option->asEnum()) {
@@ -789,7 +789,8 @@ int LuaTileTool::angle(float x1, float y1, float x2, float y2)
 void LuaTileTool::clearToolTiles()
 {
     MapLevel *mapLevel = mapDocument()->map()->levelAt(0);
-    for (const QString &layerName : mToolTileLayers.keys()) {
+    const QStringList layerNames = mToolTileLayers.keys();
+    for (const QString &layerName : layerNames) {
         if (!mToolTileRegions[layerName].isEmpty()) {
             mToolTileLayers[layerName]->erase();
             int n = mapLevel->indexOfLayer(layerName, Layer::TileLayerType);
@@ -813,7 +814,7 @@ void LuaTileTool::setToolTile(const char *layer, int x, int y, Tile *tile)
 
     QString layerName = QLatin1String(layer);
     Map *map = mapDocument()->map();
-    if (!mToolTileLayers.keys().contains(layerName))
+    if (!mToolTileLayers.contains(layerName))
         mToolTileLayers[layerName] = new Tiled::TileLayer(layerName, 0, 0,
                                                           map->width(),
                                                           map->height());
@@ -853,7 +854,8 @@ void LuaTileTool::clearToolNoBlends()
 {
     MapLevel *mapLevel = mapDocument()->map()->levelAt(0);
 
-    for (const QString &layerName : mToolNoBlends.keys()) {
+    const QStringList layerNames = mToolNoBlends.keys();
+    for (const QString &layerName : layerNames) {
         if (!mToolNoBlendRegions[layerName].isEmpty()) {
             //mToolNoBlends[layerName]->clear();
             int n = mapLevel->indexOfLayer(layerName, Layer::TileLayerType);
@@ -873,7 +875,7 @@ void LuaTileTool::setToolNoBlend(const char *layer, int x, int y, bool noBlend)
 {
     QString layerName = QLatin1String(layer);
     Map *map = mapDocument()->map();
-    if (!mToolNoBlends.keys().contains(layerName))
+    if (!mToolNoBlends.contains(layerName))
         mToolNoBlends[layerName] = new MapNoBlend(layerName, map->width(), map->height());
 
     MapNoBlend *nb = mToolNoBlends[layerName];

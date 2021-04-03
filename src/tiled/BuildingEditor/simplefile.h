@@ -113,8 +113,8 @@ public:
 
     SimpleFileBlock block(const QString &name);
 
-    QString toString(int depth = -1);
-    void write(QTextStream &ts, int indent);
+    QString toString(int depth = -1) const;
+    void write(QTextStream &ts, int indent) const;
 
     void print();
 

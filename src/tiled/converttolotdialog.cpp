@@ -87,7 +87,7 @@ void ConvertToLotDialog::accept()
     }
 
     // TODO: If replacing a map that was already loaded, must reload the map!
-    if (QFileInfo(mMapPath).exists()) {
+    if (QFileInfo::exists(mMapPath)) {
         QString fileName = QFileInfo(mMapPath).fileName();
         int r = QMessageBox::warning(this, tr("Confirm Save"),
                                      tr("%1 already exists.\nDo you want to replace it?")

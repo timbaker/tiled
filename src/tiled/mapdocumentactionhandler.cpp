@@ -73,11 +73,11 @@ MapDocumentActionHandler::MapDocumentActionHandler(QObject *parent)
     mActionRenameLayer = new QAction(this);
     mActionRenameLayer->setShortcut(tr("F2"));
 
-    mActionSelectPreviousLayer = new QAction(this);
-    mActionSelectPreviousLayer->setShortcut(tr("PgUp"));
+    mActionSelectPreviousLevel = new QAction(this);
+    mActionSelectPreviousLevel->setShortcut(tr("PgUp"));
 
-    mActionSelectNextLayer = new QAction(this);
-    mActionSelectNextLayer->setShortcut(tr("PgDown"));
+    mActionSelectNextLevel = new QAction(this);
+    mActionSelectNextLevel->setShortcut(tr("PgDown"));
 
     mActionMoveLayerUp = new QAction(this);
     mActionMoveLayerUp->setShortcut(tr("Ctrl+Shift+Up"));
@@ -103,28 +103,28 @@ MapDocumentActionHandler::MapDocumentActionHandler(QObject *parent)
     Utils::setThemeIcon(mActionMoveLayerDown, "go-down");
     Utils::setThemeIcon(mActionLayerProperties, "document-properties");
 
-    connect(mActionSelectAll, SIGNAL(triggered()), SLOT(selectAll()));
-    connect(mActionSelectNone, SIGNAL(triggered()), SLOT(selectNone()));
-    connect(mActionCropToSelection, SIGNAL(triggered()),
-            SLOT(cropToSelection()));
-    connect(mActionAddTileLayer, SIGNAL(triggered()), SLOT(addTileLayer()));
-    connect(mActionAddObjectGroup, SIGNAL(triggered()),
-            SLOT(addObjectGroup()));
-    connect(mActionAddImageLayer, SIGNAL(triggered()), SLOT(addImageLayer()));
-    connect(mActionDuplicateLayer, SIGNAL(triggered()),
-            SLOT(duplicateLayer()));
-    connect(mActionMergeLayerDown, SIGNAL(triggered()),
-            SLOT(mergeLayerDown()));
-    connect(mActionSelectPreviousLayer, SIGNAL(triggered()),
-            SLOT(selectPreviousLayer()));
-    connect(mActionSelectNextLayer, SIGNAL(triggered()),
-            SLOT(selectNextLayer()));
-    connect(mActionRenameLayer, SIGNAL(triggered()), SLOT(renameLayer()));
-    connect(mActionRemoveLayer, SIGNAL(triggered()), SLOT(removeLayer()));
-    connect(mActionMoveLayerUp, SIGNAL(triggered()), SLOT(moveLayerUp()));
-    connect(mActionMoveLayerDown, SIGNAL(triggered()), SLOT(moveLayerDown()));
-    connect(mActionToggleOtherLayers, SIGNAL(triggered()),
-            SLOT(toggleOtherLayers()));
+    connect(mActionSelectAll, &QAction::triggered, this, &MapDocumentActionHandler::selectAll);
+    connect(mActionSelectNone, &QAction::triggered, this, &MapDocumentActionHandler::selectNone);
+    connect(mActionCropToSelection, &QAction::triggered,
+            this, &MapDocumentActionHandler::cropToSelection);
+    connect(mActionAddTileLayer, &QAction::triggered, this, &MapDocumentActionHandler::addTileLayer);
+    connect(mActionAddObjectGroup, &QAction::triggered,
+            this, &MapDocumentActionHandler::addObjectGroup);
+    connect(mActionAddImageLayer, &QAction::triggered, this, &MapDocumentActionHandler::addImageLayer);
+    connect(mActionDuplicateLayer, &QAction::triggered,
+            this, &MapDocumentActionHandler::duplicateLayer);
+    connect(mActionMergeLayerDown, &QAction::triggered,
+            this, &MapDocumentActionHandler::mergeLayerDown);
+    connect(mActionSelectPreviousLevel, &QAction::triggered,
+            this, &MapDocumentActionHandler::selectPreviousLevel);
+    connect(mActionSelectNextLevel, &QAction::triggered,
+            this, &MapDocumentActionHandler::selectNextLevel);
+    connect(mActionRenameLayer, &QAction::triggered, this, &MapDocumentActionHandler::renameLayer);
+    connect(mActionRemoveLayer, &QAction::triggered, this, &MapDocumentActionHandler::removeLayer);
+    connect(mActionMoveLayerUp, &QAction::triggered, this, &MapDocumentActionHandler::moveLayerUp);
+    connect(mActionMoveLayerDown, &QAction::triggered, this, &MapDocumentActionHandler::moveLayerDown);
+    connect(mActionToggleOtherLayers, &QAction::triggered,
+            this, &MapDocumentActionHandler::toggleOtherLayers);
 
     updateActions();
     retranslateUi();
@@ -148,8 +148,8 @@ void MapDocumentActionHandler::retranslateUi()
     mActionRemoveLayer->setText(tr("&Remove Layer"));
     mActionRenameLayer->setText(tr("Re&name Layer"));
 #ifdef ZOMBOID
-    mActionSelectPreviousLayer->setText(tr("Select Level Above"));
-    mActionSelectNextLayer->setText(tr("Select Level Below"));
+    mActionSelectPreviousLevel->setText(tr("Select Level Above"));
+    mActionSelectNextLevel->setText(tr("Select Level Below"));
 #else
     mActionSelectPreviousLayer->setText(tr("Select Pre&vious Layer"));
     mActionSelectNextLayer->setText(tr("Select &Next Layer"));
@@ -293,9 +293,10 @@ void MapDocumentActionHandler::selectNextLayer()
 static void switchToLevel(MapDocument *mMapDocument, int level)
 {
     MapLevel *mapLevel = mMapDocument->map()->levelAt(level);
-    if (mapLevel == nullptr || mapLevel->layerCount() == 0)
+    if (mapLevel == nullptr)
         return;
 
+    // Try to switch to a layer with the same name in the new level
     if (Layer *layer = mMapDocument->currentLayer()) {
         for (Layer *layer2 : mapLevel->layers()) {
             if (layer2->name() != layer->name())
@@ -336,13 +337,13 @@ static void switchToLevel(MapDocument *mMapDocument, int level)
     mMapDocument->setCurrentLayerIndex(level, 0);
 }
 
-void MapDocumentActionHandler::selectPreviousLayer()
+void MapDocumentActionHandler::selectPreviousLevel()
 {
     if (mMapDocument)
         switchToLevel(mMapDocument, mMapDocument->currentLevelIndex() + 1);
 }
 
-void MapDocumentActionHandler::selectNextLayer()
+void MapDocumentActionHandler::selectNextLevel()
 {
     if (mMapDocument)
         switchToLevel(mMapDocument, mMapDocument->currentLevelIndex() - 1);
@@ -382,18 +383,20 @@ void MapDocumentActionHandler::toggleOtherLayers()
 void MapDocumentActionHandler::updateActions()
 {
     Map *map = nullptr;
+    MapLevel *mapLevel = nullptr;
+    int currentLevelIndex = -1;
     int currentLayerIndex = -1;
     QRegion selection;
     bool canMergeDown = false;
 
     if (mMapDocument) {
         map = mMapDocument->map();
-        int currentLevelIndex = mMapDocument->currentLevelIndex();
+        mapLevel = mMapDocument->currentMapLevel();
+        currentLevelIndex = mMapDocument->currentLevelIndex();
         currentLayerIndex = mMapDocument->currentLayerIndex();
         selection = mMapDocument->tileSelection();
 
         if (currentLayerIndex > 0) {
-            MapLevel *mapLevel = mMapDocument->map()->levelAt(currentLevelIndex);
             Layer *upper = mapLevel->layerAt(currentLayerIndex);
             Layer *lower = mapLevel->layerAt(currentLayerIndex - 1);
             canMergeDown = lower->canMergeWith(upper);
@@ -409,15 +412,18 @@ void MapDocumentActionHandler::updateActions()
     mActionAddObjectGroup->setEnabled(map);
     mActionAddImageLayer->setEnabled(map);
 
-    const int layerCount = map ? map->layerCount() : 0;
-    const bool hasPreviousLayer = currentLayerIndex >= 0
-            && currentLayerIndex < layerCount - 1;
+    const int levelCount = map ? map->levelCount() : 0;
+    const bool hasPreviousLevel = (currentLevelIndex >= 0) && (currentLevelIndex < levelCount - 1);
+    const bool hasNextLevel = currentLevelIndex > 0;
+
+    const int layerCount = mapLevel ? mapLevel->layerCount() : 0;
+    const bool hasPreviousLayer = (currentLayerIndex >= 0) && (currentLayerIndex < layerCount - 1);
     const bool hasNextLayer = currentLayerIndex > 0;
 
     mActionDuplicateLayer->setEnabled(currentLayerIndex >= 0);
     mActionMergeLayerDown->setEnabled(canMergeDown);
-    mActionSelectPreviousLayer->setEnabled(hasPreviousLayer);
-    mActionSelectNextLayer->setEnabled(hasNextLayer);
+    mActionSelectPreviousLevel->setEnabled(hasPreviousLevel);
+    mActionSelectNextLevel->setEnabled(hasNextLevel);
     mActionMoveLayerUp->setEnabled(hasPreviousLayer);
     mActionMoveLayerDown->setEnabled(hasNextLayer);
     mActionToggleOtherLayers->setEnabled(layerCount > 1);

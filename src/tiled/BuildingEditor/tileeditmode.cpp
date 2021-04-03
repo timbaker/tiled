@@ -369,10 +369,10 @@ void TileEditMode::onActiveStateChanged(bool active)
             QAction *action = dockWidget->toggleViewAction();
             map[action->text()] = action;
         }
-        foreach (QAction *action, map.values())
+        for (QAction *action : map.values())
             menu->addAction(action);
         menu->addSeparator();
-        foreach (QToolBar *toolBar, mMainWindow->toolBars())
+        for (QToolBar *toolBar : mMainWindow->toolBars())
             menu->addAction(toolBar->toggleViewAction());
 
 #ifdef BUILDINGED_SA

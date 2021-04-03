@@ -70,7 +70,8 @@ bool TileOverlayDialog::fileOpen(const QString &fileName, QList<AbstractOverlay 
     }
 
     overlays.clear();
-    for (TileOverlay* overlay : tof.takeOverlays()) {
+    const QList<TileOverlay*> tileOverlays = tof.takeOverlays();
+    for (TileOverlay* overlay : tileOverlays) {
         overlays << overlay;
     }
     return true;
