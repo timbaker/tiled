@@ -342,8 +342,9 @@ void WorldEdDock::setMapDocument(MapDocument *mapDoc)
         else
             ui->view->model()->setWorldCell(0);
         restoreExpandedLevels(mDocument);
-    } else
+    } else {
         ui->view->model()->setWorldCell(0);
+    }
 }
 
 void WorldEdDock::selectionChanged()

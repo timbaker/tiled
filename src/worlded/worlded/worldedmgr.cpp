@@ -38,12 +38,12 @@ WorldEdMgr *WorldEdMgr::instance()
 WorldEdMgr::WorldEdMgr(QObject *parent) :
     QObject(parent)
 {
-    connect(&mWatcher, SIGNAL(fileChanged(QString)), SLOT(fileChanged(QString)));
+    connect(&mWatcher, &Tiled::Internal::FileSystemWatcher::fileChanged, this, &WorldEdMgr::fileChanged);
 
     mChangedFilesTimer.setInterval(500);
     mChangedFilesTimer.setSingleShot(true);
-    connect(&mChangedFilesTimer, SIGNAL(timeout()),
-            SLOT(fileChangedTimeout()));
+    connect(&mChangedFilesTimer, &QTimer::timeout,
+            this, &WorldEdMgr::fileChangedTimeout);
 }
 
 WorldEdMgr::~WorldEdMgr()
@@ -66,20 +66,29 @@ void WorldEdMgr::addProject(const QString &fileName)
 
 WorldCell *WorldEdMgr::cellForMap(const QString &fileName)
 {
-    foreach (World *world, mWorlds) {
+    QFileInfo info2(fileName);
+    for (World *world : qAsConst(mWorlds)) {
+        if (mCheckedDocuments.contains(world)) {
+            const auto& nameToCell = mCheckedDocuments[world];
+            if (nameToCell.contains(fileName)) {
+                return nameToCell[fileName];
+            }
+        }
         for (int y = 0; y < world->height(); y++) {
             for (int x = 0; x < world->width(); x++) {
                 WorldCell *cell = world->cellAt(x, y);
                 if (cell->mapFilePath().isEmpty())
                     continue;
                 QFileInfo info1(cell->mapFilePath());
-                QFileInfo info2(fileName);
-                if (info1 == info2)
+                if (info1 == info2) {
+                    mCheckedDocuments[world].insert(fileName, cell);
                     return cell;
+                }
             }
         }
+        mCheckedDocuments[world].insert(fileName, nullptr);
     }
-    return 0;
+    return nullptr;
 }
 
 void WorldEdMgr::setLevelVisible(WorldCellLevel *level, bool visible)
@@ -129,15 +138,18 @@ void WorldEdMgr::fileChanged(const QString &fileName)
 void WorldEdMgr::fileChangedTimeout()
 {
     qDebug() << "WorldEdMgr::fileChangedTimeout";
-    QStringList files(mChangedFiles.constBegin(), mChangedFiles.constEnd());
+    const QStringList files(mChangedFiles.constBegin(), mChangedFiles.constEnd());
     mChangedFiles.clear();
 
-    foreach (QString fileName, files) {
+    for (const QString &fileName : files) {
         QFileInfo info(fileName);
         for (int i = 0; i < mWorlds.size(); i++) {
             if (info == QFileInfo(mWorldFileNames[i])) {
                 setSelectedLots(QSet<WorldCellLot*>());
                 emit beforeWorldChanged(mWorldFileNames[i]);
+                if (mCheckedDocuments.contains(mWorlds[i])) {
+                    mCheckedDocuments.remove(mWorlds[i]);
+                }
                 delete mWorlds[i];
                 mWorlds.removeAt(i);
                 mWorldFileNames.removeAt(i);

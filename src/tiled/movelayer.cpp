@@ -23,6 +23,7 @@
 #include "layer.h"
 #include "layermodel.h"
 #include "mapdocument.h"
+#include "maplevel.h"
 
 #include <QCoreApplication>
 
@@ -51,23 +52,45 @@ void MoveLayer::undo()
 
 void MoveLayer::moveLayer()
 {
+    MapLevel *mapLevel = mMapDocument->map()->levelAt(mLevelIndex);
     const int currentIndex = mMapDocument->currentLayerIndex();
-    const bool selectedBefore = (mLayerIndex == currentIndex);
+    const bool wasSelected = (mLayerIndex == currentIndex);
     const int prevIndex = mLayerIndex;
 
     LayerModel *layerModel = mMapDocument->layerModel();
     Layer *layer = layerModel->takeLayerAt(mLevelIndex, mLayerIndex);
 
     // Change the direction and index to swap undo/redo
-    mLayerIndex = (mDirection == Down) ? mLayerIndex - 1 : mLayerIndex + 1;
-    mDirection = (mDirection == Down) ? Up : Down;
+    switch (mDirection) {
+    case Up:
+        if (mLayerIndex == mapLevel->layerCount()) {
+            mLevelIndex++;
+            mLayerIndex = 0;
+            layer->setLevel(mLevelIndex);
+        } else {
+            mLayerIndex++;
+        }
+        mDirection = Down;
+        break;
+    case Down:
+        if (mLayerIndex == 0) {
+            mLevelIndex--;
+            MapLevel *mapLevelBelow = mMapDocument->map()->levelAt(mLevelIndex);
+            mLayerIndex = mapLevelBelow->layerCount();
+            layer->setLevel(mLevelIndex);
+        } else {
+            mLayerIndex--;
+        }
+        mDirection = Up;
+        break;
+    }
 
-    const bool selectedAfter = (mLayerIndex == currentIndex);
+    const bool isSelected = (mLayerIndex == currentIndex);
 
     layerModel->insertLayer(mLayerIndex, layer);
 
     // Set the layer that is now supposed to be selected
     mMapDocument->setCurrentLayerIndex(mLevelIndex,
-                selectedBefore ? mLayerIndex :
-                                 (selectedAfter ? prevIndex : currentIndex));
+                wasSelected ? mLayerIndex :
+                                 (isSelected ? prevIndex : currentIndex));
 }

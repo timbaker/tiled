@@ -393,7 +393,6 @@ void ZomboidScene::updateCurrentLayerHighlight()
         mDarkRectangle->setZValue(lowestVisibleItem->zValue() - 0.5);
     }
     mDarkRectangle->setVisible(true);
-    qDebug() << "mDarkRectangle z = " << mDarkRectangle->zValue();
 }
 
 void ZomboidScene::layerAdded(int z, int index)

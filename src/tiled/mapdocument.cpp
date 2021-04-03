@@ -521,7 +521,10 @@ void MapDocument::moveLayerUp(int levelIndex, int layerIndex)
     if (mapLevel == nullptr)
         return;
 
-    if (layerIndex < 0 || layerIndex >= mapLevel->layerCount() - 1)
+    if ((layerIndex < 0) || (layerIndex >= mapLevel->layerCount()))
+        return;
+
+    if ((layerIndex == mapLevel->layerCount() - 1) && (levelIndex == mMap->levelCount() - 1))
         return;
 
     mUndoStack->push(new MoveLayer(this, levelIndex, layerIndex, MoveLayer::Up));
@@ -537,7 +540,10 @@ void MapDocument::moveLayerDown(int levelIndex, int layerIndex)
     if (mapLevel == nullptr)
         return;
 
-    if (layerIndex < 1 || layerIndex >= mapLevel->layerCount())
+    if ((layerIndex < 0) || (layerIndex >= mapLevel->layerCount()))
+        return;
+
+    if ((layerIndex == 0) && (levelIndex == 0))
         return;
 
     mUndoStack->push(new MoveLayer(this, levelIndex, layerIndex, MoveLayer::Down));

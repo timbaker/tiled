@@ -60,6 +60,7 @@ protected:
     void changeEvent(QEvent *e);
 
 private slots:
+    void documentAboutToClose(int index, MapDocument *mapDocument);
     void updateOpacitySlider();
     void setLayerOpacity(int opacity);
 
@@ -69,6 +70,9 @@ private slots:
 #endif
 
 private:
+    void saveExpandedLevels(MapDocument *mapDoc);
+    void restoreExpandedLevels(MapDocument *mapDoc);
+    LayerModel *layerModel() const;
     void retranslateUi();
 
     QLabel *mOpacityLabel;
@@ -79,6 +83,7 @@ private:
 #endif
     LayerView *mLayerView;
     MapDocument *mMapDocument;
+    QHash<MapDocument*,QList<int> > mExpandedLevels;
 };
 
 /**

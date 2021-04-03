@@ -424,8 +424,8 @@ void MapDocumentActionHandler::updateActions()
     mActionMergeLayerDown->setEnabled(canMergeDown);
     mActionSelectPreviousLevel->setEnabled(hasPreviousLevel);
     mActionSelectNextLevel->setEnabled(hasNextLevel);
-    mActionMoveLayerUp->setEnabled(hasPreviousLayer);
-    mActionMoveLayerDown->setEnabled(hasNextLayer);
+    mActionMoveLayerUp->setEnabled(hasPreviousLayer || hasPreviousLevel);
+    mActionMoveLayerDown->setEnabled(hasNextLayer || hasNextLevel);
     mActionToggleOtherLayers->setEnabled(layerCount > 1);
     mActionRemoveLayer->setEnabled(currentLayerIndex >= 0);
     mActionRenameLayer->setEnabled(currentLayerIndex >= 0);

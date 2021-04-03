@@ -367,5 +367,7 @@ MapRotation TileRotation::unrotateTile(const QString &tileName, MapRotation view
         return MapRotation::Clockwise180;
     case MapRotation::Clockwise270:
         return MapRotation::Clockwise90;
+    default:
+        return MapRotation::NotRotated;
     }
 }

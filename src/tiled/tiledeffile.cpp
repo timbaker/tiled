@@ -121,8 +121,10 @@ bool TileDefFile::read(const QString &fileName)
                 QString propertyValue = ReadString(in);
                 properties[propertyName] = propertyValue;
             }
+#ifndef WORLDED
             TilePropertyMgr::instance()->modify(properties);
             tile->mPropertyUI.FromProperties(properties);
+#endif
             tile->mProperties = properties;
             tiles[j] = tile;
         }
@@ -147,6 +149,7 @@ static void SaveString(QDataStream& out, const QString& str)
 
 bool TileDefFile::write(const QString &fileName)
 {
+#ifndef WORLDED
     QFile file(fileName);
     if (!file.open(QIODevice::WriteOnly)) {
         mError = tr("Error opening file for writing.\n%1").arg(fileName);
@@ -178,7 +181,7 @@ bool TileDefFile::write(const QString &fileName)
             }
         }
     }
-
+#endif
     return true;
 }
 

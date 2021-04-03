@@ -23,6 +23,7 @@
 
 #include "layerdock.h"
 
+#include "documentmanager.h"
 #include "layer.h"
 #include "layermodel.h"
 #include "map.h"
@@ -128,20 +129,23 @@ LayerDock::LayerDock(QWidget *parent):
     setWidget(widget);
     retranslateUi();
 
-    connect(mOpacitySlider, SIGNAL(valueChanged(int)),
-            this, SLOT(setLayerOpacity(int)));
+    connect(mOpacitySlider, &QAbstractSlider::valueChanged,
+            this, &LayerDock::setLayerOpacity);
     updateOpacitySlider();
 
 #ifdef ZOMBOID
-    connect(mZomboidLayerSlider, SIGNAL(valueChanged(int)),
-            this, SLOT(setZomboidLayer(int)));
+    connect(mZomboidLayerSlider, &QAbstractSlider::valueChanged,
+            this, &LayerDock::setZomboidLayer);
     updateZomboidLayerSlider();
 #endif
 
     // Workaround since a tabbed dockwidget that is not currently visible still
     // returns true for isVisible()
-    connect(this, SIGNAL(visibilityChanged(bool)),
-            mLayerView, SLOT(setVisible(bool)));
+    connect(this, &QDockWidget::visibilityChanged,
+            mLayerView, &QWidget::setVisible);
+
+    connect(DocumentManager::instance(), &DocumentManager::documentAboutToClose,
+            this, &LayerDock::documentAboutToClose);
 }
 
 void LayerDock::setMapDocument(MapDocument *mapDocument)
@@ -149,12 +153,17 @@ void LayerDock::setMapDocument(MapDocument *mapDocument)
     if (mMapDocument == mapDocument)
         return;
 
-    if (mMapDocument)
+    if (mMapDocument) {
+        saveExpandedLevels(mMapDocument);
         mMapDocument->disconnect(this);
+    }
 
     mMapDocument = mapDocument;
 
+    mLayerView->setMapDocument(mapDocument);
+
     if (mMapDocument) {
+        restoreExpandedLevels(mMapDocument);
         connect(mMapDocument, &MapDocument::currentLayerIndexChanged,
                 this, &LayerDock::updateOpacitySlider);
 #ifdef ZOMBOID
@@ -163,7 +172,6 @@ void LayerDock::setMapDocument(MapDocument *mapDocument)
 #endif
     }
 
-    mLayerView->setMapDocument(mapDocument);
     updateOpacitySlider();
 #ifdef ZOMBOID
     updateZomboidLayerSlider();
@@ -180,6 +188,12 @@ void LayerDock::changeEvent(QEvent *e)
     default:
         break;
     }
+}
+
+void LayerDock::documentAboutToClose(int index, MapDocument *mapDocument)
+{
+    Q_UNUSED(index)
+    mExpandedLevels.remove(mapDocument);
 }
 
 void LayerDock::updateOpacitySlider()
@@ -214,7 +228,7 @@ void LayerDock::setLayerOpacity(int opacity)
     const Layer *layer = mMapDocument->map()->layerAt(levelIndex, layerIndex);
 
     if ((int) (layer->opacity() * 100) != opacity) {
-        LayerModel *layerModel = mMapDocument->layerModel();
+        LayerModel *layerModel = this->layerModel();
         QModelIndex index = layerModel->toIndex(levelIndex, layerIndex);
         layerModel->setData(index,
                             qreal(opacity) / 100,
@@ -260,6 +274,39 @@ void LayerDock::setZomboidLayer(int number)
 
     mMapDocument->setMaxVisibleLayer(number);
 }
+
+void LayerDock::saveExpandedLevels(MapDocument *mapDoc)
+{
+    mExpandedLevels[mapDoc].clear();
+    for (int level = 0; level < mapDoc->map()->levelCount(); level++) {
+        if (mLayerView->isExpanded(layerModel()->toIndex(level))) {
+            mExpandedLevels[mapDoc].append(level);
+        }
+    }
+}
+
+void LayerDock::restoreExpandedLevels(MapDocument *mapDoc)
+{
+    if (mExpandedLevels.contains(mapDoc)) {
+        for (int level : qAsConst(mExpandedLevels[mapDoc])) {
+            mLayerView->setExpanded(layerModel()->toIndex(level), true);
+        }
+        mExpandedLevels[mapDoc].clear();
+    } else {
+        mLayerView->expandAll();
+    }
+
+    // Also restore the selection
+    if (Layer *layer = mapDoc->currentLayer()) {
+        mLayerView->setCurrentIndex(layerModel()->toIndex(layer->level(), mapDoc->currentLayerIndex()));
+    }
+}
+
+LayerModel *LayerDock::layerModel() const
+{
+    return mMapDocument->layerModel();
+}
+
 #endif // ZOMBOID
 
 void LayerDock::retranslateUi()
