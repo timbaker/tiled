@@ -79,7 +79,6 @@ class Zoomable;
 #ifdef ZOMBOID
 class EdgeTool;
 class Eraser;
-class ZLevelsDock;
 class MapsDock;
 class TileDefDialog;
 class TileLayersPanel;
@@ -306,7 +305,6 @@ private:
     LayerDock *mLayerDock;
     ObjectsDock *mObjectsDock;
 #ifdef ZOMBOID
-    ZLevelsDock *mLevelsDock;
     MapsDock *mMapsDock;
     WorldEdDock *mWorldEdDock;
 #endif

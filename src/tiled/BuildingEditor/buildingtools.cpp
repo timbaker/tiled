@@ -1307,6 +1307,8 @@ void FurnitureTool::placeObject()
                                                   mCursorObject->x(),
                                                   mCursorObject->y());
     object->setFurnitureTile(mCursorObject->asFurniture()->furnitureTile());
+    object->setDir(mCursorObject->dir());
+    object->setVersion(3);
     undoStack()->push(new AddObject(mEditor->document(), floor,
                                     floor->objectCount(), object));
 }
@@ -1325,6 +1327,7 @@ void FurnitureTool::updateCursorObject()
     if (!mCursorObject) {
         BuildingFloor *floor = nullptr; //floor();
         FurnitureObject *object = new FurnitureObject(floor, x, y);
+        object->setVersion(3);
         mCursorObject = object;
     }
 
@@ -1389,6 +1392,25 @@ void FurnitureTool::updateCursorObject()
     mCursorObject->asFurniture()->setFurnitureTile(ftiles->tile(orient));
 
     mCursorObject->setPos(x, y);
+
+    if (ftiles->layer() == FurnitureTiles::LayerWalls) {
+        switch (mTileEdge) {
+        case TileEdge::N:
+            mCursorObject->setDir(BuildingObject::Direction::N);
+            break;
+        case TileEdge::S:
+            mCursorObject->setDir(BuildingObject::Direction::S);
+            break;
+        case TileEdge::W:
+            mCursorObject->setDir(BuildingObject::Direction::W);
+            break;
+        case TileEdge::E:
+            mCursorObject->setDir(BuildingObject::Direction::E);
+            break;
+        default:
+            break;
+        }
+    }
 
     setCursorObject(mCursorObject);
 #if 0
@@ -2850,7 +2872,7 @@ void WallTool::updateStatusText()
     else if (mMouseOverHandle)
         setStatusText(tr("Left-click-drag to resize wall."));
     else
-        setStatusText(tr("Left-click-drag to place a wall.  Right-click to delete any object."));
+        setStatusText(tr("Left-click-drag to place a wall.  Right-click to delete any object.  ALT = eyedrop."));
 }
 
 void WallTool::resizeWall(int length)

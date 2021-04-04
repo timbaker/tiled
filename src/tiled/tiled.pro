@@ -157,8 +157,6 @@ SOURCES += aboutdialog.cpp \
     utils.cpp \
     zoomable.cpp \
     zgriditem.cpp \
-    zlevelsdock.cpp \
-    zlevelsmodel.cpp \
     zlotmanager.cpp \
     ZomboidScene.cpp \
     zprogress.cpp \
@@ -385,8 +383,6 @@ HEADERS += aboutdialog.h \
     mapcomposite.h \
     mapmanager.h \
     mapimagemanager.h \
-    zlevelsdock.h \
-    zlevelsmodel.h \
     zlotmanager.h \
     zgriditem.h \
     zprogress.h \

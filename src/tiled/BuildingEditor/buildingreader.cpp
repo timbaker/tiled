@@ -897,6 +897,13 @@ BuildingObject *BuildingReaderPrivate::readObject(BuildingFloor *floor)
             return nullptr;
         }
         furniture->setFurnitureTile(mFurnitureTiles.at(index)->tile(orient));
+        if (mVersion >= VERSION3) {
+            bool ok = false;
+            uint version = atts.value(QLatin1String("version")).toUInt(&ok);
+            if (ok) {
+                furniture->setVersion(version);
+            }
+        }
         object = furniture;
     } else if (type == QLatin1String("roof")) {
         int width = atts.value(QLatin1String("width")).toString().toInt();

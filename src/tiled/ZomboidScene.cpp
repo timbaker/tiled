@@ -35,7 +35,6 @@
 #include "tilelayer.h"
 #include "tilelayeritem.h"
 #include "toolmanager.h"
-#include "zlevelsmodel.h"
 #include "zlotmanager.h"
 
 #include "worlded/worldcell.h"

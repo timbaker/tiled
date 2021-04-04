@@ -1058,6 +1058,7 @@ TileRotationWindow::TileRotationWindow(QWidget *parent) :
     mCurrentVisual(nullptr),
     mCurrentVisualRotation(MapRotation::NotRotated),
     mCurrentTileset(nullptr),
+    mPinnedTileset(nullptr),
     mUndoGroup(new QUndoGroup(this)),
     mUndoStack(new QUndoStack(this)),
     mTileContextMenu(new QMenu(this))
@@ -1109,6 +1110,7 @@ TileRotationWindow::TileRotationWindow(QWidget *parent) :
     connect(ui->actionCreateVisual, &QAction::triggered, this, &TileRotationWindow::createVisual);
     connect(ui->actionClearVisualTiles, &QAction::triggered, this, &TileRotationWindow::clearVisual);
     connect(ui->actionDeleteVisual, &QAction::triggered, this, &TileRotationWindow::deleteVisual);
+    connect(ui->actionPinVisuals, &QAction::toggled, this, &TileRotationWindow::pinVisualsToggled);
 
     ui->visualList->setAcceptDrops(true);
     ui->visualList->setVerticalScrollBarPolicy(Qt::ScrollBarAlwaysOn);
@@ -1551,6 +1553,9 @@ void TileRotationWindow::tilesetSelectionChanged()
     } else {
         ui->tilesetTilesView->clear();
     }
+    if (ui->actionPinVisuals->isChecked() == false) {
+        mPinnedTileset = nullptr;
+    }
     setVisualList();
     syncUI();
 }
@@ -1670,6 +1675,15 @@ void TileRotationWindow::changeDataOffsetDX(bool dx)
 void TileRotationWindow::changeDataOffsetDY(bool dy)
 {
     changeDataOffset(-1, dy ? 1 : 0);
+}
+
+void TileRotationWindow::pinVisualsToggled(bool checked)
+{
+    if (checked) {
+        mPinnedTileset = mCurrentTileset;
+    } else {
+        mPinnedTileset = nullptr;
+    }
 }
 
 void TileRotationWindow::tileContextMenu_AddFloor()
@@ -1871,8 +1885,9 @@ void TileRotationWindow::setVisualList()
 {
     QSet<TileRotatedVisual*> visualSet;
     QList<QSharedPointer<TileRotatedVisual>> visuals;
-    if (mCurrentTileset != nullptr) {
-        if (TilesetRotated *tilesetR = mTilesetByName[mCurrentTileset->name()]) {
+    Tiled::Tileset *tileset = mPinnedTileset ? mPinnedTileset : mCurrentTileset;
+    if (tileset != nullptr) {
+        if (TilesetRotated *tilesetR = mTilesetByName[tileset->name()]) {
             for (TileRotated *tileR : qAsConst(tilesetR->mTiles)) {
                 if (tileR->mVisual && !visualSet.contains(tileR->mVisual.data())) {
                     visuals += tileR->mVisual;
@@ -2060,6 +2075,11 @@ void TileRotationWindow::tilesetAboutToBeRemoved(Tileset *tileset)
 {
     int row = TileMetaInfoMgr::instance()->indexOf(tileset);
     delete ui->tilesetList->takeItem(row);
+
+    if (tileset == mPinnedTileset) {
+        mPinnedTileset = nullptr;
+        ui->actionPinVisuals->setChecked(false);
+    }
 }
 
 void TileRotationWindow::tilesetRemoved(Tileset *tileset)

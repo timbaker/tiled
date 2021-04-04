@@ -359,7 +359,8 @@ void BuildingMap::loadNeededTilesets(Building *building)
 {
     // If the building uses any tilesets that aren't in Tilesets.txt, then
     // try to load them in now.
-    foreach (QString tilesetName, building->tilesetNames()) {
+    const QStringList tilesetNames = building->tilesetNames();
+    for (const QString &tilesetName : tilesetNames) {
         if (!TileMetaInfoMgr::instance()->tileset(tilesetName)) {
             QString source = TileMetaInfoMgr::instance()->tilesDirectory() +
                     QLatin1Char('/') + tilesetName + QLatin1String(".png");

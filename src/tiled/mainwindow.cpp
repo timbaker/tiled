@@ -107,7 +107,6 @@
 #include "tilemetainfodialog.h"
 #include "tilemetainfomgr.h"
 #include "tileoverlaydialog.h"
-#include "zlevelsdock.h"
 #include "zprogress.h"
 #include "worldeddock.h"
 #include "worldlottool.h"
@@ -170,7 +169,6 @@ MainWindow::MainWindow(QWidget *parent, Qt::WindowFlags flags)
     , mLayerDock(new LayerDock(this))
     , mObjectsDock(new ObjectsDock())
 #ifdef ZOMBOID
-    , mLevelsDock(new ZLevelsDock(this))
     , mMapsDock(new MapsDock(this))
     , mWorldEdDock(new WorldEdDock(this))
 #endif
@@ -262,14 +260,12 @@ MainWindow::MainWindow(QWidget *parent, Qt::WindowFlags flags)
 
 #ifdef ZOMBOID
     addDockWidget(Qt::RightDockWidgetArea, mLayerDock);
-    addDockWidget(Qt::RightDockWidgetArea, mLevelsDock);
     addDockWidget(Qt::RightDockWidgetArea, mObjectsDock);
     addDockWidget(Qt::RightDockWidgetArea, mWorldEdDock);
     addDockWidget(Qt::RightDockWidgetArea, mMapsDock);
     addDockWidget(Qt::RightDockWidgetArea, undoDock);
     addDockWidget(Qt::RightDockWidgetArea, mTilesetDock);
-    tabifyDockWidget(mLayerDock, mLevelsDock);
-    tabifyDockWidget(mLevelsDock, mObjectsDock);
+    tabifyDockWidget(mLayerDock, mObjectsDock);
     tabifyDockWidget(mObjectsDock, mWorldEdDock);
     tabifyDockWidget(mWorldEdDock, mMapsDock);
     tabifyDockWidget(undoDock, mTilesetDock);
@@ -606,7 +602,6 @@ MainWindow::MainWindow(QWidget *parent, Qt::WindowFlags flags)
     mUi->menuView->addAction(undoDock->toggleViewAction());
     mUi->menuView->addAction(mObjectsDock->toggleViewAction());
 #ifdef ZOMBOID
-    mUi->menuView->addAction(mLevelsDock->toggleViewAction());
     mUi->menuView->addAction(mWorldEdDock->toggleViewAction());
     mUi->menuView->addAction(mMapsDock->toggleViewAction());
 #endif
@@ -3267,7 +3262,6 @@ void MainWindow::mapDocumentChanged(MapDocument *mapDocument)
     mLayerDock->setMapDocument(mMapDocument);
     mObjectsDock->setMapDocument(mMapDocument);
 #ifdef ZOMBOID
-    mLevelsDock->setMapDocument(mMapDocument);
     mWorldEdDock->setMapDocument(mMapDocument);
     mTileLayersPanel->setDocument(mMapDocument);
 #endif

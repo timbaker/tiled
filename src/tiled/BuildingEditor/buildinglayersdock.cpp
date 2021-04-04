@@ -33,16 +33,16 @@ BuildingLayersDock::BuildingLayersDock(QWidget *parent) :
 {
     ui->setupUi(this);
 
-    connect(ui->visibility, SIGNAL(valueChanged(int)), SLOT(visibilityChanged(int)));
-    connect(ui->opacity, SIGNAL(valueChanged(int)), SLOT(opacityChanged(int)));
+    connect(ui->visibility, &QAbstractSlider::valueChanged, this, &BuildingLayersDock::visibilityChanged);
+    connect(ui->opacity, &QAbstractSlider::valueChanged, this, &BuildingLayersDock::opacityChanged);
 
-    connect(ui->layers, SIGNAL(currentRowChanged(int)),
-            SLOT(currentLayerChanged(int)));
-    connect(ui->layers, SIGNAL(itemChanged(QListWidgetItem*)),
-            SLOT(layerItemChanged(QListWidgetItem*)));
+    connect(ui->layers, &QListWidget::currentRowChanged,
+            this, QOverload<int>::of(&BuildingLayersDock::currentLayerChanged));
+    connect(ui->layers, &QListWidget::itemChanged,
+            this, &BuildingLayersDock::layerItemChanged);
 
-    connect(BuildingDocumentMgr::instance(), SIGNAL(currentDocumentChanged(BuildingDocument*)),
-            SLOT(currentDocumentChanged(BuildingDocument*)));
+    connect(BuildingDocumentMgr::instance(), &BuildingDocumentMgr::currentDocumentChanged,
+            this, &BuildingLayersDock::currentDocumentChanged);
     updateActions();
 }
 
@@ -59,12 +59,12 @@ void BuildingLayersDock::currentDocumentChanged(BuildingDocument *doc)
     mDocument = doc;
 
     if (mDocument) {
-        connect(mDocument, SIGNAL(currentFloorChanged()),
-                SLOT(currentFloorChanged()));
-        connect(mDocument, SIGNAL(currentLayerChanged()),
-                SLOT(currentLayerChanged()));
-        connect(mDocument, SIGNAL(layerVisibilityChanged(BuildingFloor*,QString)),
-                SLOT(layerVisibilityChanged(BuildingFloor*,QString)));
+        connect(mDocument, &BuildingDocument::currentFloorChanged,
+                this, &BuildingLayersDock::currentFloorChanged);
+        connect(mDocument, &BuildingDocument::currentLayerChanged,
+                this, QOverload<>::of(&BuildingLayersDock::currentLayerChanged));
+        connect(mDocument, &BuildingDocument::layerVisibilityChanged,
+                this, &BuildingLayersDock::layerVisibilityChanged);
     }
 
     setLayersList();

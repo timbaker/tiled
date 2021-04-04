@@ -366,8 +366,19 @@ public:
 
     bool inWallLayer() const;
 
+    int version() const
+    {
+        return mVersion;
+    }
+
+    void setVersion(int version)
+    {
+        mVersion = version;
+    }
+
 private:
     FurnitureTile *mFurnitureTile;
+    int mVersion;
 };
 
 class RoofObject : public BuildingObject

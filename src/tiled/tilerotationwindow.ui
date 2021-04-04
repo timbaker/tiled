@@ -202,6 +202,7 @@
    <addaction name="actionCreateVisual"/>
    <addaction name="actionClearVisualTiles"/>
    <addaction name="actionDeleteVisual"/>
+   <addaction name="actionPinVisuals"/>
   </widget>
   <action name="actionOpen">
    <property name="icon">
@@ -278,6 +279,18 @@
    </property>
    <property name="toolTip">
     <string>Clear Visual Appearance</string>
+   </property>
+  </action>
+  <action name="actionPinVisuals">
+   <property name="checkable">
+    <bool>true</bool>
+   </property>
+   <property name="icon">
+    <iconset resource="tiled.qrc">
+     <normaloff>:/images/16x16/help-about.png</normaloff>:/images/16x16/help-about.png</iconset>
+   </property>
+   <property name="text">
+    <string>Pin Visuals</string>
    </property>
   </action>
  </widget>

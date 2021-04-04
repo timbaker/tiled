@@ -117,8 +117,8 @@ public:
 
     bool inSameBuilding(Room *comp)
     {
-        for (RoomRect *rr : rects) {
-            for (RoomRect *rr2 : comp->rects) {
+        for (RoomRect *rr : qAsConst(rects)) {
+            for (RoomRect *rr2 : qAsConst(comp->rects)) {
                 if (rr->isAdjacent(rr2))
                     return true;
             }
@@ -129,7 +129,7 @@ public:
     QRect bounds()
     {
         QRect r;
-        for (RoomRect *rr : rects) {
+        for (RoomRect *rr : qAsConst(rects)) {
             r |= rr->bounds();
         }
         return r;
@@ -138,7 +138,7 @@ public:
     QRegion region()
     {
         QRegion ret;
-        for (RoomRect *rr : rects) {
+        for (RoomRect *rr : qAsConst(rects)) {
             ret += rr->bounds();
         }
         return ret;
@@ -146,7 +146,7 @@ public:
 
     bool contains(const QPoint& pos)
     {
-        for (RoomRect *rr : rects) {
+        for (RoomRect *rr : qAsConst(rects)) {
             if (rr->bounds().contains(pos)) {
                 return true;
             }
@@ -170,8 +170,8 @@ public:
     QRegion region()
     {
         QRegion ret;
-        for (Room *room : RoomList) {
-            for (RoomRect *rr : room->rects)
+        for (Room *room : qAsConst(RoomList)) {
+            for (RoomRect *rr : qAsConst(room->rects))
                 ret += rr->bounds().adjusted(0, 0, 1, 1);
         }
         return ret;
@@ -212,7 +212,8 @@ public:
         yMax = clamp(yMax, 0, 30-1);
         for (int y = yMin; y <= yMax; y++) {
             for (int x = xMin; x <= xMax; x++) {
-                for (RoomRect* rr : mLookup[x + y * 30]) {
+                const QList<RoomRect*> &lookup = mLookup[x + y * 30];
+                for (RoomRect* rr : lookup) {
                     if (rects.contains(rr) == false) {
                         rects += rr;
                     }
@@ -265,7 +266,8 @@ public:
         yMax = clamp(yMax, 0, 30-1);
         for (int y = yMin; y <= yMax; y++) {
             for (int x = xMin; x <= xMax; x++) {
-                for (Room* r : mGrid[x + y * 30]) {
+                const QList<Room*> &grid =  mGrid[x + y * 30];
+                for (Room* r : grid) {
                     if (rooms.contains(r) == false) {
                         rooms += r;
                     }

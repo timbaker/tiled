@@ -318,7 +318,8 @@ public:
         w.writeEndElement();
 
         // Write user tile indices.
-        QStringList grimeLayers = floor->grimeLayers();
+        const QStringList userTiles = mUserTilesMap.values();
+        const QStringList grimeLayers = floor->grimeLayers();
         for (const QString &layerName : grimeLayers) {
             if (floor->grime()[layerName]->isEmpty())
                 continue;
@@ -332,7 +333,7 @@ public:
                     if (buildingCell.isEmpty()) {
                         text += zero;
                     } else {
-                        uint gid = mUserTilesMap.values().indexOf(buildingCell.tileName()) + 1;
+                        uint gid = userTiles.indexOf(buildingCell.tileName()) + 1;
                         switch (buildingCell.rotation()) {
                         case Tiled::MapRotation::Clockwise90:
                             gid |= RotateFlag90;
@@ -377,11 +378,10 @@ public:
             w.writeAttribute(QLatin1String("type"), QLatin1String("stairs"));
         else if (FurnitureObject *furniture = object->asFurniture()) {
             w.writeAttribute(QLatin1String("type"), QLatin1String("furniture"));
-
             FurnitureTile *ftile = furniture->furnitureTile();
             w.writeAttribute(QLatin1String("FurnitureTiles"), furnitureIndex(ftile->owner()));
             w.writeAttribute(QLatin1String("orient"), ftile->orientToString());
-
+            w.writeAttribute(QLatin1String("version"), QString::number(furniture->version()));
             writeDir = false;
             writeTile = false;
         } else if (RoofObject *roof = object->asRoof()) {

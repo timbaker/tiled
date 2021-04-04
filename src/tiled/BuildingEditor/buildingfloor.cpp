@@ -806,43 +806,59 @@ void BuildingFloor::LayoutToSquares()
     // Furniture in the Walls layer replaces wall entries with tiles.
     QList<FurnitureObject*> wallReplacement;
     for (BuildingObject *object : qAsConst(mObjects)) {
-        if (FurnitureObject *fo = object->asFurniture()) {
-            FurnitureTile *ftile = fo->furnitureTile()->resolved();
-            if (ftile->owner()->layer() == FurnitureTiles::LayerWalls) {
-                wallReplacement += fo;
+        FurnitureObject *fo = object->asFurniture();
+        if (fo == nullptr)
+            continue;
+        FurnitureTile *ftile = fo->furnitureTile()->resolved();
+        if (ftile->owner()->layer() == FurnitureTiles::LayerWalls) {
+            wallReplacement += fo;
 
-                int x = fo->x(), y = fo->y();
-                int dx = 0, dy = 0;
-                bool killW = false, killN = false;
-                switch (fo->furnitureTile()->orient()) {
-                case FurnitureTile::FurnitureW:
-                    killW = true;
-                    break;
-                case FurnitureTile::FurnitureE:
+            int x = fo->x(), y = fo->y();
+            int dx = 0, dy = 0;
+            bool killN = false;
+            bool killS = false;
+            bool killW = false;
+            bool killE = false;
+            switch (fo->furnitureTile()->orient()) {
+            case FurnitureTile::FurnitureW:
+                killW = true;
+                break;
+            case FurnitureTile::FurnitureE:
+                if (fo->version() >= 3) {
+                    killE = true;
+                } else {
                     killW = true;
                     dx = 1;
-                    break;
-                case FurnitureTile::FurnitureN:
-                    killN = true;
-                    break;
-                case FurnitureTile::FurnitureS:
+                }
+                break;
+            case FurnitureTile::FurnitureN:
+                killN = true;
+                break;
+            case FurnitureTile::FurnitureS:
+                if (fo->version() >= 3) {
+                    killS = true;
+                } else {
                     killN = true;
                     dy = 1;
-                    break;
-                default:
-                    break;
                 }
-                // TODO: setWallE() and setWallS() on opposite squares
-                for (int i = 0; i < ftile->size().height(); i++) {
-                    for (int j = 0; j < ftile->size().width(); j++) {
-                        int sx = x + j + dx, sy = y + i + dy;
-                        if (bounds(1, 1).contains(sx, sy)) {
-                            BuildingSquare &sq = squares[sx][sy];
-                            if (killW)
-                                sq.SetWallW(fo->furnitureTile(), ftile->tile(j, i));
-                            if (killN)
-                                sq.SetWallN(fo->furnitureTile(), ftile->tile(j, i));
-                        }
+                break;
+            default:
+                break;
+            }
+            // TODO: setWallE() and setWallS() on opposite squares
+            for (int i = 0; i < ftile->size().height(); i++) {
+                for (int j = 0; j < ftile->size().width(); j++) {
+                    int sx = x + j + dx, sy = y + i + dy;
+                    if (bounds(1, 1).contains(sx, sy)) {
+                        BuildingSquare &sq = squares[sx][sy];
+                        if (killW)
+                            sq.SetWallW(fo->furnitureTile(), ftile->tile(j, i));
+                        if (killE)
+                            sq.SetWallE(fo->furnitureTile(), ftile->tile(j, i));
+                        if (killN)
+                            sq.SetWallN(fo->furnitureTile(), ftile->tile(j, i));
+                        if (killS)
+                            sq.SetWallS(fo->furnitureTile(), ftile->tile(j, i));
                     }
                 }
             }
@@ -890,7 +906,7 @@ void BuildingFloor::LayoutToSquares()
     mFlatRoofsWithDepthThree.clear();
     mStairs.clear();
 
-    for (BuildingObject *object : mObjects) {
+    for (BuildingObject *object : qAsConst(mObjects)) {
         int x = object->x();
         int y = object->y();
         if (Door *door = object->asDoor()) {
@@ -1327,12 +1343,16 @@ void BuildingFloor::LayoutToSquares()
         case FurnitureTile::FurnitureW:
             break;
         case FurnitureTile::FurnitureE:
-            dx = 1;
+            if (fo->version() < 3) {
+                dx = 1;
+            }
             break;
         case FurnitureTile::FurnitureN:
             break;
         case FurnitureTile::FurnitureS:
-            dy = 1;
+            if (fo->version() < 3) {
+                dy = 1;
+            }
             break;
 #if 0
         case FurnitureTile::FurnitureNW:
@@ -1357,6 +1377,24 @@ void BuildingFloor::LayoutToSquares()
                     if (s.mTiles[section] && !s.mTiles[section]->isNone()) {
                         // FIXME: if SectionWall2 is occupied, push it down to SectionWall
                         section = BuildingSquare::SectionWall2;
+                    }
+                    if (fo->version() == 3) {
+                        switch (fo->dir()) {
+                        case BuildingObject::Direction::N:
+                            section = BuildingSquare::SectionWall;
+                            break;
+                        case BuildingObject::Direction::S:
+                            section = BuildingSquare::SectionWall4;
+                            break;
+                        case BuildingObject::Direction::E:
+                            section = BuildingSquare::SectionWall3;
+                            break;
+                        case BuildingObject::Direction::W:
+                            section = BuildingSquare::SectionWall2;
+                            break;
+                        default:
+                            break;
+                        }
                     }
                     s.mTiles[section] = ftile->tile(j, i);
                     s.mEntries[section] = nullptr;
@@ -1660,12 +1698,16 @@ QVector<QVector<Room *> > BuildingFloor::resizeGrid(const QSize &newSize) const
 QMap<QString,FloorTileGrid*> BuildingFloor::resizeGrime(const QSize &newSize) const
 {
     QMap<QString,FloorTileGrid*> grid;
-    for (const QString &key : mGrimeGrid.keys()) {
-        grid[key] = new FloorTileGrid(newSize.width(), newSize.height());
-        for (int x = 0; x < qMin(mGrimeGrid[key]->width(), newSize.width()); x++)
-            for (int y = 0; y < qMin(mGrimeGrid[key]->height(), newSize.height()); y++)
-                grid[key]->replace(x, y, mGrimeGrid[key]->at(x, y));
-
+    const QStringList keys = mGrimeGrid.keys();
+    for (const QString &key : keys) {
+        FloorTileGrid *gridSrc = mGrimeGrid[key];
+        FloorTileGrid *gridDest = new FloorTileGrid(newSize.width(), newSize.height());
+        for (int x = 0; x < qMin(gridSrc->width(), newSize.width()); x++) {
+            for (int y = 0; y < qMin(gridSrc->height(), newSize.height()); y++) {
+                gridDest->replace(x, y, gridSrc->at(x, y));
+            }
+        }
+        grid[key] = gridDest;
     }
 
     return grid;
@@ -1700,8 +1742,9 @@ void BuildingFloor::rotate(bool right)
 
     setGrid(roomAtPos);
 
-    foreach (BuildingObject *object, mObjects)
+    for (BuildingObject *object : qAsConst(mObjects)) {
         object->rotate(right);
+    }
 }
 
 void BuildingFloor::flip(bool horizontal)

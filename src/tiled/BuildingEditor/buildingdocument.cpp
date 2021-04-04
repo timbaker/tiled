@@ -62,8 +62,8 @@ BuildingDocument::BuildingDocument(Building *building, const QString &fileName) 
     if (building->usedTiles().isEmpty()) {
         QList<BuildingTileEntry*> entries;
         QList<FurnitureTiles*> furniture;
-        foreach (BuildingFloor *floor, building->floors()) {
-            foreach (BuildingObject *object, floor->objects()) {
+        for (BuildingFloor *floor : building->floors()) {
+            for (BuildingObject *object : floor->objects()) {
                 if (FurnitureObject *fo = object->asFurniture()) {
                     if (FurnitureTile *ftile = fo->furnitureTile()) {
                         if (!furniture.contains(ftile->owner()))
@@ -71,7 +71,8 @@ BuildingDocument::BuildingDocument(Building *building, const QString &fileName) 
                     }
                     continue;
                 }
-                foreach (BuildingTileEntry *entry, object->tiles()) {
+                const QList<BuildingTileEntry*> objectTiles = object->tiles();
+                for (BuildingTileEntry *entry : objectTiles) {
                     if (entry && !entry->isNone() && !entries.contains(entry))
                         entries += entry;
                 }
@@ -80,8 +81,8 @@ BuildingDocument::BuildingDocument(Building *building, const QString &fileName) 
         BuildingTileEntry *entry = building->exteriorWall();
         if (entry && !entry->isNone() && !entries.contains(entry))
             entries += entry;
-        foreach (Room *room, building->rooms()) {
-            foreach (BuildingTileEntry *entry, room->tiles()) {
+        for (Room *room : building->rooms()) {
+            for (BuildingTileEntry *entry : room->tiles()) {
                 if (entry && !entry->isNone() && !entries.contains(entry))
                     entries += entry;
             }
@@ -96,14 +97,12 @@ BuildingDocument::BuildingDocument(Building *building, const QString &fileName) 
     if (layerNames.size())
         setCurrentLayer(layerNames.first());
 
-    connect(BuildingTilesMgr::instance(), SIGNAL(entryTileChanged(BuildingTileEntry*)),
-            SLOT(entryTileChanged(BuildingTileEntry*)));
-    connect(FurnitureGroups::instance(),
-            SIGNAL(furnitureTileChanged(FurnitureTile*)),
-            SLOT(furnitureTileChanged(FurnitureTile*)));
-    connect(FurnitureGroups::instance(),
-            SIGNAL(furnitureLayerChanged(FurnitureTiles*)),
-            SLOT(furnitureLayerChanged(FurnitureTiles*)));
+    connect(BuildingTilesMgr::instance(), QOverload<BuildingTileEntry*>::of(&BuildingTilesMgr::entryTileChanged),
+            this, &BuildingDocument::entryTileChanged);
+    connect(FurnitureGroups::instance(), &FurnitureGroups::furnitureTileChanged,
+            this, &BuildingDocument::furnitureTileChanged);
+    connect(FurnitureGroups::instance(), &FurnitureGroups::furnitureLayerChanged,
+            this, &BuildingDocument::furnitureLayerChanged);
 }
 
 BuildingDocument::~BuildingDocument()

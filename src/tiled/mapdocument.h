@@ -61,9 +61,6 @@ namespace Internal {
 class LayerModel;
 class TileSelectionModel;
 class MapObjectModel;
-#ifdef ZOMBOID
-class ZLevelsModel;
-#endif
 
 /**
  * Represents an editable map. The purpose of this class is to make sure that
@@ -199,8 +196,6 @@ public:
 
     MapObjectModel *mapObjectModel() const { return mMapObjectModel; }
 #ifdef ZOMBOID
-    ZLevelsModel *levelsModel() const { return mLevelsModel; }
-
     void setLayerGroupVisibility(CompositeLayerGroup *layerGroup, bool visible);
 #endif
 
@@ -453,7 +448,6 @@ private:
     int mCurrentLayerIndex;
     MapObjectModel *mMapObjectModel;
 #ifdef ZOMBOID
-    ZLevelsModel *mLevelsModel;
     int mMaxVisibleLayer;
     MapComposite *mMapComposite;
 #ifdef SEPARATE_BMP_SELECTION

@@ -37,7 +37,6 @@
 #include "mapmanager.h"
 #include "preferences.h"
 #include "zlevelrenderer.h"
-#include "zlevelsmodel.h"
 #include "worlded/world.h"
 #include "worlded/worldcell.h"
 #include "worlded/worldedmgr.h"
@@ -75,7 +74,6 @@ MapDocument::MapDocument(Map *map, const QString &fileName):
     mLayerModel(new LayerModel(this)),
     mMapObjectModel(new MapObjectModel(this)),
 #ifdef ZOMBOID
-    mLevelsModel(new ZLevelsModel(this)),
     mMapComposite(nullptr),
     mWorldCell(nullptr),
 #endif
@@ -153,10 +151,6 @@ MapDocument::MapDocument(Map *map, const QString &fileName):
             this, &MapDocument::layerLevelChanged);
 #endif
 
-#ifdef ZOMBOID
-    mLevelsModel->setMapDocument(this);
-#endif
-
     // Forward signals emitted from the map object model
     mMapObjectModel->setMapDocument(this);
     connect(mMapObjectModel, &MapObjectModel::objectsAdded,
@@ -190,7 +184,6 @@ MapDocument::~MapDocument()
 
 #ifdef ZOMBOID
     // Paranoia
-    mLevelsModel->setMapDocument(nullptr);
     mMapObjectModel->setMapDocument(nullptr);
     delete mMapComposite;
 #endif

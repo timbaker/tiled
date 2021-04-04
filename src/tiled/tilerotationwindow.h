@@ -123,6 +123,7 @@ protected slots:
     void edgeRadioClicked(int id);
     void changeDataOffsetDX(bool dx);
     void changeDataOffsetDY(bool dy);
+    void pinVisualsToggled(bool checked);
 
     void tileContextMenu_AddFloor();
     void tileContextMenu_AddNorthAndWestTiles();
@@ -136,6 +137,7 @@ private:
     QSharedPointer<Tiled::TileRotatedVisual> mCurrentVisual;
     Tiled::MapRotation mCurrentVisualRotation;
     Tiled::Tileset *mCurrentTileset;
+    Tiled::Tileset *mPinnedTileset;
     QString mHoverTileName;
     QString mError;
     QUndoGroup *mUndoGroup;
