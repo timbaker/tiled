@@ -420,16 +420,16 @@ QPolygonF FurnitureObject::calcShape() const
     }
     if (layer == FurnitureTiles::LayerWalls ||
             layer == FurnitureTiles::LayerRoofCap) {
-        if (/*ftile->*/isW()) {
+        if (ftile->isW()) {
             r.setRight(r.left() + 12/30.0);
 //            r.translate(-6/30.0, 0);
-        } else if (/*ftile->*/isE()) {
+        } else if (ftile->isE()) {
             r.setLeft(r.right() - 12/30.0);
 //            r.translate(6/30.0, 0);
-        } else if (/*ftile->*/isN()) {
+        } else if (ftile->isN()) {
             r.setBottom(r.top() + 12/30.0);
 //            r.translate(0, -6/30.0);
-        } else if (/*ftile->*/isS()) {
+        } else if (ftile->isS()) {
             r.setTop(r.bottom() - 12/30.0);
 //            r.translate(0, 6/30.0);
         }
@@ -437,19 +437,19 @@ QPolygonF FurnitureObject::calcShape() const
     }
     if (layer == FurnitureTiles::LayerFrames) {
         // Mimic window shape
-        if (/*ftile->*/isW()) {
+        if (ftile->isW()) {
             r.setRight(r.left() + 6/30.0);
             r.adjust(0,7/30.0,0,-7/30.0);
 //            r.translate(-3/30.0, 0);
-        } else if (/*ftile->*/isE()) {
+        } else if (ftile->isE()) {
             r.setLeft(r.right() - 6/30.0);
             r.adjust(0,7/30.0,0,-7/30.0);
 //            r.translate(3/30.0, 0);
-        } else if (/*ftile->*/isN()) {
+        } else if (ftile->isN()) {
             r.adjust(7/30.0,0,-7/30.0,0);
             r.setBottom(r.top() + 6/30.0);
 //            r.translate(0, -3/30.0);
-        } else if (/*ftile->*/isS()) {
+        } else if (ftile->isS()) {
             r.adjust(7/30.0,0,-7/30.0,0);
             r.setTop(r.bottom() - 6/30.0);
 //            r.translate(0, 3/30.0);

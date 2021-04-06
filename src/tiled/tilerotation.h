@@ -212,6 +212,8 @@ public:
     void initRenderInfo(const QList<QSharedPointer<TileRotatedVisual>>& visuals);
     void rotateTile(const Cell &cell, MapRotation viewRotation, QVector<Tiled::ZTileRenderInfo>& tileInfos);
     bool hasTileRotated(const QString& tilesetName, int tileID);
+    bool isTileOnEdgeN(const QString& tilesetName, int tileID);
+    bool isTileOnEdgeW(const QString& tilesetName, int tileID);
 
     void reload();
 

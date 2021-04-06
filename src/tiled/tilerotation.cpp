@@ -244,6 +244,26 @@ public:
         return false;
     }
 
+    bool isTileOnEdgeN(const QString &tilesetName, int tileID)
+    {
+        if (mTilesetByName.contains(tilesetName)) {
+            if (TileRotated *tileR = mTilesetByName[tilesetName]->tileAt(tileID)) {
+                return tileR->mRotation == MapRotation::NotRotated;
+            }
+        }
+        return false;
+    }
+
+    bool isTileOnEdgeW(const QString &tilesetName, int tileID)
+    {
+        if (mTilesetByName.contains(tilesetName)) {
+            if (TileRotated *tileR = mTilesetByName[tilesetName]->tileAt(tileID)) {
+                return tileR->mRotation == MapRotation::Clockwise270;
+            }
+        }
+        return false;
+    }
+
     void reload()
     {
         qDeleteAll(mTilesetRotatedList);
@@ -343,6 +363,16 @@ void TileRotation::initRenderInfo(const QList<QSharedPointer<TileRotatedVisual> 
 bool TileRotation::hasTileRotated(const QString &tilesetName, int tileID)
 {
     return mPrivate->hasTileRotated(tilesetName, tileID);
+}
+
+bool TileRotation::isTileOnEdgeN(const QString &tilesetName, int tileID)
+{
+    return mPrivate->isTileOnEdgeN(tilesetName, tileID);
+}
+
+bool TileRotation::isTileOnEdgeW(const QString &tilesetName, int tileID)
+{
+    return mPrivate->isTileOnEdgeW(tilesetName, tileID);
 }
 
 void TileRotation::rotateTile(const Cell &cell, MapRotation viewRotation, QVector<Tiled::ZTileRenderInfo>& tileInfos)

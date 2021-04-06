@@ -296,6 +296,11 @@ static void switchToLevel(MapDocument *mMapDocument, int level)
     if (mapLevel == nullptr)
         return;
 
+    if (mapLevel->layerCount() == 0) {
+        mMapDocument->setCurrentLayerIndex(level, -1);
+        return;
+    }
+
     // Try to switch to a layer with the same name in the new level
     if (Layer *layer = mMapDocument->currentLayer()) {
         for (Layer *layer2 : mapLevel->layers()) {

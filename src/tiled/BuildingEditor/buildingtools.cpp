@@ -1307,7 +1307,9 @@ void FurnitureTool::placeObject()
                                                   mCursorObject->x(),
                                                   mCursorObject->y());
     object->setFurnitureTile(mCursorObject->asFurniture()->furnitureTile());
+#if 0
     object->setDir(mCursorObject->dir());
+#endif
     object->setVersion(3);
     undoStack()->push(new AddObject(mEditor->document(), floor,
                                     floor->objectCount(), object));
@@ -1392,7 +1394,7 @@ void FurnitureTool::updateCursorObject()
     mCursorObject->asFurniture()->setFurnitureTile(ftiles->tile(orient));
 
     mCursorObject->setPos(x, y);
-
+#if 0
     if (ftiles->layer() == FurnitureTiles::LayerWalls) {
         switch (mTileEdge) {
         case TileEdge::N:
@@ -1411,7 +1413,7 @@ void FurnitureTool::updateCursorObject()
             break;
         }
     }
-
+#endif
     setCursorObject(mCursorObject);
 #if 0
     QRegion rgn;

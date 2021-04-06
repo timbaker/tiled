@@ -381,7 +381,9 @@ public:
             FurnitureTile *ftile = furniture->furnitureTile();
             w.writeAttribute(QLatin1String("FurnitureTiles"), furnitureIndex(ftile->owner()));
             w.writeAttribute(QLatin1String("orient"), ftile->orientToString());
+#if 0
             w.writeAttribute(QLatin1String("version"), QString::number(furniture->version()));
+#endif
             writeDir = false;
             writeTile = false;
         } else if (RoofObject *roof = object->asRoof()) {

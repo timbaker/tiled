@@ -550,6 +550,8 @@ static void SetWindow(Window *window, QVector<QVector<BuildingSquare> > &squares
 #endif
 }
 
+#include "tilerotation.h"
+
 static bool tileHasWallPropertyN(const QString &tileName)
 {
     Tiled::Internal::TileDefWatcher *tileDefWatcher = getTileDefWatcher();
@@ -569,6 +571,9 @@ static bool tileHasWallPropertyN(const QString &tileName)
                 return true;
             }
         }
+    }
+    if (Tiled::TileRotation::instance()->isTileOnEdgeN(tilesetName, tileID)) {
+        return true;
     }
     return false;
 }
@@ -592,6 +597,9 @@ static bool tileHasWallPropertyW(const QString &tileName)
                 return true;
             }
         }
+    }
+    if (Tiled::TileRotation::instance()->isTileOnEdgeW(tilesetName, tileID)) {
+        return true;
     }
     return false;
 }
@@ -1343,14 +1351,14 @@ void BuildingFloor::LayoutToSquares()
         case FurnitureTile::FurnitureW:
             break;
         case FurnitureTile::FurnitureE:
-            if (fo->version() < 3) {
+            /*if (fo->version() < 3)*/ {
                 dx = 1;
             }
             break;
         case FurnitureTile::FurnitureN:
             break;
         case FurnitureTile::FurnitureS:
-            if (fo->version() < 3) {
+            /*if (fo->version() < 3)*/ {
                 dy = 1;
             }
             break;
@@ -1378,6 +1386,7 @@ void BuildingFloor::LayoutToSquares()
                         // FIXME: if SectionWall2 is occupied, push it down to SectionWall
                         section = BuildingSquare::SectionWall2;
                     }
+#if 0
                     if (fo->version() == 3) {
                         switch (fo->dir()) {
                         case BuildingObject::Direction::N:
@@ -1396,6 +1405,7 @@ void BuildingFloor::LayoutToSquares()
                             break;
                         }
                     }
+#endif
                     s.mTiles[section] = ftile->tile(j, i);
                     s.mEntries[section] = nullptr;
                     s.mEntryEnum[section] = 0;
