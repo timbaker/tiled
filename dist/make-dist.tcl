@@ -3,7 +3,7 @@ if {[llength [info commands console]]} {
     update
 }
 
-set QT_DIR C:/Programming/QtSDK2015/5.9.3/msvc2017_64
+set QT_DIR C:/Programming/QtSDK2015/5.15.2/msvc2019_64
 set BIN C:/Programming/TileZed/dist64
 set SRC C:/Programming/TileZed/tiled
 set DEST {C:\Users\Tim\Desktop\ProjectZomboid\Tools\TileZed}
@@ -17,7 +17,7 @@ if {$argc > 0} {
             puts "dist.tcl: 32-bit"
             append DEST "32"
             set BIN C:/Programming/TileZed/dist32
-            set QT_DIR C:/Programming/QtSDK2015/5.9.3/msvc2017
+            set QT_DIR C:/Programming/QtSDK2015/5.15.2/msvc2019
             set SUFFIX "-32bit"
             set SUFFIX2 "32"
             set REDIST vcredist.x86.exe
@@ -187,6 +187,8 @@ copyFile $QT_PLUGINS_DIR $DEST/plugins imageformats/qjpeg.dll
 copyFile $QT_PLUGINS_DIR $DEST/plugins imageformats/qtiff.dll
 
 copyFile $QT_PLUGINS_DIR $DEST/plugins platforms/qwindows.dll
+
+copyFile $QT_PLUGINS_DIR $DEST/plugins styles/qwindowsvistastyle.dll
 
 #copyFile $QT_PLUGINS_DIR $DEST/plugins codecs/qcncodecs4.dll
 #copyFile $QT_PLUGINS_DIR $DEST/plugins codecs/qjpcodecs4.dll

@@ -35,6 +35,7 @@
 #include "zoomable.h"
 
 #include <QAction>
+#include <QAbstractItemView>
 #include <QComboBox>
 #include <QDir>
 #include <QMainWindow>
