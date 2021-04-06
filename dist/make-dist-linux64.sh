@@ -1,8 +1,10 @@
-QTDIR=~/Qt/5.8/gcc_64
-SRC=~/Programming/TileZed/tiled
-BUILD=~/Programming/TileZed/build-tiled-Desktop_Qt_5_8_0_GCC_64bit-Release
-DEST=~/Programming/TileZed/TileZed
+QTDIR=~/Qt/5.15.2/gcc_64
+SRC=~/Programming/tiled
+BUILD=~/Programming/build-tiled-Desktop_Qt_5_15_2_GCC_64bit-Release
+DESTROOT=~/Programming/TileZed
+DEST=$DESTROOT/TileZed
 
+mkdir $DESTROOT
 mkdir $DEST
 cp -avr $BUILD/bin/ $DEST
 cp -ar $BUILD/share/ $DEST
@@ -17,16 +19,16 @@ cp -a $SRC/dist/qt.conf.linux $DEST/bin/qt.conf
 cp -a $SRC/dist/TileZed.sh $DEST
 chmod +x $DEST/TileZed.sh
 
-cp $QTDIR/lib/libQt5Core.so.5.8.0 $DEST/lib/libQt5Core.so.5
-cp $QTDIR/lib/libQt5DBus.so.5.8.0 $DEST/lib/libQt5DBus.so.5
-cp $QTDIR/lib/libQt5Gui.so.5.8.0 $DEST/lib/libQt5Gui.so.5
-cp $QTDIR/lib/libQt5Network.so.5.8.0 $DEST/lib/libQt5Network.so.5
-cp $QTDIR/lib/libQt5OpenGL.so.5.8.0 $DEST/lib/libQt5OpenGL.so.5
-cp $QTDIR/lib/libQt5Widgets.so.5.8.0 $DEST/lib/libQt5Widgets.so.5
+cp $QTDIR/lib/libQt5Core.so.5.15.2 $DEST/lib/libQt5Core.so.5
+cp $QTDIR/lib/libQt5DBus.so.5.15.2 $DEST/lib/libQt5DBus.so.5
+cp $QTDIR/lib/libQt5Gui.so.5.15.2 $DEST/lib/libQt5Gui.so.5
+cp $QTDIR/lib/libQt5Network.so.5.15.2 $DEST/lib/libQt5Network.so.5
+cp $QTDIR/lib/libQt5OpenGL.so.5.15.2 $DEST/lib/libQt5OpenGL.so.5
+cp $QTDIR/lib/libQt5Widgets.so.5.15.2 $DEST/lib/libQt5Widgets.so.5
 cp $QTDIR/lib/libicudata.so.56.1 $DEST/lib/libicudata.so.56
 cp $QTDIR/lib/libicui18n.so.56.1 $DEST/lib/libicui18n.so.56
 cp $QTDIR/lib/libicuuc.so.56.1 $DEST/lib/libicuuc.so.56
-cp $QTDIR/lib/libQt5XcbQpa.so.5.8.0 $DEST/lib/libQt5XcbQpa.so.5
+cp $QTDIR/lib/libQt5XcbQpa.so.5.15.2 $DEST/lib/libQt5XcbQpa.so.5
 
 #for file in $QTDIR/lib/libQt5Gui.so*; do cp -a "$file" "$DEST/lib/"; done
 #for file in $QTDIR/lib/libQt5Network.so*; do cp -a "$file" "$DEST/lib/"; done
@@ -42,3 +44,8 @@ cp -a $QTDIR/plugins/imageformats/libqgif.so $DEST/plugins/imageformats/
 cp -a $QTDIR/plugins/imageformats/libqjpeg.so $DEST/plugins/imageformats/
 mkdir $DEST/plugins/platforms
 cp -a $QTDIR/plugins/platforms/libqxcb.so $DEST/plugins/platforms/
+cp -a $QTDIR/plugins/platforms/libqwayland-egl.so $DEST/plugins/platforms/
+cp -a $QTDIR/plugins/platforms/libqwayland-generic.so $DEST/plugins/platforms/
+cp -a $QTDIR/plugins/platforms/libqwayland-xcomposite-egl.so $DEST/plugins/platforms/
+cp -a $QTDIR/plugins/platforms/libqwayland-xcomposite-glx.so $DEST/plugins/platforms/
+
