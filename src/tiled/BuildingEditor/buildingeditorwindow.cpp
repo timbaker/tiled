@@ -337,6 +337,8 @@ BuildingEditorWindow::BuildingEditorWindow(QWidget *parent) :
     ui->actionOpen->setIcon(openIcon);
     ui->actionSave->setIcon(saveIcon);
 
+    ui->actionExportNewBinary->setVisible(false);
+
     ui->actionCut->setShortcuts(QKeySequence::Cut);
     ui->actionCopy->setShortcuts(QKeySequence::Copy);
     ui->actionPaste->setShortcuts(QKeySequence::Paste);

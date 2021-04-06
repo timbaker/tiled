@@ -310,6 +310,8 @@ MainWindow::MainWindow(QWidget *parent, Qt::WindowFlags flags)
     mUi->actionShowLotFloorsOnly->setChecked(preferences->showLotFloorsOnly());
     mUi->actionShowMiniMap->setChecked(preferences->showMiniMap());
     mUi->actionShowTileLayersPanel->setChecked(preferences->showTileLayersPanel());
+
+    mUi->actionExportNewBinary->setVisible(false);
 #endif
 
     // Make sure Ctrl+= also works for zooming in
