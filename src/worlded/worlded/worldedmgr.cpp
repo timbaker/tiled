@@ -66,20 +66,29 @@ void WorldEdMgr::addProject(const QString &fileName)
 
 WorldCell *WorldEdMgr::cellForMap(const QString &fileName)
 {
-    foreach (World *world, mWorlds) {
+    QFileInfo info2(fileName);
+    for (World *world : qAsConst(mWorlds)) {
+        if (mCheckedDocuments.contains(world)) {
+            const auto& nameToCell = mCheckedDocuments[world];
+            if (nameToCell.contains(fileName)) {
+                return nameToCell[fileName];
+            }
+        }
         for (int y = 0; y < world->height(); y++) {
             for (int x = 0; x < world->width(); x++) {
                 WorldCell *cell = world->cellAt(x, y);
                 if (cell->mapFilePath().isEmpty())
                     continue;
                 QFileInfo info1(cell->mapFilePath());
-                QFileInfo info2(fileName);
-                if (info1 == info2)
+                if (info1 == info2) {
+                    mCheckedDocuments[world].insert(fileName, cell);
                     return cell;
             }
         }
     }
-    return 0;
+        mCheckedDocuments[world].insert(fileName, nullptr);
+}
+    return nullptr;
 }
 
 void WorldEdMgr::setLevelVisible(WorldCellLevel *level, bool visible)
@@ -138,6 +147,9 @@ void WorldEdMgr::fileChangedTimeout()
             if (info == QFileInfo(mWorldFileNames[i])) {
                 setSelectedLots(QSet<WorldCellLot*>());
                 emit beforeWorldChanged(mWorldFileNames[i]);
+                if (mCheckedDocuments.contains(mWorlds[i])) {
+                    mCheckedDocuments.remove(mWorlds[i]);
+                }
                 delete mWorlds[i];
                 mWorlds.removeAt(i);
                 mWorldFileNames.removeAt(i);
