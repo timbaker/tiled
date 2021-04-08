@@ -81,6 +81,7 @@ private:
     QTimer mChangedFilesTimer;
     QSet<WorldCellLot*> mSelectedLots;
     QHash<World*,QMap<QString,WorldCell*>> mCheckedDocuments;
+    QSet<QString> mMapWithoutWorld;
 };
 
 } // namespace WorldEd

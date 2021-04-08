@@ -66,6 +66,9 @@ void WorldEdMgr::addProject(const QString &fileName)
 
 WorldCell *WorldEdMgr::cellForMap(const QString &fileName)
 {
+    if (mMapWithoutWorld.contains(fileName)) {
+        return nullptr;
+    }
     QFileInfo info2(fileName);
     for (World *world : qAsConst(mWorlds)) {
         if (mCheckedDocuments.contains(world)) {
@@ -73,6 +76,7 @@ WorldCell *WorldEdMgr::cellForMap(const QString &fileName)
             if (nameToCell.contains(fileName)) {
                 return nameToCell[fileName];
             }
+            continue;
         }
         for (int y = 0; y < world->height(); y++) {
             for (int x = 0; x < world->width(); x++) {
@@ -83,11 +87,11 @@ WorldCell *WorldEdMgr::cellForMap(const QString &fileName)
                 if (info1 == info2) {
                     mCheckedDocuments[world].insert(fileName, cell);
                     return cell;
+                }
             }
         }
     }
-        mCheckedDocuments[world].insert(fileName, nullptr);
-}
+    mMapWithoutWorld.insert(fileName);
     return nullptr;
 }
 
@@ -150,6 +154,7 @@ void WorldEdMgr::fileChangedTimeout()
                 if (mCheckedDocuments.contains(mWorlds[i])) {
                     mCheckedDocuments.remove(mWorlds[i]);
                 }
+                mMapWithoutWorld.clear();
                 delete mWorlds[i];
                 mWorlds.removeAt(i);
                 mWorldFileNames.removeAt(i);
