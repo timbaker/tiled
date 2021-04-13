@@ -16,26 +16,31 @@ layerNames = {
 }
 
 function indexOfLayer(layerName)
-	for i=1,map:layerCount() do
-		if map:layerAt(i-1):name() == layerName then
+	local level = map:levelForLayerName(layerName);
+	layerName = map:layerNameWithoutPrefix(layerName);
+	local mapLevel = map:levelAt(level);
+	for i=1,mapLevel:layerCount() do
+		if mapLevel:layerAt(i-1):name() == layerName then
 			return i-1
 		end
 	end
 	return -1
 end
 
-layers = {}
-previousExistingLayer = -1
+previousExistingLayer = {}
+
 for index,layerName in ipairs(layerNames) do
+	level = map:levelForLayerName(layerName);
+	mapLevel = map:levelAt(level);
 	existIndex = indexOfLayer(layerName)
 	if existIndex == -1 then
-		if previousExistingLayer == -1 then
-			previousExistingLayer = 0
+		if not previousExistingLayer[level] then
+			previousExistingLayer[level] = 0
 		end
 		newLayer = map:newTileLayer(layerName)
-		map:insertLayer(previousExistingLayer + 1, newLayer)
-		previousExistingLayer = previousExistingLayer + 1
+		map:insertLayer(previousExistingLayer[level] + 1, newLayer)
+		previousExistingLayer[level] = previousExistingLayer[level] + 1
 	else
-		previousExistingLayer = existIndex
+		previousExistingLayer[level] = existIndex
 	end
 end

@@ -35,6 +35,7 @@ class BmpRule;
 class Layer;
 class Map;
 class MapBmp;
+class MapLevel;
 class MapNoBlend;
 class MapObject;
 class ObjectGroup;
@@ -161,7 +162,7 @@ public:
     void fill(Tile *tile);
 
     bool replaceTile(Tile *oldTile, Tile *newTile);
-    bool replaceTiles(QList<Tile*> &tiles);
+    bool replaceTiles(const QList<Tile*> &tiles);
 
     TileLayer *mCloneTileLayer;
     QRegion mAltered;
@@ -308,6 +309,26 @@ public:
     QRegion mAltered;
 };
 
+class LuaMapLevel
+{
+public:
+    LuaMapLevel(MapLevel *clone);
+    ~LuaMapLevel();
+
+    int z() const;
+    int layerCount() const;
+    LuaLayer *layerAt(int index) const;
+    void addLayer(LuaLayer *layer);
+    void insertLayer(int index, LuaLayer *layer);
+    LuaLayer *takeLayerAt(int index);
+
+
+    MapLevel *mClone;
+    QList<LuaLayer*> mLayers;
+    QMap<QString,LuaLayer*> mLayerByName;
+    QList<LuaLayer*> mRemovedLayers;
+};
+
 class LuaMap
 {
 public:
@@ -335,10 +356,12 @@ public:
     int width() const;
     int height() const;
 
-    int maxLevel();
+    int maxLevel() const;
+    int levelCount() const;
+    LuaMapLevel *levelAt(int z) const;
 
-    int layerCount() const;
-    LuaLayer *layerAt(int index) const;
+    int layerCount(int z) const;
+    LuaLayer *layerAt(int z, int index) const;
     LuaLayer *layer(const char *name);
     LuaTileLayer *tileLayer(const char *name);
 
@@ -346,7 +369,10 @@ public:
 
     void addLayer(LuaLayer *layer);
     void insertLayer(int index, LuaLayer *layer);
-    void removeLayer(int index);
+    void removeLayer(int z, int index);
+
+    int levelForLayerName(const char *name) const;
+    const char *layerNameWithoutPrefix(const char *name) const;
 
     Tile *tile(const char *name);
     Tile *tile(const char *tilesetName, int tileID);
@@ -388,9 +414,8 @@ public:
     Map *mOrig;
     QMap<QString,Tileset*> mTilesetByName;
     QList<Tileset*> mNewTilesets;
-    QList<LuaLayer*> mLayers;
+    QVector<LuaMapLevel*> mLevels;
     QList<LuaLayer*> mRemovedLayers;
-    QMap<QString,LuaLayer*> mLayerByName;
     LuaRegion mSelection;
     LuaMapBmp mBmpMain;
     LuaMapBmp mBmpVeg;

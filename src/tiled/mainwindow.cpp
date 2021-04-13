@@ -2340,6 +2340,52 @@ void MainWindow::LuaConsole()
 namespace Tiled {
 namespace Internal {
 
+class MoveLayerToLevel : public QUndoCommand
+{
+public:
+    MoveLayerToLevel(MapDocument *doc, int newLevelIndex, int newLayerIndex, Layer *layer) :
+        QUndoCommand(QCoreApplication::translate("Undo Commands", "Move Layer To Level")),
+        mDocument(doc),
+        mLevelIndex(newLevelIndex),
+        mLayerIndex(newLayerIndex),
+        mLayer(layer)
+    {}
+
+    void undo() { swap(); }
+    void redo() { swap(); }
+
+private:
+    void swap()
+    {
+//        Layer *current = mDocument->currentLayer();
+
+        int newLevelIndex = mLevelIndex;
+        int newLayerIndex = mLayerIndex;
+        mLevelIndex = mLayer->level();
+        mLayerIndex = mDocument->map()->levelAt(mLevelIndex)->layers().indexOf(mLayer);
+        reorderLayer(mLevelIndex, mLayerIndex, newLevelIndex, newLayerIndex);
+        /*
+        MapLevel *mapLevel = mDocument->map()->levelAt(mLevelIndex);
+        mDocument->setCurrentLayerIndex(mLevelIndex, current
+                                        ? mapLevel->layers().indexOf(current)
+                                        : 0);
+*/
+    }
+
+    void reorderLayer(int levelIndex, int layerIndex, int newLevelIndex, int newLayerIndex)
+    {
+        LayerModel *layerModel = mDocument->layerModel();
+        Layer *layer = layerModel->takeLayerAt(levelIndex, layerIndex);
+        layer->setLevel(newLevelIndex);
+        layerModel->insertLayer(newLayerIndex, layer);
+    }
+
+    MapDocument *mDocument;
+    int mLevelIndex;
+    int mLayerIndex;
+    Layer *mLayer;
+};
+
 class ReorderLayer : public QUndoCommand
 {
 public:
@@ -2418,9 +2464,9 @@ void MainWindow::ApplyScriptChanges(MapDocument *doc, const QString &undoText, L
 
     // Handle deleted layers
     for (Lua::LuaLayer *ll : qAsConst(mMap->mRemovedLayers)) {
-        if (ll->mOrig) {
-            MapLevel *mapLevel = doc->map()->levelAt(ll->mOrig->level());
-            int index = mapLevel->layers().indexOf(ll->mOrig);
+        if (ll->mOrig != nullptr) {
+            MapLevel *origMapLevel = doc->map()->levelAt(ll->mOrig->level());
+            int index = origMapLevel->layers().indexOf(ll->mOrig);
             Q_ASSERT(index != -1);
             qDebug() << "remove layer" << ll->mOrig->name() << " at " << index;
             us->push(new RemoveLayer(doc, ll->mOrig->level(), index));
@@ -2428,22 +2474,30 @@ void MainWindow::ApplyScriptChanges(MapDocument *doc, const QString &undoText, L
     }
 
     // Layers may have been added, moved, deleted, and/or edited.
-    for (Lua::LuaLayer *ll : qAsConst(mMap->mLayers)) {
-        if (Layer *layer = ll->mOrig) {
-            // This layer exists (somewhere) in the original map.
-            int oldIndex = doc->map()->layers().indexOf(layer);
-            int newIndex = mMap->mLayers.indexOf(ll);
-            if (oldIndex != newIndex) {
-                qDebug() << "move layer" << layer->name() << "from " << oldIndex << " to " << newIndex;
-                us->push(new ReorderLayer(doc, newIndex, layer));
+    for (Lua::LuaMapLevel *mapLevel : qAsConst(mMap->mLevels)) {
+        for (Lua::LuaLayer *ll : qAsConst(mapLevel->mLayers)) {
+            if (Layer *layer = ll->mOrig) {
+                // This layer exists (somewhere) in the original map.
+                MapLevel *origMapLevel = doc->map()->levelAt(ll->mOrig->level());
+                int newIndex = mapLevel->mLayers.indexOf(ll);
+                if (origMapLevel->z() == mapLevel->z()) {
+                    int oldIndex = origMapLevel->layers().indexOf(layer);
+                    if (oldIndex != newIndex) {
+                        qDebug() << "move layer" << layer->name() << "from " << oldIndex << " to " << newIndex;
+                        us->push(new ReorderLayer(doc, newIndex, layer));
+                    }
+                } else {
+                    qDebug() << "move layer" << layer->name() << "from " << origMapLevel->z() << " to " << mapLevel->z();
+                    us->push(new MoveLayerToLevel(doc, mapLevel->z(), newIndex, layer));
+                }
+            } else {
+                // This is a new layer.
+                Q_ASSERT(ll->mClone);
+                Layer *newLayer = ll->mClone->clone();
+                int index = mapLevel->mLayers.indexOf(ll);
+                qDebug() << "add layer" << newLayer->name() << "at" << index;
+                us->push(new AddLayer(doc, newLayer->level(), index, newLayer));
             }
-        } else {
-            // This is a new layer.
-            Q_ASSERT(ll->mClone);
-            Layer *newLayer = ll->mClone->clone();
-            int index = mMap->mLayers.indexOf(ll);
-            qDebug() << "add layer" << newLayer->name() << "at" << index;
-            us->push(new AddLayer(doc, newLayer->level(), index, newLayer));
         }
     }
 
@@ -2451,29 +2505,28 @@ void MainWindow::ApplyScriptChanges(MapDocument *doc, const QString &undoText, L
     if (!doc->tileSelection().isEmpty())
         us->push(new ChangeTileSelection(doc, QRegion()));
 
-    for (Lua::LuaLayer *ll : qAsConst(mMap->mLayers)) {
-        // Apply changes to tile layers.
-        if (Lua::LuaTileLayer *tl = ll->asTileLayer()) {
-            if (tl->mOrig == nullptr)
-                continue; // Ignore new layers.
-            if (!tl->mCloneTileLayer || tl->mAltered.isEmpty())
-                continue; // No changes.
-            TileLayer *source = tl->mCloneTileLayer->copy(tl->mAltered);
-            QRect r = tl->mAltered.boundingRect();
-            us->push(new PaintTileLayer(doc, tl->mOrig->asTileLayer(),
-                                        r.x(), r.y(), source, tl->mAltered, true));
-            delete source;
-        }
-        // Add/Remove/Delete objects
-        if (Lua::LuaObjectGroup *og = ll->asObjectGroup()) {
-            QList<Lua::LuaMapObject*> objects = og->objects();
-            for (Lua::LuaMapObject *o : objects) {
-                if (og->mOrig) {
-
-                } else {
-                    us->push(new AddMapObject(doc,
-                                              doc->map()->layerAt(og->level(), mMap->mLayers.indexOf(ll))->asObjectGroup(),
-                                              o->mClone->clone()));
+    for (Lua::LuaMapLevel *mapLevel : qAsConst(mMap->mLevels)) {
+        for (Lua::LuaLayer *ll : qAsConst(mapLevel->mLayers)) {
+            // Apply changes to tile layers.
+            if (Lua::LuaTileLayer *tl = ll->asTileLayer()) {
+                if (tl->mOrig == nullptr)
+                    continue; // Ignore new layers.
+                if (!tl->mCloneTileLayer || tl->mAltered.isEmpty())
+                    continue; // No changes.
+                TileLayer *source = tl->mCloneTileLayer->copy(tl->mAltered);
+                QRect r = tl->mAltered.boundingRect();
+                us->push(new PaintTileLayer(doc, tl->mOrig->asTileLayer(),
+                                            r.x(), r.y(), source, tl->mAltered, true));
+                delete source;
+            }
+            // Add/Remove/Delete objects
+            if (Lua::LuaObjectGroup *og = ll->asObjectGroup()) {
+                ObjectGroup *origObjectGroup = doc->map()->layerAt(og->level(), mapLevel->mLayers.indexOf(ll))->asObjectGroup();
+                const QList<Lua::LuaMapObject*> objects = og->objects();
+                for (Lua::LuaMapObject *o : objects) {
+                    if (og->mOrig == nullptr) {
+                        us->push(new AddMapObject(doc, origObjectGroup,o->mClone->clone()));
+                    }
                 }
             }
         }

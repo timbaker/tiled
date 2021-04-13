@@ -252,7 +252,7 @@ LuaLayer::LuaLayer() :
 }
 
 LuaLayer::LuaLayer(Layer *orig) :
-    mLevelIndex(0),
+    mLevelIndex(orig->level()),
     mClone(nullptr),
     mOrig(orig),
     mName(orig->name())
@@ -276,6 +276,7 @@ void LuaLayer::initClone()
 
     if (!mClone && mOrig) {
         mClone = mOrig->clone();
+        mLevelIndex = mClone->level();
         cloned();
     }
 }
@@ -288,6 +289,9 @@ void LuaLayer::cloned()
 void LuaLayer::setLevel(int level)
 {
     mLevelIndex = level;
+    if (mClone != nullptr) {
+        mClone->setLevel(level);
+    }
 }
 
 int LuaLayer::level() const
@@ -428,7 +432,7 @@ bool LuaTileLayer::replaceTile(Tile *oldTile, Tile *newTile)
     return replaced;
 }
 
-bool LuaTileLayer::replaceTiles(QList<Tile *> &tiles)
+bool LuaTileLayer::replaceTiles(const QList<Tile *> &tiles)
 {
     if (tiles.size() % 2)
         return false;
@@ -455,6 +459,61 @@ bool LuaTileLayer::replaceTiles(QList<Tile *> &tiles)
 
 /////
 
+LuaMapLevel::LuaMapLevel(MapLevel *clone) :
+    mClone(clone)
+{
+
+}
+
+LuaMapLevel::~LuaMapLevel()
+{
+    // Remove all layers from the clone map.
+    // Either they are the original unmodified layers or they are clones.
+    // Original layers aren't to be deleted, clones delete themselves.
+    for (int i = mClone->layerCount() - 1; i >= 0; i--) {
+        mClone->takeLayerAt(i);
+    }
+
+    qDeleteAll(mLayers);
+}
+
+int LuaMapLevel::z() const
+{
+    return mClone->z();
+}
+
+int LuaMapLevel::layerCount() const
+{
+    return mLayers.size();
+}
+
+LuaLayer *LuaMapLevel::layerAt(int index) const
+{
+    if (index < 0 || index >= mLayers.size()) {
+        return nullptr;
+    }
+    return mLayers.at(index);
+}
+
+void LuaMapLevel::addLayer(LuaLayer *layer)
+{
+    Q_UNUSED(layer);
+}
+
+void LuaMapLevel::insertLayer(int index, LuaLayer *layer)
+{
+    Q_UNUSED(index);
+    Q_UNUSED(layer);
+}
+
+LuaLayer *LuaMapLevel::takeLayerAt(int index)
+{
+    Q_UNUSED(index);
+    return nullptr;
+}
+
+/////
+
 LuaMap::LuaMap(Map *orig, int cellX, int cellY) :
     mClone(new Map(orig->orientation(), orig->width(), orig->height(),
                    orig->tileWidth(), orig->tileHeight())),
@@ -466,15 +525,22 @@ LuaMap::LuaMap(Map *orig, int cellX, int cellY) :
     mCellX(cellX),
     mCellY(cellY)
 {
-    foreach (Layer *layer, orig->layers()) {
-        if (TileLayer *tl = layer->asTileLayer())
-            mLayers += new LuaTileLayer(tl);
-        else if (ObjectGroup *og = layer->asObjectGroup())
-            mLayers+= new LuaObjectGroup(og);
-        else
-            mLayers += new LuaLayer(layer);
-        mLayerByName[layer->name()] = mLayers.last(); // could be duplicates & empty names
-//        mClone->addLayer(layer);
+    mLevels.resize(orig->levelCount());
+    for (int z = 0; z < orig->levelCount(); z++) {
+        MapLevel *origLevel = orig->levelAt(z);
+        LuaMapLevel *cloneLevel = new LuaMapLevel(mClone->levelAt(z));
+        for (Layer *origLayer : origLevel->layers()) {
+            if (TileLayer *tl = origLayer->asTileLayer()) {
+                cloneLevel->mLayers += new LuaTileLayer(tl);
+            } else if (ObjectGroup *og = origLayer->asObjectGroup()) {
+                cloneLevel->mLayers+= new LuaObjectGroup(og);
+            } else {
+                cloneLevel->mLayers += new LuaLayer(origLayer);
+            }
+            cloneLevel->mLayerByName[origLayer->name()] = cloneLevel->mLayers.last(); // could be duplicates & empty names
+//            mClone->addLayer(layer);
+        }
+        mLevels[z] = cloneLevel;
     }
 
     mClone->rbmpSettings()->clone(*mOrig->bmpSettings());
@@ -511,6 +577,10 @@ LuaMap::LuaMap(LuaMap::Orientation orient, int width, int height, int tileWidth,
     mCellX(-1),
     mCellY(-1)
 {
+    mLevels.resize(mClone->levelCount());
+    for (int z = 0; z < mLevels.size(); z++) {
+        mLevels[z] = new LuaMapLevel(mClone->levelAt(z));
+    }
 }
 
 LuaMap::~LuaMap()
@@ -518,18 +588,7 @@ LuaMap::~LuaMap()
     qDeleteAll(mAliases);
     qDeleteAll(mRules);
     qDeleteAll(mBlends);
-
-    // Remove all layers from the clone map.
-    // Either they are the original unmodified layers or they are clones.
-    // Original layers aren't to be deleted, clones delete themselves.
-    for (int z = 0; z < mClone->levelCount(); z++) {
-        MapLevel *level = mClone->levelAt(z);
-        for (int i = level->layerCount() - 1; i >= 0; i--) {
-            level->takeLayerAt(i);
-        }
-    }
-
-    qDeleteAll(mLayers);
+    qDeleteAll(mLevels);
     qDeleteAll(mRemovedLayers);
     delete mClone;
 
@@ -551,87 +610,160 @@ int LuaMap::height() const
     return mClone->height();
 }
 
-int LuaMap::maxLevel()
+int LuaMap::maxLevel() const
 {
-    return 10; // FIXME
+    return mClone->levelCount();
 }
 
-int LuaMap::layerCount() const
+int LuaMap::levelCount() const
 {
-    return mLayers.size();
+    return mClone->levelCount();
 }
 
-LuaLayer *LuaMap::layerAt(int index) const
+LuaMapLevel *LuaMap::levelAt(int z) const
 {
-    if (index < 0 || index >= mLayers.size())
-        return 0; // TODO: lua error
-    return mLayers.at(index);
+    if (z < 0 || z >= levelCount()) {
+        return nullptr;
+    }
+    return mLevels[z];
+}
+
+int LuaMap::layerCount(int z) const
+{
+    if (z < 0 || z >= levelCount()) {
+        return 0;
+    }
+    return mLevels[z]->layerCount();
+}
+
+LuaLayer *LuaMap::layerAt(int z, int index) const
+{
+    if (z < 0 || z >= levelCount()) {
+        return 0;
+    }
+    return mLevels[z]->layerAt(index);
 }
 
 LuaLayer *LuaMap::layer(const char *name)
 {
     QString _name = QString::fromLatin1(name);
-    if (mLayerByName.contains(_name))
-        return mLayerByName[_name];
-    return 0;
+    int level = 0;
+    if (MapComposite::levelForLayer(_name, &level)) {
+        if (LuaMapLevel *mapLevel = levelAt(level)) {
+            if (mapLevel->mLayerByName.contains(_name)) {
+                return mapLevel->mLayerByName[_name];
+            }
+        }
+    }
+    return nullptr;
 }
 
 LuaTileLayer *LuaMap::tileLayer(const char *name)
 {
     if (LuaLayer *layer = this->layer(name))
         return layer->asTileLayer();
-    return 0;
+    return nullptr;
 }
 
 LuaTileLayer *LuaMap::newTileLayer(const char *name)
 {
+    QString name2 = QString::fromLatin1(name);
+    int level = 0;
+    if (MapComposite::levelForLayer(name2, &level)) {
+        name2 = MapComposite::layerNameWithoutPrefix(name2);
+        LuaTileLayer *tl = new LuaTileLayer(cstring(name2), 0, 0, width(), height());
+        tl->setLevel(level);
+        return tl;
+    }
     LuaTileLayer *tl = new LuaTileLayer(name, 0, 0, width(), height());
     return tl;
 }
 
 void LuaMap::addLayer(LuaLayer *layer)
 {
-    if (mLayers.contains(layer))
+    if (layer == nullptr) {
+        return;
+    }
+    LuaMapLevel *mapLevel = levelAt(layer->level());
+    if (mapLevel == nullptr) {
+        return;
+    }
+    if (mapLevel->mLayers.contains(layer)) {
         return; // error!
+    }
 
-    if (mRemovedLayers.contains(layer))
+    if (mRemovedLayers.contains(layer)) {
         mRemovedLayers.removeAll(layer);
-    mLayers += layer;
+    }
+
+    mapLevel->mLayers += layer;
 //    mClone->addLayer(layer->mClone ? layer->mClone : layer->mOrig);
 
-    mLayerByName.clear(); // FIXME: make more efficient
-    foreach (LuaLayer *ll, mLayers)
-        mLayerByName[ll->mName] = ll;
+    mapLevel->mLayerByName.clear(); // FIXME: make more efficient
+    for (LuaLayer *ll : qAsConst(mapLevel->mLayers)) {
+        mapLevel->mLayerByName[ll->mName] = ll;
+    }
 }
 
 void LuaMap::insertLayer(int index, LuaLayer *layer)
 {
-    if (mLayers.contains(layer))
+    if (layer == nullptr) {
+        return;
+    }
+    LuaMapLevel *mapLevel = levelAt(layer->level());
+    if (mapLevel == nullptr) {
+        return;
+    }
+    if (mapLevel->mLayers.contains(layer)) {
         return; // error!
+    }
 
-    if (mRemovedLayers.contains(layer))
+    if (mRemovedLayers.contains(layer)) {
         mRemovedLayers.removeAll(layer);
+    }
 
-    index = qBound(0, index, mLayers.size());
-    mLayers.insert(index, layer);
+    index = qBound(0, index, mapLevel->mLayers.size());
+    mapLevel->mLayers.insert(index, layer);
 //    mClone->insertLayer(index, layer->mClone ? layer->mClone : layer->mOrig);
 
-    mLayerByName.clear(); // FIXME: make more efficient
-    foreach (LuaLayer *ll, mLayers)
-        mLayerByName[ll->mName] = ll;
+    mapLevel->mLayerByName.clear(); // FIXME: make more efficient
+    for (LuaLayer *ll : qAsConst(mapLevel->mLayers)) {
+        mapLevel->mLayerByName[ll->mName] = ll;
+    }
 }
 
-void LuaMap::removeLayer(int index)
+void LuaMap::removeLayer(int z, int index)
 {
-    if (index < 0 || index >= mLayers.size())
+    LuaMapLevel *mapLevel = levelAt(z);
+    if (mapLevel == nullptr) {
+        return;
+    }
+    if (index < 0 || index >= mapLevel->mLayers.size()) {
         return; // error!
-    LuaLayer *layer = mLayers.takeAt(index);
+    }
+    LuaLayer *layer = mapLevel->mLayers.takeAt(index);
     mRemovedLayers += layer;
 //    mClone->takeLayerAt(index);
 
-    mLayerByName.clear(); // FIXME: make more efficient
-    foreach (LuaLayer *ll, mLayers)
-        mLayerByName[layer->mName] = ll;
+    mapLevel->mLayerByName.clear(); // FIXME: make more efficient
+    for (LuaLayer *ll : qAsConst(mapLevel->mLayers)) {
+        mapLevel->mLayerByName[ll->mName] = ll;
+    }
+}
+
+int LuaMap::levelForLayerName(const char *name) const
+{
+    int level = 0;
+    if (MapComposite::levelForLayer(QString::fromLatin1(name), &level)) {
+        return level;
+    }
+    return -1;
+}
+
+const char *LuaMap::layerNameWithoutPrefix(const char *name) const
+{
+    QString name2 = MapComposite::layerNameWithoutPrefix(QLatin1String(name));
+    return cstring(name2);
 }
 
 static bool parseTileName(const QString &tileName, QString &tilesetName, int &index)
@@ -770,28 +902,30 @@ void LuaMap::replaceTilesByName(const char *names)
         tiles += tileFrom;
         tiles += tileTo;
     }
-{
-    bool replaced = false;
-    for (int layerIndex = 0; layerIndex < layerCount(); layerIndex++) {
-        LuaLayer *layer = layerAt(layerIndex);
-        if (LuaTileLayer *tl = layer->asTileLayer()) {
-            if (tl->replaceTiles(tiles)) {
-                replaced = true;
+    {
+        bool replaced = false;
+        for (LuaMapLevel *mapLevel : qAsConst(mLevels)) {
+            for (int layerIndex = 0; layerIndex < mapLevel->layerCount(); layerIndex++) {
+                LuaLayer *layer = mapLevel->layerAt(layerIndex);
+                if (LuaTileLayer *tl = layer->asTileLayer()) {
+                    if (tl->replaceTiles(tiles)) {
+                        replaced = true;
+                    }
+                }
             }
         }
-    }
 
-    foreach (Tileset *ts, addTilesets) {
-        if (replaced) {
-            addTileset(ts);
-            Tiled::Internal::TilesetManager::instance()->addReference(ts);
-            mNewTilesets += ts;
-        } else {
-            delete ts;
+        for (Tileset *ts : qAsConst(addTilesets)) {
+            if (replaced) {
+                addTileset(ts);
+                Tiled::Internal::TilesetManager::instance()->addReference(ts);
+                mNewTilesets += ts;
+            } else {
+                delete ts;
+            }
         }
+        return;
     }
-    return;
-}
 errorExit:
     qDeleteAll(addTilesets);
 }
@@ -935,13 +1069,17 @@ bool LuaMap::write(const char *path)
 {
     QScopedPointer<Map> map(mClone->clone());
     Q_ASSERT(map->layerCount() == 0);
-    foreach (LuaLayer *ll, mLayers) {
-        Layer *newLayer = ll->mClone ? ll->mClone->clone() : ll->mOrig->clone();
-        if (LuaObjectGroup *og = ll->asObjectGroup()) {
-            foreach (LuaMapObject *o, og->objects())
-                newLayer->asObjectGroup()->addObject(o->mClone->clone());
+    for (LuaMapLevel *mapLevel : qAsConst(mLevels)) {
+        for (LuaLayer *ll : qAsConst(mapLevel->mLayers)) {
+            Layer *newLayer = ll->mClone ? ll->mClone->clone() : ll->mOrig->clone();
+            if (LuaObjectGroup *og = ll->asObjectGroup()) {
+                const QList<LuaMapObject*> objects = og->objects();
+                for (LuaMapObject *o : objects) {
+                    newLayer->asObjectGroup()->addObject(o->mClone->clone());
+                }
+            }
+            map->addLayer(newLayer);
         }
-        map->addLayer(newLayer);
     }
 
     Internal::TmxMapWriter writer;

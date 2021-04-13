@@ -198,6 +198,16 @@ public:
     bool get(int x, int y);
 };
 
+class LuaMapLevel @ MapLevel
+{
+    int z();
+    int layerCount();
+    LuaLayer *layerAt(int index);
+    void addLayer(LuaLayer *layer);
+    void insertLayer(int index, LuaLayer *layer);
+    LuaLayer *takeLayerAt(int index);
+};
+
 class LuaMap @ Map
 {
     enum Orientation {
@@ -216,16 +226,21 @@ class LuaMap @ Map
     int height();
 
     int maxLevel();
+    int levelCount();
+    LuaMapLevel *levelAt(int z);
 
     void addLayer(LuaLayer *layer);
     void insertLayer(int index, LuaLayer *layer);
-    void removeLayer(int index);
-    int layerCount();
-    LuaLayer *layerAt(int index);
+    void removeLayer(int z, int index);
+    int layerCount(int z);
+    LuaLayer *layerAt(int z, int index);
     LuaLayer *layer(const char *name);
     LuaTileLayer *tileLayer(const char *name);
     
     LuaTileLayer *newTileLayer(const char *name);
+    
+    int levelForLayerName(const char *name);
+    const char *layerNameWithoutPrefix(const char *name);
 
     void addTileset(Tileset *tileset);
     int tilesetCount();

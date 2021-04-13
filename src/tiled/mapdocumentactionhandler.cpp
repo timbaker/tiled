@@ -422,6 +422,7 @@ void MapDocumentActionHandler::updateActions()
     const bool hasNextLevel = currentLevelIndex > 0;
 
     const int layerCount = mapLevel ? mapLevel->layerCount() : 0;
+    const bool hasLayer = (currentLayerIndex >= 0) && (currentLayerIndex < layerCount);
     const bool hasPreviousLayer = (currentLayerIndex >= 0) && (currentLayerIndex < layerCount - 1);
     const bool hasNextLayer = currentLayerIndex > 0;
 
@@ -429,8 +430,8 @@ void MapDocumentActionHandler::updateActions()
     mActionMergeLayerDown->setEnabled(canMergeDown);
     mActionSelectPreviousLevel->setEnabled(hasPreviousLevel);
     mActionSelectNextLevel->setEnabled(hasNextLevel);
-    mActionMoveLayerUp->setEnabled(hasPreviousLayer || hasPreviousLevel);
-    mActionMoveLayerDown->setEnabled(hasNextLayer || hasNextLevel);
+    mActionMoveLayerUp->setEnabled(hasPreviousLayer || (hasPreviousLevel && hasLayer));
+    mActionMoveLayerDown->setEnabled(hasNextLayer || (hasNextLevel && hasLayer));
     mActionToggleOtherLayers->setEnabled(layerCount > 1);
     mActionRemoveLayer->setEnabled(currentLayerIndex >= 0);
     mActionRenameLayer->setEnabled(currentLayerIndex >= 0);

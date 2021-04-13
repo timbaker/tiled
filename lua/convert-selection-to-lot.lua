@@ -34,6 +34,7 @@ for i=0,map:layerCount()-1 do
     if tl then
 	if tl:level() <= maxLevel then
 	    cloneLayer = clone:newTileLayer(tl:name())
+	    cloneLayer:setLevel(tl:level())
 	    clone:addLayer(cloneLayer)
 
 	    offset = 0

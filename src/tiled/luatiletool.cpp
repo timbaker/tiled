@@ -413,8 +413,15 @@ void LuaTileTool::setCursorType(LuaTileTool::CursorType type)
 
 LuaTileLayer *LuaTileTool::currentLayer() const
 {
+    if (mMap == nullptr) {
+        return nullptr;
+    }
+    int levelIndex = mapDocument()->currentLevelIndex();
     int layerIndex = mapDocument()->currentLayerIndex();
-    return (mMap && mMap->layerAt(layerIndex)) ? mMap->layerAt(layerIndex)->asTileLayer() : nullptr;
+    if (LuaLayer *layer = mMap->layerAt(levelIndex, layerIndex)) {
+        return layer->asTileLayer();
+    }
+    return nullptr;
 }
 
 void LuaTileTool::mouseEvent(const char *func, Qt::MouseButtons buttons,
