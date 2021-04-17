@@ -650,8 +650,9 @@ void BmpRuleView::setRules(const Map *map)
             }
         }
     }
-    TileMetaInfoMgr::instance()->loadTilesets(tilesets.toList());
-
+    if (tilesets.isEmpty() == false) {
+        TileMetaInfoMgr::instance()->loadTilesets(tilesets.toList());
+    }
     model()->setRules(map);
 }
 
