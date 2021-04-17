@@ -66,29 +66,27 @@ void WorldEdMgr::addProject(const QString &fileName)
 
 WorldCell *WorldEdMgr::cellForMap(const QString &fileName)
 {
-    if (mMapWithoutWorld.contains(fileName)) {
+    QFileInfo info2(fileName);
+    QString canonicalPath = info2.canonicalFilePath();
+    if (mMapWithoutWorld.contains(canonicalPath)) {
         return nullptr;
     }
-    QFileInfo info2(fileName);
     for (World *world : qAsConst(mWorlds)) {
-        if (mCheckedDocuments.contains(world)) {
-            const auto& nameToCell = mCheckedDocuments[world];
-            if (nameToCell.contains(fileName)) {
-                return nameToCell[fileName];
-            }
-            continue;
-        }
-        for (int y = 0; y < world->height(); y++) {
-            for (int x = 0; x < world->width(); x++) {
-                WorldCell *cell = world->cellAt(x, y);
-                if (cell->mapFilePath().isEmpty())
-                    continue;
-                QFileInfo info1(cell->mapFilePath());
-                if (info1 == info2) {
-                    mCheckedDocuments[world].insert(fileName, cell);
-                    return cell;
+        if (mCheckedDocuments.contains(world) == false) {
+            auto& nameToCell = mCheckedDocuments[world];
+            for (int y = 0; y < world->height(); y++) {
+                for (int x = 0; x < world->width(); x++) {
+                    WorldCell *cell = world->cellAt(x, y);
+                    if (cell->mapFilePath().isEmpty())
+                        continue;
+                    QFileInfo info1(cell->mapFilePath());
+                    nameToCell.insert(info1.canonicalFilePath(), cell);
                 }
             }
+        }
+        const auto& nameToCell = mCheckedDocuments[world];
+        if (nameToCell.contains(canonicalPath)) {
+            return nameToCell[canonicalPath];
         }
     }
     mMapWithoutWorld.insert(fileName);
