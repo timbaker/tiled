@@ -17,6 +17,7 @@
 
 #include "mixedtilesetview.h"
 
+#include "preferences.h"
 #include "tile.h"
 #include "tileset.h"
 #include "tilesetmanager.h"
@@ -360,6 +361,11 @@ void MixedTilesetView::scaleChanged(qreal scale)
     model()->scaleChanged(scale);
 }
 
+void MixedTilesetView::tilesetBackgroundColorChanged(const QColor &color)
+{
+    setStyleSheet(QStringLiteral("QTableView { alternate-background-color: %1; background-color: %1; }").arg(color.name()));
+}
+
 void MixedTilesetView::init()
 {
     setHorizontalScrollMode(QAbstractItemView::ScrollPerPixel);
@@ -399,6 +405,9 @@ void MixedTilesetView::init()
     connect(mZoomable, SIGNAL(scaleChanged(qreal)), SLOT(scaleChanged(qreal)));
 
     mMousePressed = false;
+
+    tilesetBackgroundColorChanged(Preferences::instance()->tilesetBackgroundColor());
+    connect(Preferences::instance(), &Preferences::tilesetBackgroundColorChanged, this, &MixedTilesetView::tilesetBackgroundColorChanged);
 }
 
 /////

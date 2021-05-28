@@ -92,6 +92,7 @@ Preferences::Preferences()
                                                QColor(Qt::darkGray).name()).toString());
     mShowAdjacentMaps = mSettings->value(QLatin1String("ShowAdjacentMaps"), true).toBool();
     mHighlightRoomUnderPointer = mSettings->value(QLatin1String("HighlightRoomUnderPointer"), false).toBool();
+    mTilesetBackgroundColor = QColor(mSettings->value(QLatin1String("TilesetBackgroundColor"), QColor(Qt::white).name()).toString());
 #endif
     mSettings->endGroup();
 #ifdef ZOMBOID
@@ -609,6 +610,16 @@ void Preferences::setEraserBrushSize(int newSize)
     mEraserBrushSize = newSize;
     mSettings->setValue(QLatin1String("Tools/Eraser/BrushSize"), mEraserBrushSize);
     emit eraserBrushSizeChanged(mEraserBrushSize);
+}
+
+void Preferences::setTilesetBackgroundColor(const QColor &color)
+{
+    if (mTilesetBackgroundColor == color)
+        return;
+
+    mTilesetBackgroundColor = color;
+    mSettings->setValue(QLatin1String("Interface/TilesetBackgroundColor"), mTilesetBackgroundColor.name());
+    emit tilesetBackgroundColorChanged(mTilesetBackgroundColor);
 }
 
 #endif // ZOMBOID

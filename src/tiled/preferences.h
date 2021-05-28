@@ -133,6 +133,9 @@ public:
 
     int eraserBrushSize() const
     { return mEraserBrushSize; }
+
+    QColor tilesetBackgroundColor() const
+    { return mTilesetBackgroundColor; }
 #endif // ZOMBOID
 
     /**
@@ -159,6 +162,7 @@ public slots:
     void setWorldEdFiles(const QStringList &fileNames);
     void setHighlightRoomUnderPointer(bool highlight);
     void setEraserBrushSize(int newSize);
+    void setTilesetBackgroundColor(const QColor& color);
 #endif
 
 signals:
@@ -187,6 +191,7 @@ signals:
     void worldEdFilesChanged(const QStringList &fileNames);
     void highlightRoomUnderPointerChanged(bool highlight);
     void eraserBrushSizeChanged(int newSize);
+    void tilesetBackgroundColorChanged(const QColor &color);
 #endif
 
 private:
@@ -226,6 +231,7 @@ private:
     QStringList mWorldEdFiles;
     bool mHighlightRoomUnderPointer;
     int mEraserBrushSize;
+    QColor mTilesetBackgroundColor;
 #endif
 
     static Preferences *mInstance;

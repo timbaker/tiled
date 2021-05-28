@@ -385,6 +385,8 @@ TileDefDialog::TileDefDialog(QWidget *parent) :
     connect(TilesetManager::instance(), SIGNAL(tilesetChanged(Tileset*)),
             SLOT(tilesetChanged(Tileset*)));
 
+    connect(Preferences::instance(), &Preferences::tilesetBackgroundColorChanged, this, &TileDefDialog::tilesetBackgroundColorChanged);
+
     foreach (QObject *o, ui->propertySheet->children())
         if (o->isWidgetType())
             delete o;
@@ -979,6 +981,16 @@ void TileDefDialog::tilesetChanged(Tileset *tileset)
         setTilesList();
 }
 
+void TileDefDialog::tilesetBackgroundColorChanged(const QColor &color)
+{
+    if (mCurrentTileset) {
+        TileDefTileset *defTileset = mCurrentDefTileset;
+        for (int i = 0; i < defTileset->mTiles.size(); i++) {
+            setToolTipEtc(i);
+        }
+    }
+}
+
 void TileDefDialog::updateUI()
 {
     mSynching = true;
@@ -1237,6 +1249,8 @@ void TileDefDialog::setTilesList()
     }
 }
 
+#include <QStyle>
+
 void TileDefDialog::setToolTipEtc(int tileID)
 {
     if (!mCurrentTileset || !mCurrentDefTileset)
@@ -1266,7 +1280,11 @@ void TileDefDialog::setToolTipEtc(int tileID)
         if (!known.contains(name))
             unknown += tr("%1 = %2").arg(name).arg(defTile->mProperties[name]);
     }
-    if (properties.isEmpty()) color = Qt::white;
+    if (properties.isEmpty()) {
+        QStyleOption styleOption;
+        styleOption.initFrom(ui->tiles);
+        color = styleOption.palette.background().color(); // Qt::white;
+    }
     if (unknown.size()) {
         if (tooltip.size())
             tooltip += QLatin1String("");

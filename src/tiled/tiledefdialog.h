@@ -113,6 +113,8 @@ private slots:
 
     void tilesetChanged(Tileset *tileset);
 
+    void tilesetBackgroundColorChanged(const QColor& color);
+
     void updateUI();
 
     void help();

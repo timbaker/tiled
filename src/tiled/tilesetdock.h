@@ -156,6 +156,8 @@ private:
 
 #else  // ZOMBOID
 
+#include "colorbutton.h"
+
 #include <QDockWidget>
 #include <QLineEdit>
 #include <QMap>
@@ -267,6 +269,8 @@ private slots:
 
     void filterEdited(const QString& text);
 
+    void tilesetBackgroundColorChanged(const QColor& color);
+
 private:
     void setTilesetNamesList();
     void setTilesetList();
@@ -295,6 +299,8 @@ private:
     QAction *mActionDeleteTileset;
     QAction *mActionRenameTileset;
     QAction *mActionSwitchLayer;
+
+    ColorButton *mBackgroundColorButton;
 
     QMap<MapDocument*,QString> mCurrentTilesets;
 

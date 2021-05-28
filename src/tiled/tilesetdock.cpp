@@ -692,6 +692,7 @@ void TilesetDock::refreshTilesetMenu()
 
 #include "addremovemapobject.h"
 #include "addremovetileset.h"
+#include "colorbutton.h"
 #include "documentmanager.h"
 #include "erasetiles.h"
 #include "map.h"
@@ -898,6 +899,12 @@ TilesetDock::TilesetDock(QWidget *parent):
     mToolBar->addAction(mActionDeleteTileset);
     mToolBar->addAction(mActionRenameTileset);
     mToolBar->addAction(mActionSwitchLayer);
+
+    mToolBar->addWidget(mBackgroundColorButton = new Tiled::Internal::ColorButton(mToolBar));
+    mBackgroundColorButton->setColor(Preferences::instance()->tilesetBackgroundColor());
+    tilesetBackgroundColorChanged(Preferences::instance()->tilesetBackgroundColor());
+    connect(mBackgroundColorButton, &ColorButton::colorChanged, Preferences::instance(), &Preferences::setTilesetBackgroundColor);
+    connect(Preferences::instance(), &Preferences::tilesetBackgroundColorChanged, this, &TilesetDock::tilesetBackgroundColorChanged);
 
     connect(mTilesetView->selectionModel(),
             SIGNAL(selectionChanged(QItemSelection,QItemSelection)),
@@ -1477,6 +1484,11 @@ void TilesetDock::filterEdited(const QString &text)
     current = mTilesetNamesView->currentItem();
     if (current != nullptr)
         mTilesetNamesView->scrollToItem(current);
+}
+
+void TilesetDock::tilesetBackgroundColorChanged(const QColor &color)
+{
+    mTilesetView->setStyleSheet(QStringLiteral("QTableView { alternate-background-color: %1; background-color: %1; }").arg(color.name()));
 }
 
 void TilesetDock::setTilesetNamesList()

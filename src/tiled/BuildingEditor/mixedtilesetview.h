@@ -216,6 +216,7 @@ signals:
 
 public slots:
     void scaleChanged(qreal scale);
+    void tilesetBackgroundColorChanged(const QColor& color);
 
 private:
     void init();
