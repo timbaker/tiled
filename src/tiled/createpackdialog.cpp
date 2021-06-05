@@ -23,6 +23,8 @@
 
 #include "BuildingEditor/simplefile.h"
 
+#include "preferences.h"
+
 #include <QFileDialog>
 #include <QMessageBox>
 #include <QPushButton>
@@ -44,17 +46,25 @@ CreatePackDialog::CreatePackDialog(QWidget *parent) :
 {
     ui->setupUi(this);
 
-    QToolBar *tb = new QToolBar;
+    QToolBar *tb = new QToolBar(this);
 //    tb->setIconSize(QSize(16, 16));
     tb->addAction(ui->actionAddDirectory);
     tb->addAction(ui->actionRemoveDirectory);
     ui->directoryToolbarLayout->addWidget(tb);
+
+    QToolBar *tb2 = new QToolBar(this);
+    tb2->addAction(ui->actionAddTileDef);
+    tb2->addAction(ui->actionRemoveTileDef);
+    ui->tileDefToolbarLayout->addWidget(tb2);
 
     connect(ui->packNameEdit, SIGNAL(textChanged(QString)), SLOT(syncUI()));
     connect(ui->packNameBrowse, SIGNAL(clicked()), SLOT(savePackAs()));
     connect(ui->actionAddDirectory, SIGNAL(triggered()), SLOT(addDirectory()));
     connect(ui->actionRemoveDirectory, SIGNAL(triggered()), SLOT(removeDirectory()));
     connect(ui->dirList, SIGNAL(itemSelectionChanged()), SLOT(syncUI()));
+    connect(ui->tileDefList, &QListWidget::itemSelectionChanged, this, &CreatePackDialog::syncUI);
+    connect(ui->actionAddTileDef, &QAction::triggered, this, &CreatePackDialog::addTileDef);
+    connect(ui->actionRemoveTileDef, &QAction::triggered, this, &CreatePackDialog::removeTileDef);
     connect(ui->btnLoad, SIGNAL(clicked()), SLOT(loadSettings()));
     connect(ui->btnSave, SIGNAL(clicked()), SLOT(saveSettings()));
     connect(ui->btnSaveAs, SIGNAL(clicked()), SLOT(saveSettingsAs()));
@@ -78,7 +88,7 @@ void CreatePackDialog::settingsToUI(const TexturePackSettings &settings)
     ui->packNameEdit->setText(QDir::toNativeSeparators(settings.mPackFileName));
 
     ui->dirList->clear();
-    foreach (TexturePackSettings::Directory tpd, settings.mInputImageDirectories) {
+    for (const TexturePackSettings::Directory &tpd : settings.mInputImageDirectories) {
         QListWidgetItem *item = new QListWidgetItem(QDir::toNativeSeparators(tpd.mPath));
         item->setCheckState(tpd.mImagesAreTilesheets ? Qt::Checked : Qt::Unchecked);
         item->setData(Qt::UserRole, tpd.mCustomTileSize);
@@ -93,6 +103,12 @@ void CreatePackDialog::settingsToUI(const TexturePackSettings &settings)
         ui->texSizeCombo->setCurrentIndex(1); // default 1024x1024
 
     ui->scale50->setChecked(settings.mScale50);
+
+    ui->tileDefList->clear();
+    for (const QString &fileName : settings.mTileDefFiles) {
+        QListWidgetItem *item = new QListWidgetItem(QDir::toNativeSeparators(fileName));
+        ui->tileDefList->addItem(item);
+    }
 }
 
 void CreatePackDialog::settingsFromUI(TexturePackSettings &settings)
@@ -115,6 +131,11 @@ void CreatePackDialog::settingsFromUI(TexturePackSettings &settings)
     settings.mScale50 = ui->scale50->isChecked();
     settings.mPackFileName = ui->packNameEdit->text();
     settings.padding = 2;
+
+    for (int i = 0; i < ui->tileDefList->count(); i++) {
+        QListWidgetItem *item = ui->tileDefList->item(i);
+        settings.mTileDefFiles += item->text();
+    }
 }
 
 void CreatePackDialog::savePackAs()
@@ -151,6 +172,26 @@ void CreatePackDialog::removeDirectory()
     syncUI();
 }
 
+void CreatePackDialog::addTileDef()
+{
+    QString path = QFileDialog::getOpenFileName(this, tr("Choose .tiles file"), QString(), QStringLiteral("*.tiles"));
+    if (path.isEmpty())
+        return;
+
+    QListWidgetItem *item = new QListWidgetItem(QDir::toNativeSeparators(path));
+    ui->tileDefList->addItem(item);
+}
+
+void CreatePackDialog::removeTileDef()
+{
+    QList<QListWidgetItem*> items = ui->tileDefList->selectedItems();
+    if (items.size() == 1) {
+        int row = ui->tileDefList->row(items.first());
+        delete ui->tileDefList->takeItem(row);
+    }
+    syncUI();
+}
+
 void CreatePackDialog::syncUI()
 {
     QList<QListWidgetItem*> items = ui->dirList->selectedItems();
@@ -168,6 +209,9 @@ void CreatePackDialog::syncUI()
         ui->jumboX->setEnabled(false);
         ui->jumboY->setEnabled(false);
     }
+
+    items = ui->tileDefList->selectedItems();
+    ui->actionRemoveTileDef->setEnabled(items.size() == 1);
 }
 
 void CreatePackDialog::tileSizeChangedX(int value)
@@ -318,7 +362,7 @@ bool PackSettingsFile::read(const QString &fileName)
 
     QDir dir = QFileInfo(fileName).absoluteDir();
 
-    foreach (SimpleFileBlock block, simple.blocks) {
+    for (const SimpleFileBlock &block : qAsConst(simple.blocks)) {
         if (block.name == QLatin1String("settings")) {
             mSettings.mPackFileName = QDir::cleanPath(dir.filePath(block.value("packFileName")));
 
@@ -331,9 +375,9 @@ bool PackSettingsFile::read(const QString &fileName)
             }
 
             QString scaleStr = block.value("scale50");
-            mSettings.mScale50 = (scaleStr == QLatin1Literal("true"));
+            mSettings.mScale50 = (scaleStr == QStringLiteral("true"));
 
-            foreach (SimpleFileBlock block2, block.blocks) {
+            for (const SimpleFileBlock &block2 : qAsConst(block.blocks)) {
                 if (block2.name == QLatin1String("inputImageDirectory")) {
                     TexturePackSettings::Directory tpd;
                     tpd.mPath = QDir::cleanPath(dir.filePath(block2.value("path")));
@@ -345,6 +389,9 @@ bool PackSettingsFile::read(const QString &fileName)
                         tpd.mCustomTileSize = QSize(0, 0);
                     }
                     mSettings.mInputImageDirectories += tpd;
+                } else if (block2.name == QLatin1String("tileDef")) {
+                    QString path = QDir::cleanPath(dir.filePath(block2.value("path")));
+                    mSettings.mTileDefFiles += path;
                 } else {
                     mError = tr("Line %1: Unknown block name '%2'.")
                             .arg(block2.lineNumber)
@@ -357,6 +404,20 @@ bool PackSettingsFile::read(const QString &fileName)
                     .arg(block.lineNumber)
                     .arg(block.name);
             return false;
+        }
+    }
+
+    bool contains = false;
+    for (const QString &filePath : mSettings.mTileDefFiles) {
+        if (filePath.endsWith(QStringLiteral("newtiledefinitions.tiles"))) {
+            contains = true;
+            break;
+        }
+    }
+    if (contains == false) {
+        QFileInfo fileInfo(Tiled::Internal::Preferences::instance()->tilesDirectory() + QString::fromLatin1("/newtiledefinitions.tiles"));
+        if (fileInfo.exists()) {
+            mSettings.mTileDefFiles += fileInfo.absoluteFilePath();
         }
     }
 
@@ -379,7 +440,7 @@ bool PackSettingsFile::write(const QString &fileName)
                            .arg(mSettings.mOutputImageSize.height()));
     settingsBlock.addValue("scale50", QLatin1Literal(mSettings.mScale50 ? "true" : "false"));
 
-    foreach (TexturePackSettings::Directory tpd, mSettings.mInputImageDirectories) {
+    for (const TexturePackSettings::Directory &tpd : mSettings.mInputImageDirectories) {
         SimpleFileBlock dirBlock;
         dirBlock.name = QLatin1String("inputImageDirectory");
         dirBlock.addValue("path", dir.relativeFilePath(tpd.mPath));
@@ -389,6 +450,13 @@ bool PackSettingsFile::write(const QString &fileName)
                               .arg(tpd.mCustomTileSize.width())
                               .arg(tpd.mCustomTileSize.height()));
         settingsBlock.blocks += dirBlock;
+    }
+
+    for (const QString &fileName : mSettings.mTileDefFiles) {
+        SimpleFileBlock tileDefBlock;
+        tileDefBlock.name = QStringLiteral("tileDef");
+        tileDefBlock.addValue("path", dir.relativeFilePath(fileName));
+        settingsBlock.blocks += tileDefBlock;
     }
 
     simpleFile.blocks += settingsBlock;

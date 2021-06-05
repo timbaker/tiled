@@ -7,7 +7,7 @@
     <x>0</x>
     <y>0</y>
     <width>696</width>
-    <height>475</height>
+    <height>600</height>
    </rect>
   </property>
   <property name="windowTitle">
@@ -75,7 +75,7 @@
      </item>
     </layout>
    </item>
-   <item row="3" column="1">
+   <item row="4" column="1">
     <widget class="QDialogButtonBox" name="buttonBox">
      <property name="orientation">
       <enum>Qt::Horizontal</enum>
@@ -83,6 +83,60 @@
      <property name="standardButtons">
       <set>QDialogButtonBox::Cancel|QDialogButtonBox::Ok</set>
      </property>
+    </widget>
+   </item>
+   <item row="3" column="1">
+    <widget class="QGroupBox" name="groupBox_2">
+     <property name="title">
+      <string>Saved settings</string>
+     </property>
+     <layout class="QVBoxLayout" name="verticalLayout">
+      <item>
+       <widget class="QLabel" name="settingsName">
+        <property name="text">
+         <string>Untitled</string>
+        </property>
+       </widget>
+      </item>
+      <item>
+       <layout class="QHBoxLayout" name="horizontalLayout_2">
+        <item>
+         <widget class="QToolButton" name="btnLoad">
+          <property name="text">
+           <string>Load...</string>
+          </property>
+         </widget>
+        </item>
+        <item>
+         <widget class="QToolButton" name="btnSave">
+          <property name="text">
+           <string>Save</string>
+          </property>
+         </widget>
+        </item>
+        <item>
+         <widget class="QToolButton" name="btnSaveAs">
+          <property name="text">
+           <string>Save As...</string>
+          </property>
+         </widget>
+        </item>
+        <item>
+         <spacer name="horizontalSpacer">
+          <property name="orientation">
+           <enum>Qt::Horizontal</enum>
+          </property>
+          <property name="sizeHint" stdset="0">
+           <size>
+            <width>40</width>
+            <height>20</height>
+           </size>
+          </property>
+         </spacer>
+        </item>
+       </layout>
+      </item>
+     </layout>
     </widget>
    </item>
    <item row="1" column="0" colspan="2">
@@ -155,55 +209,26 @@
     </widget>
    </item>
    <item row="2" column="1">
-    <widget class="QGroupBox" name="groupBox_2">
+    <widget class="QGroupBox" name="groupBox_3">
      <property name="title">
-      <string>Saved settings</string>
+      <string>.tiles files:</string>
      </property>
-     <layout class="QVBoxLayout" name="verticalLayout">
+     <layout class="QVBoxLayout" name="verticalLayout_2">
       <item>
-       <widget class="QLabel" name="settingsName">
+       <widget class="QLabel" name="label_5">
         <property name="text">
-         <string>Untitled</string>
+         <string>Floor tiles with the &quot;solidfloor&quot; sprite property are packed into a separate .pack file.</string>
+        </property>
+        <property name="wordWrap">
+         <bool>true</bool>
         </property>
        </widget>
       </item>
       <item>
-       <layout class="QHBoxLayout" name="horizontalLayout_2">
-        <item>
-         <widget class="QToolButton" name="btnLoad">
-          <property name="text">
-           <string>Load...</string>
-          </property>
-         </widget>
-        </item>
-        <item>
-         <widget class="QToolButton" name="btnSave">
-          <property name="text">
-           <string>Save</string>
-          </property>
-         </widget>
-        </item>
-        <item>
-         <widget class="QToolButton" name="btnSaveAs">
-          <property name="text">
-           <string>Save As...</string>
-          </property>
-         </widget>
-        </item>
-        <item>
-         <spacer name="horizontalSpacer">
-          <property name="orientation">
-           <enum>Qt::Horizontal</enum>
-          </property>
-          <property name="sizeHint" stdset="0">
-           <size>
-            <width>40</width>
-            <height>20</height>
-           </size>
-          </property>
-         </spacer>
-        </item>
-       </layout>
+       <widget class="QListWidget" name="tileDefList"/>
+      </item>
+      <item>
+       <layout class="QHBoxLayout" name="tileDefToolbarLayout"/>
       </item>
      </layout>
     </widget>
@@ -231,6 +256,30 @@
    </property>
    <property name="toolTip">
     <string>Remove selected directory</string>
+   </property>
+  </action>
+  <action name="actionAddTileDef">
+   <property name="icon">
+    <iconset resource="tiled.qrc">
+     <normaloff>:/images/22x22/add.png</normaloff>:/images/22x22/add.png</iconset>
+   </property>
+   <property name="text">
+    <string>Add .tiles file</string>
+   </property>
+   <property name="toolTip">
+    <string>Add .tiles file</string>
+   </property>
+  </action>
+  <action name="actionRemoveTileDef">
+   <property name="icon">
+    <iconset resource="tiled.qrc">
+     <normaloff>:/images/22x22/remove.png</normaloff>:/images/22x22/remove.png</iconset>
+   </property>
+   <property name="text">
+    <string>Remove selected .tiles file</string>
+   </property>
+   <property name="toolTip">
+    <string>Remove selected .tiles file</string>
    </property>
   </action>
  </widget>

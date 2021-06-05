@@ -25,6 +25,12 @@
 #include <QSize>
 #include <QStringList>
 
+namespace Tiled {
+namespace Internal {
+class TileDefTileset;
+}
+}
+
 /*
  * Loosely based on Sprite Sheet Packer
  * http://spritesheetpacker.codeplex.com/
@@ -48,6 +54,7 @@ public:
     bool mScale50;
     QList<Directory> mInputImageDirectories;
     int padding;
+    QStringList mTileDefFiles;
 };
 
 class LemmyRectanglePacker
@@ -106,6 +113,8 @@ private:
 #endif
     QImage CreateOutputImage(const QStringList &toPack);
     bool LoadTileNamesFile(QString imageName, int columns);
+
+    bool isSolidFloor(const QList<Tiled::Internal::TileDefTileset*>& tilesets, int tileID) const;
 
 private:
     QString mError;

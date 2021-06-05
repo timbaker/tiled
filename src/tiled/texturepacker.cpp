@@ -69,10 +69,15 @@ bool TexturePacker::pack(const TexturePackSettings &settings)
 
     PROGRESS progress(tr("Reading image files"));
 
-    TileDefFile tileDefFile;
-    QFileInfo fileInfo(Preferences::instance()->tilesDirectory() + QString::fromLatin1("/newtiledefinitions.tiles"));
-    if (fileInfo.exists()) {
-        tileDefFile.read(fileInfo.absoluteFilePath());
+    QList<QSharedPointer<TileDefFile>> tileDefFiles;
+    for (const QString &fileName : mSettings.mTileDefFiles) {
+        QFileInfo fileInfo(fileName);
+        if (fileInfo.exists()) {
+            QSharedPointer<TileDefFile> tileDefFile(new TileDefFile());
+            if (tileDefFile->read(fileInfo.absoluteFilePath())) {
+                tileDefFiles += tileDefFile;
+            }
+        }
     }
 
     QStringList toPack, toPackFloor;
@@ -87,7 +92,13 @@ bool TexturePacker::pack(const TexturePackSettings &settings)
         if (mImageIsTilesheet.contains(str)) {
             const int TILE_WIDTH = mImageTileSize[str].width() * (mSettings.mScale50 ? 0.5f : 1);
             const int TILE_HEIGHT = mImageTileSize[str].height() * (mSettings.mScale50 ? 0.5f : 1);
-            TileDefTileset *tdts = tileDefFile.tileset(QFileInfo(str).baseName());
+            QList<TileDefTileset*> tileDefTilesets;
+            QString tilesetName = QFileInfo(str).baseName();
+            for (const QSharedPointer<TileDefFile> &tileDefFile : qAsConst(tileDefFiles)) {
+                if (TileDefTileset *tdts = tileDefFile->tileset(tilesetName)) {
+                    tileDefTilesets += tdts;
+                }
+            }
             if (image.width() % TILE_WIDTH || image.height() % TILE_HEIGHT) {
                 imageTranslation[str] = WorkOutTranslation(image);
                 toPack += str;
@@ -107,15 +118,8 @@ bool TexturePacker::pack(const TexturePackSettings &settings)
                         if (!tln.size.isEmpty()) {
                             QString key = QString::fromLatin1("%1_INDEX_%2").arg(x + y * cols).arg(str);
                             imageTranslation[key] = tln;
-                            if (tdts) {
-                                if (TileDefTile *tdt = tdts->tileAt(x + y * cols)) {
-                                    if (tdt->mProperties.contains(QLatin1Literal("solidfloor")))
-                                        toPackFloor += key;
-                                    else
-                                        toPack += key;
-                                } else {
-                                    toPack += key;
-                                }
+                            if (isSolidFloor(tileDefTilesets, x + y * cols)) {
+                                toPackFloor += key;
                             } else {
                                 toPack += key;
                             }
@@ -203,7 +207,7 @@ bool TexturePacker::pack(const TexturePackSettings &settings)
     }
 
     if (pageNum > 0) {
-        fileInfo = QFileInfo(mSettings.mPackFileName);
+        QFileInfo fileInfo(mSettings.mPackFileName);
         progress.update(tr("Saving %1").arg(fileInfo.fileName()));
         packFileFloor.write(fileInfo.absolutePath() + QLatin1String("/") + fileInfo.baseName() + QLatin1String(".floor.") + fileInfo.suffix());
     }
@@ -806,6 +810,19 @@ bool TexturePacker::LoadTileNamesFile(QString imageName, int columns)
         mTileNames[key] = ss[2];
     }
     return true;
+}
+
+bool TexturePacker::isSolidFloor(const QList<TileDefTileset *> &tilesets, int tileID) const
+{
+    QString solidfloor = QStringLiteral("solidfloor");
+    for (TileDefTileset *tdts : tilesets) {
+        if (TileDefTile *tdt = tdts->tileAt(tileID)) {
+            if (tdt->mProperties.contains(solidfloor)) {
+                return true;
+            }
+        }
+    }
+    return false;
 }
 
 TexturePacker::Translation TexturePacker::WorkOutTranslation(QImage image)
