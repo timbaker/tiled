@@ -523,7 +523,7 @@ bool BuildingWriter::write(Building *building, const QString &filePath)
 
     // /tmp/tempXYZ -> foo.tbx
     tempFile.close();
-    if (!tempFile.rename(filePath)) {
+    if (!tempFile.copy(filePath)) {
         d->mError = QString(QLatin1String("Error renaming file!\nFrom: %1\nTo: %2\n\n%3"))
                 .arg(tempFile.fileName())
                 .arg(filePath)

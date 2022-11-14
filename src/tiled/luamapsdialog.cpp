@@ -169,7 +169,7 @@ bool LuaMapsDialog::processMap(const QString &mapFilePath)
     }
 
     // /tmp/tempXYZ -> foo.tmx
-    if (!tempFile.rename(mapFilePath)) {
+    if (!tempFile.copy(mapFilePath)) {
         backup.rename(mapFilePath);
         QString msg = QString(QLatin1String("Error renaming file!\nFrom: %1\nTo: %2"))
                 .arg(QFileInfo(tempFile).fileName())
