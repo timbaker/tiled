@@ -6,7 +6,7 @@ if {[llength [info commands console]]} {
 set QT_DIR C:/Programming/QtSDK2015/5.15.2/msvc2019_64
 set BIN C:/Programming/TileZed/dist64
 set SRC C:/Programming/TileZed/tiled
-set DEST {C:\Users\Tim\Desktop\ProjectZomboid\Tools\TileZed}
+set DEST {C:\Programming\ProjectZomboid\Tools\TileZed}
 set SUFFIX "-64bit"
 set SUFFIX2 ""
 set REDIST vcredist.x64.exe
@@ -201,9 +201,9 @@ if false {
 puts "---Archive Creation---"
 set date [clock format [clock seconds] -format "%b-%d-%Y"]
 set name TileZed-$date$SUFFIX.zip
-set ARCHIVE C:/Users/Tim/Desktop/ProjectZomboid/$name
+set ARCHIVE C:/Programming/ProjectZomboid/$name
 file delete $ARCHIVE
-cd C:/Users/Tim/Desktop/ProjectZomboid/Tools
+cd C:/Programming/ProjectZomboid/Tools
 exec {C:\Program Files\7-Zip\7z.exe} a $ARCHIVE TileZed$SUFFIX2
 cd C:/Programming/TileZed
 puts $name
