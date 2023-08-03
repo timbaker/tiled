@@ -121,3 +121,8 @@ QRectF ZTileLayerGroup::boundingRect(const MapRenderer *renderer) const
 
     return boundingRect;
 }
+
+bool ZTileLayerGroup::useImageBlack(int x, int y) const
+{
+    return false;
+}

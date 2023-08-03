@@ -23,6 +23,7 @@
 #include "buildingmap.h"
 #include "buildingobjects.h"
 #include "buildingpreferences.h"
+#include "buildingroomdef.h"
 #include "buildingtemplates.h"
 #include "buildingtiles.h"
 #include "buildingtiletools.h"
@@ -348,6 +349,8 @@ void BuildingIsoScene::setDocument(BuildingDocument *doc)
 
     setSceneRect(mBuildingMap->mapComposite()->boundingRect(mBuildingMap->mapRenderer()));
     mDarkRectangle->setRect(sceneRect());
+
+    calculateUnlitRoomMask();
 
     connect(mDocument, &BuildingDocument::currentFloorChanged,
             this, &BuildingIsoScene::currentFloorChanged);
@@ -714,7 +717,6 @@ QVector<QRect> adjacentRects(const QVector<QRect> &rects, const QPoint &pos)
     return ret;
 }
 
-#include "buildingroomdef.h"
 void BuildingIsoScene::setCursorPosition(const QPoint &pos)
 {
     if (mHighlightRoomLock)
@@ -744,6 +746,32 @@ void BuildingIsoScene::setCursorPosition(const QPoint &pos)
     } else {
         mBuildingMap->suppressTiles(currentFloor(), QRegion());
     }
+}
+
+void BuildingIsoScene::calculateUnlitRoomMask()
+{
+    bool highlightRoom = prefs()->highlightRoom();
+    if (highlightRoom) {
+        prefs()->setHighlightRoom(false);
+        qApp->processEvents(QEventLoop::ExcludeUserInputEvents);
+    }
+    bool showRoomLights = prefs()->highlightUnlitRooms();
+    Building *building = this->building();
+    for (BuildingFloor *floor : building->floors()) {
+        CompositeLayerGroupItem *item = itemForFloor(floor);
+        if (item == nullptr) {
+            continue;
+        }
+        if (showRoomLights) {
+            item->layerGroup()->calculateUnlitRoomMask(building);
+        } else {
+            item->layerGroup()->clearUseImageBlack();
+        }
+    }
+    if (highlightRoom) {
+        prefs()->setHighlightRoom(true);
+    }
+    update();
 }
 
 void BuildingIsoScene::BuildingToMap()
