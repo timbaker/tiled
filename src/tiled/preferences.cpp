@@ -89,6 +89,7 @@ Preferences::Preferences()
     mShowMiniMap = mSettings->value(QLatin1String("ShowMiniMap"), true).toBool();
     mMiniMapWidth = mSettings->value(QLatin1String("MiniMapWidth"), 256).toInt();
     mShowTileLayersPanel = mSettings->value(QLatin1String("ShowTileLayersPanel"), true).toBool();
+    mShowTileSelection = mSettings->value(QLatin1String("ShowTileSelection"), true).toBool();
     mBackgroundColor = QColor(mSettings->value(QLatin1String("BackgroundColor"),
                                                QColor(Qt::darkGray).name()).toString());
     mShowAdjacentMaps = mSettings->value(QLatin1String("ShowAdjacentMaps"), true).toBool();
@@ -567,6 +568,15 @@ void Preferences::setShowTileLayersPanel(bool show)
     mShowTileLayersPanel = show;
     mSettings->setValue(QLatin1String("Interface/ShowTileLayersPanel"), show);
     emit showTileLayersPanelChanged(mShowTileLayersPanel);
+}
+
+void Preferences::setShowTileSelection(bool show)
+{
+    if (mShowTileSelection == show)
+        return;
+    mShowTileSelection = show;
+    mSettings->setValue(QLatin1String("Interface/ShowTileSelection"), show);
+    emit showTileSelectionChanged(mShowTileLayersPanel);
 }
 
 void Preferences::setBackgroundColor(const QColor &bgColor)

@@ -310,6 +310,7 @@ MainWindow::MainWindow(QWidget *parent, Qt::WindowFlags flags)
     mUi->actionShowLotFloorsOnly->setChecked(preferences->showLotFloorsOnly());
     mUi->actionShowMiniMap->setChecked(preferences->showMiniMap());
     mUi->actionShowTileLayersPanel->setChecked(preferences->showTileLayersPanel());
+    mUi->actionShowTileSelection->setChecked(preferences->showTileSelection());
 
     mUi->actionExportNewBinary->setVisible(false);
 #endif
@@ -412,6 +413,8 @@ MainWindow::MainWindow(QWidget *parent, Qt::WindowFlags flags)
             preferences, &Preferences::setShowMiniMap);
     connect(mUi->actionShowTileLayersPanel, &QAction::toggled,
             preferences, &Preferences::setShowTileLayersPanel);
+    connect(mUi->actionShowTileSelection, &QAction::toggled,
+            preferences, &Preferences::setShowTileSelection);
 #endif
     connect(mUi->actionZoomIn, &QAction::triggered, this, &MainWindow::zoomIn);
     connect(mUi->actionZoomOut, &QAction::triggered, this, &MainWindow::zoomOut);

@@ -131,6 +131,7 @@
     <addaction name="actionShowLotFloorsOnly"/>
     <addaction name="actionShowMiniMap"/>
     <addaction name="actionShowTileLayersPanel"/>
+    <addaction name="actionShowTileSelection"/>
     <addaction name="separator"/>
     <addaction name="actionZoomIn"/>
     <addaction name="actionZoomOut"/>
@@ -683,6 +684,17 @@
   <action name="actionRemoveMissingTilesets">
    <property name="text">
     <string>Remove Missing Tilesets</string>
+   </property>
+  </action>
+  <action name="actionShowTileSelection">
+   <property name="checkable">
+    <bool>true</bool>
+   </property>
+   <property name="text">
+    <string>ShowTile Selection</string>
+   </property>
+   <property name="shortcut">
+    <string>Ctrl+H</string>
    </property>
   </action>
  </widget>
