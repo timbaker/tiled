@@ -61,6 +61,7 @@ macx {
 
 SOURCES += aboutdialog.cpp \
     BuildingEditor/buildingkeyvaluesdialog.cpp \
+    BuildingEditor/exportbasementsdialog.cpp \
     abstractobjecttool.cpp \
     abstracttiletool.cpp \
     abstracttool.cpp \
@@ -278,6 +279,7 @@ SOURCES += aboutdialog.cpp \
 
 HEADERS += aboutdialog.h \
     BuildingEditor/buildingkeyvaluesdialog.h \
+    BuildingEditor/exportbasementsdialog.h \
     abstractobjecttool.h \
     abstractoverlay.h \
     abstracttiletool.h \
@@ -507,6 +509,7 @@ macx {
 
 FORMS += aboutdialog.ui \
     BuildingEditor/buildingkeyvaluesdialog.ui \
+    BuildingEditor/exportbasementsdialog.ui \
     commanddialog.ui \
     mainwindow.ui \
     newmapdialog.ui \

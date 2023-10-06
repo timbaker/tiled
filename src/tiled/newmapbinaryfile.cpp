@@ -559,9 +559,7 @@ bool NewMapBinaryFile::processObjectGroups(MapComposite *mapComposite)
 
 bool NewMapBinaryFile::processObjectGroup(ObjectGroup *objectGroup, int levelOffset, const QPoint &offset)
 {
-    int level;
-    if (!MapComposite::levelForLayer(objectGroup, &level))
-        return true;
+    int level = objectGroup->level();
     level += levelOffset;
 
     for (const MapObject *mapObject : objectGroup->objects()) {

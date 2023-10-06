@@ -28,6 +28,7 @@
 #include "buildingpreferences.h"
 #include "buildingpreferencesdialog.h"
 #include "buildingpropertiesdialog.h"
+#include "buildingreader.h"
 #include "buildingundoredo.h"
 #include "buildingisoview.h"
 #include "buildingorthoview.h"
@@ -97,7 +98,7 @@ using namespace Tiled::Internal;
 /////
 
 EditorWindowPerDocumentStuff::EditorWindowPerDocumentStuff(BuildingDocument *doc) :
-    QObject(doc),
+    QObject(),
     mMainWindow(BuildingEditorWindow::instance()),
     mDocument(doc),
     mEditMode(IsoObjectMode),
@@ -338,7 +339,7 @@ BuildingEditorWindow::BuildingEditorWindow(QWidget *parent) :
     ui->actionOpen->setIcon(openIcon);
     ui->actionSave->setIcon(saveIcon);
 
-    ui->actionExportNewBinary->setVisible(false);
+    ui->actionExportNewBinary->setVisible(true);
 
     ui->actionCut->setShortcuts(QKeySequence::Cut);
     ui->actionCopy->setShortcuts(QKeySequence::Copy);
@@ -1258,81 +1259,22 @@ void BuildingEditorWindow::exportTMX()
 }
 
 #include "buildingmap.h"
+#include "exportbasementsdialog.h"
 #include "mapcomposite.h"
 #include "mapmanager.h"
 #include "newmapbinaryfile.h"
 
 void BuildingEditorWindow::exportNewBinary()
 {
-    if (mCurrentDocument == nullptr)
+    ExportBasementsDialog dialog(this);
+    int result = dialog.exec();
+    if (result != QDialog::Accepted) {
         return;
-    QFileInfo fileInfo(mCurrentDocument->fileName());
-    QString dir = fileInfo.dir().path();
-    QString fileName = fileInfo.dir().filePath(fileInfo.baseName() + QLatin1String(".pzby"));
-    fileName = QFileDialog::getSaveFileName(this, tr("Export New Binary"), fileName, tr("Project Zomboid Map Binary (*.pzby)"));
-    if (fileName.isEmpty())
-        return;
-
-    Building* building = mCurrentDocument->building();
-    BuildingMap bmap(building);
-    Map *map = bmap.mergedMap();
-
-#if 0
-    if (map->orientation() == Map::LevelIsometric) {
-        if (!BuildingPreferences::instance()->levelIsometric()) {
-            Map *isoMap = MapManager::instance()->convertOrientation(map, Map::Isometric);
-            TilesetManager::instance()->removeReferences(map->tilesets());
-            delete map;
-            map = isoMap;
-        }
     }
-#endif
-    for (BuildingFloor *floor : building->floors()) {
-#if 0
-        // The given map has layers required by the editor, i.e., Floors, Walls,
-        // Doors, etc.  The TMXConfig.txt file may specify extra layer names.
-        // So we need to insert any extra layers in the order specified in
-        // TMXConfig.txt.  If the layer name has a N_ prefix, it is only added
-        // to level N, otherwise it is added to every level.  Object layers are
-        // added above *all* the tile layers in the map.
-        int previousExistingLayer = -1;
-        foreach (LayerInfo layerInfo, mLayers) {
-            QString layerName = layerInfo.mName;
-            int level;
-            if (MapComposite::levelForLayer(layerName, &level)) {
-                if (level != floor->level())
-                    continue;
-            } else {
-                layerName = tr("%1_%2").arg(floor->level()).arg(layerName);
-            }
-            int n;
-            if ((n = map->indexOfLayer(layerName)) >= 0) {
-                previousExistingLayer = n;
-                continue;
-            }
-            if (layerInfo.mType == LayerInfo::Tile) {
-                TileLayer *tl = new TileLayer(layerName, 0, 0,
-                                              map->width(), map->height());
-                if (previousExistingLayer < 0)
-                    previousExistingLayer = 0;
-                map->insertLayer(previousExistingLayer + 1, tl);
-                previousExistingLayer++;
-            } else {
-                ObjectGroup *og = new ObjectGroup(layerName,
-                                                  0, 0, map->width(), map->height());
-                map->addLayer(og);
-            }
-        }
-#endif
-
-        bmap.addRoomDefObjects(map, floor);
+    QStringList fileNames = dialog.fileNames();
+    for (const QString& fileName : fileNames) {
+        exportNewBinaryFile(&dialog, fileName);
     }
-
-    MapInfo* mapInfo = MapManager::instance()->newFromMap(map);
-    MapComposite mapComposite(mapInfo);
-
-    NewMapBinaryFile file;
-    file.write(&mapComposite, fileName);
 }
 
 void BuildingEditorWindow::editCut()
@@ -1741,6 +1683,84 @@ void BuildingEditorWindow::cropBuilding(const QRect &bounds)
         QMessageBox::information(this, tr("Crop Building"),
                                  tr("Some objects were deleted during cropping."));
     }
+}
+
+void BuildingEditorWindow::exportNewBinaryFile(ExportBasementsDialog *dialog, const QString &tbxFilePath)
+{
+    BuildingReader reader;
+    Building *building = reader.read(tbxFilePath);
+    if (building == nullptr) {
+        return;
+    }
+    reader.fix(building);
+    BuildingMap bmap(building);
+    Map *map = bmap.mergedMap();
+
+#if 0
+    if (map->orientation() == Map::LevelIsometric) {
+        if (!BuildingPreferences::instance()->levelIsometric()) {
+            Map *isoMap = MapManager::instance()->convertOrientation(map, Map::Isometric);
+            TilesetManager::instance()->removeReferences(map->tilesets());
+            delete map;
+            map = isoMap;
+        }
+    }
+#endif
+    for (BuildingFloor *floor : building->floors()) {
+#if 0
+        // The given map has layers required by the editor, i.e., Floors, Walls,
+        // Doors, etc.  The TMXConfig.txt file may specify extra layer names.
+        // So we need to insert any extra layers in the order specified in
+        // TMXConfig.txt.  If the layer name has a N_ prefix, it is only added
+        // to level N, otherwise it is added to every level.  Object layers are
+        // added above *all* the tile layers in the map.
+        int previousExistingLayer = -1;
+        foreach (LayerInfo layerInfo, mLayers) {
+            QString layerName = layerInfo.mName;
+            int level;
+            if (MapComposite::levelForLayer(layerName, &level)) {
+                if (level != floor->level())
+                    continue;
+            } else {
+                layerName = tr("%1_%2").arg(floor->level()).arg(layerName);
+            }
+            int n;
+            if ((n = map->indexOfLayer(layerName)) >= 0) {
+                previousExistingLayer = n;
+                continue;
+            }
+            if (layerInfo.mType == LayerInfo::Tile) {
+                TileLayer *tl = new TileLayer(layerName, 0, 0,
+                                              map->width(), map->height());
+                if (previousExistingLayer < 0)
+                    previousExistingLayer = 0;
+                map->insertLayer(previousExistingLayer + 1, tl);
+                previousExistingLayer++;
+            } else {
+                ObjectGroup *og = new ObjectGroup(layerName,
+                                                  0, 0, map->width(), map->height());
+                map->addLayer(og);
+            }
+        }
+#endif
+
+        bmap.addRoomDefObjects(map, floor);
+    }
+
+    delete building;
+
+    MapInfo* mapInfo = MapManager::instance()->newFromMap(map);
+    MapComposite mapComposite(mapInfo);
+
+    NewMapBinaryFile file;
+    QFileInfo fileInfo(tbxFilePath);
+    QString fileName = QDir(dialog->exportDirectory()).filePath(fileInfo.completeBaseName() + QStringLiteral(".pzby"));
+    file.write(&mapComposite, fileName);
+
+    TilesetManager::instance()->removeReferences(map->tilesets());
+
+    delete mapInfo;
+    delete map;
 }
 
 void BuildingEditorWindow::resizeBuilding()

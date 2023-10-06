@@ -18,6 +18,7 @@
 #ifndef BUILDINGEDITORWINDOW_H
 #define BUILDINGEDITORWINDOW_H
 
+#include "BuildingEditor/exportbasementsdialog.h"
 #include <QItemSelection>
 #include <QMainWindow>
 #include <QMap>
@@ -67,6 +68,7 @@ class BuildingOrthoScene;
 class BuildingOrthoView;
 class CategoryDock;
 class Door;
+class ExportBasementsDialog;
 class FurnitureGroup;
 class FurnitureTile;
 class IMode;
@@ -210,6 +212,8 @@ private:
     void deleteObjects();
 
     void cropBuilding(const QRect &bounds);
+
+    void exportNewBinaryFile(ExportBasementsDialog *dialog, const QString& tbxFilePath);
 
     typedef Tiled::Tileset Tileset; // Hack for signals/slots
 

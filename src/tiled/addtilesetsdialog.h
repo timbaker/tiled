@@ -53,7 +53,7 @@ private slots:
     void checkAll();
     void uncheckAll();
 
-    void accept();
+    void accept() override;
 
 private:
     Ui::AddTilesetsDialog *ui;
