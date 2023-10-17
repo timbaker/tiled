@@ -331,6 +331,9 @@ public:
     { return mSuppressRgn; }
     int suppressLevel() const
     { return mSuppressLevel; }
+
+    MapComposite* cropToMinimum();
+
 signals:
     void layerGroupAdded(int level);
     void layerAddedToGroup(int index);

@@ -53,6 +53,7 @@
 #include "simplefile.h"
 #include "templatefrombuildingdialog.h"
 #include "tileeditmode.h"
+#include "tiledeffile.h"
 #include "welcomemode.h"
 
 #include "fancytabwidget.h"
@@ -66,10 +67,12 @@
 #include "zoomable.h"
 #include "zprogress.h"
 
+#include "maplevel.h"
 #include "tile.h"
 #include "tileset.h"
 
 #include <QBitmap>
+#include <QClipboard>
 #include <QCloseEvent>
 #include <QComboBox>
 #include <QDebug>
@@ -1271,10 +1274,25 @@ void BuildingEditorWindow::exportNewBinary()
     if (result != QDialog::Accepted) {
         return;
     }
+
     QStringList fileNames = dialog.fileNames();
-    for (const QString& fileName : fileNames) {
-        exportNewBinaryFile(&dialog, fileName);
+    if (fileNames.isEmpty()) {
+        QMessageBox::information(this, tr("Export Basements"), tr("No TBX files were selected for export."));
+        return;
     }
+
+    QString tileDefFileName = TileMetaInfoMgr::instance()->tilesDirectory() + QStringLiteral("/newtiledefinitions.tiles");
+    QSet<QString> northStairTiles;
+    QSet<QString> westStairTiles;
+    getTopStaircaseTiles(tileDefFileName, northStairTiles, westStairTiles);
+
+    QString luaCode;
+    for (const QString& fileName : fileNames) {
+        exportNewBinaryFile(&dialog, fileName, northStairTiles, westStairTiles, luaCode);
+    }
+
+    QApplication::clipboard()->setText(luaCode);
+    QMessageBox::information(this, tr("Export Basements"), tr("basements.lua code was copied to the system clipboard."));
 }
 
 void BuildingEditorWindow::editCut()
@@ -1685,7 +1703,7 @@ void BuildingEditorWindow::cropBuilding(const QRect &bounds)
     }
 }
 
-void BuildingEditorWindow::exportNewBinaryFile(ExportBasementsDialog *dialog, const QString &tbxFilePath)
+void BuildingEditorWindow::exportNewBinaryFile(ExportBasementsDialog *dialog, const QString &tbxFilePath, QSet<QString> &northStairTiles, QSet<QString> &westStairTiles, QString& luaCode)
 {
     BuildingReader reader;
     Building *building = reader.read(tbxFilePath);
@@ -1752,15 +1770,87 @@ void BuildingEditorWindow::exportNewBinaryFile(ExportBasementsDialog *dialog, co
     MapInfo* mapInfo = MapManager::instance()->newFromMap(map);
     MapComposite mapComposite(mapInfo);
 
+    MapComposite* mapCompositeCropped = mapComposite.cropToMinimum();
+    MapComposite* mapCompositeToWrite = mapCompositeCropped ? mapCompositeCropped : &mapComposite;
+
     NewMapBinaryFile file;
     QFileInfo fileInfo(tbxFilePath);
     QString fileName = QDir(dialog->exportDirectory()).filePath(fileInfo.completeBaseName() + QStringLiteral(".pzby"));
-    file.write(&mapComposite, fileName);
+    if (file.write(mapCompositeToWrite, fileName) && (mapCompositeToWrite->map()->maxMapLevel() != nullptr)) {
+        Map* mapToWrite = mapCompositeToWrite->map();
+        MapInfo *mapInfo1 = mapCompositeToWrite->mapInfo();
+        int stairx = 0;
+        int stairy = 0;
+        QString stairDir = QStringLiteral("N");
+        if (getBasementStaircase(mapToWrite, northStairTiles, westStairTiles, stairx, stairy, stairDir)) {
+            luaCode += QStringLiteral("%1 = { width=%2, height=%3, stairx=%4, stairy=%5, stairDir=\"%6\" },")
+                    .arg(fileInfo.completeBaseName())
+                    .arg(mapInfo1->width())
+                    .arg(mapInfo1->height())
+                    .arg(stairx)
+                    .arg(stairy)
+                    .arg(stairDir);
+            luaCode += QStringLiteral("\n");
+        }
+    }
 
     TilesetManager::instance()->removeReferences(map->tilesets());
 
+    if (mapCompositeCropped) {
+        delete mapCompositeCropped->mapInfo();
+        delete mapCompositeCropped->map();
+        delete mapCompositeCropped;
+    }
+
     delete mapInfo;
     delete map;
+}
+
+void BuildingEditorWindow::getTopStaircaseTiles(const QString &tileDefFileName, QSet<QString> &northStairTiles, QSet<QString> &westStairTiles)
+{
+    Tiled::Internal::TileDefFile tileDefFile;
+    if (tileDefFile.read(tileDefFileName) == false) {
+        return;
+    }
+    for (TileDefTileset* tdts : tileDefFile.tilesets()) {
+        for (TileDefTile* tdt : tdts->mTiles) {
+            if (tdt->mProperties.contains(QStringLiteral("stairsTN"))) {
+                northStairTiles += BuildingTilesMgr::nameForTile(tdt->tileset()->mName, tdt->id());
+            }
+            else if (tdt->mProperties.contains(QStringLiteral("stairsTW"))) {
+                westStairTiles += BuildingTilesMgr::nameForTile(tdt->tileset()->mName, tdt->id());
+            }
+        }
+    }
+}
+
+bool BuildingEditorWindow::getBasementStaircase(Tiled::Map *map, QSet<QString> &northStairTiles, QSet<QString> &westStairTiles, int &stairx, int &stairy, QString &stairDir)
+{
+    MapLevel* mapLevel = map->maxMapLevel();
+    for (TileLayer* tileLayer : mapLevel->tileLayers()) {
+        for (int y = 0; y < tileLayer->height(); y++) {
+            for (int x = 0; x < tileLayer->width(); x++) {
+                const Cell& cell = tileLayer->cellAt(x, y);
+                if (cell.isEmpty()) {
+                    continue;
+                }
+                QString tileName = BuildingEditor::BuildingTilesMgr::instance()->nameForTile(cell.tile);
+                if (northStairTiles.contains(tileName)) {
+                    stairx = x;
+                    stairy = y;
+                    stairDir = QStringLiteral("N");
+                    return true;
+                }
+                if (westStairTiles.contains(tileName)) {
+                    stairx = x;
+                    stairy = y;
+                    stairDir = QStringLiteral("W");
+                    return true;
+                }
+            }
+        }
+    }
+    return false;
 }
 
 void BuildingEditorWindow::resizeBuilding()

@@ -1654,3 +1654,54 @@ void MapComposite::setSuppressRegion(const QRegion &rgn, int level)
     mSuppressLevel = level;
 }
 
+MapComposite *MapComposite::cropToMinimum()
+{
+    QVector<const Tiled::Cell *> cells(40);
+    MapInfo *mapInfo = this->mapInfo();
+    int mapWidth = mapInfo->width();
+    int mapHeight = mapInfo->height();
+    int minX = std::numeric_limits<int>::max();
+    int minY = std::numeric_limits<int>::max();
+    int maxX = std::numeric_limits<int>::min();
+    int maxY = std::numeric_limits<int>::min();
+    for (CompositeLayerGroup *lg : layerGroups()) {
+        lg->prepareDrawing2();
+        int d = (mapInfo->orientation() == Map::Isometric) ? -3 : 0;
+        d *= lg->level();
+        for (int y = d; y < mapHeight; y++) {
+            for (int x = d; x < mapWidth; x++) {
+                cells.resize(0);
+                lg->orderedCellsAt2(QPoint(x, y), cells);
+                if (cells.isEmpty()) {
+                    continue;
+                }
+                minX = std::min(minX, x);
+                minY = std::min(minY, y);
+                maxX = std::max(maxX, x);
+                maxY = std::max(maxY, y);
+            }
+        }
+    }
+    if (maxX - minX + 1 == mapWidth && maxY - minY + 1 == mapHeight) {
+        return nullptr;
+    }
+#if 1
+    Map *mapNew = map()->clone();
+    mapNew->setWidth(maxX - minX + 1);
+    mapNew->setHeight(maxY - minY + 1);
+    for (Layer* layer : mapNew->layers()) {
+        layer->resize(mapNew->size(), { -minX, -minY });
+    }
+#else
+    Map *mapNew = new Map(Map::LevelIsometric, maxX - minX + 1, maxY - minY + 1, 64, 32);
+    for (Layer* layer : map()->layers()) {
+        Layer* newLayer = layer->clone();
+        newLayer->resize(mapNew->size(), { -minX, -minY });
+        mapNew->addLayer(newLayer);
+    }
+#endif
+    MapInfo *mapInfoNew = MapManager::instance()->newFromMap(mapNew);
+    MapComposite *mapCompositeNew = new MapComposite(mapInfoNew, mapNew->orientation());
+    return mapCompositeNew;
+}
+

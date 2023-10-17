@@ -2349,7 +2349,7 @@ void TileDefWatcher::check()
 {
     if (!tileDefFileChecked) {
         QFileInfo fileInfo(TileMetaInfoMgr::instance()->tilesDirectory() + QString::fromLatin1("/newtiledefinitions.tiles"));
-#if 1
+#if 0
         QFileInfo info2(QLatin1String("D:/zomboid-svn/Anims2/workdir/media/newtiledefinitions.tiles"));
         if (info2.exists())
             fileInfo = info2;
