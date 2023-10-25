@@ -1773,7 +1773,8 @@ void BuildingEditorWindow::exportNewBinaryFile(ExportBasementsDialog *dialog, co
     MapComposite* mapCompositeCropped = mapComposite.cropToMinimum();
     MapComposite* mapCompositeToWrite = mapCompositeCropped ? mapCompositeCropped : &mapComposite;
 
-    NewMapBinaryFile file;
+    int SquaresPerChunk = 8;
+    NewMapBinaryFile file(SquaresPerChunk);
     QFileInfo fileInfo(tbxFilePath);
     QString fileName = QDir(dialog->exportDirectory()).filePath(fileInfo.completeBaseName() + QStringLiteral(".pzby"));
     if (file.write(mapCompositeToWrite, fileName) && (mapCompositeToWrite->map()->maxMapLevel() != nullptr)) {

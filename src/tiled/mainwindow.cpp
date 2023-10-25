@@ -1307,7 +1307,8 @@ void MainWindow::exportNewBinary()
                                                     filter, &selectedFilter);
     if (fileName.isEmpty())
         return;
-    NewMapBinaryFile file;
+    int SquaresPerChunk = 8;
+    NewMapBinaryFile file(SquaresPerChunk);
     MapComposite* mapComposite = mMapDocument->mapComposite();
     file.write(mapComposite, fileName);
 }

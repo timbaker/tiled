@@ -7,6 +7,8 @@
 #include <QString>
 #include <QVector>
 
+#include <cmath>
+
 class MapComposite;
 
 namespace Tiled {
@@ -16,11 +18,15 @@ class Tile;
 class Tileset;
 }
 
-#define CHUNK_WIDTH 10
-#define CHUNK_HEIGHT 10
-
 namespace LotFile
 {
+
+template<typename T>
+T clamp(T v, T min, T max)
+{
+    return qMin(qMax(v, min), max);
+};
+
 class Tile
 {
 public:
@@ -211,18 +217,114 @@ public:
         return false;
     }
 
+    const QRect& bounds() const
+    {
+        return mBounds;
+    }
+
+    QRect calculateBounds() const
+    {
+        QRect bounds;
+        if (rects.isEmpty()) {
+            return bounds;
+        }
+        bounds = rects[0]->bounds();
+        for (int i = 1; i < rects.size(); i++) {
+            bounds = bounds.united(rects[i]->bounds());
+        }
+        return bounds;
+    }
+
     int ID;
     int floor;
     QString name;
     Building *building;
     QList<RoomRect*> rects;
     QList<RoomObject> objects;
+    QRect mBounds;
 };
 
 class Building
 {
 public:
+    QRect calculateBounds() const
+    {
+        QRect bounds;
+        if (RoomList.isEmpty()) {
+            return bounds;
+        }
+        bounds = RoomList[0]->bounds();
+        for (int i = 1; i < RoomList.size(); i++) {
+            bounds = bounds.united(RoomList[i]->bounds());
+        }
+        return bounds;
+    }
+
     QList<Room*> RoomList;
+};
+
+template <typename T>
+class RectLookup
+{
+public:
+    RectLookup()
+    {
+
+    }
+
+    void clear(int widthInChunks, int heightInChunks, int squaresPerChunk)
+    {
+        for (int i = 0; i < mGrid.size(); i++) {
+            mGrid[i].clear();
+        }
+        mWidthInChunks = widthInChunks;
+        mHeightInChunks = heightInChunks;
+        mSquaresPerChunk = squaresPerChunk;
+        mGrid.resize(mWidthInChunks * mHeightInChunks);
+    }
+
+    void add(T* element, const QRect& bounds)
+    {
+        int xMin = bounds.x() / mSquaresPerChunk;
+        int yMin = bounds.y() / mSquaresPerChunk;
+        int xMax = std::ceil((bounds.x() + bounds.width()) / float(mSquaresPerChunk));
+        int yMax = std::ceil((bounds.y() + bounds.height()) / float(mSquaresPerChunk));
+        xMin = clamp(xMin, 0, mWidthInChunks-1);
+        yMin = clamp(yMin, 0, mHeightInChunks-1);
+        xMax = clamp(xMax, 0, mWidthInChunks-1);
+        yMax = clamp(yMax, 0, mHeightInChunks-1);
+        for (int y = yMin; y <= yMax; y++) {
+            for (int x = xMin; x <= xMax; x++) {
+                mGrid[x + y * mWidthInChunks] += element;
+            }
+        }
+    }
+
+    void overlapping(const QRect& rect, QList<T*>& elements) const
+    {
+        int xMin = rect.x() / mSquaresPerChunk;
+        int yMin = rect.y() / mSquaresPerChunk;
+        int xMax = std::ceil((rect.x() + rect.width()) / float(mSquaresPerChunk));
+        int yMax = std::ceil((rect.y() + rect.height()) / float(mSquaresPerChunk));
+        xMin = clamp(xMin, 0, mWidthInChunks-1);
+        yMin = clamp(yMin, 0, mHeightInChunks-1);
+        xMax = clamp(xMax, 0, mWidthInChunks-1);
+        yMax = clamp(yMax, 0, mHeightInChunks-1);
+        for (int y = yMin; y <= yMax; y++) {
+            for (int x = xMin; x <= xMax; x++) {
+                for (T* e : mGrid[x + y * mWidthInChunks]) {
+                    if (elements.contains(e) == false) {
+                        elements += e;
+                    }
+                }
+            }
+        }
+    }
+
+    int mWidthInChunks;
+    int mHeightInChunks;
+    int mSquaresPerChunk;
+    QVector<QVector<T*>> mGrid;
 };
 
 class Stats
@@ -248,7 +350,7 @@ class NewMapBinaryFile : public QObject
 {
     Q_OBJECT
 public:
-    NewMapBinaryFile();
+    NewMapBinaryFile(int squaresPerChunk);
 
     bool write(MapComposite* mapComposite, const QString& filePath);
 
@@ -275,8 +377,9 @@ private:
     void SaveString(QDataStream& out, const QString& str);
 
 private:
-    QList<LotFile::Zone*> ZoneList;
+    int mSquaresPerChunk;
     QMap<const Tiled::Tileset*,uint> mTilesetToFirstGid;
+    QMap<QString ,uint> mTilesetNameToFirstGid;
     Tiled::Tileset *mJumboTreeTileset;
     QMap<uint,LotFile::Tile*> mTileMap;
     QVector<QVector<QVector<LotFile::Square> > > mGridData;
