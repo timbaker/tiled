@@ -20,6 +20,8 @@
 
 #include <QDockWidget>
 
+class QListWidgetItem;
+
 namespace Ui {
 class BuildingAttributesDock;
 }
@@ -37,8 +39,14 @@ public:
 
 private slots:
     void currentDocumentChanged(BuildingEditor::BuildingDocument *doc);
-
+    void tileSelectionChanged(const QRegion& old);
+    void itemChanged(QListWidgetItem *item);
     void updateActions();
+
+private:
+    void clearAttributeOnSelectedSquares(const QString& attrName);
+    void setAttributeOnSelectedSquares(const QString& attrName);
+    void syncListWithSelectedSquares();
 
 private:
     Ui::BuildingAttributesDock *ui;

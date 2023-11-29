@@ -108,6 +108,7 @@ EditorWindowPerDocumentStuff::EditorWindowPerDocumentStuff(BuildingDocument *doc
     mEditMode(IsoObjectMode),
     mPrevObjectTool(PencilTool::instance()),
     mPrevTileTool(DrawTileTool::instance()),
+    mPrevAttributeTool(SelectTileTool::instance()),
     mMissingTilesetsReported(false),
     mIsoView(nullptr),
     mTileView(nullptr),
@@ -212,7 +213,9 @@ void EditorWindowPerDocumentStuff::toAttribute()
 
 void EditorWindowPerDocumentStuff::rememberTool()
 {
-    if (isTile())
+    if (isAttribute())
+        mPrevAttributeTool = ToolManager::instance()->currentTool();
+    else if (isTile())
         mPrevTileTool = ToolManager::instance()->currentTool();
     else if (isObject())
         mPrevObjectTool = ToolManager::instance()->currentTool();
@@ -220,7 +223,9 @@ void EditorWindowPerDocumentStuff::rememberTool()
 
 void EditorWindowPerDocumentStuff::restoreTool()
 {
-    if (isTile() && mPrevTileTool && mPrevTileTool->action()->isEnabled())
+    if (isAttribute() && mPrevAttributeTool && mPrevAttributeTool->action()->isEnabled())
+        mPrevAttributeTool->makeCurrent();
+    else if (isTile() && mPrevTileTool && mPrevTileTool->action()->isEnabled())
         mPrevTileTool->makeCurrent();
     else if (isObject() && mPrevObjectTool && mPrevObjectTool->action()->isEnabled())
         mPrevObjectTool->makeCurrent();
@@ -1780,6 +1785,7 @@ void BuildingEditorWindow::exportNewBinaryFile(ExportBasementsDialog *dialog, co
         }
     }
 #endif
+
     for (BuildingFloor *floor : building->floors()) {
 #if 0
         // The given map has layers required by the editor, i.e., Floors, Walls,
@@ -1821,13 +1827,19 @@ void BuildingEditorWindow::exportNewBinaryFile(ExportBasementsDialog *dialog, co
         bmap.addRoomDefObjects(map, floor);
     }
 
-    delete building;
-
     MapInfo* mapInfo = MapManager::instance()->newFromMap(map);
     MapComposite mapComposite(mapInfo);
 
-    MapComposite* mapCompositeCropped = mapComposite.cropToMinimum();
+    QPoint offset;
+    MapComposite* mapCompositeCropped = mapComposite.cropToMinimum(offset);
     MapComposite* mapCompositeToWrite = mapCompositeCropped ? mapCompositeCropped : &mapComposite;
+
+    QVector<SquareAttributesGrid*> attributesGrids;
+    for (BuildingFloor *floor : building->floors()) {
+        attributesGrids += floor->squareAttributesGrid()->clone(QRect(offset, mapCompositeToWrite->map()->size()));
+    }
+
+    delete building;
 
     int SquaresPerChunk = 8;
     NewMapBinaryFile file(SquaresPerChunk);
@@ -1835,7 +1847,7 @@ void BuildingEditorWindow::exportNewBinaryFile(ExportBasementsDialog *dialog, co
     QString fileName = QDir(dialog->exportDirectory()).filePath(fileInfo.completeBaseName() + QStringLiteral(".pzby"));
     bool isBasementAccess = fileInfo.fileName().startsWith(QStringLiteral("ba_"));
     MapLevel *mapLevel = isBasementAccess ? map->minMapLevel() : map->maxMapLevel();
-    if (file.write(mapCompositeToWrite, fileName) && (mapLevel != nullptr)) {
+    if (file.write(mapCompositeToWrite, attributesGrids, fileName) && (mapLevel != nullptr)) {
         Map* mapToWrite = mapCompositeToWrite->map();
         MapInfo *mapInfo1 = mapCompositeToWrite->mapInfo();
         int stairx = 0;
@@ -1863,6 +1875,7 @@ void BuildingEditorWindow::exportNewBinaryFile(ExportBasementsDialog *dialog, co
 
     delete mapInfo;
     delete map;
+    qDeleteAll(attributesGrids);
 }
 
 void BuildingEditorWindow::getTopStaircaseTiles(const QString &tileDefFileName, QSet<QString> &northStairTiles, QSet<QString> &westStairTiles)

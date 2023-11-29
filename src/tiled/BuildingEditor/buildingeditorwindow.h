@@ -144,6 +144,7 @@ private:
     EditMode mPrevObjectMode;
     BaseTool *mPrevObjectTool;
     BaseTool *mPrevTileTool;
+    BaseTool *mPrevAttributeTool;
     bool mMissingTilesetsReported;
 
     // Hack to keep iso/tile view position and scale synched.

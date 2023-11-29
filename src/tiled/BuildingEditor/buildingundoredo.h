@@ -41,6 +41,7 @@ class FurnitureTile;
 class FurnitureTiles;
 class RoofObject;
 class Room;
+class SquareAttributesGrid;
 class WallObject;
 class Window;
 
@@ -410,6 +411,7 @@ private:
     QSize mSize;
     QVector<QVector<Room*> > mGrid;
     QMap<QString,FloorTileGrid*> mGrime;
+    SquareAttributesGrid *mSquareAttributesGrid;
 };
 
 class InsertFloor : public QUndoCommand
@@ -639,6 +641,24 @@ private:
 
     BuildingDocument *mDocument;
     Tiled::Properties mProperties;
+};
+
+class ChangeSquareAttributes : public QUndoCommand
+{
+public:
+    ChangeSquareAttributes(BuildingDocument *doc, int level, const QRegion &selection, SquareAttributesGrid *attributes);
+    ~ChangeSquareAttributes();
+
+    void undo() override { swap(); }
+    void redo() override { swap(); }
+
+private:
+    void swap();
+
+    BuildingDocument *mDocument;
+    int mLevel;
+    QRegion mSelection;
+    SquareAttributesGrid *mAttributes;
 };
 
 } // namespace BuildingEditor

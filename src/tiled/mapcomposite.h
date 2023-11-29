@@ -332,7 +332,7 @@ public:
     int suppressLevel() const
     { return mSuppressLevel; }
 
-    MapComposite* cropToMinimum();
+    MapComposite* cropToMinimum(QPoint& offset);
 
 signals:
     void layerGroupAdded(int level);

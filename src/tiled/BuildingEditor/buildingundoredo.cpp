@@ -432,15 +432,17 @@ ResizeFloor::ResizeFloor(BuildingDocument *doc, BuildingFloor *floor,
 {
     mGrid = floor->resizeGrid(newSize);
     mGrime = floor->resizeGrime(newSize + QSize(1, 1));
+    mSquareAttributesGrid = floor->resizeSquareAttributesGrid(newSize);
 }
 
 ResizeFloor::~ResizeFloor()
 {
+    delete mSquareAttributesGrid;
 }
 
 void ResizeFloor::swap()
 {
-    mGrid = mDocument->resizeFloor(mFloor, mGrid, mGrime);
+    mGrid = mDocument->resizeFloor(mFloor, mGrid, mGrime, &mSquareAttributesGrid);
 }
 
 /////
@@ -711,4 +713,26 @@ ChangeBuildingKeyValues::ChangeBuildingKeyValues(BuildingDocument *doc, const Ti
 void ChangeBuildingKeyValues::swap()
 {
     mProperties = mDocument->changeBuildingProperties(mProperties);
+}
+
+/////
+
+ChangeSquareAttributes::ChangeSquareAttributes(BuildingDocument *doc, int level, const QRegion &selection, SquareAttributesGrid *attributes) :
+    QUndoCommand(QCoreApplication::translate("Undo Commands", "Change Square Attributes")),
+    mDocument(doc),
+    mLevel(level),
+    mSelection(selection),
+    mAttributes(attributes)
+{
+
+}
+
+ChangeSquareAttributes::~ChangeSquareAttributes()
+{
+    delete mAttributes;
+}
+
+void ChangeSquareAttributes::swap()
+{
+    mAttributes = mDocument->changeSquareAttributes(mLevel, mSelection, *mAttributes);
 }

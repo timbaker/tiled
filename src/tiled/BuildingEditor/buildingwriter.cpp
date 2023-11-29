@@ -304,6 +304,33 @@ public:
         w.writeCharacters(text);
         w.writeEndElement();
 
+        // Write square attributes
+        text.clear();
+        text += newline;
+        count = 0;
+        SquareAttributesGrid *sag = floor->squareAttributesGrid();
+        for (int y = 0; y < floor->height(); y++) {
+            for (int x = 0; x < floor->width(); x++) {
+                if (sag->hasAttributesFor(x, y) == false)
+                    text += zero;
+                else {
+                    int bits = 0;
+                    const SquareAttributes& attributes = sag->at(x, y);
+                    if (attributes.contains(QStringLiteral("KeepFloors")))
+                        bits |= 0x01;
+                    if (attributes.contains(QStringLiteral("KeepWalls")))
+                        bits |= 0x02;
+                    text += QString::number(bits, 16);
+                }
+                if (++count < max)
+                    text += comma;
+            }
+            text += newline;
+        }
+        w.writeStartElement(QLatin1String("attributes"));
+        w.writeCharacters(text);
+        w.writeEndElement();
+
         // Write user tile indices.
         foreach (QString layerName, floor->grimeLayers()) {
             if (floor->grime()[layerName]->isEmpty())

@@ -1654,7 +1654,7 @@ void MapComposite::setSuppressRegion(const QRegion &rgn, int level)
     mSuppressLevel = level;
 }
 
-MapComposite *MapComposite::cropToMinimum()
+MapComposite *MapComposite::cropToMinimum(QPoint &offset)
 {
     QVector<const Tiled::Cell *> cells(40);
     MapInfo *mapInfo = this->mapInfo();
@@ -1702,6 +1702,8 @@ MapComposite *MapComposite::cropToMinimum()
 #endif
     MapInfo *mapInfoNew = MapManager::instance()->newFromMap(mapNew);
     MapComposite *mapCompositeNew = new MapComposite(mapInfoNew, mapNew->orientation());
+    offset.setX(minX);
+    offset.setY(minY);
     return mapCompositeNew;
 }
 

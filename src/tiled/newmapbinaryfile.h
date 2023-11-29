@@ -1,6 +1,8 @@
 #ifndef TMXBINARY_H
 #define TMXBINARY_H
 
+#include "BuildingEditor/buildingfloor.h"
+
 #include <QMap>
 #include <QObject>
 #include <QRect>
@@ -94,6 +96,8 @@ public:
 
     QList<Entry*> Entries;
     int roomID;
+    BuildingEditor::SquareAttributes attributes;
+
 };
 
 class Zone
@@ -352,7 +356,7 @@ class NewMapBinaryFile : public QObject
 public:
     NewMapBinaryFile(int squaresPerChunk);
 
-    bool write(MapComposite* mapComposite, const QString& filePath);
+    bool write(MapComposite* mapComposite, const QVector<BuildingEditor::SquareAttributesGrid*>& attributesGrids, const QString& filePath);
 
     bool generateHeader(MapComposite *mapComposite);
     bool generateHeaderAux(QDataStream& out, MapComposite *mapComposite);

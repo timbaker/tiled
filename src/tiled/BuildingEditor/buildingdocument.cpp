@@ -425,11 +425,13 @@ QSize BuildingDocument::resizeBuilding(const QSize &newSize)
 
 QVector<QVector<Room *> > BuildingDocument::resizeFloor(BuildingFloor *floor,
                                                         const QVector<QVector<Room *> > &grid,
-                                                        QMap<QString,FloorTileGrid*> &grime)
+                                                        QMap<QString,FloorTileGrid*> &grime,
+                                                        SquareAttributesGrid **attributesGrid)
 {
     QVector<QVector<Room *> > old = floor->grid();
     floor->setGrid(grid);
     grime = floor->setGrime(grime);
+    *attributesGrid = floor->setSquareAttributesGrid(*attributesGrid);
     return old;
 }
 
@@ -518,6 +520,16 @@ Tiled::Properties BuildingDocument::changeBuildingProperties(const Tiled::Proper
     Tiled::Properties old = building()->properties();
     building()->properties() = properties;
     return old;
+}
+
+SquareAttributesGrid *BuildingDocument::changeSquareAttributes(int level, const QRegion &selection, const SquareAttributesGrid &attributes)
+{
+    BuildingFloor *floor = mBuilding->floor(level);
+    QRect bounds = selection.boundingRect();
+    SquareAttributesGrid *result = floor->squareAttributesGrid()->clone();
+    floor->squareAttributesGrid()->copy(attributes, selection);
+    emit squareAttributesChanged(floor, selection);
+    return result;
 }
 
 void BuildingDocument::furnitureTileChanged(FurnitureTile *ftile)

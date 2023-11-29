@@ -246,8 +246,100 @@ void FloorTileGrid::swapToVector()
 
 /////
 
+SquareAttributesGrid::SquareAttributesGrid(int width, int height) :
+    mWidth(width),
+    mHeight(height)
+{
+
+}
+
+const SquareAttributes &SquareAttributesGrid::at(int index) const
+{
+    QHash<int,SquareAttributes>::const_iterator it = mCells.find(index);
+    if (it != mCells.end())
+        return *it;
+    return mEmptyCell;
+}
+
+void SquareAttributesGrid::replace(int index, const SquareAttributes &atts)
+{
+    QHash<int,SquareAttributes>::iterator it = mCells.find(index);
+    if (it == mCells.end()) {
+        if (atts.isEmpty())
+            return;
+        mCells.insert(index, atts);
+    } else if (!atts.isEmpty()) {
+        (*it) = atts;
+    } else {
+        mCells.erase(it);
+    }
+}
+
+void SquareAttributesGrid::replace(int x, int y, const SquareAttributes &atts)
+{
+    Q_ASSERT(isValidPosition(x, y));
+    replace(x + y * mWidth, atts);
+}
+
+SquareAttributesGrid *SquareAttributesGrid::clone() const
+{
+    return new SquareAttributesGrid(*this);
+}
+
+SquareAttributesGrid *SquareAttributesGrid::clone(const QRect &r) const
+{
+    SquareAttributesGrid *klone = new SquareAttributesGrid(r.width(), r.height());
+    const QRect r2 = r & bounds();
+    for (int x = r2.left(); x <= r2.right(); x++) {
+        for (int y = r2.top(); y <= r2.bottom(); y++) {
+            klone->replace(x - r.x(), y - r.y(), at(x, y));
+        }
+    }
+    return klone;
+}
+
+SquareAttributesGrid *SquareAttributesGrid::clone(const QRegion &rgn) const
+{
+    QRect r = rgn.boundingRect();
+    SquareAttributesGrid *klone = new SquareAttributesGrid(r.width(), r.height());
+    for (QRect r2 : rgn) {
+        r2 &= bounds();
+        for (int x = r2.left(); x <= r2.right(); x++) {
+            for (int y = r2.top(); y <= r2.bottom(); y++) {
+                klone->replace(x - r.x(), y - r.y(), at(x, y));
+            }
+        }
+    }
+    return klone;
+}
+
+void SquareAttributesGrid::copy(const SquareAttributesGrid &other)
+{
+    QRect r = bounds() & other.bounds();
+    for (int y = r.top(); y <= r.bottom(); y++) {
+        for (int x = r.left(); x <= r.right(); x++) {
+            replace(x - r.x(), y - r.y(), other.at(x, y));
+        }
+    }
+}
+
+void SquareAttributesGrid::copy(const SquareAttributesGrid &other, const QRegion &rgn)
+{
+    for (QRect r2 : rgn) {
+        r2 &= bounds() & other.bounds();
+        for (int x = r2.left(); x <= r2.right(); x++) {
+            for (int y = r2.top(); y <= r2.bottom(); y++) {
+                replace(x, y, other.at(x, y));
+            }
+        }
+    }
+}
+
+/////
+
 BuildingFloor::BuildingFloor(Building *building, int level) :
     mBuilding(building),
+    mAttributesGrid(new SquareAttributesGrid(building->width(), building->height())),
     mLevel(level)
 {
     int w = building->width();
@@ -267,6 +359,7 @@ BuildingFloor::BuildingFloor(Building *building, int level) :
 BuildingFloor::~BuildingFloor()
 {
     qDeleteAll(mObjects);
+    delete mAttributesGrid;
 }
 
 BuildingFloor *BuildingFloor::floorAbove() const
@@ -1825,6 +1918,13 @@ QMap<QString,FloorTileGrid*> BuildingFloor::resizeGrime(const QSize &newSize) co
     return grid;
 }
 
+SquareAttributesGrid *BuildingFloor::resizeSquareAttributesGrid(const QSize &newSize) const
+{
+    SquareAttributesGrid *result = new SquareAttributesGrid(newSize.width(), newSize.height());
+    result->copy(*mAttributesGrid);
+    return result;
+}
+
 void BuildingFloor::rotate(bool right)
 {
     int oldWidth = mRoomAtPos.size();
@@ -1886,6 +1986,7 @@ BuildingFloor *BuildingFloor::clone()
     klone->mGrimeGrid = mGrimeGrid;
     foreach (QString key, klone->mGrimeGrid.keys())
         klone->mGrimeGrid[key] = new FloorTileGrid(*klone->mGrimeGrid[key]);
+    klone->setSquareAttributesGrid(mAttributesGrid);
     return klone;
 }
 
@@ -1976,6 +2077,18 @@ bool BuildingFloor::hasUserTiles(const QString &layerName)
     if (mGrimeGrid.contains(layerName))
         return !mGrimeGrid[layerName]->isEmpty();
     return false;
+}
+
+SquareAttributesGrid *BuildingFloor::setSquareAttributesGrid(SquareAttributesGrid *other)
+{
+    SquareAttributesGrid *old = mAttributesGrid;
+    mAttributesGrid = other->clone();
+    return old;
+}
+
+SquareAttributesGrid *BuildingFloor::createSquareAttributesGrid() const
+{
+    return mAttributesGrid->clone();
 }
 
 /////

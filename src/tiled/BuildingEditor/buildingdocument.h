@@ -18,6 +18,7 @@
 #ifndef BUILDINGDOCUMENT_H
 #define BUILDINGDOCUMENT_H
 
+#include "BuildingEditor/buildingundoredo.h"
 #include "properties.h"
 
 #include <QObject>
@@ -40,6 +41,7 @@ class FurnitureTiles;
 class RoofObject;
 class Room;
 class FloorTileGrid;
+class SquareAttributesGrid;
 class WallObject;
 class Window;
 
@@ -158,7 +160,8 @@ public:
     QSize resizeBuilding(const QSize &newSize);
     QVector<QVector<Room *> > resizeFloor(BuildingFloor *floor,
                                           const QVector<QVector<Room*> > &grid,
-                                          QMap<QString,FloorTileGrid*> &grime);
+                                          QMap<QString,FloorTileGrid*> &grime,
+                                          SquareAttributesGrid **attributesGrid);
     void rotateBuilding(bool right);
     void flipBuilding(bool horizontal);
 
@@ -175,6 +178,8 @@ public:
     QRegion setTileSelection(const QRegion &selection);
 
     Tiled::Properties changeBuildingProperties(const Tiled::Properties& properties);
+
+    SquareAttributesGrid *changeSquareAttributes(int level, const QRegion& selection, const SquareAttributesGrid& attributes);
     // -UNDO/REDO
 
 signals:
@@ -225,6 +230,8 @@ signals:
 
     void usedTilesChanged();
     void usedFurnitureChanged();
+
+    void squareAttributesChanged(BuildingEditor::BuildingFloor *floor, const QRegion& region);
 
 private:
     void checkUsedTile(BuildingTileEntry *entry);
