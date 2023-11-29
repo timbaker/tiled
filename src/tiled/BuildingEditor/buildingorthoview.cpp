@@ -331,6 +331,7 @@ BuildingBaseScene::BuildingBaseScene(QObject *parent) :
     mRenderer(0),
     mMouseOverObject(0),
     mEditingTiles(false),
+    mEditingAttributes(false),
     mRoomSelectionItem(0)
 {
 }
@@ -543,6 +544,11 @@ void BuildingBaseScene::setMouseOverObject(BuildingObject *object)
 void BuildingBaseScene::setEditingTiles(bool editing)
 {
     mEditingTiles = editing;
+}
+
+void BuildingBaseScene::setEditingAttributes(bool editing)
+{
+    mEditingAttributes = editing;
 }
 
 bool BuildingBaseScene::shouldShowFloorItem(BuildingFloor *floor) const

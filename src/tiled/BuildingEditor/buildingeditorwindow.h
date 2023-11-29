@@ -55,6 +55,7 @@ class FancyTabWidget;
 
 namespace BuildingEditor {
 
+class AttributeEditMode;
 class BaseTool;
 class Building;
 class BuildingBaseScene;
@@ -98,21 +99,24 @@ public:
     enum EditMode {
         OrthoObjectMode,
         IsoObjectMode,
-        TileMode
+        TileMode,
+        AttributeMode,
     };
     void setEditMode(EditMode mode);
     EditMode editMode() const { return mEditMode; }
-    bool isOrthoObject() { return mEditMode == OrthoObjectMode; }
-    bool isIsoObject() { return mEditMode == IsoObjectMode; }
-    bool isObject() { return mEditMode != TileMode; }
-    bool isTile() { return mEditMode == TileMode; }
-    bool isOrtho() { return mEditMode == OrthoObjectMode; }
-    bool isIso() { return mEditMode != OrthoObjectMode; }
+    bool isOrthoObject() { return mEditMode == EditMode::OrthoObjectMode; }
+    bool isIsoObject() { return mEditMode == EditMode::IsoObjectMode; }
+    bool isObject() { return mEditMode != EditMode::TileMode && mEditMode != EditMode::AttributeMode; }
+    bool isTile() { return mEditMode == EditMode::TileMode; }
+    bool isOrtho() { return mEditMode == EditMode::OrthoObjectMode; }
+    bool isIso() { return mEditMode != EditMode::OrthoObjectMode; }
+    bool isAttribute() { return mEditMode == EditMode::AttributeMode; }
 
     void toOrthoObject();
     void toIsoObject();
     void toObject();
     void toTile();
+    void toAttribute();
 
     void rememberTool();
     void restoreTool();
@@ -143,8 +147,11 @@ private:
     bool mMissingTilesetsReported;
 
     // Hack to keep iso/tile view position and scale synched.
+    QPointF mIsoViewsCenter;
+    qreal mIsoViewsZoom = qreal(1.0);
     BuildingIsoView *mIsoView;
     BuildingIsoView *mTileView;
+    BuildingIsoView *mAttributeView;
 
     QTimer mAutoSaveTimer;
     QString mAutoSaveFileName;
@@ -217,7 +224,7 @@ private:
 
     void exportNewBinaryFile(ExportBasementsDialog *dialog, const QString& tbxFilePath, QSet<QString> &northStairTiles, QSet<QString> &westStairTiles, QString &luaCode);
     void getTopStaircaseTiles(const QString& tileDefFileName, QSet<QString>& northStairTiles, QSet<QString> &westStairTiles);
-    bool getBasementStaircase(Tiled::Map* map, QSet<QString>& northStairTiles, QSet<QString>& westStairTiles, int &stairx, int &stairy, QString& stairDir);
+    bool getBasementStaircase(Tiled::Map* map, QSet<QString>& northStairTiles, QSet<QString>& westStairTiles, int &stairx, int &stairy, QString& stairDir, bool isBasementAccess);
 
     typedef Tiled::Tileset Tileset; // Hack for signals/slots
 
@@ -317,6 +324,7 @@ private:
     OrthoObjectEditMode *mOrthoObjectEditMode;
     IsoObjectEditMode *mIsoObjectEditMode;
     TileEditMode *mTileEditMode;
+    AttributeEditMode *mAttributeEditMode;
 
     QMap<BuildingDocument*,EditorWindowPerDocumentStuff*> mDocumentStuff;
     friend class EditorWindowPerDocumentStuff;

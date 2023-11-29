@@ -482,6 +482,9 @@ public:
     virtual void setEditingTiles(bool editing);
     bool editingTiles() const { return mEditingTiles; }
 
+    virtual void setEditingAttributes(bool editing);
+    bool editingAttributes() const { return mEditingAttributes; }
+
     virtual bool shouldShowFloorItem(BuildingFloor *floor) const;
     virtual bool shouldShowObjectItem(BuildingObject *object) const;
 
@@ -531,6 +534,7 @@ protected:
     QSet<GraphicsObjectItem*> mSelectedObjectItems;
     BuildingObject *mMouseOverObject;
     bool mEditingTiles;
+    bool mEditingAttributes;
     RoomSelectionItem *mRoomSelectionItem;
 };
 

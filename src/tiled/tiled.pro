@@ -60,6 +60,9 @@ macx {
 #OBJECTS_DIR = .obj
 
 SOURCES += aboutdialog.cpp \
+    BuildingEditor/attributeeditmode.cpp \
+    BuildingEditor/attributeeditmode_p.cpp \
+    BuildingEditor/buildingattributesdock.cpp \
     BuildingEditor/buildingkeyvaluesdialog.cpp \
     BuildingEditor/exportbasementsdialog.cpp \
     abstractobjecttool.cpp \
@@ -278,6 +281,9 @@ SOURCES += aboutdialog.cpp \
     BuildingEditor/roofhiding.cpp
 
 HEADERS += aboutdialog.h \
+    BuildingEditor/attributeeditmode.h \
+    BuildingEditor/attributeeditmode_p.h \
+    BuildingEditor/buildingattributesdock.h \
     BuildingEditor/buildingkeyvaluesdialog.h \
     BuildingEditor/exportbasementsdialog.h \
     abstractobjecttool.h \
@@ -508,6 +514,7 @@ macx {
 }
 
 FORMS += aboutdialog.ui \
+    BuildingEditor/buildingattributesdock.ui \
     BuildingEditor/buildingkeyvaluesdialog.ui \
     BuildingEditor/exportbasementsdialog.ui \
     commanddialog.ui \

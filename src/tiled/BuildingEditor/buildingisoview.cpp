@@ -672,6 +672,13 @@ void BuildingIsoScene::setEditingTiles(bool editing)
     }
 }
 
+void BuildingIsoScene::setEditingAttributes(bool editing)
+{
+    if (editing != mEditingAttributes) {
+        mEditingAttributes = editing;
+    }
+}
+
 bool isRectAdjacent(const QRect &r, const QRect &r2)
 {
     return r.adjusted(-1, -1, 1, 1).intersects(r2);

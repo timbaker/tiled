@@ -18,6 +18,7 @@
 #include "buildingeditorwindow.h"
 #include "ui_buildingeditorwindow.h"
 
+#include "attributeeditmode.h"
 #include "building.h"
 #include "buildingdocument.h"
 #include "buildingdocumentmgr.h"
@@ -108,8 +109,9 @@ EditorWindowPerDocumentStuff::EditorWindowPerDocumentStuff(BuildingDocument *doc
     mPrevObjectTool(PencilTool::instance()),
     mPrevTileTool(DrawTileTool::instance()),
     mMissingTilesetsReported(false),
-    mIsoView(0),
-    mTileView(0)
+    mIsoView(nullptr),
+    mTileView(nullptr),
+    mAttributeView(nullptr)
 {
     connect(document()->undoStack(), &QUndoStack::cleanChanged, this, &EditorWindowPerDocumentStuff::autoSaveCheck);
     connect(document()->undoStack(), &QUndoStack::indexChanged, this, &EditorWindowPerDocumentStuff::autoSaveCheck);
@@ -138,27 +140,41 @@ void EditorWindowPerDocumentStuff::deactivate()
 
 void EditorWindowPerDocumentStuff::toOrthoObject()
 {
-    if (mEditMode == TileMode) {
-        mIsoView->centerOn(mTileView->mapToScene(mTileView->viewport()->rect().center()));
-        mIsoView->zoomable()->setScale(mTileView->zoomable()->scale());
+    if (mEditMode == EditMode::IsoObjectMode) {
+        mIsoViewsCenter = mIsoView->mapToScene(mTileView->viewport()->rect().center());
+        mIsoViewsZoom = mIsoView->zoomable()->scale();
     }
-    mEditMode = OrthoObjectMode;
-    mPrevObjectMode = OrthoObjectMode;
+    if (mEditMode == EditMode::TileMode) {
+        mIsoViewsCenter = mTileView->mapToScene(mTileView->viewport()->rect().center());
+        mIsoViewsZoom = mTileView->zoomable()->scale();
+    }
+    if (mEditMode == EditMode::AttributeMode) {
+        mIsoViewsCenter = mAttributeView->mapToScene(mAttributeView->viewport()->rect().center());
+        mIsoViewsZoom = mAttributeView->zoomable()->scale();
+    }
+    mEditMode = EditMode::OrthoObjectMode;
+    mPrevObjectMode = EditMode::OrthoObjectMode;
 }
 
 void EditorWindowPerDocumentStuff::toIsoObject()
 {
-    if (mEditMode == TileMode) {
-        mIsoView->centerOn(mTileView->mapToScene(mTileView->viewport()->rect().center()));
-        mIsoView->zoomable()->setScale(mTileView->zoomable()->scale());
+    if (mEditMode == EditMode::TileMode) {
+        mIsoViewsCenter = mTileView->mapToScene(mTileView->viewport()->rect().center());
+        mIsoViewsZoom = mTileView->zoomable()->scale();
     }
-    mEditMode = IsoObjectMode;
-    mPrevObjectMode = IsoObjectMode;
+    if (mEditMode == EditMode::AttributeMode) {
+        mIsoViewsCenter = mAttributeView->mapToScene(mAttributeView->viewport()->rect().center());
+        mIsoViewsZoom = mAttributeView->zoomable()->scale();
+    }
+    mIsoView->centerOn(mIsoViewsCenter);
+    mIsoView->zoomable()->setScale(mIsoViewsZoom);
+    mEditMode = EditMode::IsoObjectMode;
+    mPrevObjectMode = EditMode::IsoObjectMode;
 }
 
 void EditorWindowPerDocumentStuff::toObject()
 {
-    if (mPrevObjectMode == OrthoObjectMode)
+    if (mPrevObjectMode == EditMode::OrthoObjectMode)
         toOrthoObject();
     else
         toIsoObject();
@@ -166,9 +182,32 @@ void EditorWindowPerDocumentStuff::toObject()
 
 void EditorWindowPerDocumentStuff::toTile()
 {
-    mTileView->centerOn(mIsoView->mapToScene(mIsoView->viewport()->rect().center()));
-    mTileView->zoomable()->setScale(mIsoView->zoomable()->scale());
-    mEditMode = TileMode;
+    if (mEditMode == EditMode::IsoObjectMode) {
+        mIsoViewsCenter = mIsoView->mapToScene(mIsoView->viewport()->rect().center());
+        mIsoViewsZoom = mIsoView->zoomable()->scale();
+    }
+    if (mEditMode == EditMode::AttributeMode) {
+        mIsoViewsCenter = mAttributeView->mapToScene(mAttributeView->viewport()->rect().center());
+        mIsoViewsZoom = mAttributeView->zoomable()->scale();
+    }
+    mTileView->centerOn(mIsoViewsCenter);
+    mTileView->zoomable()->setScale(mIsoViewsZoom);
+    mEditMode = EditMode::TileMode;
+}
+
+void EditorWindowPerDocumentStuff::toAttribute()
+{
+    if (mEditMode == EditMode::IsoObjectMode) {
+        mIsoViewsCenter = mIsoView->mapToScene(mIsoView->viewport()->rect().center());
+        mIsoViewsZoom = mIsoView->zoomable()->scale();
+    }
+    if (mEditMode == EditMode::TileMode) {
+        mIsoViewsCenter = mTileView->mapToScene(mTileView->viewport()->rect().center());
+        mIsoViewsZoom = mTileView->zoomable()->scale();
+    }
+    mAttributeView->centerOn(mIsoViewsCenter);
+    mAttributeView->zoomable()->setScale(mIsoViewsZoom);
+    mEditMode = EditMode::AttributeMode;
 }
 
 void EditorWindowPerDocumentStuff::rememberTool()
@@ -189,7 +228,9 @@ void EditorWindowPerDocumentStuff::restoreTool()
 
 void EditorWindowPerDocumentStuff::viewAddedForDocument(BuildingIsoView *view)
 {
-    if (view->scene()->editingTiles())
+    if (view->scene()->editingAttributes())
+        mAttributeView = view;
+    else if (view->scene()->editingTiles())
         mTileView = view;
     else
         mIsoView = view;
@@ -274,6 +315,7 @@ BuildingEditorWindow::BuildingEditorWindow(QWidget *parent) :
     mOrthoObjectEditMode(0),
     mIsoObjectEditMode(0),
     mTileEditMode(0),
+    mAttributeEditMode(nullptr),
     mDocumentChanging(false)
 {
     ui->setupUi(this);
@@ -455,10 +497,13 @@ BuildingEditorWindow::BuildingEditorWindow(QWidget *parent) :
     mOrthoObjectEditMode = new OrthoObjectEditMode(this);
     mIsoObjectEditMode = new IsoObjectEditMode(this);
     mTileEditMode = new TileEditMode(this);
+    mAttributeEditMode = new AttributeEditMode(this);
 
     connect(mIsoObjectEditMode, &IsoObjectEditMode::viewAddedForDocument,
             this, &BuildingEditorWindow::viewAddedForDocument);
     connect(mTileEditMode, &TileEditMode::viewAddedForDocument,
+            this, &BuildingEditorWindow::viewAddedForDocument);
+    connect(mAttributeEditMode, &AttributeEditMode::viewAddedForDocument,
             this, &BuildingEditorWindow::viewAddedForDocument);
 
     ::Utils::StyleHelper::setBaseColor(::Utils::StyleHelper::DEFAULT_BASE_COLOR);
@@ -470,6 +515,7 @@ BuildingEditorWindow::BuildingEditorWindow(QWidget *parent) :
     ModeManager::instance().addMode(mOrthoObjectEditMode);
     ModeManager::instance().addMode(mIsoObjectEditMode);
     ModeManager::instance().addMode(mTileEditMode);
+    ModeManager::instance().addMode(mAttributeEditMode);
     setCentralWidget(mTabWidget);
 
     mWelcomeMode->setEnabled(true);
@@ -534,6 +580,9 @@ bool BuildingEditorWindow::openFile(const QString &fileName)
                 break;
             case EditorWindowPerDocumentStuff::TileMode:
                 mode = mTileEditMode;
+                break;
+            case EditorWindowPerDocumentStuff::AttributeMode:
+                mode = mAttributeEditMode;
                 break;
             }
             ModeManager::instance().setCurrentMode(mode);
@@ -681,6 +730,7 @@ void BuildingEditorWindow::readSettings()
     mOrthoObjectEditMode->readSettings(mSettings);
     mIsoObjectEditMode->readSettings(mSettings);
     mTileEditMode->readSettings(mSettings);
+    mAttributeEditMode->readSettings(mSettings);
 }
 
 void BuildingEditorWindow::writeSettings()
@@ -700,6 +750,7 @@ void BuildingEditorWindow::writeSettings()
     mOrthoObjectEditMode->writeSettings(mSettings);
     mIsoObjectEditMode->writeSettings(mSettings);
     mTileEditMode->writeSettings(mSettings);
+    mAttributeEditMode->writeSettings(mSettings);
 }
 
 void BuildingEditorWindow::saveSplitterSizes(QSplitter *splitter)
@@ -970,6 +1021,7 @@ void BuildingEditorWindow::documentAdded(BuildingDocument *doc)
     mOrthoObjectEditMode->setEnabled(true);
     mIsoObjectEditMode->setEnabled(true);
     mTileEditMode->setEnabled(true);
+    mAttributeEditMode->setEnabled(true);
 
 //    reportMissingTilesets();
 #if 1
@@ -1127,6 +1179,9 @@ void BuildingEditorWindow::currentDocumentChanged(BuildingDocument *doc)
         case EditorWindowPerDocumentStuff::TileMode:
             mode = mTileEditMode;
             break;
+        case EditorWindowPerDocumentStuff::AttributeMode:
+            mode = mAttributeEditMode;
+            break;
         }
         ModeManager::instance().setCurrentMode(mode);
 
@@ -1163,6 +1218,7 @@ void BuildingEditorWindow::currentDocumentChanged(BuildingDocument *doc)
         mOrthoObjectEditMode->setEnabled(false);
         mIsoObjectEditMode->setEnabled(false);
         mTileEditMode->setEnabled(false);
+        mAttributeEditMode->setEnabled(false);
     }
 
     updateActions();
@@ -1377,7 +1433,7 @@ void BuildingEditorWindow::selectAll()
 {
     if (!mCurrentDocument)
         return;
-    if (mCurrentDocumentStuff->isTile()) {
+    if (mCurrentDocumentStuff->isTile() || mCurrentDocumentStuff->isAttribute()) {
         mCurrentDocument->undoStack()->push(
                     new ChangeTileSelection(mCurrentDocument, currentFloor()->bounds(1, 1)));
         return;
@@ -1395,7 +1451,7 @@ void BuildingEditorWindow::selectNone()
 {
     if (!mCurrentDocument)
         return;
-    if (mCurrentDocumentStuff->isTile()) {
+    if (mCurrentDocumentStuff->isTile() || mCurrentDocumentStuff->isAttribute()) {
         mCurrentDocument->undoStack()->push(
                     new ChangeTileSelection(mCurrentDocument, QRegion()));
         return;
@@ -1777,13 +1833,15 @@ void BuildingEditorWindow::exportNewBinaryFile(ExportBasementsDialog *dialog, co
     NewMapBinaryFile file(SquaresPerChunk);
     QFileInfo fileInfo(tbxFilePath);
     QString fileName = QDir(dialog->exportDirectory()).filePath(fileInfo.completeBaseName() + QStringLiteral(".pzby"));
-    if (file.write(mapCompositeToWrite, fileName) && (mapCompositeToWrite->map()->maxMapLevel() != nullptr)) {
+    bool isBasementAccess = fileInfo.fileName().startsWith(QStringLiteral("ba_"));
+    MapLevel *mapLevel = isBasementAccess ? map->minMapLevel() : map->maxMapLevel();
+    if (file.write(mapCompositeToWrite, fileName) && (mapLevel != nullptr)) {
         Map* mapToWrite = mapCompositeToWrite->map();
         MapInfo *mapInfo1 = mapCompositeToWrite->mapInfo();
         int stairx = 0;
         int stairy = 0;
         QString stairDir = QStringLiteral("N");
-        if (getBasementStaircase(mapToWrite, northStairTiles, westStairTiles, stairx, stairy, stairDir)) {
+        if (getBasementStaircase(mapToWrite, northStairTiles, westStairTiles, stairx, stairy, stairDir, isBasementAccess)) {
             luaCode += QStringLiteral("%1 = { width=%2, height=%3, stairx=%4, stairy=%5, stairDir=\"%6\" },")
                     .arg(fileInfo.completeBaseName())
                     .arg(mapInfo1->width())
@@ -1825,9 +1883,9 @@ void BuildingEditorWindow::getTopStaircaseTiles(const QString &tileDefFileName, 
     }
 }
 
-bool BuildingEditorWindow::getBasementStaircase(Tiled::Map *map, QSet<QString> &northStairTiles, QSet<QString> &westStairTiles, int &stairx, int &stairy, QString &stairDir)
+bool BuildingEditorWindow::getBasementStaircase(Tiled::Map *map, QSet<QString> &northStairTiles, QSet<QString> &westStairTiles, int &stairx, int &stairy, QString &stairDir, bool isBasementAccess)
 {
-    MapLevel* mapLevel = map->maxMapLevel();
+    MapLevel* mapLevel = isBasementAccess ? map->minMapLevel() : map->maxMapLevel();
     for (TileLayer* tileLayer : mapLevel->tileLayers()) {
         for (int y = 0; y < tileLayer->height(); y++) {
             for (int x = 0; x < tileLayer->width(); x++) {
@@ -2202,6 +2260,7 @@ void BuildingEditorWindow::updateActions()
             mCurrentDocument != 0;
     bool showObjects = BuildingPreferences::instance()->showObjects();
     bool objectMode = hasDoc && mCurrentDocumentStuff->isObject();
+    bool attributeMode = hasDoc && mCurrentDocumentStuff->isAttribute();
 
     bool hasEditor = ToolManager::instance()->currentEditor() != 0;
     PencilTool::instance()->setEnabled(hasEditor && objectMode && currentRoom() != 0);
@@ -2258,13 +2317,13 @@ void BuildingEditorWindow::updateActions()
     ui->actionFloors->setEnabled(hasDoc);
 
     bool hasTileSel = hasDoc && !objectMode && !mCurrentDocument->tileSelection().isEmpty();
-    ui->actionCut->setEnabled(hasTileSel);
-    ui->actionCopy->setEnabled(hasTileSel);
-    ui->actionPaste->setEnabled(hasDoc && !objectMode && mCurrentDocument->clipboardTiles());
+    ui->actionCut->setEnabled(hasTileSel && !attributeMode);
+    ui->actionCopy->setEnabled(hasTileSel && !attributeMode);
+    ui->actionPaste->setEnabled(hasDoc && !objectMode && !attributeMode && mCurrentDocument->clipboardTiles());
     if (!objectMode) {
         ui->actionSelectAll->setEnabled(!currentLayer().isEmpty());
         ui->actionSelectNone->setEnabled(hasTileSel);
-        ui->actionDelete->setEnabled(hasTileSel);
+        ui->actionDelete->setEnabled(hasTileSel && !attributeMode);
     } else {
         ui->actionSelectAll->setEnabled(hasDoc);
         bool selectNone = false;
@@ -2315,6 +2374,8 @@ void BuildingEditorWindow::currentModeChanged()
         mCurrentDocumentStuff->toIsoObject();
     else if (mode == mTileEditMode)
         mCurrentDocumentStuff->toTile();
+    else if (mode == mAttributeEditMode)
+        mCurrentDocumentStuff->toAttribute();
 
     updateActions();
     updateWindowTitle();

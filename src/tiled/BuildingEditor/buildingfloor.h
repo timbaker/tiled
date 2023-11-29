@@ -160,6 +160,7 @@ public:
         WallOrientation mWallOrientation;
         bool mExterior;
         QVector<BuildingTile*> mTiles;
+        QStringList mAttributes;
 
         struct WallInfo {
             WallInfo() :

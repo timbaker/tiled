@@ -203,6 +203,9 @@ public:
     void setEditingTiles(bool editing);
     bool editingTiles() const { return mEditingTiles; }
 
+    void setEditingAttributes(bool editing);
+    bool editingAttributes() const { return mEditingAttributes; }
+
     void setCursorPosition(const QPoint &pos);
 
 private:
