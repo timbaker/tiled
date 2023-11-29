@@ -129,6 +129,31 @@ private:
     QRectF mBoundingRect;
 };
 
+class SquareAttributesItem : public QObject, public QGraphicsItem
+{
+    Q_OBJECT
+    Q_INTERFACES(QGraphicsItem)
+public:
+    SquareAttributesItem(BuildingIsoScene *scene);
+
+    QRectF boundingRect() const;
+
+    void paint(QPainter *painter, const QStyleOptionGraphicsItem *option, QWidget *widget);
+
+    BuildingDocument *document() const;
+
+private slots:
+    void currentLevelChanged();
+    void squareAttributesChanged(BuildingEditor::BuildingFloor *floor, const QRegion &region);
+
+private:
+    void updateBoundingRect();
+
+private:
+    BuildingIsoScene *mScene;
+    QRectF mBoundingRect;
+};
+
 class IsoBuildingRenderer : public BuildingRenderer
 {
 public:
@@ -268,6 +293,7 @@ private:
     BuildingMap *mBuildingMap;
     TileModeGridItem *mGridItem;
     TileModeSelectionItem *mTileSelectionItem;
+    SquareAttributesItem *mSquareAttributesItem;
     QMap<int,CompositeLayerGroupItem*> mLayerGroupItems;
     bool mLoading;
     QGraphicsRectItem *mDarkRectangle;

@@ -226,11 +226,89 @@ void TileModeSelectionItem::updateBoundingRect()
 
 /////
 
+SquareAttributesItem::SquareAttributesItem(BuildingIsoScene *scene) :
+    mScene(scene)
+{
+    setZValue(1000);
+
+    connect(document(), &BuildingDocument::currentFloorChanged,
+            this, &SquareAttributesItem::currentLevelChanged);
+    connect(document(), &BuildingDocument::squareAttributesChanged,
+            this, &SquareAttributesItem::squareAttributesChanged);
+
+    updateBoundingRect();
+}
+
+QRectF SquareAttributesItem::boundingRect() const
+{
+    return mBoundingRect;
+}
+
+void SquareAttributesItem::paint(QPainter *painter, const QStyleOptionGraphicsItem *option, QWidget *)
+{
+    BuildingFloor *floor = document()->currentFloor();
+    if (floor == nullptr) {
+        return;
+    }
+    QRegion selection = floor->squareAttributesGrid()->region();
+
+    QColor highlight(Qt::green);
+    highlight.setAlpha(128);
+
+    MapRenderer *renderer = mScene->mapRenderer();
+//    renderer->drawTileSelection(p, selection, highlight, option->exposedRect, mScene->currentLevel());
+
+    QPen pen(highlight, 4);
+    painter->setPen(pen);
+    for (const QRect &r : selection) {
+        for (int y = r.top(); y <= r.bottom(); y++) {
+            for (int x = r.left(); x <= r.right(); x++) {
+                QRectF rf(x + 0.1, y + 0.1, 1 - 0.1 * 2, 1 - 0.1 * 2);
+                QPolygonF polygon = renderer->tileToPixelCoords(rf, floor->level());
+                if (QRectF(polygon.boundingRect()).intersects(option->exposedRect)) {
+                    painter->drawConvexPolygon(polygon);
+                }
+            }
+        }
+    }
+}
+
+BuildingDocument *SquareAttributesItem::document() const
+{
+    return mScene->document();
+}
+
+void SquareAttributesItem::currentLevelChanged()
+{
+    prepareGeometryChange();
+    updateBoundingRect();
+}
+
+void SquareAttributesItem::squareAttributesChanged(BuildingFloor *floor, const QRegion &region)
+{
+    prepareGeometryChange();
+    updateBoundingRect();
+}
+
+void SquareAttributesItem::updateBoundingRect()
+{
+    BuildingFloor *floor = document()->currentFloor();
+    QRegion rgn;
+    if (floor != nullptr) {
+        rgn = floor->squareAttributesGrid()->region();
+    }
+    const QRect r = rgn.boundingRect();
+    mBoundingRect = mScene->mapRenderer()->boundingRect(r, document()->currentLevel());
+}
+
+/////
+
 BuildingIsoScene::BuildingIsoScene(QObject *parent) :
     BuildingBaseScene(parent),
     mBuildingMap(0),
     mGridItem(0),
     mTileSelectionItem(0),
+    mSquareAttributesItem(nullptr),
     mDarkRectangle(new QGraphicsRectItem),
     mCurrentTool(0),
     mLayerGroupWithToolTiles(0),
@@ -310,7 +388,9 @@ void BuildingIsoScene::setDocument(BuildingDocument *doc)
 
     // Delete before clearing mDocument.
     delete mTileSelectionItem;
-    mTileSelectionItem = 0;
+    mTileSelectionItem = nullptr;
+    delete mSquareAttributesItem;
+    mSquareAttributesItem = nullptr;
 
     mDocument = doc;
 
@@ -762,6 +842,7 @@ void BuildingIsoScene::BuildingToMap()
         mLayerGroupItems.clear();
         delete mGridItem;
         delete mTileSelectionItem;
+        delete mSquareAttributesItem;
 
         mLayerGroupWithToolTiles = 0;
         mNonEmptyLayerGroupItem = 0;
@@ -794,6 +875,11 @@ void BuildingIsoScene::BuildingToMap()
 
     mTileSelectionItem = new TileModeSelectionItem(this);
     addItem(mTileSelectionItem);
+
+    if (editingAttributes()) {
+        mSquareAttributesItem = new SquareAttributesItem(this);
+        addItem(mSquareAttributesItem);
+    }
 
     mRoomSelectionItem = new RoomSelectionItem(this);
     addItem(mRoomSelectionItem);

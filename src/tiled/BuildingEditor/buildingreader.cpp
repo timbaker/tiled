@@ -1139,8 +1139,9 @@ void BuildingReaderPrivate::decodeCSVSquareAttributes(BuildingFloor *floor, cons
     const QChar sep(QLatin1Char(','));
     const QChar nullChar(QLatin1Char('0'));
     SquareAttributesGrid *sag = floor->squareAttributesGrid();
-    SquareAttributes attributes;
+    SquareAttributes sa;
     SquareAttributes emptyAttributes;
+    const QStringList &SQUARE_ATTRIBUTES = getSquareAttributeNames();
     while ((end = text.indexOf(sep, start, Qt::CaseSensitive)) != -1) {
         if ((end - start == 1) && (text.at(start) == nullChar)) {
             sag->replace(x, y, emptyAttributes);
@@ -1153,14 +1154,13 @@ void BuildingReaderPrivate::decodeCSVSquareAttributes(BuildingFloor *floor, cons
                                .arg(x + 1).arg(y + 1).arg(floor->level()));
                 return;
             }
-            attributes.clear();
-            if (bits & 0x01) {
-                attributes += QStringLiteral("KeepFloors");
+            sa.clear();
+            for (int i = 0; i < SQUARE_ATTRIBUTES.size(); i++) {
+                if (bits & (1 << i)) {
+                    sa += SQUARE_ATTRIBUTES[i];
+                }
             }
-            if (bits & 0x02) {
-                attributes += QStringLiteral("KeepWalls");
-            }
-            sag->replace(x, y, attributes);
+            sag->replace(x, y, sa);
         }
         start = end + 1;
         if (++x == floor->width()) {
@@ -1188,14 +1188,13 @@ void BuildingReaderPrivate::decodeCSVSquareAttributes(BuildingFloor *floor, cons
                            .arg(x + 1).arg(y + 1).arg(floor->level()));
             return;
         }
-        attributes.clear();
-        if (bits & 0x01) {
-            attributes += QStringLiteral("KeepFloors");
+        sa.clear();
+        for (int i = 0; i < SQUARE_ATTRIBUTES.size(); i++) {
+            if (bits & (1 << i)) {
+                sa += SQUARE_ATTRIBUTES[i];
+            }
         }
-        if (bits & 0x02) {
-            attributes += QStringLiteral("KeepWalls");
-        }
-        sag->replace(x, y, attributes);
+        sag->replace(x, y, sa);
     }
 }
 

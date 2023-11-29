@@ -314,12 +314,8 @@ public:
                 if (sag->hasAttributesFor(x, y) == false)
                     text += zero;
                 else {
-                    int bits = 0;
-                    const SquareAttributes& attributes = sag->at(x, y);
-                    if (attributes.contains(QStringLiteral("KeepFloors")))
-                        bits |= 0x01;
-                    if (attributes.contains(QStringLiteral("KeepWalls")))
-                        bits |= 0x02;
+                    const SquareAttributes& sa = sag->at(x, y);
+                    int bits = sa.toBits(getSquareAttributeNames());
                     text += QString::number(bits, 16);
                 }
                 if (++count < max)

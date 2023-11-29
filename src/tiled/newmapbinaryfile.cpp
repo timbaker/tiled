@@ -10,6 +10,8 @@
 #include "tile.h"
 #include "tileset.h"
 
+#include "BuildingEditor/buildingfloor.h"
+
 #include <qmath.h>
 
 using namespace Tiled;
@@ -372,14 +374,15 @@ bool NewMapBinaryFile::generateChunk(QDataStream &out, MapComposite *mapComposit
     Q_UNUSED(mapComposite)
 
     // Write square attributes.
+    const QStringList& SQUARE_ATTRIBUTES = BuildingEditor::getSquareAttributeNames();
     int notdonecount = 0;
     for (int z = 0; z < MaxLevel; z++)  {
         for (int x = 0; x < mSquaresPerChunk; x++) {
             for (int y = 0; y < mSquaresPerChunk; y++) {
                 int gx = cx * mSquaresPerChunk + x;
                 int gy = cy * mSquaresPerChunk + y;
-                const BuildingEditor::SquareAttributes &attributes = mGridData[gx][gy][z].attributes;
-                if (attributes.isEmpty()) {
+                const BuildingEditor::SquareAttributes &sa = mGridData[gx][gy][z].attributes;
+                if (sa.isEmpty()) {
                     notdonecount++;
                     continue;
                 }
@@ -388,11 +391,7 @@ bool NewMapBinaryFile::generateChunk(QDataStream &out, MapComposite *mapComposit
                     out << qint32(notdonecount);
                     notdonecount = 0;
                 }
-                quint32 bits = 0;
-                if (attributes.contains(QStringLiteral("KeepFloors")))
-                    bits |= 0x01;
-                if (attributes.contains(QStringLiteral("KeepWalls")))
-                    bits |= 0x02;
+                quint32 bits = sa.toBits(SQUARE_ATTRIBUTES);
                 out << qint32(2); // any number > 1
                 out << quint32(bits);
             }

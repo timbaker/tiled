@@ -97,7 +97,23 @@ private:
     QString mEmptyCell;
 };
 
-typedef QStringList SquareAttributes;
+extern const QStringList& getSquareAttributeNames();
+
+class SquareAttributes : public QStringList
+{
+public:
+    int toBits(const QStringList& attributeNames) const
+    {
+        int bits = 0;
+        for (int i = 0; i < size(); i++) {
+            int index = attributeNames.indexOf(at(i));
+            if (index != -1) {
+                bits |= 1 << index;
+            }
+        }
+        return bits;
+    }
+};
 
 class SquareAttributesGrid
 {
@@ -142,6 +158,8 @@ public:
 
     void copy(const SquareAttributesGrid& other);
     void copy(const SquareAttributesGrid& other, const QRegion &rgn);
+
+    QRegion region() const;
 
 private:
     int mWidth, mHeight;

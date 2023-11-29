@@ -112,7 +112,7 @@ AttributeEditMode::AttributeEditMode(QObject *parent) :
     mCurrentDocumentStuff(nullptr)
 {
     setDisplayName(tr("Attrs"));
-    setIcon(QIcon(QLatin1String(":/BuildingEditor/icons/mode_tile.png")));
+    setIcon(QIcon(QLatin1String(":/BuildingEditor/icons/mode_attributes.png")));
 
     mMainWindow = new EmbeddedMainWindow;
     mMainWindow->setObjectName(QString::fromUtf8("AttributeEditMode.Widget"));

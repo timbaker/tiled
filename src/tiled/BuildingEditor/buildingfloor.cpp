@@ -246,6 +246,16 @@ void FloorTileGrid::swapToVector()
 
 /////
 
+const QStringList& BuildingEditor::getSquareAttributeNames()
+{
+    static QStringList SQUARE_ATTRIBUTES;
+    if (SQUARE_ATTRIBUTES.isEmpty()) {
+        SQUARE_ATTRIBUTES += QStringLiteral("KeepFloors");
+        SQUARE_ATTRIBUTES += QStringLiteral("KeepWalls");
+    }
+    return SQUARE_ATTRIBUTES;
+}
+
 SquareAttributesGrid::SquareAttributesGrid(int width, int height) :
     mWidth(width),
     mHeight(height)
@@ -333,6 +343,17 @@ void SquareAttributesGrid::copy(const SquareAttributesGrid &other, const QRegion
             }
         }
     }
+}
+
+QRegion SquareAttributesGrid::region() const
+{
+    QRegion rgn;
+    for (int index : mCells.keys()) {
+        int x = index % width();
+        int y = index / width();
+        rgn += QRect(x, y, 1, 1);
+    }
+    return rgn;
 }
 
 /////

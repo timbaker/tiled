@@ -22,6 +22,8 @@
 #include "buildingfloor.h"
 #include "buildingdocumentmgr.h"
 
+#include <array>
+
 using namespace BuildingEditor;
 
 BuildingAttributesDock::BuildingAttributesDock(QWidget *parent) :
@@ -38,10 +40,12 @@ BuildingAttributesDock::BuildingAttributesDock(QWidget *parent) :
             this, &BuildingAttributesDock::currentDocumentChanged);
 
     mSynching = true;
-    ui->listWidget->addItem(QStringLiteral("KeepFloors"));
-    ui->listWidget->addItem(QStringLiteral("KeepWalls"));
-    ui->listWidget->item(0)->setCheckState(Qt::Unchecked);
-    ui->listWidget->item(1)->setCheckState(Qt::Unchecked);
+    const QStringList& SQUARE_ATTRIBUTES = getSquareAttributeNames();
+    for (int i = 0; i < SQUARE_ATTRIBUTES.size(); i++) {
+        ui->listWidget->addItem(SQUARE_ATTRIBUTES.at(i));
+        ui->listWidget->item(i)->setCheckState(Qt::Unchecked);
+
+    }
     mSynching = false;
 
     updateActions();
@@ -151,19 +155,17 @@ void BuildingAttributesDock::syncListWithSelectedSquares()
     const QRegion &selection = mDocument->tileSelection();
     BuildingFloor *floor = mDocument->currentFloor();
     int numSelectedSquares = 0;
-    int numKeepFloors = 0;
-    int numKeepWalls = 0;
+    std::array<int, 32> numWithAttribute;
+    numWithAttribute.fill(0);
+    const QStringList& SQUARE_ATTRIBUTES = getSquareAttributeNames();
     SquareAttributesGrid *sag = floor->squareAttributesGrid();
     for (const QRect& rect : selection) {
         for (int y = rect.top(); y <= rect.bottom(); y++) {
             for (int x = rect.left(); x <= rect.right(); x++) {
                 if (sag->hasAttributesFor(x, y)) {
                     const SquareAttributes& sa = sag->at(x, y);
-                    if (sa.contains(QStringLiteral("KeepFloors"))) {
-                        numKeepFloors++;
-                    }
-                    if (sa.contains(QStringLiteral("KeepWalls"))) {
-                        numKeepWalls++;
+                    for (int i = 0; i < sa.size(); i++) {
+                        numWithAttribute[SQUARE_ATTRIBUTES.indexOf(sa.at(i))]++;
                     }
                 }
                 numSelectedSquares++;
@@ -171,7 +173,17 @@ void BuildingAttributesDock::syncListWithSelectedSquares()
         }
     }
     mSynching = true;
-    ui->listWidget->item(0)->setCheckState((numSelectedSquares > 0 && numSelectedSquares == numKeepFloors) ? Qt::CheckState::Checked : (numKeepFloors > 0 ? Qt::CheckState::PartiallyChecked : Qt::Unchecked));
-    ui->listWidget->item(1)->setCheckState((numSelectedSquares > 0 && numSelectedSquares == numKeepWalls) ? Qt::CheckState::Checked : (numKeepWalls > 0 ? Qt::CheckState::PartiallyChecked : Qt::Unchecked));
+    for (int i = 0; i < SQUARE_ATTRIBUTES.size(); i++) {
+        QListWidgetItem *item = ui->listWidget->item(i);
+        if (numSelectedSquares == 0) {
+            item->setCheckState(Qt::CheckState::Unchecked);
+        } else if (numSelectedSquares == numWithAttribute[i]) {
+            item->setCheckState(Qt::CheckState::Checked);
+        } else if (numWithAttribute[i] > 0) {
+            item->setCheckState(Qt::CheckState::PartiallyChecked);
+        } else {
+            item->setCheckState(Qt::CheckState::Unchecked);
+        }
+    }
     mSynching = false;
 }
