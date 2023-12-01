@@ -40,9 +40,9 @@ BuildingAttributesDock::BuildingAttributesDock(QWidget *parent) :
             this, &BuildingAttributesDock::currentDocumentChanged);
 
     mSynching = true;
-    const QStringList& SQUARE_ATTRIBUTES = getSquareAttributeNames();
-    for (int i = 0; i < SQUARE_ATTRIBUTES.size(); i++) {
-        ui->listWidget->addItem(SQUARE_ATTRIBUTES.at(i));
+    const QStringList& SQUARE_PROPERTIES = getSquarePropertyNames();
+    for (int i = 0; i < SQUARE_PROPERTIES.size(); i++) {
+        ui->listWidget->addItem(SQUARE_PROPERTIES.at(i));
         ui->listWidget->item(i)->setCheckState(Qt::Unchecked);
 
     }
@@ -108,19 +108,19 @@ void BuildingAttributesDock::clearAttributeOnSelectedSquares(const QString &attr
     if (selection.isEmpty())
         return;
     BuildingFloor *floor = mDocument->currentFloor();
-    SquareAttributesGrid *attributes = floor->squareAttributesGrid()->clone();
+    Tiled::PropertiesGrid *spg = floor->squarePropertiesGrid()->clone();
     for (const QRect& rect : selection) {
         for (int y = rect.top(); y <= rect.bottom(); y++) {
             for (int x = rect.left(); x <= rect.right(); x++) {
-                if (attributes->hasAttributesFor(x, y)) {
-                    SquareAttributes sa = attributes->at(x, y);
-                    sa.removeAll(attrName);
-                    attributes->replace(x, y, sa);
+                if (spg->hasPropertiesAt(x, y)) {
+                    Tiled::Properties properties = spg->at(x, y);
+                    properties.remove(attrName);
+                    spg->replace(x, y, properties);
                 }
             }
         }
     }
-    mDocument->undoStack()->push(new ChangeSquareAttributes(mDocument, floor->level(), selection, attributes));
+    mDocument->undoStack()->push(new ChangeSquareProperties(mDocument, floor->level(), selection, spg));
 }
 
 void BuildingAttributesDock::setAttributeOnSelectedSquares(const QString &attrName)
@@ -129,25 +129,25 @@ void BuildingAttributesDock::setAttributeOnSelectedSquares(const QString &attrNa
     if (selection.isEmpty())
         return;
     BuildingFloor *floor = mDocument->currentFloor();
-    SquareAttributesGrid *attributes = floor->squareAttributesGrid()->clone();
+    Tiled::PropertiesGrid *spg = floor->squarePropertiesGrid()->clone();
     for (const QRect& rect : selection) {
         for (int y = rect.top(); y <= rect.bottom(); y++) {
             for (int x = rect.left(); x <= rect.right(); x++) {
-                if (attributes->hasAttributesFor(x, y)) {
-                    SquareAttributes sa = attributes->at(x, y);
-                    if (sa.contains(attrName) == false) {
-                        sa += attrName;
-                        attributes->replace(x, y, sa);
+                if (spg->hasPropertiesAt(x, y)) {
+                    Tiled::Properties properties = spg->at(x, y);
+                    if (properties.contains(attrName) == false) {
+                        properties.insert(attrName, QString());
+                        spg->replace(x, y, properties);
                     }
                 } else {
-                    SquareAttributes sa;
-                    sa += attrName;
-                    attributes->replace(x, y, sa);
+                    Tiled::Properties properties;
+                    properties.insert(attrName, QString());
+                    spg->replace(x, y, properties);
                 }
             }
         }
     }
-    mDocument->undoStack()->push(new ChangeSquareAttributes(mDocument, floor->level(), selection, attributes));
+    mDocument->undoStack()->push(new ChangeSquareProperties(mDocument, floor->level(), selection, spg));
 }
 
 void BuildingAttributesDock::syncListWithSelectedSquares()
@@ -157,15 +157,18 @@ void BuildingAttributesDock::syncListWithSelectedSquares()
     int numSelectedSquares = 0;
     std::array<int, 32> numWithAttribute;
     numWithAttribute.fill(0);
-    const QStringList& SQUARE_ATTRIBUTES = getSquareAttributeNames();
-    SquareAttributesGrid *sag = floor->squareAttributesGrid();
+    const QStringList& SQUARE_PROPERTIES = getSquarePropertyNames();
+    Tiled::PropertiesGrid *spg = floor->squarePropertiesGrid();
     for (const QRect& rect : selection) {
         for (int y = rect.top(); y <= rect.bottom(); y++) {
             for (int x = rect.left(); x <= rect.right(); x++) {
-                if (sag->hasAttributesFor(x, y)) {
-                    const SquareAttributes& sa = sag->at(x, y);
-                    for (int i = 0; i < sa.size(); i++) {
-                        numWithAttribute[SQUARE_ATTRIBUTES.indexOf(sa.at(i))]++;
+                if (spg->hasPropertiesAt(x, y)) {
+                    const Tiled::Properties& properties = spg->at(x, y);
+                    for (auto key : properties.keys()) {
+                        int index = SQUARE_PROPERTIES.indexOf(key);
+                        if (index != -1) {
+                            numWithAttribute[index]++;
+                        }
                     }
                 }
                 numSelectedSquares++;
@@ -173,7 +176,7 @@ void BuildingAttributesDock::syncListWithSelectedSquares()
         }
     }
     mSynching = true;
-    for (int i = 0; i < SQUARE_ATTRIBUTES.size(); i++) {
+    for (int i = 0; i < SQUARE_PROPERTIES.size(); i++) {
         QListWidgetItem *item = ui->listWidget->item(i);
         if (numSelectedSquares == 0) {
             item->setCheckState(Qt::CheckState::Unchecked);

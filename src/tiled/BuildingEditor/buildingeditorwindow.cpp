@@ -1834,9 +1834,9 @@ void BuildingEditorWindow::exportNewBinaryFile(ExportBasementsDialog *dialog, co
     MapComposite* mapCompositeCropped = mapComposite.cropToMinimum(offset);
     MapComposite* mapCompositeToWrite = mapCompositeCropped ? mapCompositeCropped : &mapComposite;
 
-    QVector<SquareAttributesGrid*> attributesGrids;
+    QVector<Tiled::PropertiesGrid*> attributesGrids;
     for (BuildingFloor *floor : building->floors()) {
-        attributesGrids += floor->squareAttributesGrid()->clone(QRect(offset, mapCompositeToWrite->map()->size()));
+        attributesGrids += floor->squarePropertiesGrid()->clone(QRect(offset, mapCompositeToWrite->map()->size()));
     }
 
     delete building;

@@ -96,8 +96,7 @@ public:
 
     QList<Entry*> Entries;
     int roomID;
-    BuildingEditor::SquareAttributes attributes;
-
+    Tiled::Properties properties;
 };
 
 class Zone
@@ -356,7 +355,7 @@ class NewMapBinaryFile : public QObject
 public:
     NewMapBinaryFile(int squaresPerChunk);
 
-    bool write(MapComposite* mapComposite, const QVector<BuildingEditor::SquareAttributesGrid*>& attributesGrids, const QString& filePath);
+    bool write(MapComposite* mapComposite, const QVector<Tiled::PropertiesGrid*>& propertiesGrids, const QString& filePath);
 
     bool generateHeader(MapComposite *mapComposite);
     bool generateHeaderAux(QDataStream& out, MapComposite *mapComposite);
@@ -379,6 +378,7 @@ private:
     bool processObjectGroup(Tiled::ObjectGroup *objectGroup,
                             int levelOffset, const QPoint &offset);
     void SaveString(QDataStream& out, const QString& str);
+    int toBits(const Tiled::Properties &properties, const QStringList &attributeNames) const;
 
 private:
     int mSquaresPerChunk;

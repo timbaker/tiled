@@ -23,7 +23,7 @@ NewMapBinaryFile::NewMapBinaryFile(int squaresPerChunk)
 
 }
 
-bool NewMapBinaryFile::write(MapComposite *mapComposite, const QVector<BuildingEditor::SquareAttributesGrid*>& attributesGrids, const QString &filePath)
+bool NewMapBinaryFile::write(MapComposite *mapComposite, const QVector<Tiled::PropertiesGrid*>& propertiesGrids, const QString &filePath)
 {
     MapInfo* mapInfo = mapComposite->mapInfo();
 
@@ -78,7 +78,7 @@ bool NewMapBinaryFile::write(MapComposite *mapComposite, const QVector<BuildingE
         lg->prepareDrawing2();
         int d = (mapInfo->orientation() == Map::Isometric) ? -3 : 0;
         d *= lg->level();
-        BuildingEditor::SquareAttributesGrid *attributesGrid = attributesGrids.isEmpty() ? nullptr : attributesGrids[lg->level()];
+        Tiled::PropertiesGrid *propertiesGrid = propertiesGrids.isEmpty() ? nullptr : propertiesGrids[lg->level()];
         for (int y = d; y < mapHeight; y++) {
             for (int x = d; x < mapWidth; x++) {
                 int lx = x, ly = y;
@@ -97,8 +97,8 @@ bool NewMapBinaryFile::write(MapComposite *mapComposite, const QVector<BuildingE
                     square.Entries.append(e);
                     mTileMap[e->gid]->used = true;
                 }
-                if ((attributesGrid != nullptr) && attributesGrid->hasAttributesFor(lx, ly)) {
-                    square.attributes = attributesGrid->at(lx, ly);
+                if ((propertiesGrid != nullptr) && propertiesGrid->hasPropertiesAt(lx, ly)) {
+                    square.properties = propertiesGrid->at(lx, ly);
                 }
             }
         }
@@ -374,15 +374,15 @@ bool NewMapBinaryFile::generateChunk(QDataStream &out, MapComposite *mapComposit
     Q_UNUSED(mapComposite)
 
     // Write square attributes.
-    const QStringList& SQUARE_ATTRIBUTES = BuildingEditor::getSquareAttributeNames();
+    const QStringList& SQUARE_PROPERTIES = BuildingEditor::getSquarePropertyNames();
     int notdonecount = 0;
     for (int z = 0; z < MaxLevel; z++)  {
         for (int x = 0; x < mSquaresPerChunk; x++) {
             for (int y = 0; y < mSquaresPerChunk; y++) {
                 int gx = cx * mSquaresPerChunk + x;
                 int gy = cy * mSquaresPerChunk + y;
-                const BuildingEditor::SquareAttributes &sa = mGridData[gx][gy][z].attributes;
-                if (sa.isEmpty()) {
+                const Tiled::Properties &properties = mGridData[gx][gy][z].properties;
+                if (properties.isEmpty()) {
                     notdonecount++;
                     continue;
                 }
@@ -391,7 +391,7 @@ bool NewMapBinaryFile::generateChunk(QDataStream &out, MapComposite *mapComposit
                     out << qint32(notdonecount);
                     notdonecount = 0;
                 }
-                quint32 bits = sa.toBits(SQUARE_ATTRIBUTES);
+                quint32 bits = toBits(properties, SQUARE_PROPERTIES);
                 out << qint32(2); // any number > 1
                 out << quint32(bits);
             }
@@ -642,4 +642,16 @@ void NewMapBinaryFile::SaveString(QDataStream& out, const QString& str)
         out << quint8(str[i].toLatin1());
     }
     out << quint8('\n');
+}
+
+int NewMapBinaryFile::toBits(const Tiled::Properties& properties, const QStringList& attributeNames) const
+{
+    int bits = 0;
+    for (const QString& key : properties.keys()) {
+        int index = attributeNames.indexOf(key);
+        if (index != -1) {
+            bits |= 1 << index;
+        }
+    }
+    return bits;
 }

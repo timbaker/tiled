@@ -226,31 +226,31 @@ void TileModeSelectionItem::updateBoundingRect()
 
 /////
 
-SquareAttributesItem::SquareAttributesItem(BuildingIsoScene *scene) :
+SquarePropertiesItem::SquarePropertiesItem(BuildingIsoScene *scene) :
     mScene(scene)
 {
     setZValue(1000);
 
     connect(document(), &BuildingDocument::currentFloorChanged,
-            this, &SquareAttributesItem::currentLevelChanged);
-    connect(document(), &BuildingDocument::squareAttributesChanged,
-            this, &SquareAttributesItem::squareAttributesChanged);
+            this, &SquarePropertiesItem::currentLevelChanged);
+    connect(document(), &BuildingDocument::squarePropertiesChanged,
+            this, &SquarePropertiesItem::squarePropertiesChanged);
 
     updateBoundingRect();
 }
 
-QRectF SquareAttributesItem::boundingRect() const
+QRectF SquarePropertiesItem::boundingRect() const
 {
     return mBoundingRect;
 }
 
-void SquareAttributesItem::paint(QPainter *painter, const QStyleOptionGraphicsItem *option, QWidget *)
+void SquarePropertiesItem::paint(QPainter *painter, const QStyleOptionGraphicsItem *option, QWidget *)
 {
     BuildingFloor *floor = document()->currentFloor();
     if (floor == nullptr) {
         return;
     }
-    QRegion selection = floor->squareAttributesGrid()->region();
+    QRegion selection = floor->squarePropertiesGrid()->region();
 
     QColor highlight(Qt::green);
     highlight.setAlpha(128);
@@ -273,29 +273,29 @@ void SquareAttributesItem::paint(QPainter *painter, const QStyleOptionGraphicsIt
     }
 }
 
-BuildingDocument *SquareAttributesItem::document() const
+BuildingDocument *SquarePropertiesItem::document() const
 {
     return mScene->document();
 }
 
-void SquareAttributesItem::currentLevelChanged()
+void SquarePropertiesItem::currentLevelChanged()
 {
     prepareGeometryChange();
     updateBoundingRect();
 }
 
-void SquareAttributesItem::squareAttributesChanged(BuildingFloor *floor, const QRegion &region)
+void SquarePropertiesItem::squarePropertiesChanged(BuildingFloor *floor, const QRegion &region)
 {
     prepareGeometryChange();
     updateBoundingRect();
 }
 
-void SquareAttributesItem::updateBoundingRect()
+void SquarePropertiesItem::updateBoundingRect()
 {
     BuildingFloor *floor = document()->currentFloor();
     QRegion rgn;
     if (floor != nullptr) {
-        rgn = floor->squareAttributesGrid()->region();
+        rgn = floor->squarePropertiesGrid()->region();
     }
     const QRect r = rgn.boundingRect();
     mBoundingRect = mScene->mapRenderer()->boundingRect(r, document()->currentLevel());
@@ -308,7 +308,7 @@ BuildingIsoScene::BuildingIsoScene(QObject *parent) :
     mBuildingMap(0),
     mGridItem(0),
     mTileSelectionItem(0),
-    mSquareAttributesItem(nullptr),
+    mSquarePropertiesItem(nullptr),
     mDarkRectangle(new QGraphicsRectItem),
     mCurrentTool(0),
     mLayerGroupWithToolTiles(0),
@@ -389,8 +389,8 @@ void BuildingIsoScene::setDocument(BuildingDocument *doc)
     // Delete before clearing mDocument.
     delete mTileSelectionItem;
     mTileSelectionItem = nullptr;
-    delete mSquareAttributesItem;
-    mSquareAttributesItem = nullptr;
+    delete mSquarePropertiesItem;
+    mSquarePropertiesItem = nullptr;
 
     mDocument = doc;
 
@@ -842,7 +842,7 @@ void BuildingIsoScene::BuildingToMap()
         mLayerGroupItems.clear();
         delete mGridItem;
         delete mTileSelectionItem;
-        delete mSquareAttributesItem;
+        delete mSquarePropertiesItem;
 
         mLayerGroupWithToolTiles = 0;
         mNonEmptyLayerGroupItem = 0;
@@ -877,8 +877,8 @@ void BuildingIsoScene::BuildingToMap()
     addItem(mTileSelectionItem);
 
     if (editingAttributes()) {
-        mSquareAttributesItem = new SquareAttributesItem(this);
-        addItem(mSquareAttributesItem);
+        mSquarePropertiesItem = new SquarePropertiesItem(this);
+        addItem(mSquarePropertiesItem);
     }
 
     mRoomSelectionItem = new RoomSelectionItem(this);

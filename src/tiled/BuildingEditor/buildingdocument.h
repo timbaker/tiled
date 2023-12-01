@@ -41,7 +41,6 @@ class FurnitureTiles;
 class RoofObject;
 class Room;
 class FloorTileGrid;
-class SquareAttributesGrid;
 class WallObject;
 class Window;
 
@@ -161,7 +160,7 @@ public:
     QVector<QVector<Room *> > resizeFloor(BuildingFloor *floor,
                                           const QVector<QVector<Room*> > &grid,
                                           QMap<QString,FloorTileGrid*> &grime,
-                                          SquareAttributesGrid **attributesGrid);
+                                          Tiled::PropertiesGrid **attributesGrid);
     void rotateBuilding(bool right);
     void flipBuilding(bool horizontal);
 
@@ -179,7 +178,7 @@ public:
 
     Tiled::Properties changeBuildingProperties(const Tiled::Properties& properties);
 
-    SquareAttributesGrid *changeSquareAttributes(int level, const QRegion& selection, const SquareAttributesGrid& attributes);
+    Tiled::PropertiesGrid *changeSquareProperties(int level, const QRegion& selection, const Tiled::PropertiesGrid &propertiesGrid);
     // -UNDO/REDO
 
 signals:
@@ -231,7 +230,7 @@ signals:
     void usedTilesChanged();
     void usedFurnitureChanged();
 
-    void squareAttributesChanged(BuildingEditor::BuildingFloor *floor, const QRegion& region);
+    void squarePropertiesChanged(BuildingEditor::BuildingFloor *floor, const QRegion& region);
 
 private:
     void checkUsedTile(BuildingTileEntry *entry);

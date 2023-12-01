@@ -19,6 +19,7 @@
 #define BUILDINGUNDOREDO_H
 
 #include "properties.h"
+#include "propertiesgrid.h"
 
 #include <QMap>
 #include <QRectF>
@@ -41,7 +42,6 @@ class FurnitureTile;
 class FurnitureTiles;
 class RoofObject;
 class Room;
-class SquareAttributesGrid;
 class WallObject;
 class Window;
 
@@ -411,7 +411,7 @@ private:
     QSize mSize;
     QVector<QVector<Room*> > mGrid;
     QMap<QString,FloorTileGrid*> mGrime;
-    SquareAttributesGrid *mSquareAttributesGrid;
+    Tiled::PropertiesGrid *mSquarePropertiesGrid;
 };
 
 class InsertFloor : public QUndoCommand
@@ -643,11 +643,11 @@ private:
     Tiled::Properties mProperties;
 };
 
-class ChangeSquareAttributes : public QUndoCommand
+class ChangeSquareProperties : public QUndoCommand
 {
 public:
-    ChangeSquareAttributes(BuildingDocument *doc, int level, const QRegion &selection, SquareAttributesGrid *attributes);
-    ~ChangeSquareAttributes();
+    ChangeSquareProperties(BuildingDocument *doc, int level, const QRegion &selection, Tiled::PropertiesGrid *attributes);
+    ~ChangeSquareProperties();
 
     void undo() override { swap(); }
     void redo() override { swap(); }
@@ -658,7 +658,7 @@ private:
     BuildingDocument *mDocument;
     int mLevel;
     QRegion mSelection;
-    SquareAttributesGrid *mAttributes;
+    Tiled::PropertiesGrid *mAttributes;
 };
 
 } // namespace BuildingEditor

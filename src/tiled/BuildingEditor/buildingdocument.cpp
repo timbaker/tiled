@@ -426,12 +426,12 @@ QSize BuildingDocument::resizeBuilding(const QSize &newSize)
 QVector<QVector<Room *> > BuildingDocument::resizeFloor(BuildingFloor *floor,
                                                         const QVector<QVector<Room *> > &grid,
                                                         QMap<QString,FloorTileGrid*> &grime,
-                                                        SquareAttributesGrid **attributesGrid)
+                                                        Tiled::PropertiesGrid **attributesGrid)
 {
     QVector<QVector<Room *> > old = floor->grid();
     floor->setGrid(grid);
     grime = floor->setGrime(grime);
-    *attributesGrid = floor->setSquareAttributesGrid(*attributesGrid);
+    *attributesGrid = floor->setSquarePropertiesGrid(*attributesGrid);
     return old;
 }
 
@@ -522,13 +522,13 @@ Tiled::Properties BuildingDocument::changeBuildingProperties(const Tiled::Proper
     return old;
 }
 
-SquareAttributesGrid *BuildingDocument::changeSquareAttributes(int level, const QRegion &selection, const SquareAttributesGrid &attributes)
+Tiled::PropertiesGrid *BuildingDocument::changeSquareProperties(int level, const QRegion &selection, const Tiled::PropertiesGrid &propertiesGrid)
 {
     BuildingFloor *floor = mBuilding->floor(level);
     QRect bounds = selection.boundingRect();
-    SquareAttributesGrid *result = floor->squareAttributesGrid()->clone();
-    floor->squareAttributesGrid()->copy(attributes, selection);
-    emit squareAttributesChanged(floor, selection);
+    Tiled::PropertiesGrid *result = floor->squarePropertiesGrid()->clone();
+    floor->squarePropertiesGrid()->copy(propertiesGrid, selection);
+    emit squarePropertiesChanged(floor, selection);
     return result;
 }
 

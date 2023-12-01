@@ -35,6 +35,7 @@ SOURCES += compression.cpp \
     objectgroup.cpp \
     orthogonalrenderer.cpp \
     properties.cpp \
+    propertiesgrid.cpp \
     staggeredrenderer.cpp \
     tilelayer.cpp \
     tileset.cpp \
@@ -56,6 +57,7 @@ HEADERS += compression.h \
     objectgroup.h \
     orthogonalrenderer.h \
     properties.h \
+    propertiesgrid.h \
     staggeredrenderer.h \
     tile.h \
     tiled_global.h \

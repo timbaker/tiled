@@ -1310,7 +1310,7 @@ void MainWindow::exportNewBinary()
     int SquaresPerChunk = 8;
     NewMapBinaryFile file(SquaresPerChunk);
     MapComposite* mapComposite = mMapDocument->mapComposite();
-    QVector<BuildingEditor::SquareAttributesGrid*> attributesGrids;
+    QVector<Tiled::PropertiesGrid*> attributesGrids;
     file.write(mapComposite, attributesGrids, fileName);
 }
 #endif

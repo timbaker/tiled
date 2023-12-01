@@ -308,14 +308,14 @@ public:
         text.clear();
         text += newline;
         count = 0;
-        SquareAttributesGrid *sag = floor->squareAttributesGrid();
+        Tiled::PropertiesGrid *sag = floor->squarePropertiesGrid();
         for (int y = 0; y < floor->height(); y++) {
             for (int x = 0; x < floor->width(); x++) {
-                if (sag->hasAttributesFor(x, y) == false)
+                if (sag->hasPropertiesAt(x, y) == false)
                     text += zero;
                 else {
-                    const SquareAttributes& sa = sag->at(x, y);
-                    int bits = sa.toBits(getSquareAttributeNames());
+                    const Tiled::Properties& sa = sag->at(x, y);
+                    int bits = toBits(sa, getSquarePropertyNames());
                     text += QString::number(bits, 16);
                 }
                 if (++count < max)
@@ -485,6 +485,18 @@ public:
         int index = mFurnitureTiles.indexOf(ftiles);
         Q_ASSERT(index >= 0);
         return QString::number(index);
+    }
+
+    int toBits(const Tiled::Properties& properties, const QStringList& attributeNames) const
+    {
+        int bits = 0;
+        for (const QString& key : properties.keys()) {
+            int index = attributeNames.indexOf(key);
+            if (index != -1) {
+                bits |= 1 << index;
+            }
+        }
+        return bits;
     }
 
     Building *mBuilding;

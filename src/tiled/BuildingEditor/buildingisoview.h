@@ -129,12 +129,12 @@ private:
     QRectF mBoundingRect;
 };
 
-class SquareAttributesItem : public QObject, public QGraphicsItem
+class SquarePropertiesItem : public QObject, public QGraphicsItem
 {
     Q_OBJECT
     Q_INTERFACES(QGraphicsItem)
 public:
-    SquareAttributesItem(BuildingIsoScene *scene);
+    SquarePropertiesItem(BuildingIsoScene *scene);
 
     QRectF boundingRect() const;
 
@@ -144,7 +144,7 @@ public:
 
 private slots:
     void currentLevelChanged();
-    void squareAttributesChanged(BuildingEditor::BuildingFloor *floor, const QRegion &region);
+    void squarePropertiesChanged(BuildingEditor::BuildingFloor *floor, const QRegion &region);
 
 private:
     void updateBoundingRect();
@@ -293,7 +293,7 @@ private:
     BuildingMap *mBuildingMap;
     TileModeGridItem *mGridItem;
     TileModeSelectionItem *mTileSelectionItem;
-    SquareAttributesItem *mSquareAttributesItem;
+    SquarePropertiesItem *mSquarePropertiesItem;
     QMap<int,CompositeLayerGroupItem*> mLayerGroupItems;
     bool mLoading;
     QGraphicsRectItem *mDarkRectangle;
