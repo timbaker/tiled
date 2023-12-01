@@ -347,6 +347,7 @@ BuildingEditorWindow::BuildingEditorWindow(QWidget *parent) :
     RoofShallowTool::instance()->setAction(ui->actionRoofShallow);
     RoofCornerTool::instance()->setAction(ui->actionRoofCorner);
     SelectMoveObjectTool::instance()->setAction(ui->actionSelectObject);
+    BasementAccessTool::instance()->setAction(ui->actionBasementAccessTool);
 
     DrawTileTool::instance()->setAction(ui->actionDrawTiles);
     SelectTileTool::instance()->setAction(ui->actionSelectTiles);
@@ -493,6 +494,9 @@ BuildingEditorWindow::BuildingEditorWindow(QWidget *parent) :
     connect(ui->actionTiles, &QAction::triggered, this, &BuildingEditorWindow::tilesDialog);
     connect(ui->actionTemplateFromBuilding, &QAction::triggered,
             this, &BuildingEditorWindow::templateFromBuilding);
+    connect(ui->actionBasementAccessNone, &QAction::triggered, this, &BuildingEditorWindow::setBasementAccessNone);
+    connect(ui->actionBasementAccessNorth, &QAction::triggered, this, &BuildingEditorWindow::setBasementAccessNorth);
+    connect(ui->actionBasementAccessWest, &QAction::triggered, this, &BuildingEditorWindow::setBasementAccessWest);
 
     connect(ui->actionHelp, &QAction::triggered, this, &BuildingEditorWindow::help);
     connect(ui->actionAboutQt, &QAction::triggered, qApp, &QApplication::aboutQt);
@@ -1216,6 +1220,9 @@ void BuildingEditorWindow::currentDocumentChanged(BuildingDocument *doc)
         connect(mCurrentDocument, &BuildingDocument::clipboardTilesChanged,
                 this, &BuildingEditorWindow::updateActions);
 
+        connect(mCurrentDocument, &BuildingDocument::basementAccessChanged,
+                this, &BuildingEditorWindow::updateActions);
+
         connect(mCurrentDocument, &BuildingDocument::cleanChanged, this, &BuildingEditorWindow::updateWindowTitle);
     } else {
         ToolManager::instance()->clearDocument();
@@ -1737,7 +1744,7 @@ void BuildingEditorWindow::cropBuilding(const QRect &bounds)
 
     // Resize
     undoStack->push(new EmitResizeBuilding(mCurrentDocument, true));
-    undoStack->push(new ResizeBuilding(mCurrentDocument, newSize));
+    undoStack->push(new ResizeBuilding(mCurrentDocument, offset, newSize));
     bool objectsDeleted = false;
     foreach (BuildingFloor *floor, mCurrentDocument->building()->floors()) {
         undoStack->push(new ResizeFloor(mCurrentDocument, floor, newSize));
@@ -1751,6 +1758,12 @@ void BuildingEditorWindow::cropBuilding(const QRect &bounds)
                 objectsDeleted = true;
             }
         }
+    }
+    if (mCurrentDocument->building()->hasBasementAccess()) {
+        BasementAccess ba = mCurrentDocument->building()->basementAccess();
+        ba.mX += offset.x();
+        ba.mY += offset.y();
+        undoStack->push(new SetBasementAccess(mCurrentDocument, ba));
     }
     undoStack->push(new EmitResizeBuilding(mCurrentDocument, false));
 
@@ -1839,6 +1852,8 @@ void BuildingEditorWindow::exportNewBinaryFile(ExportBasementsDialog *dialog, co
         attributesGrids += floor->squarePropertiesGrid()->clone(QRect(offset, mapCompositeToWrite->map()->size()));
     }
 
+    BasementAccess ba = building->basementAccess();
+
     delete building;
 
     int SquaresPerChunk = 8;
@@ -1850,18 +1865,29 @@ void BuildingEditorWindow::exportNewBinaryFile(ExportBasementsDialog *dialog, co
     if (file.write(mapCompositeToWrite, attributesGrids, fileName) && (mapLevel != nullptr)) {
         Map* mapToWrite = mapCompositeToWrite->map();
         MapInfo *mapInfo1 = mapCompositeToWrite->mapInfo();
-        int stairx = 0;
-        int stairy = 0;
-        QString stairDir = QStringLiteral("N");
-        if (getBasementStaircase(mapToWrite, northStairTiles, westStairTiles, stairx, stairy, stairDir, isBasementAccess)) {
+        if (ba.isValid()) {
             luaCode += QStringLiteral("%1 = { width=%2, height=%3, stairx=%4, stairy=%5, stairDir=\"%6\" },")
                     .arg(fileInfo.completeBaseName())
                     .arg(mapInfo1->width())
                     .arg(mapInfo1->height())
-                    .arg(stairx)
-                    .arg(stairy)
-                    .arg(stairDir);
+                    .arg(ba.mX)
+                    .arg(ba.mY)
+                    .arg(ba.dirString());
             luaCode += QStringLiteral("\n");
+        } else {
+            int stairx = 0;
+            int stairy = 0;
+            QString stairDir = QStringLiteral("N");
+            if (getBasementStaircase(mapToWrite, northStairTiles, westStairTiles, stairx, stairy, stairDir, isBasementAccess)) {
+                luaCode += QStringLiteral("%1 = { width=%2, height=%3, stairx=%4, stairy=%5, stairDir=\"%6\" },")
+                        .arg(fileInfo.completeBaseName())
+                        .arg(mapInfo1->width())
+                        .arg(mapInfo1->height())
+                        .arg(stairx)
+                        .arg(stairy)
+                        .arg(stairDir);
+                luaCode += QStringLiteral("\n");
+            }
         }
     }
 
@@ -1980,7 +2006,7 @@ void BuildingEditorWindow::resizeBuilding()
 
     // Resize
     undoStack->push(new EmitResizeBuilding(mCurrentDocument, true));
-    undoStack->push(new ResizeBuilding(mCurrentDocument, newSize));
+    undoStack->push(new ResizeBuilding(mCurrentDocument, offset, newSize));
     foreach (BuildingFloor *floor, mCurrentDocument->building()->floors()) {
         undoStack->push(new ResizeFloor(mCurrentDocument, floor, newSize));
         undoStack->push(new SwapFloorGrid(mCurrentDocument, floor, grids[floor],
@@ -1996,6 +2022,12 @@ void BuildingEditorWindow::resizeBuilding()
                 undoStack->push(new RemoveObject(mCurrentDocument, floor, i));
             }
         }
+    }
+    if (mCurrentDocument->building()->hasBasementAccess()) {
+        BasementAccess ba = mCurrentDocument->building()->basementAccess();
+        ba.mX += offset.x();
+        ba.mY += offset.y();
+        undoStack->push(new SetBasementAccess(mCurrentDocument, ba));
     }
     undoStack->push(new EmitResizeBuilding(mCurrentDocument, false));
     undoStack->endMacro();
@@ -2123,6 +2155,32 @@ void BuildingEditorWindow::rotateLeft()
     if (lostTiles)
         QMessageBox::information(this, tr("Rotate Building"),
                                  tr("User-drawn tiles were removed during rotating."));
+}
+
+void BuildingEditorWindow::setBasementAccessNone()
+{
+    if (mCurrentDocument == nullptr)
+        return;
+    QUndoStack *undoStack = mCurrentDocument->undoStack();
+    undoStack->push(new SetBasementAccess(mCurrentDocument, BasementAccess()));
+}
+
+void BuildingEditorWindow::setBasementAccessNorth()
+{
+    if (mCurrentDocument == nullptr)
+        return;
+    BasementAccess ba{ 0, 0, BuildingObject::Direction::N };
+    QUndoStack *undoStack = mCurrentDocument->undoStack();
+    undoStack->push(new SetBasementAccess(mCurrentDocument, ba));
+}
+
+void BuildingEditorWindow::setBasementAccessWest()
+{
+    if (mCurrentDocument == nullptr)
+        return;
+    BasementAccess ba{ 0, 0, BuildingObject::Direction::W };
+    QUndoStack *undoStack = mCurrentDocument->undoStack();
+    undoStack->push(new SetBasementAccess(mCurrentDocument, ba));
 }
 
 void BuildingEditorWindow::templatesDialog()
@@ -2291,6 +2349,7 @@ void BuildingEditorWindow::updateActions()
     RoofShallowTool::instance()->setEnabled(hasEditor && objectMode && showObjects && roofTilesOK);
     RoofCornerTool::instance()->setEnabled(hasEditor && objectMode && showObjects && roofTilesOK);
     SelectMoveObjectTool::instance()->setEnabled(hasEditor && objectMode && showObjects);
+    BasementAccessTool::instance()->setEnabled(hasEditor && objectMode && mCurrentDocument->building()->hasBasementAccess());
 
     DrawTileTool::instance()->setEnabled(hasEditor && !objectMode && !currentLayer().isEmpty());
     SelectTileTool::instance()->setEnabled(hasEditor && !objectMode && !currentLayer().isEmpty());

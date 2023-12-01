@@ -508,6 +508,54 @@ private:
 
 /////
 
+class BasementAccessTool : public BaseTool
+{
+    Q_OBJECT
+public:
+    static BasementAccessTool *instance();
+
+    BasementAccessTool();
+
+    void mousePressEvent(QGraphicsSceneMouseEvent *event) override;
+    void mouseMoveEvent(QGraphicsSceneMouseEvent *event) override;
+    void mouseReleaseEvent(QGraphicsSceneMouseEvent *event) override;
+
+public slots:
+    void activate() override;
+    void deactivate() override;
+
+private:
+    enum Mode {
+        NoMode,
+        Moving,
+        CancelMoving
+    };
+
+    bool isMouseOverObject(const QPointF &pos) const;
+
+    void startMoving();
+    void updateMovingItems(const QPointF &pos,
+                           Qt::KeyboardModifiers modifiers);
+    void finishMoving(const QPointF &pos);
+    void cancelMoving();
+
+    void updateStatusText();
+
+private:
+    Q_DISABLE_COPY(BasementAccessTool)
+    static BasementAccessTool *mInstance;
+    ~BasementAccessTool() { mInstance = 0; }
+
+    Mode mMode;
+    bool mMouseDown;
+    bool mMouseOverObject;
+    bool mClickedObject;
+    QPointF mStartScenePos;
+    QPoint mDragOffset;
+};
+
+/////
+
 class SelectMoveObjectTool : public BaseTool
 {
     Q_OBJECT

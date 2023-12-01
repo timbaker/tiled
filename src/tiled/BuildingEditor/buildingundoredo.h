@@ -18,6 +18,7 @@
 #ifndef BUILDINGUNDOREDO_H
 #define BUILDINGUNDOREDO_H
 
+#include "buildingobjects.h"
 #include "properties.h"
 #include "propertiesgrid.h"
 
@@ -30,7 +31,6 @@
 namespace BuildingEditor {
 
 class Building;
-class BuildingObject;
 class BuildingDocument;
 class BuildingFloor;
 class BuildingTile;
@@ -351,7 +351,7 @@ private:
 class ResizeBuilding : public QUndoCommand
 {
 public:
-    ResizeBuilding(BuildingDocument *doc, const QSize &newSize);
+    ResizeBuilding(BuildingDocument *doc, const QPoint& offset, const QSize &newSize);
 
     void undo() { swap(); }
     void redo() { swap(); }
@@ -360,6 +360,7 @@ private:
     void swap();
 
     BuildingDocument *mDocument;
+    QPoint mOffset;
     QSize mSize;
 };
 
@@ -659,6 +660,21 @@ private:
     int mLevel;
     QRegion mSelection;
     Tiled::PropertiesGrid *mAttributes;
+};
+
+class SetBasementAccess : public QUndoCommand
+{
+public:
+    SetBasementAccess(BuildingDocument *doc, const BasementAccess &ba);
+
+    void undo() override { swap(); }
+    void redo() override { swap(); }
+
+private:
+    void swap();
+
+    BuildingDocument *mDocument;
+    BasementAccess mBasementAccess;
 };
 
 } // namespace BuildingEditor

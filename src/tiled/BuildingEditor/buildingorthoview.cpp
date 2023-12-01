@@ -399,6 +399,9 @@ void BuildingBaseScene::mapResized()
 
     if (mRoomSelectionItem)
         mRoomSelectionItem->buildingResized();
+
+    if (mBasementAccessItem)
+        mBasementAccessItem->synchWithBuilding();
 }
 
 void BuildingBaseScene::floorAdded(BuildingFloor *floor)
@@ -613,6 +616,132 @@ void BuildingOrthoScene::drawTileSelection(QPainter *painter, const QRegion &reg
     Q_UNUSED(color)
     Q_UNUSED(exposed)
     Q_UNUSED(level)
+}
+
+/////
+
+GraphicsBasementAccessItem::GraphicsBasementAccessItem(BuildingBaseScene *editor) :
+    QGraphicsItem(),
+    mEditor(editor),
+    mMouseOver(false)
+{
+    synchWithBuilding();
+}
+
+QPainterPath GraphicsBasementAccessItem::shape() const
+{
+    return mShape;
+}
+
+QRectF GraphicsBasementAccessItem::boundingRect() const
+{
+    return mBoundingRect;
+}
+
+void GraphicsBasementAccessItem::paint(QPainter *painter, const QStyleOptionGraphicsItem *option, QWidget *widget)
+{
+    Q_UNUSED(option)
+    Q_UNUSED(widget)
+
+    painter->setOpacity(mMouseOver ? 0.55 : 0.25);
+
+    QPainterPath path = mShape;
+    QColor color = mMouseOver ? Qt::white : QColor(225, 225, 225);
+    painter->fillPath(path, color);
+
+    QRectF r = tileBounds().translated(mDragging ? mDragOffset : QPoint());
+    int level = 0;
+    if (isWest()) {
+        for (int x = 30; x <= 120; x += 10) {
+            mEditor->renderer()->drawLine(painter, r.left()+x/30.0, r.top(), r.left()+x/30.0,r.bottom(), level);
+        }
+    } else {
+        for (int y = 30; y <= 120; y += 10) {
+            mEditor->renderer()->drawLine(painter, r.left(), r.top()+y/30.0, r.right(),r.top()+y/30.0, level);
+        }
+    }
+
+    QPen pen(Qt::blue);
+    painter->setPen(pen);
+    painter->drawPath(path);
+}
+
+void GraphicsBasementAccessItem::setMouseOver(bool mouseOver)
+{
+    mMouseOver = mouseOver;
+    update();
+}
+
+void GraphicsBasementAccessItem::setDragging(bool dragging)
+{
+    mDragging = dragging;
+    synchWithBuilding();
+}
+
+void GraphicsBasementAccessItem::setDragOffset(const QPoint &offset)
+{
+    mDragOffset = offset;
+    synchWithBuilding();
+}
+
+void GraphicsBasementAccessItem::synchWithBuilding()
+{
+    QPainterPath shape = calcShape();
+    QRectF bounds = shape.boundingRect();
+    if (bounds != mBoundingRect) {
+        prepareGeometryChange();
+        mBoundingRect = bounds;
+        mShape = shape;
+    }
+}
+
+QPainterPath GraphicsBasementAccessItem::calcShape() const
+{
+    QPolygonF tilePolygon = tileBounds().translated(mDragging ? mDragOffset : QPoint());
+    QPainterPath path;
+    int level = 0;
+    QPolygonF scenePolygon = mEditor->tileToScenePolygon(tilePolygon, level);
+    path.addPolygon(scenePolygon);
+    return path;
+}
+
+QRectF GraphicsBasementAccessItem::tileBounds() const
+{
+    if (isNorth())
+        return QRect(accessX(), accessY() - 1, 1, 5);
+    if (isWest())
+        return QRect(accessX() - 1, accessY(), 5, 1);
+    return QRectF();
+}
+
+bool GraphicsBasementAccessItem::isNorth() const
+{
+    BasementAccess ba = mEditor->building()->basementAccess();
+    return ba.mDirection == BuildingObject::Direction::N;
+}
+
+bool GraphicsBasementAccessItem::isWest() const
+{
+    BasementAccess ba = mEditor->building()->basementAccess();
+    return ba.mDirection == BuildingObject::Direction::W;
+}
+
+int GraphicsBasementAccessItem::accessX() const
+{
+    BasementAccess ba = mEditor->building()->basementAccess();
+    if (ba.isValid()) {
+        return ba.mX;
+    }
+    return 0;
+}
+
+int GraphicsBasementAccessItem::accessY() const
+{
+    BasementAccess ba = mEditor->building()->basementAccess();
+    if (ba.isValid()) {
+        return ba.mY;
+    }
+    return 0;
 }
 
 /////
@@ -1352,6 +1481,10 @@ void BuildingOrthoScene::setDocument(BuildingDocument *doc)
             floorAdded(floor);
         currentFloorChanged();
 
+        mBasementAccessItem = new GraphicsBasementAccessItem(this);
+        mBasementAccessItem->setZValue(ZVALUE_GRID);
+        addItem(mBasementAccessItem);
+
         mGridItem = new GraphicsGridItem(building()->width(),
                                          building()->height());
         mGridItem->setZValue(ZVALUE_GRID);
@@ -1401,6 +1534,8 @@ void BuildingOrthoScene::setDocument(BuildingDocument *doc)
 
         connect(mDocument, &BuildingDocument::buildingResized, this, &BuildingOrthoScene::buildingResized);
         connect(mDocument, &BuildingDocument::buildingRotated, this, &BuildingOrthoScene::buildingRotated);
+
+        connect(mDocument, &BuildingDocument::basementAccessChanged, this, &BuildingOrthoScene::basementAccessChanged);
     }
 
     emit documentChanged();
@@ -1560,10 +1695,17 @@ void BuildingOrthoScene::buildingRotated()
     }
 
     mGridItem->setSize(building()->width(), building()->height());
+    mBasementAccessItem->synchWithBuilding();
 
     setSceneRect(-10, -10,
                  building()->width() * 30 + 20,
                  building()->height() * 30 + 20);
+}
+
+void BuildingOrthoScene::basementAccessChanged()
+{
+    mBasementAccessItem->synchWithBuilding();
+    mBasementAccessItem->setVisible((currentLevel() == 0) && building()->hasBasementAccess());
 }
 
 /////

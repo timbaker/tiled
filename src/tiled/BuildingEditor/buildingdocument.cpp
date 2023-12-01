@@ -416,10 +416,10 @@ FloorTileGrid *BuildingDocument::swapFloorTiles(BuildingFloor *floor,
     return old;
 }
 
-QSize BuildingDocument::resizeBuilding(const QSize &newSize)
+QSize BuildingDocument::resizeBuilding(const QPoint &offset, const QSize &newSize)
 {
     QSize old = building()->size();
-    building()->resize(newSize);
+    building()->resize(offset, newSize);
     return old;
 }
 
@@ -530,6 +530,14 @@ Tiled::PropertiesGrid *BuildingDocument::changeSquareProperties(int level, const
     floor->squarePropertiesGrid()->copy(propertiesGrid, selection);
     emit squarePropertiesChanged(floor, selection);
     return result;
+}
+
+BasementAccess BuildingDocument::setBasementAccess(const BasementAccess &ba)
+{
+    BasementAccess old = mBuilding->basementAccess();
+    mBuilding->setBasementAccess(ba);
+    emit basementAccessChanged();
+    return old;
 }
 
 void BuildingDocument::furnitureTileChanged(FurnitureTile *ftile)

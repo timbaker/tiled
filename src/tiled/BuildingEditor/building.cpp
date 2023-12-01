@@ -50,6 +50,7 @@ Building::~Building()
 {
     qDeleteAll(mFloors);
     qDeleteAll(mRooms);
+    delete mBasementAccess;
 }
 
 BuildingFloor *Building::floor(int index)
@@ -119,8 +120,9 @@ int Building::categoryEnum(int n)
     return BuildingTemplate::categoryEnum(n);
 }
 
-void Building::resize(const QSize &newSize)
+void Building::resize(const QPoint &offset, const QSize &newSize)
 {
+    Q_UNUSED(offset)
     mWidth = newSize.width();
     mHeight = newSize.height();
 }
@@ -201,4 +203,36 @@ QStringList Building::tilesetNames() const
     }
 
     return {ret.begin(), ret.end()};
+}
+
+bool Building::hasBasementAccess() const
+{
+    return mBasementAccess != nullptr;
+}
+
+BasementAccess Building::basementAccess() const
+{
+    if (hasBasementAccess()) {
+        return *mBasementAccess;
+    }
+    return {};
+}
+
+void Building::setBasementAccess(const BasementAccess &ba)
+{
+    if (ba.isValid()) {
+        if (mBasementAccess == nullptr) {
+            mBasementAccess = new BasementAccess(ba);
+        } else {
+            *mBasementAccess = ba;
+        }
+    } else {
+        clearBasementAccess();
+    }
+}
+
+void Building::clearBasementAccess()
+{
+    delete mBasementAccess;
+    mBasementAccess = nullptr;
 }

@@ -19,6 +19,7 @@
 #define BUILDINGDOCUMENT_H
 
 #include "BuildingEditor/buildingundoredo.h"
+#include "BuildingEditor/buildingobjects.h"
 #include "properties.h"
 
 #include <QObject>
@@ -156,7 +157,7 @@ public:
                                   const QPoint &pos,
                                   const FloorTileGrid *tiles);
 
-    QSize resizeBuilding(const QSize &newSize);
+    QSize resizeBuilding(const QPoint& offset, const QSize &newSize);
     QVector<QVector<Room *> > resizeFloor(BuildingFloor *floor,
                                           const QVector<QVector<Room*> > &grid,
                                           QMap<QString,FloorTileGrid*> &grime,
@@ -179,6 +180,8 @@ public:
     Tiled::Properties changeBuildingProperties(const Tiled::Properties& properties);
 
     Tiled::PropertiesGrid *changeSquareProperties(int level, const QRegion& selection, const Tiled::PropertiesGrid &propertiesGrid);
+
+    BasementAccess setBasementAccess(const BasementAccess& ba);
     // -UNDO/REDO
 
 signals:
@@ -231,6 +234,8 @@ signals:
     void usedFurnitureChanged();
 
     void squarePropertiesChanged(BuildingEditor::BuildingFloor *floor, const QRegion& region);
+
+    void basementAccessChanged();
 
 private:
     void checkUsedTile(BuildingTileEntry *entry);

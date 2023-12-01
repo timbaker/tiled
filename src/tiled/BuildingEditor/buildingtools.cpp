@@ -2040,6 +2040,182 @@ private:
 
 /////
 
+BasementAccessTool *BasementAccessTool::mInstance = nullptr;
+
+BasementAccessTool *BasementAccessTool::instance()
+{
+    if (mInstance == nullptr)
+        mInstance = new BasementAccessTool;
+    return mInstance;
+}
+
+BasementAccessTool::BasementAccessTool() :
+    BaseTool(),
+    mMode(NoMode),
+    mMouseDown(false),
+    mMouseOverObject(false),
+    mClickedObject(false)
+{
+    updateStatusText();
+}
+
+void BasementAccessTool::mousePressEvent(QGraphicsSceneMouseEvent *event)
+{
+    if (event->button() == Qt::LeftButton) {
+        if (mMode != NoMode) // Ignore additional presses during select/move
+            return;
+        mMouseDown = true;
+        mStartScenePos = event->scenePos();
+        mClickedObject = mMouseOverObject;
+        if (mMouseOverObject)
+            startMoving();
+    }
+    if (event->button() == Qt::RightButton) {
+        if (mMode == Moving)
+            cancelMoving();
+    }
+}
+
+void BasementAccessTool::mouseMoveEvent(QGraphicsSceneMouseEvent *event)
+{
+    QPointF pos = event->scenePos();
+
+    if (!mMouseDown) {
+        bool mouseOverObject = isMouseOverObject(pos);
+        if (mouseOverObject != mMouseOverObject) {
+            mMouseOverObject = mouseOverObject;
+            updateStatusText();
+            mEditor->basementAccessItem()->setMouseOver(mouseOverObject);
+        }
+        setHandCursor(mMouseOverObject ? HandOpen : HandNone);
+    }
+
+    if (mMode == NoMode && mMouseDown) {
+        const int dragDistance = (mStartScenePos - pos).manhattanLength();
+        if (dragDistance >= QApplication::startDragDistance()) {
+            if (mClickedObject)
+                startMoving();
+        }
+    }
+
+    switch (mMode) {
+    case Moving:
+        updateMovingItems(pos, event->modifiers());
+        break;
+    case CancelMoving:
+        break;
+    case NoMode:
+        break;
+    }
+}
+
+void BasementAccessTool::mouseReleaseEvent(QGraphicsSceneMouseEvent *event)
+{
+    if (event->button() != Qt::LeftButton)
+        return;
+
+    switch (mMode) {
+    case NoMode:
+        break;
+    case Moving:
+        mMouseDown = false;
+        finishMoving(event->scenePos());
+        break;
+    case CancelMoving:
+        mMode = NoMode;
+        break;
+    }
+
+    mMouseDown = false;
+    mClickedObject = false;
+    mouseMoveEvent(event); // update mMouseOverXXX
+    updateStatusText();
+}
+
+void BasementAccessTool::activate()
+{
+    BaseTool::activate();
+}
+
+void BasementAccessTool::deactivate()
+{
+    if (mMode == Moving)
+        cancelMoving();
+    if (mMouseOverObject) {
+        mEditor->basementAccessItem()->setMouseOver(false);
+    }
+    BaseTool::deactivate();
+}
+
+bool BasementAccessTool::isMouseOverObject(const QPointF& pos) const
+{
+    for (QGraphicsItem *item : mEditor->items(pos)) {
+        if (GraphicsBasementAccessItem *baItem = dynamic_cast<GraphicsBasementAccessItem*>(item)) {
+            return true;
+        }
+    }
+    return false;
+}
+
+void BasementAccessTool::startMoving()
+{
+    mMode = Moving;
+    mDragOffset = QPoint();
+    setHandCursor(HandClosed);
+    updateStatusText();
+}
+
+void BasementAccessTool::updateMovingItems(const QPointF &pos, Qt::KeyboardModifiers modifiers)
+{
+    Q_UNUSED(modifiers)
+
+    QPoint startTilePos = mEditor->sceneToTile(mStartScenePos, mEditor->currentLevel());
+    QPoint currentTilePos = mEditor->sceneToTile(pos, mEditor->currentLevel());
+    mDragOffset = currentTilePos - startTilePos;
+
+    mEditor->basementAccessItem()->setDragging(true);
+    mEditor->basementAccessItem()->setDragOffset(mDragOffset);
+}
+
+void BasementAccessTool::finishMoving(const QPointF &pos)
+{
+    Q_UNUSED(pos)
+
+    Q_ASSERT(mMode == Moving);
+    mMode = NoMode;
+
+    mEditor->basementAccessItem()->setDragging(false);
+    mEditor->basementAccessItem()->setDragOffset(QPoint());
+
+    if (mDragOffset.isNull()) // Move is a no-op
+        return;
+
+    QUndoStack *undoStack = this->undoStack();
+    BasementAccess ba = mEditor->building()->basementAccess();
+    ba.mX += mDragOffset.x();
+    ba.mY += mDragOffset.y();
+    undoStack->push(new SetBasementAccess(document(), ba));
+}
+
+void BasementAccessTool::cancelMoving()
+{
+    mEditor->basementAccessItem()->setDragging(false);
+    mEditor->basementAccessItem()->setDragOffset(QPoint());
+    mMode = CancelMoving;
+}
+
+void BasementAccessTool::updateStatusText()
+{
+    if (mMode == Moving) {
+        setStatusText(tr("Right-click to cancel."));
+    } else if (mMouseOverObject) {
+        setStatusText(tr("Left-click-drag to move."));
+    } else
+        setStatusText(tr(""));
+}
+
+/////
+
 SelectMoveObjectTool *SelectMoveObjectTool::mInstance = 0;
 
 SelectMoveObjectTool *SelectMoveObjectTool::instance()

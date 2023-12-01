@@ -406,6 +406,7 @@ void BuildingIsoScene::setDocument(BuildingDocument *doc)
         qDeleteAll(mLayerGroupItems);
         mLayerGroupItems.clear();
         delete mGridItem;
+        delete mBasementAccessItem;
 
         dynamic_cast<IsoBuildingRenderer*>(mRenderer)->mMapRenderer = 0;
 
@@ -480,6 +481,8 @@ void BuildingIsoScene::setDocument(BuildingDocument *doc)
     connect(mDocument, &BuildingDocument::roomAdded, this, &BuildingIsoScene::roomAdded);
     connect(mDocument, &BuildingDocument::roomRemoved, this, &BuildingIsoScene::roomRemoved);
     connect(mDocument, &BuildingDocument::roomChanged, this, &BuildingIsoScene::roomChanged);
+
+    connect(mDocument, &BuildingDocument::basementAccessChanged, this, &BuildingIsoScene::basementAccessChanged);
 
     emit documentChanged();
 }
@@ -840,6 +843,7 @@ void BuildingIsoScene::BuildingToMap()
 
         qDeleteAll(mLayerGroupItems);
         mLayerGroupItems.clear();
+        delete mBasementAccessItem;
         delete mGridItem;
         delete mTileSelectionItem;
         delete mSquarePropertiesItem;
@@ -866,6 +870,10 @@ void BuildingIsoScene::BuildingToMap()
         addItem(item);
         mLayerGroupItems[layerGroup->level()] = item;
     }
+
+    mBasementAccessItem = new GraphicsBasementAccessItem(this);
+    mBasementAccessItem->setZValue(ZVALUE_GRID);
+    addItem(mBasementAccessItem);
 
     mGridItem = new TileModeGridItem(mDocument, mBuildingMap->mapRenderer());
     mGridItem->setEditingTiles(editingTiles());
@@ -945,6 +953,8 @@ void BuildingIsoScene::currentFloorChanged()
     highlightFloorChanged(prefs()->highlightFloor());
 
     mGridItem->synchWithBuilding();
+
+    mBasementAccessItem->setVisible((currentLevel() == 0) && building()->hasBasementAccess());
 
     if (!mNonEmptyLayer.isEmpty()) {
         mNonEmptyLayerGroupItem->layerGroup()->setLayerNonEmpty(mNonEmptyLayer, false);
@@ -1089,6 +1099,7 @@ void BuildingIsoScene::buildingResized()
     BuildingBaseScene::buildingResized();
     mBuildingMap->buildingResized();
     mGridItem->synchWithBuilding();
+    mBasementAccessItem->synchWithBuilding();
 }
 
 // Called when the building is flipped or rotated.
@@ -1097,6 +1108,7 @@ void BuildingIsoScene::buildingRotated()
     BuildingBaseScene::buildingRotated();
     mBuildingMap->buildingRotated();
     mGridItem->synchWithBuilding();
+    mBasementAccessItem->synchWithBuilding();
 }
 
 void BuildingIsoScene::highlightFloorChanged(bool highlight)
@@ -1166,6 +1178,12 @@ void BuildingIsoScene::tilesetChanged(Tileset *tileset)
 void BuildingIsoScene::currentToolChanged(BaseTool *tool)
 {
     mCurrentTool = tool;
+}
+
+void BuildingIsoScene::basementAccessChanged()
+{
+    mBasementAccessItem->synchWithBuilding();
+    mBasementAccessItem->setVisible((currentLevel() == 0) && building()->hasBasementAccess());
 }
 
 void BuildingIsoScene::aboutToRecreateLayers()

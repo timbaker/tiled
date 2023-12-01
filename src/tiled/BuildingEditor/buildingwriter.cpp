@@ -96,6 +96,11 @@ public:
         for (int i = 0; i < Building::TileCount; i++)
             w.writeAttribute(building->enumToString(i), entryIndex(building->tile(i)));
 
+        if (building->hasBasementAccess()) {
+            BasementAccess ba = building->basementAccess();
+            building->properties().insert(QStringLiteral("BasementAccess"), ba.toString());
+        }
+
         // Put these near the beginning of the file so MapManager::MapInfoReader can read properties without reading much text.
         writeProperties(w, building->properties());
 

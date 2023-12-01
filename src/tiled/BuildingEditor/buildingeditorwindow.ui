@@ -35,7 +35,7 @@
      <x>0</x>
      <y>0</y>
      <width>800</width>
-     <height>21</height>
+     <height>17</height>
     </rect>
    </property>
    <widget class="QMenu" name="menuFile">
@@ -92,6 +92,14 @@
     <property name="title">
      <string>Building</string>
     </property>
+    <widget class="QMenu" name="menuBasement_Access">
+     <property name="title">
+      <string>Basement Access</string>
+     </property>
+     <addaction name="actionBasementAccessNone"/>
+     <addaction name="actionBasementAccessNorth"/>
+     <addaction name="actionBasementAccessWest"/>
+    </widget>
     <addaction name="actionCropToMinimum"/>
     <addaction name="actionCropToSelection"/>
     <addaction name="actionResize"/>
@@ -107,6 +115,7 @@
     <addaction name="actionTemplates"/>
     <addaction name="actionTiles"/>
     <addaction name="separator"/>
+    <addaction name="menuBasement_Access"/>
     <addaction name="actionTemplateFromBuilding"/>
    </widget>
    <widget class="QMenu" name="menuFloor">
@@ -733,10 +742,37 @@
     <string>KeyValues...</string>
    </property>
   </action>
+  <action name="actionBasementAccessNone">
+   <property name="text">
+    <string>None</string>
+   </property>
+  </action>
+  <action name="actionBasementAccessNorth">
+   <property name="text">
+    <string>North</string>
+   </property>
+  </action>
+  <action name="actionBasementAccessWest">
+   <property name="text">
+    <string>West</string>
+   </property>
+  </action>
+  <action name="actionBasementAccessTool">
+   <property name="checkable">
+    <bool>true</bool>
+   </property>
+   <property name="icon">
+    <iconset resource="buildingeditor.qrc">
+     <normaloff>:/BuildingEditor/icons/icon_stair.png</normaloff>:/BuildingEditor/icons/icon_stair.png</iconset>
+   </property>
+   <property name="text">
+    <string>Move Basement Access</string>
+   </property>
+  </action>
  </widget>
  <resources>
-  <include location="../tiled.qrc"/>
   <include location="buildingeditor.qrc"/>
+  <include location="../tiled.qrc"/>
  </resources>
  <connections/>
 </ui>

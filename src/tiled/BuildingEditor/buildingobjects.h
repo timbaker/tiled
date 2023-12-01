@@ -140,6 +140,24 @@ protected:
     BuildingTileEntry *mTile;
 };
 
+// Not an object
+class BasementAccess
+{
+public:
+    int mX = 0;
+    int mY = 0;
+    BuildingObject::Direction mDirection = BuildingObject::Direction::Invalid;
+
+    bool fromString(const QString& str);
+    QString toString() const;
+    QString dirString() const;
+
+    bool isValid() const
+    {
+        return mDirection != BuildingObject::Direction::Invalid;
+    }
+};
+
 class Door : public BuildingObject
 {
 public:

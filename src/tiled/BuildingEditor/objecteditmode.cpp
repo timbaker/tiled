@@ -76,6 +76,7 @@ ObjectEditModeToolBar::ObjectEditModeToolBar(ObjectEditMode *mode, QWidget *pare
     addAction(actions->actionRoofCorner);
     addAction(actions->actionFurniture);
     addAction(actions->actionSelectObject);
+    addAction(actions->actionBasementAccessTool);
     addAction(actions->actionRooms);
     addAction(actions->actionUpLevel);
     addAction(actions->actionDownLevel);

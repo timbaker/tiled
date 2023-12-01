@@ -2510,3 +2510,44 @@ QPolygonF Window::calcShape() const
 }
 
 /////
+
+bool BasementAccess::fromString(const QString &value)
+{
+    QStringList ss = value.split(QLatin1Char(' '), Qt::SkipEmptyParts);
+    if (ss.length() == 3) {
+        bool ok;
+        mX = ss[0].toInt(&ok);
+        if (ok == false) {
+            return false;
+        }
+        mY = ss[1].toInt(&ok);
+        if (ok == false) {
+            return false;
+        }
+        QString direction = ss[2];
+        if (direction == QStringLiteral("N")) {
+            mDirection = BuildingObject::Direction::N;
+        } else if (direction == QStringLiteral("S")) {
+            mDirection = BuildingObject::Direction::S;
+        } else if (direction == QStringLiteral("W")) {
+            mDirection = BuildingObject::Direction::W;
+        } else if (direction == QStringLiteral("E")) {
+            mDirection = BuildingObject::Direction::E;
+        } else {
+            return false;
+        }
+        return true;
+    }
+    return false;
+}
+
+QString BasementAccess::toString() const
+{
+    return QStringLiteral("%1 %2 %3").arg(mX).arg(mY).arg(dirString());
+}
+
+QString BasementAccess::dirString() const
+{
+    static const char *s[] = { "N", "S", "E", "W", "Invalid" };
+    return QLatin1String(s[mDirection]);
+}

@@ -283,6 +283,8 @@ private slots:
 
     void currentToolChanged(BaseTool *tool);
 
+    void basementAccessChanged();
+
     // BuildingMap signals
     void aboutToRecreateLayers();
     void layersRecreated();

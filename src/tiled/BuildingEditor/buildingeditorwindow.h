@@ -283,6 +283,10 @@ private slots:
     void rotateRight();
     void rotateLeft();
 
+    void setBasementAccessNone();
+    void setBasementAccessNorth();
+    void setBasementAccessWest();
+
     void templatesDialog();
 
 public slots:

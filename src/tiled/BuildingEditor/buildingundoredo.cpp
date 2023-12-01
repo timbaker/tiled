@@ -381,16 +381,18 @@ void PaintFloorTiles::swap()
 
 /////
 
-ResizeBuilding::ResizeBuilding(BuildingDocument *doc, const QSize &newSize) :
+ResizeBuilding::ResizeBuilding(BuildingDocument *doc, const QPoint &offset, const QSize &newSize) :
     QUndoCommand(QCoreApplication::translate("Undo Commands", "Resize Building")),
     mDocument(doc),
+    mOffset(offset),
     mSize(newSize)
 {
 }
 
 void ResizeBuilding::swap()
 {
-    mSize = mDocument->resizeBuilding(mSize);
+    mSize = mDocument->resizeBuilding(mOffset, mSize);
+    mOffset *= -1;
 }
 
 /////
@@ -735,4 +737,19 @@ ChangeSquareProperties::~ChangeSquareProperties()
 void ChangeSquareProperties::swap()
 {
     mAttributes = mDocument->changeSquareProperties(mLevel, mSelection, *mAttributes);
+}
+
+/////
+
+SetBasementAccess::SetBasementAccess(BuildingDocument *doc, const BasementAccess &ba) :
+    QUndoCommand(QCoreApplication::translate("Undo Commands", "Set Basement Access")),
+    mDocument(doc),
+    mBasementAccess(ba)
+{
+
+}
+
+void SetBasementAccess::swap()
+{
+    mBasementAccess = mDocument->setBasementAccess(mBasementAccess);
 }

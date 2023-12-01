@@ -489,6 +489,16 @@ Building *BuildingReaderPrivate::readBuilding()
         mBuilding->setTile(i, getEntry(entryString)->asCategory(mBuilding->categoryEnum(i)));
     }
 
+    QString sBasementAccess = QStringLiteral("BasementAccess");
+    if (mBuilding->properties().contains(sBasementAccess)) {
+        QString value = mBuilding->properties().value(sBasementAccess);
+        BasementAccess ba;
+        if (ba.fromString(value)) {
+            mBuilding->setBasementAccess(ba);
+            mBuilding->properties().remove(sBasementAccess);
+        }
+    }
+
     // Clean up in case of error
     if (xml.hasError()) {
         delete mBuilding;
