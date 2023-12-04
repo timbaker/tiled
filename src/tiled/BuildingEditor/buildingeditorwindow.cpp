@@ -102,7 +102,7 @@ using namespace Tiled::Internal;
 /////
 
 EditorWindowPerDocumentStuff::EditorWindowPerDocumentStuff(BuildingDocument *doc) :
-    QObject(),
+    QObject(doc),
     mMainWindow(BuildingEditorWindow::instance()),
     mDocument(doc),
     mEditMode(IsoObjectMode),
@@ -112,7 +112,8 @@ EditorWindowPerDocumentStuff::EditorWindowPerDocumentStuff(BuildingDocument *doc
     mMissingTilesetsReported(false),
     mIsoView(nullptr),
     mTileView(nullptr),
-    mAttributeView(nullptr)
+    mAttributeView(nullptr),
+    mAutoSaveTimer(this)
 {
     connect(document()->undoStack(), &QUndoStack::cleanChanged, this, &EditorWindowPerDocumentStuff::autoSaveCheck);
     connect(document()->undoStack(), &QUndoStack::indexChanged, this, &EditorWindowPerDocumentStuff::autoSaveCheck);
@@ -1156,7 +1157,8 @@ void BuildingEditorWindow::documentAdded(BuildingDocument *doc)
 void BuildingEditorWindow::documentAboutToClose(int index, BuildingDocument *doc)
 {
     Q_UNUSED(index)
-    Q_UNUSED(doc)
+
+    mDocumentStuff.remove(doc);
 
     // At this point, the document is not in the DocumentManager's list of documents.
     // Removing the current tab will cause another tab to be selected and
@@ -1174,7 +1176,7 @@ void BuildingEditorWindow::currentDocumentChanged(BuildingDocument *doc)
     }
 
     mCurrentDocument = doc;
-    mCurrentDocumentStuff = doc ? mDocumentStuff[doc] : 0; // FIXME: unset when deleted
+    mCurrentDocumentStuff = doc ? mDocumentStuff[doc] : nullptr; // FIXME: unset when deleted
 
     if (mCurrentDocument) {
         IMode *mode = 0;
@@ -1870,8 +1872,8 @@ void BuildingEditorWindow::exportNewBinaryFile(ExportBasementsDialog *dialog, co
                     .arg(fileInfo.completeBaseName())
                     .arg(mapInfo1->width())
                     .arg(mapInfo1->height())
-                    .arg(ba.mX)
-                    .arg(ba.mY)
+                    .arg(ba.mX - offset.x())
+                    .arg(ba.mY - offset.y())
                     .arg(ba.dirString());
             luaCode += QStringLiteral("\n");
         } else {
