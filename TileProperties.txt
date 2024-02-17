@@ -59,6 +59,7 @@ property
         FloorTile = FloorTile
         FloorRug = FloorRug
         Vegitation = Vegitation
+        DoorObject = DoorObject
     }
     Default = Normal
     ValueAsPropertyName = false
@@ -86,10 +87,12 @@ property
     Enums
     {
         None =
-        Hammer = Hammer
         Crowbar = Crowbar
-        Electrician = Electrician
         Cutter = Cutter
+        Door = Door
+        Electrician = Electrician
+        Hammer = Hammer
+        Screwdriver = Screwdriver
         Shovel = Shovel
         Wrench = Wrench
     }
@@ -104,10 +107,12 @@ property
     Enums
     {
         None =
-        Hammer = Hammer
         Crowbar = Crowbar
-        Electrician = Electrician
         Cutter = Cutter
+        Door = Door
+        Electrician = Electrician
+        Hammer = Hammer
+        Screwdriver = Screwdriver
         Shovel = Shovel
         Wrench = Wrench
     }
@@ -328,6 +333,7 @@ property
         Foam = Foam
         Fridge = Fridge
         Glass = Glass
+        GoldBar = GoldBar
         Leather = Leather
         Log = Log
         Mechanical = Mechanical
@@ -346,7 +352,10 @@ property
         PlasticBag = PlasticBag
         PlasticHard = PlasticHard
         Plumbing = Plumbing
+        RailroadTie = RailroadTie,
+        RailroadTrack = RailroadTrack,
         Rubber = Rubber
+        Sandbag = Sandbag
         Screws = Screws
         Sink = Sink
         Steel = Steel
@@ -392,6 +401,8 @@ property
         PlasticBag = PlasticBag
         PlasticHard = PlasticHard
         Plumbing = Plumbing
+        RailroadTie = RailroadTie,
+        RailroadTrack = RailroadTrack,
         Rubber = Rubber
         Screws = Screws
         Sink = Sink
@@ -437,6 +448,8 @@ property
         PlasticBag = PlasticBag
         PlasticHard = PlasticHard
         Plumbing = Plumbing
+        RailroadTie = RailroadTie,
+        RailroadTrack = RailroadTrack,
         Rubber = Rubber
         Screws = Screws
         Sink = Sink
@@ -533,6 +546,14 @@ property
     Type = String
     Name = BurntTile
     ShortName = BurntTile
+    Default =
+}
+
+property
+{
+    Type = String
+    Name = SnowTile
+    ShortName = SnowTile
     Default =
 }
 
@@ -1560,6 +1581,47 @@ property
     }
     Default = None
     ValueAsPropertyName = false
+}
+property
+{
+    Type = String
+    Name = PhysicsMesh
+    ShortName =
+    Default =
+}
+property
+{
+    Type = Enum
+    Name = SlopedSurfaceDirection
+    ShortName =
+    Enums
+    {
+        None = 
+        North = N
+        South = S
+        West = W
+        East = E
+    }
+    Default = None
+    ValueAsPropertyName = false
+}
+property
+{
+    Type = Integer
+    Name = SlopedSurfaceHeightMin
+    ShortName = 
+    Min = 0
+    Max = 100
+    Default = 0
+}
+property
+{
+    Type = Integer
+    Name = SlopedSurfaceHeightMax
+    ShortName = 
+    Min = 0
+    Max = 100
+    Default = 0
 }
 
 separator

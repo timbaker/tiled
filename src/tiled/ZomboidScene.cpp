@@ -736,7 +736,7 @@ void ZomboidScene::synchNoBlendVisible()
 {
     QString layerName;
     if (mapDocument()->currentLayer() && mapDocument()->currentLayer()->asTileLayer()) {
-        layerName = mapDocument()->currentLayer()->name();
+        layerName = mapDocument()->currentLayer()->nameWithPrefix();
         if (!mapDocument()->mapComposite()->bmpBlender()->blendLayers().contains(layerName))
             layerName.clear();
     }

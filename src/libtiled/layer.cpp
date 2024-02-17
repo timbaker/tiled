@@ -58,7 +58,7 @@ Layer::Layer(Type type, const QString &name, int x, int y,
 
 QString Layer::nameWithPrefix() const
 {
-    return QLatin1String("%1_%2").arg(level()).arg(mName);
+    return QLatin1String("%1_%2").arg(QString::number(level())).arg(mName);
 }
 
 void Layer::resize(const QSize &size, const QPoint & /* offset */)

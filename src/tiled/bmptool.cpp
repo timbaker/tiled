@@ -1871,7 +1871,7 @@ void NoBlendTool::tilePositionChanged(const QPoint &tilePos)
         clearNoBlend();
         if (isBlendLayer() && !brushItem()->tileRegion().isEmpty()) {
             MapDocument *doc = mapDocument();
-            MapNoBlend *nb = doc->map()->noBlend(currentLayer()->name());
+            MapNoBlend *nb = doc->map()->noBlend(currentLayer()->nameWithPrefix());
             MapNoBlend noBlend = nb->copy(brushItem()->tileRegion());
             for (QRect r : brushItem()->tileRegion()) {
                 for (int y = r.top(); y <= r.bottom(); y++) {
@@ -1922,7 +1922,7 @@ bool NoBlendTool::isBlendLayer()
     MapDocument *doc = mapDocument();
     Layer *layer = currentLayer();
     if (doc && layer && layer->asTileLayer())
-        return doc->mapComposite()->bmpBlender()->blendLayers().contains(layer->name());
+        return doc->mapComposite()->bmpBlender()->blendLayers().contains(layer->nameWithPrefix());
     return false;
 }
 
@@ -1964,7 +1964,7 @@ void NoBlendTool::mouseReleased(QGraphicsSceneMouseEvent *event)
             if (isBlendLayer()) {
                 const QRect r = selectedArea();
                 if (!r.isEmpty()) {
-                    MapNoBlend *noBlend = doc->map()->noBlend(currentLayer()->name());
+                    MapNoBlend *noBlend = doc->map()->noBlend(currentLayer()->nameWithPrefix());
 
                     QRegion tileRgn(r);
                     if (BmpBrushTool::instance()->restrictToSelection()) {

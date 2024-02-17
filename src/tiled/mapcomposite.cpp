@@ -283,7 +283,7 @@ bool CompositeLayerGroup::orderedCellsAt(const QPoint &pos,
         }
 
         // Draw the no-blend tile.
-        if (noBlend && tl->name() == mOwner->mNoBlendLayer && noBlend->get(subPos - nbPos)) {
+        if (noBlend && tl->nameWithPrefix() == mOwner->mNoBlendLayer && noBlend->get(subPos - nbPos)) {
             if (!cleared) {
                 bool isFloor = !mLevel && !index && (tl->name() == sFloor);
                 if (isFloor) root->mKeepFloorLayerCount = 0;
@@ -611,8 +611,8 @@ bool CompositeLayerGroup::setBmpBlendLayers(const QList<TileLayer *> &layers)
         for (int i = 0; i < mLayers.size(); i++) {
             if (mLayers[i]->name() == MapComposite::layerNameWithoutPrefix(tl->name())) {
                 mBmpBlendLayers[i] = tl;
-                if (mOwner->bmpBlender()->blendLayers().contains(tl->name()))
-                    mNoBlends[i] = mMap->noBlend(tl->name());
+                if (mOwner->bmpBlender()->blendLayers().contains(tl->nameWithPrefix()))
+                    mNoBlends[i] = mMap->noBlend(tl->nameWithPrefix());
             }
         }
     }

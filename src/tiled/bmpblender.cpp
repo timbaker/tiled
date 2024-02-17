@@ -668,7 +668,7 @@ void BmpBlender::tileGridsToLayers(int x1, int y1, int x2, int y2)
     if (mTileLayers.isEmpty()) {
         foreach (QString layerName, mRuleLayers + mBlendLayers) {
             if (!mTileLayers.contains(layerName)) {
-                mTileLayers[layerName] = new TileLayer(layerName, 0, 0,
+                mTileLayers[layerName] = new TileLayer(MapLevel::layerNameWithoutPrefix(layerName), 0, 0,
                                                        mMap->width(), mMap->height());
             }
         }
