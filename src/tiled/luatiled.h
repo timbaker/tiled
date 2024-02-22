@@ -114,7 +114,11 @@ public:
     LuaLayer(Layer *orig);
     virtual ~LuaLayer();
 
-    const char *name();
+    const char *name() const;
+    const char *nameWithPrefix() const;
+    const QString nameWithPrefixQString() const;
+
+    int level() const { return mLevel; }
 
     virtual LuaTileLayer *asTileLayer() { return 0; }
     virtual LuaObjectGroup *asObjectGroup() { return 0; }
@@ -127,6 +131,7 @@ public:
     Layer *mClone;
     Layer *mOrig;
     QString mName;
+    int mLevel;
 };
 
 class LuaTileLayer : public LuaLayer
@@ -140,8 +145,6 @@ public:
     const char *type() const { return "tile"; }
 
     void cloned();
-
-    int level();
 
     void setTile(int x, int y, Tile *tile);
     Tile *tileAt(int x, int y);

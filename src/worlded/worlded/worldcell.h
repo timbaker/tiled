@@ -321,7 +321,13 @@ public:
 
     void addLot(const QString &name, int x, int y, int z, int width, int height)
     {
-        insertLot(mLots.size(), new WorldCellLot(this, name, x, y, z, width, height));
+        int index = 0;
+        for (; index < mLots.size(); index++) {
+            WorldCellLot *lot = mLots[index];
+            if (lot->level() > z)
+                break;
+        }
+        insertLot(index, new WorldCellLot(this, name, x, y, z, width, height));
     }
 
     const WorldCellLevelList &levels() const

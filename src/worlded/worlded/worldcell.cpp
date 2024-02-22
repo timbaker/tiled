@@ -58,6 +58,9 @@ WorldCellLevel::WorldCellLevel(WorldCell *cell, int level) :
 
 void WorldCellLevel::insertLot(int index, WorldCellLot *lot)
 {
+    if (index > mLots.size()) {
+        int dbg = 1;
+    }
     mLots.insert(index, lot);
 }
 
@@ -103,13 +106,21 @@ WorldCellLevel *WorldCell::levelForZ(int z) const
 void WorldCell::insertLot(int index, WorldCellLot *lot)
 {
     mLots.insert(index, lot);
-    levelForZ(lot->level())->insertLot(index, lot);
+    int offset = 0;
+    for (int z = MIN_WORLD_LEVEL; z < lot->level(); z++) {
+        offset += levelForZ(z)->lots().size();
+    }
+    levelForZ(lot->level())->insertLot(index - offset, lot);
 }
 
 WorldCellLot *WorldCell::removeLot(int index)
 {
     WorldCellLot *lot = mLots.takeAt(index);
-    levelForZ(lot->level())->removeLot(index);
+    int offset = 0;
+    for (int z = MIN_WORLD_LEVEL; z < lot->level(); z++) {
+        offset += levelForZ(z)->lots().size();
+    }
+    levelForZ(lot->level())->removeLot(index - offset);
     return lot;
 }
 
