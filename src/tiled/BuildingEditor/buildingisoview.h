@@ -233,6 +233,8 @@ public:
 
     void setCursorPosition(const QPoint &pos);
 
+    void calculateUnlitRoomMask();
+
 private:
     void BuildingToMap();
     CompositeLayerGroupItem *itemForFloor(BuildingFloor *floor);

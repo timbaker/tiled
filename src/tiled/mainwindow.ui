@@ -54,7 +54,7 @@
      <x>0</x>
      <y>0</y>
      <width>553</width>
-     <height>21</height>
+     <height>17</height>
     </rect>
    </property>
    <widget class="QMenu" name="menuFile">
@@ -111,6 +111,7 @@
     </property>
     <addaction name="actionNewTileset"/>
     <addaction name="actionAddExternalTileset"/>
+    <addaction name="actionRemoveMissingTilesets"/>
     <addaction name="separator"/>
     <addaction name="actionResizeMap"/>
     <addaction name="actionOffsetMap"/>
@@ -130,6 +131,7 @@
     <addaction name="actionShowLotFloorsOnly"/>
     <addaction name="actionShowMiniMap"/>
     <addaction name="actionShowTileLayersPanel"/>
+    <addaction name="actionShowTileSelection"/>
     <addaction name="separator"/>
     <addaction name="actionZoomIn"/>
     <addaction name="actionZoomOut"/>
@@ -679,11 +681,27 @@
     <string>Snow Editor...</string>
    </property>
   </action>
+  <action name="actionRemoveMissingTilesets">
+   <property name="text">
+    <string>Remove Missing Tilesets</string>
+   </property>
+  </action>
+  <action name="actionShowTileSelection">
+   <property name="checkable">
+    <bool>true</bool>
+   </property>
+   <property name="text">
+    <string>ShowTile Selection</string>
+   </property>
+   <property name="shortcut">
+    <string>Ctrl+H</string>
+   </property>
+  </action>
  </widget>
  <layoutdefault spacing="6" margin="11"/>
  <resources>
-  <include location="BuildingEditor/buildingeditor.qrc"/>
   <include location="tiled.qrc"/>
+  <include location="BuildingEditor/buildingeditor.qrc"/>
  </resources>
  <connections/>
 </ui>

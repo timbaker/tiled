@@ -61,6 +61,8 @@ public:
                                 QVector<qreal> &opacities) const = 0;
     virtual void prepareDrawing(const MapRenderer *renderer, const QRect &rect) = 0;
 
+    virtual bool useImageBlack(int x, int y) const;
+
     void setLevel(int level) { mLevel = level; }
     int level() const { return mLevel; }
 

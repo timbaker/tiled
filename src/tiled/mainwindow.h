@@ -178,6 +178,9 @@ public slots:
     bool newTileset(const QString &path = QString());
     void newTilesets(const QStringList &paths);
     void addExternalTileset();
+#ifdef ZOMBOID
+    void removeMissingTilesets();
+#endif
     void resizeMap();
     void offsetMap();
     void editMapProperties();

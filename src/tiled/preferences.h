@@ -116,6 +116,9 @@ public:
     bool showTileLayersPanel() const
     { return mShowTileLayersPanel; }
 
+    bool showTileSelection() const
+    { return mShowTileSelection; }
+
     QColor backgroundColor() const
     { return mBackgroundColor; }
 
@@ -161,6 +164,7 @@ public slots:
     void setShowLotFloorsOnly(bool show);
     void setShowMiniMap(bool show);
     void setShowTileLayersPanel(bool show);
+    void setShowTileSelection(bool show);
     void setBackgroundColor(const QColor &bgColor);
     void setShowAdjacentMaps(bool show);
     void setWorldEdFiles(const QStringList &fileNames);
@@ -191,6 +195,7 @@ signals:
     void showMiniMapChanged(bool show);
     void miniMapWidthChanged(int width);
     void showTileLayersPanelChanged(bool show);
+    void showTileSelectionChanged(bool show);
     void backgroundColorChanged(const QColor &color);
     void showAdjacentMapsChanged(bool show);
     void worldEdFilesChanged(const QStringList &fileNames);
@@ -239,6 +244,7 @@ private:
     int mEraserBrushSize;
     QColor mTilesetBackgroundColor;
     QString mThumbnailsDirectory;
+    bool mShowTileSelection;
 #endif
 
     static Preferences *mInstance;

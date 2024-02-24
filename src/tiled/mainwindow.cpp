@@ -312,6 +312,7 @@ MainWindow::MainWindow(QWidget *parent, Qt::WindowFlags flags)
     mUi->actionShowLotFloorsOnly->setChecked(preferences->showLotFloorsOnly());
     mUi->actionShowMiniMap->setChecked(preferences->showMiniMap());
     mUi->actionShowTileLayersPanel->setChecked(preferences->showTileLayersPanel());
+    mUi->actionShowTileSelection->setChecked(preferences->showTileSelection());
 
     mUi->actionExportNewBinary->setVisible(false);
 #endif
@@ -414,6 +415,8 @@ MainWindow::MainWindow(QWidget *parent, Qt::WindowFlags flags)
             preferences, &Preferences::setShowMiniMap);
     connect(mUi->actionShowTileLayersPanel, &QAction::toggled,
             preferences, &Preferences::setShowTileLayersPanel);
+    connect(mUi->actionShowTileSelection, &QAction::toggled,
+            preferences, &Preferences::setShowTileSelection);
 #endif
     connect(mUi->actionZoomIn, &QAction::triggered, this, &MainWindow::zoomIn);
     connect(mUi->actionZoomOut, &QAction::triggered, this, &MainWindow::zoomOut);
@@ -422,6 +425,10 @@ MainWindow::MainWindow(QWidget *parent, Qt::WindowFlags flags)
     connect(mUi->actionNewTileset, &QAction::triggered, this, [this]{this->newTileset();});
     connect(mUi->actionAddExternalTileset, &QAction::triggered,
             this, &MainWindow::addExternalTileset);
+#ifdef ZOMBOID
+    connect(mUi->actionRemoveMissingTilesets, &QAction::triggered,
+            this, &MainWindow::removeMissingTilesets);
+#endif
     connect(mUi->actionResizeMap, &QAction::triggered, this, &MainWindow::resizeMap);
     connect(mUi->actionOffsetMap, &QAction::triggered, this, &MainWindow::offsetMap);
     connect(mUi->actionMapProperties, &QAction::triggered,
@@ -1575,6 +1582,20 @@ void MainWindow::addExternalTileset()
         QMessageBox::critical(this, tr("Error Reading Tileset"),
                               reader.errorString());
     }
+}
+
+void MainWindow::removeMissingTilesets()
+{
+    if (!mMapDocument)
+        return;
+    Map *map = mMapDocument->map();
+    mMapDocument->undoStack()->beginMacro(tr("Remove Unused Tilesets"));
+    QList<Tileset*> tilesets = map->missingTilesets();
+    for (Tileset * tileset : tilesets) {
+        QUndoCommand *cmd = new RemoveTileset(mMapDocument, map->indexOfTileset(tileset), tileset);
+        mMapDocument->undoStack()->push(cmd);
+    }
+    mMapDocument->undoStack()->endMacro();
 }
 
 void MainWindow::resizeMap()
@@ -2813,6 +2834,9 @@ void MainWindow::updateActions()
 #endif
     mUi->actionNewTileset->setEnabled(map);
     mUi->actionAddExternalTileset->setEnabled(map);
+#ifdef ZOMBOID
+    mUi->actionRemoveMissingTilesets->setEnabled((map != nullptr) && (map->missingTilesets().isEmpty() == false));
+#endif
     mUi->actionResizeMap->setEnabled(map);
     mUi->actionOffsetMap->setEnabled(map);
     mUi->actionMapProperties->setEnabled(map);
@@ -3301,6 +3325,10 @@ void MainWindow::mapDocumentChanged(MapDocument *mapDocument)
         connect(mapDocument, &MapDocument::mapChanged,
                 this, &MainWindow::resizeStatusInfoLabel);
         connect(mapDocument, &MapDocument::layerRenamed,
+                this, &MainWindow::updateActions);
+        connect(mapDocument, &MapDocument::tilesetAdded,
+                this, &MainWindow::updateActions);
+        connect(mapDocument, &MapDocument::tilesetRemoved,
                 this, &MainWindow::updateActions);
 #endif
 

@@ -62,6 +62,9 @@ public:
     bool showObjects() const
     { return mShowObjects; }
 
+    bool highlightUnlitRooms() const
+    { return mHighlightUnlitRooms; }
+
     qreal tileScale() const
     { return mTileScale; }
 
@@ -80,6 +83,7 @@ signals:
     void showWallsChanged(bool show);
     void showLowerFloorsChanged(bool show);
     void showObjectsChanged(bool show);
+    void highlightUnlitRoomsChanged(bool show);
     void tileScaleChanged(qreal scale);
     void useOpenGLChanged(bool useOpenGL);
     void levelIsometricChanged(bool levels);
@@ -93,6 +97,7 @@ public slots:
     void setShowWalls(bool show);
     void setShowLowerFloors(bool show);
     void setShowObjects(bool show);
+    void setHighlightUnlitRooms(bool show);
     void setTileScale(qreal scale);
     void setUseOpenGL(bool useOpenGL);
     void setLevelIsometric(bool levels);
@@ -108,6 +113,7 @@ private:
     bool mShowWalls;
     bool mShowLowerFloors;
     bool mShowObjects;
+    bool mHighlightUnlitRooms;
     qreal mTileScale;
     bool mUseOpenGL;
     bool mLevelIsometric;

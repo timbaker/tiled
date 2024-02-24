@@ -262,6 +262,9 @@ bool TilesetManager::getTilesetFileName(const QString &tilesetName, QString &pat
     infoList = dir1x.entryInfoList(QDir::AllDirs | QDir::NoDotAndDotDot);
     for (const QFileInfo &dirInfo : infoList) {
         QDir dir = QDir(dirInfo.filePath());
+        if (dir == dir2x) {
+            continue;
+        }
         QString try1x = dir.filePath(fileName);
         if (QImageReader(try1x).size().isValid()) {
             path1x = try1x;

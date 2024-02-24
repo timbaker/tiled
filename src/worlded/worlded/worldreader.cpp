@@ -394,6 +394,7 @@ private:
                 atts.value(QLatin1String("height")).toString().toInt();
 
         // No check wanted/needed on Lot coordinates
+        if (level >= 0 && level < 8)
         cell->addLot(resolveReference(mapName, mPath), x, y, level, width, height);
 
         xml.skipCurrentElement();

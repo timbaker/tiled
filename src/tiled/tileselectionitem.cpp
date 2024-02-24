@@ -20,6 +20,10 @@
 
 #include "tileselectionitem.h"
 
+#ifdef ZOMBOID
+#include "preferences.h"
+#endif
+
 #include "map.h"
 #include "mapdocument.h"
 #include "maprenderer.h"
@@ -42,6 +46,8 @@ TileSelectionItem::TileSelectionItem(MapDocument *mapDocument)
 #ifdef ZOMBOID
     connect(mMapDocument, &MapDocument::currentLayerIndexChanged,
             this, &TileSelectionItem::currentLayerIndexChanged);
+    connect(Preferences::instance(), &Preferences::showTileSelectionChanged,
+            this, &TileSelectionItem::showTileSelectionChanged);
 #endif
 
     updateBoundingRect();
@@ -58,6 +64,12 @@ void TileSelectionItem::paint(QPainter *painter,
 {
 #ifdef ZOMBOID
     const QRegion &selection = mMapDocument->tileSelection().translated(mDragOffset);
+    if (selection.isEmpty()) {
+        return;
+    }
+    if (Preferences::instance()->showTileSelection() == false) {
+        return;
+    }
 #else
     const QRegion &selection = mMapDocument->tileSelection();
 #endif
@@ -94,6 +106,11 @@ void TileSelectionItem::currentLayerIndexChanged(int index)
     Q_UNUSED(index)
     prepareGeometryChange();
     updateBoundingRect();
+}
+
+void TileSelectionItem::showTileSelectionChanged(bool show)
+{
+    update();
 }
 #endif
 

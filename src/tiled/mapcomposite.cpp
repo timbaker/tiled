@@ -26,7 +26,15 @@
 #include "mapobject.h"
 #include "maprenderer.h"
 #include "objectgroup.h"
+#include "tile.h"
 #include "tilelayer.h"
+#include "tileset.h"
+
+#ifdef BUILDINGED
+#include "BuildingEditor/building.h"
+#include "BuildingEditor/buildingroomdef.h"
+#include "BuildingEditor/buildingtemplates.h"
+#endif
 
 #include <QDebug>
 #include <QDir>
@@ -641,6 +649,93 @@ bool CompositeLayerGroup::setLayerNonEmpty(TileLayer *tl, bool force)
     }
     return mNeedsSynch;
 }
+
+void CompositeLayerGroup::calculateUnlitRoomMask(BuildingEditor::Building *building)
+{
+    clearUseImageBlack();
+    prepareDrawing2();
+    BuildingEditor::BuildingFloor *floor = building->floor(level());
+    for (BuildingEditor::Room *room : building->rooms()) {
+        BuildingEditor::BuildingRoomDefecator rd(floor, room);
+        rd.defecate();
+        for (const QRegion& roomRgn : rd.mRegions) {
+            if (roomHasLightSwitch(floor, roomRgn)) {
+                continue;
+            }
+            setUseImageBlack(roomRgn, true);
+        }
+    }
+}
+
+bool CompositeLayerGroup::roomHasLightSwitch(BuildingEditor::BuildingFloor *floor, const QRegion &region)
+{
+    const int NORTH_SWITCH = 0;
+    const int WEST_SWITCH = 1;
+    const int EAST_SWITCH = 2;
+    const int SOUTH_SWITCH = 3;
+
+    QVector<const Cell*> cells(10);
+    for (const QRect &rect : region) {
+        for (int y = rect.top(); y <= rect.bottom(); y++) {
+            for (int x = rect.left(); x <= rect.right(); x++) {
+                cells.clear();
+                if (orderedCellsAt2(QPoint(x, y), cells) == false) {
+                    continue;
+                }
+                for (const Cell *cell : cells) {
+                    if (cell->isEmpty()) {
+                        continue;
+                    }
+                    Tile *tile = cell->tile;
+                    if (tile->tileset()->name() == QStringLiteral("lighting_indoor_01")) {
+                        int id = tile->id();
+                        if (id == NORTH_SWITCH || id == NORTH_SWITCH + 4 ||
+                                id == WEST_SWITCH || id == WEST_SWITCH + 4 ||
+                                id == EAST_SWITCH || id == EAST_SWITCH + 5 ||
+                                id == SOUTH_SWITCH || id == SOUTH_SWITCH + 3)
+                        {
+                            return true;
+                        }
+                    }
+                }
+            }
+        }
+    }
+    return false;
+}
+
+void CompositeLayerGroup::setUseImageBlack(int x, int y, bool value)
+{
+    QRect bounds = this->bounds();
+    if (x < 0 || x >= bounds.width() || y < 0 || y >= bounds.height()) {
+        return;
+    }
+    if (mUseImageBlack.size() != bounds.width() * bounds.height()) {
+        mUseImageBlack.fill(false, bounds.width() * bounds.height());
+    }
+    mUseImageBlack[x + y * bounds.width()] = value;
+}
+
+void CompositeLayerGroup::setUseImageBlack(const QRect &rect, bool value)
+{
+    for (int y = rect.top(); y <= rect.bottom(); y++) {
+        for (int x = rect.left(); x <= rect.right(); x++) {
+            setUseImageBlack(x, y, value);
+        }
+    }
+}
+
+void CompositeLayerGroup::setUseImageBlack(const QRegion &region, bool value)
+{
+    for (const QRect &rect : region) {
+        setUseImageBlack(rect, value);
+    }
+}
+
+void CompositeLayerGroup::clearUseImageBlack()
+{
+    mUseImageBlack.fill(false);
+}
 #endif // BUILDINGED
 
 QRect CompositeLayerGroup::bounds() const
@@ -790,6 +885,18 @@ QRectF CompositeLayerGroup::boundingRect(const MapRenderer *renderer) const
     }
 
     return boundingRect;
+}
+
+bool CompositeLayerGroup::useImageBlack(int x, int y) const
+{
+    QRect bounds = this->bounds();
+    if (x < 0 || x >= bounds.width() || y < 0 || y > bounds.height()) {
+        return false;
+    }
+    if (mUseImageBlack.size() != bounds.width() * bounds.height()) {
+        return false;
+    }
+    return mUseImageBlack[x + y * bounds.width()];
 }
 
 ///// ///// ///// ///// /////

@@ -60,6 +60,7 @@ private slots:
                           const QRegion &oldSelection);
 #ifdef ZOMBOID
     void currentLayerIndexChanged(int index);
+    void showTileSelectionChanged(bool show);
 #endif
 
 private:

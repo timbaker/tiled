@@ -352,8 +352,13 @@ bool TileOverlayFile::write(const QString &filePath, const QList<TileOverlay*> &
 
     // /tmp/tempXYZ -> foo.tbx
     tempFile.close();
-    if (!tempFile.rename(filePath)) {
-        mError = QString(QLatin1String("Error renaming file!\nFrom: %1\nTo: %2\n\n%3"))
+    if (tempFile.rename(filePath)) {
+        // If anything above failed, the temp file should auto-remove, but not after
+        // a successful save.
+        tempFile.setAutoRemove(false);
+    // QTemporaryFile::rename() doesn't work across filesystems.  Should use QSaveFile instead.
+    } else if (!tempFile.copy(filePath)) {
+        mError = QString(QLatin1String("Error copying file!\nFrom: %1\nTo: %2\n\n%3"))
                 .arg(tempFile.fileName())
                 .arg(filePath)
                 .arg(tempFile.errorString());
@@ -362,10 +367,6 @@ bool TileOverlayFile::write(const QString &filePath, const QList<TileOverlay*> &
             backupFile.rename(filePath); // might fail
         return false;
     }
-
-    // If anything above failed, the temp file should auto-remove, but not after
-    // a successful save.
-    tempFile.setAutoRemove(false);
 
     return true;
 }

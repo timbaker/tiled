@@ -130,6 +130,9 @@ public:
 
     void focusOn(int x, int y, int z, int objectIndex);
 
+    BuildingIsoView *isoView() const { return mIsoView; }
+    BuildingIsoView *tileView() const { return mTileView; }
+
 public slots:
     void autoSaveCheck();
     void autoSaveTimeout();
@@ -297,6 +300,7 @@ public slots:
 
 private slots:
     void showObjectsChanged(bool show);
+    void highlightUnlitRoomsChanged(bool show);
 
     void tilesetAdded(Tiled::Tileset *tileset);
     void tilesetAboutToBeRemoved(Tiled::Tileset *tileset);

@@ -457,6 +457,12 @@ BuildingEditorWindow::BuildingEditorWindow(QWidget *parent) :
     connect(prefs, &BuildingPreferences::showObjectsChanged,
             this, &BuildingEditorWindow::showObjectsChanged);
 
+    ui->actionHighlightUnlitRooms->setChecked(prefs->highlightUnlitRooms());
+    connect(ui->actionHighlightUnlitRooms, &QAction::toggled,
+            prefs, &BuildingPreferences::setHighlightUnlitRooms);
+    connect(prefs, &BuildingPreferences::highlightUnlitRoomsChanged,
+            this, &BuildingEditorWindow::highlightUnlitRoomsChanged);
+
     QList<QKeySequence> keys = QKeySequence::keyBindings(QKeySequence::ZoomIn);
     keys += QKeySequence(tr("Ctrl+="));
     keys += QKeySequence(tr("+"));
@@ -2235,6 +2241,23 @@ void BuildingEditorWindow::showObjectsChanged(bool show)
     updateActions();
 }
 
+void BuildingEditorWindow::highlightUnlitRoomsChanged(bool show)
+{
+    Q_UNUSED(show)
+    updateActions();
+
+    bool hasDoc = (ModeManager::instance().currentMode() != mWelcomeMode) && (mCurrentDocumentStuff != nullptr);
+    if (hasDoc == false) {
+        return;
+    }
+    if (mCurrentDocumentStuff->isoView() != nullptr) {
+        mCurrentDocumentStuff->isoView()->scene()->calculateUnlitRoomMask();
+    }
+    if (mCurrentDocumentStuff->tileView() != nullptr) {
+        mCurrentDocumentStuff->tileView()->scene()->calculateUnlitRoomMask();
+    }
+}
+
 
 void BuildingEditorWindow::tilesetAdded(Tileset *tileset)
 {
@@ -2369,6 +2392,7 @@ void BuildingEditorWindow::updateActions()
     ui->actionExportNewBinary->setEnabled(hasDoc);
 
     ui->actionShowObjects->setEnabled(hasDoc);
+    ui->actionHighlightUnlitRooms->setEnabled(hasDoc);
 
     ui->actionBuildingProperties->setEnabled(hasDoc);
     ui->actionKeyValues->setEnabled(hasDoc);
