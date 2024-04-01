@@ -48,6 +48,10 @@
 using namespace SharedTools;
 #endif
 
+#define VERSION1 1 // The original TileZed version for map elements is "1.0"
+#define VERSION2 2 // Added layer attribute "level"
+#define VERSION_LATEST VERSION2
+
 using namespace Tiled;
 using namespace Tiled::Internal;
 
@@ -185,7 +189,7 @@ void MapWriterPrivate::writeMap(QXmlStreamWriter &w, const Map *map)
 
     const QString orientation = orientationToString(map->orientation());
 
-    w.writeAttribute(QLatin1String("version"), QLatin1String("1.0"));
+    w.writeAttribute(QLatin1String("version"), QLatin1String("%1.0").arg(QString::number(VERSION_LATEST)));
     w.writeAttribute(QLatin1String("orientation"), orientation);
     w.writeAttribute(QLatin1String("width"), QString::number(map->width()));
     w.writeAttribute(QLatin1String("height"), QString::number(map->height()));
@@ -405,6 +409,7 @@ void MapWriterPrivate::writeLayerAttributes(QXmlStreamWriter &w,
                                             const Layer *layer)
 {
     w.writeAttribute(QLatin1String("name"), layer->name());
+    w.writeAttribute(QLatin1String("level"), QString::number(layer->level()));
     w.writeAttribute(QLatin1String("width"), QString::number(layer->width()));
     w.writeAttribute(QLatin1String("height"),
                      QString::number(layer->height()));
