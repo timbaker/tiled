@@ -80,7 +80,8 @@ void BuildingLayersDock::setLayersList()
     QString topVisibleLayer;
 
     if (mDocument) {
-        foreach (QString layerName, BuildingMap::layerNames(mDocument->currentLevel())) {
+        const QStringList layerNames = BuildingMap::layerNames(mDocument->currentLevel());
+        for (const QString& layerName : layerNames) {
             QListWidgetItem *item = new QListWidgetItem;
             item->setText(layerName);
             item->setFlags(item->flags() | Qt::ItemIsUserCheckable);
@@ -152,8 +153,9 @@ void BuildingLayersDock::currentFloorChanged()
     setLayersList();
 
     if (mDocument) {
-        if (BuildingMap::layerNames(mDocument->currentLevel()).contains(layerName)) {
-            int index = BuildingMap::layerNames(mDocument->currentLevel()).indexOf(layerName);
+        QStringList layerNames = BuildingMap::layerNames(mDocument->currentLevel());
+        if (layerNames.contains(layerName)) {
+            int index = layerNames.indexOf(layerName);
             int row = ui->layers->count() - index - 1;
             ui->layers->setCurrentRow(row);
         } else {
@@ -166,11 +168,19 @@ void BuildingLayersDock::currentFloorChanged()
 void BuildingLayersDock::currentLayerChanged()
 {
     if (mDocument) {
-        int index = BuildingMap::layerNames(mDocument->currentLevel()).indexOf(mDocument->currentLayer());
+#if 1
+        auto items = ui->layers->findItems(mDocument->currentLayer(), Qt::MatchExactly);
+        if (items.size() == 1) {
+            ui->layers->setCurrentItem(items.at(0));
+        }
+#else
+        QStringList layerNames = BuildingMap::layerNames(mDocument->currentLevel());
+        int index = layerNames.indexOf(mDocument->currentLayer());
         if (index >= 0) {
             int row = ui->layers->count() - index - 1;
             ui->layers->setCurrentRow(row);
         }
+#endif
     }
     updateActions();
 }
