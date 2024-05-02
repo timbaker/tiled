@@ -18,7 +18,9 @@
 #include "BuildingEditor/buildingtiles.h"
 #include "BuildingEditor/buildingpreferences.h"
 #include "BuildingEditor/buildingreader.h"
+#include "BuildingEditor/buildingroomdef.h"
 #include "BuildingEditor/buildingtemplates.h"
+#include "BuildingEditor/buildingwriter.h"
 
 #include "map.h"
 #include "tile.h"
@@ -27,6 +29,7 @@
 #include <QDebug>
 #include <QDir>
 #include <QFileDialog>
+#include <QMessageBox>
 
 using namespace BuildingEditor;
 using namespace Tiled;
@@ -53,6 +56,7 @@ CheckBuildingsWindow::CheckBuildingsWindow(QWidget *parent) :
     connect(ui->checkSink, &QAbstractButton::clicked, this, qOverload<>(&CheckBuildingsWindow::syncList));
     connect(ui->check2x, &QAbstractButton::clicked, this, qOverload<>(&CheckBuildingsWindow::syncList));
     connect(ui->checkRearrangeGrid, &QCheckBox::clicked, this, qOverload<>(&CheckBuildingsWindow::syncList));
+    connect(ui->checkKidsBedroom, &QAbstractButton::clicked, this, qOverload<>(&CheckBuildingsWindow::syncList));
 
     ui->dirEdit->setText(BuildingPreferences::instance()->mapsDirectory());
 //    ui->dirEdit->setText(QLatin1String("C:/Users/Tim/Desktop/ProjectZomboid/Buildings"));
@@ -69,6 +73,29 @@ CheckBuildingsWindow::CheckBuildingsWindow(QWidget *parent) :
     mChangedFilesTimer.setInterval(500);
     mChangedFilesTimer.setSingleShot(true);
     connect(&mChangedFilesTimer, &QTimer::timeout, this, &CheckBuildingsWindow::fileChangedTimeout);
+
+    ui->buttonFixSelected->setEnabled(false);
+
+    mKidsBedroomTiles.clear();
+    mKidsBedroomTiles += QStringLiteral("furniture_bedding_01_36");
+    mKidsBedroomTiles += QStringLiteral("furniture_bedding_01_38");
+    mKidsBedroomTiles += QStringLiteral("furniture_seating_indoor_02_12");
+    mKidsBedroomTiles += QStringLiteral("furniture_seating_indoor_02_13");
+    mKidsBedroomTiles += QStringLiteral("furniture_seating_indoor_02_14");
+    mKidsBedroomTiles += QStringLiteral("furniture_seating_indoor_02_15");
+    mKidsBedroomTiles += QStringLiteral("walls_decoration_01_50");
+    mKidsBedroomTiles += QStringLiteral("walls_decoration_01_51");
+    mKidsBedroomTiles += QStringLiteral("location_community_school_01_62");
+    mKidsBedroomTiles += QStringLiteral("location_community_school_01_63");
+    mKidsBedroomTiles += QStringLiteral("floors_rugs_01_63");
+    mKidsBedroomTiles += QStringLiteral("floors_rugs_01_64");
+    mKidsBedroomTiles += QStringLiteral("floors_rugs_01_65");
+    mKidsBedroomTiles += QStringLiteral("floors_rugs_01_66");
+    mKidsBedroomTiles += QStringLiteral("floors_rugs_01_67");
+    mKidsBedroomTiles += QStringLiteral("floors_rugs_01_68");
+    mKidsBedroomTiles += QStringLiteral("floors_rugs_01_69");
+    mKidsBedroomTiles += QStringLiteral("floors_rugs_01_70");
+    mKidsBedroomTiles += QStringLiteral("floors_rugs_01_71");
 }
 
 CheckBuildingsWindow::~CheckBuildingsWindow()
@@ -122,15 +149,18 @@ void CheckBuildingsWindow::fixSelected()
     auto selected = ui->treeWidget->selectedItems();
     if (selected.isEmpty())
         return;
-    QMap<QString,QVector<int>> issues;
+    QMap<QString,QVector<int>> rearrangeGrid;
     for (QTreeWidgetItem *item : selected) {
         if (item->parent() == nullptr) {
             int rowFile = ui->treeWidget->indexOfTopLevelItem(item);
             IssueFile *file = mFiles[rowFile];
-            for (Issue &issue : file->issues) {
+            for (const Issue &issue : file->issues) {
                 switch (issue.type) {
                 case Issue::Type::RearrangeGrid:
-                    issues[file->path] << issue.x << issue.y << issue.z;
+                    rearrangeGrid[file->path] << issue.x << issue.y << issue.z;
+                    break;
+                case Issue::Type::KidsBedroom:
+                    fixKidsBedroom(file->path, issue.roomRegion, issue.z);
                     break;
                 default:
                     break;
@@ -140,18 +170,21 @@ void CheckBuildingsWindow::fixSelected()
         }
         int rowFile = ui->treeWidget->indexOfTopLevelItem(item->parent());
         int rowIssue = item->parent()->indexOfChild(item);
-        Issue &issue = mFiles[rowFile]->issues[rowIssue];
+        const Issue &issue = mFiles[rowFile]->issues[rowIssue];
         switch (issue.type) {
         case Issue::Type::RearrangeGrid:
-            issues[mFiles[rowFile]->path] << issue.x << issue.y << issue.z;
+            rearrangeGrid[mFiles[rowFile]->path] << issue.x << issue.y << issue.z;
+            break;
+        case Issue::Type::KidsBedroom:
+            fixKidsBedroom(mFiles[rowFile]->path, issue.roomRegion, issue.z);
             break;
         default:
             break;
         }
     }
 
-    for (const QString& filePath : issues.keys()) {
-        RearrangeTiles::instance()->fixBuilding(filePath, issues[filePath], this);
+    for (const QString& filePath : rearrangeGrid.keys()) {
+        RearrangeTiles::instance()->fixBuilding(filePath, rearrangeGrid[filePath], this);
     }
 }
 
@@ -166,6 +199,7 @@ void CheckBuildingsWindow::selectionChanged(const QItemSelection &selected, cons
             for (Issue &issue : file->issues) {
                 switch (issue.type) {
                 case Issue::Type::RearrangeGrid:
+                case Issue::Type::KidsBedroom:
                     ui->buttonFixSelected->setEnabled(true);
                     break;
                 default:
@@ -181,6 +215,7 @@ void CheckBuildingsWindow::selectionChanged(const QItemSelection &selected, cons
         Issue &issue = mFiles[rowFile]->issues[rowIssue];
         switch (issue.type) {
         case Issue::Type::RearrangeGrid:
+        case Issue::Type::KidsBedroom:
             ui->buttonFixSelected->setEnabled(true);
             break;
         default:
@@ -235,12 +270,121 @@ void CheckBuildingsWindow::syncList(IssueFile *file)
                 visible = false;
             if (issue.type == Issue::DoorInWall && !ui->checkDoorInWall->isChecked())
                 visible = false;
+            if (issue.type == Issue::KidsBedroom && !ui->checkKidsBedroom->isChecked())
+                visible = false;
             QTreeWidgetItem *issueItem = fileItem->child(i);
             issueItem->setHidden(!visible);
             if (visible) anyVisible = true;
         }
         fileItem->setHidden(!anyVisible);
     }
+}
+
+void CheckBuildingsWindow::checkKidsBedroom(BuildingEditor::BuildingFloor *floor, CompositeLayerGroup *layers, Room *room)
+{
+    if (room->internalName != QLatin1String("bedroom"))
+        return;
+    BuildingRoomDefecator rd(floor, room);
+    rd.defecate();
+    if (rd.mRegions.isEmpty())
+        return;
+    for (const QRegion& roomRegion : rd.mRegions) {
+        if (isKidsBedroomRegion(layers, roomRegion)) {
+            issue(Issue::KidsBedroom, roomRegion, floor->level());
+        }
+    }
+}
+
+bool CheckBuildingsWindow::isKidsBedroomRegion(CompositeLayerGroup *layers, const QRegion &roomRegion)
+{
+    for (const QRect& rect : roomRegion) {
+        if (isKidsBedroomRect(layers, rect)) {
+            return true;
+        }
+    }
+    return false;
+}
+
+bool CheckBuildingsWindow::isKidsBedroomRect(CompositeLayerGroup *layers, const QRect &roomRect)
+{
+    for (int y = roomRect.top(); y <= roomRect.bottom(); y++) {
+        for (int x = roomRect.left(); x <= roomRect.right(); x++) {
+            for (TileLayer *layer : layers->layers()) {
+                Tile *tile = layer->cellAt(x, y).tile;
+                if (tile == nullptr) {
+                    continue;
+                }
+                if (isKidsBedroomTile(tile)) {
+                    return true;
+                }
+            }
+        }
+    }
+    return false;
+}
+
+bool CheckBuildingsWindow::isKidsBedroomTile(Tiled::Tile *tile)
+{
+    return mKidsBedroomTiles.contains(tile->tileset()->name() + QStringLiteral("_%1").arg(tile->id()));
+}
+
+void CheckBuildingsWindow::fixKidsBedroom(const QString &tbxPath, const QRegion &roomRegion, int z)
+{
+    // read tbx
+    // create kidsbedroom duplicate of bedroom
+    // assign kidsbedroom to each square in the room region
+    // write tbx
+    BuildingReader reader;
+    Building *building = reader.read(tbxPath);
+    if (building == nullptr) {
+        QString error = reader.errorString();
+        QMessageBox::warning(this, tr("Error reading building"), error);
+        return;
+    }
+    reader.fix(building);
+
+    BuildingFloor *floor = building->floor(z);
+    Room *roomOld = floor->GetRoomAt(roomRegion.cbegin()->topLeft());
+    Room *roomNew = findExistingKidsBedroom(building, roomOld);
+    if (roomNew == nullptr) {
+        roomNew = new Room(roomOld);
+        roomNew->Name = kidsBedroomName(roomOld);
+        roomNew->internalName = QLatin1String("kidsbedroom");
+        building->insertRoom(building->roomCount(), roomNew);
+    }
+    for (const QRect &roomRect : roomRegion) {
+        for (int y = roomRect.top(); y <= roomRect.bottom(); y++) {
+            for (int x = roomRect.left(); x <= roomRect.right(); x++) {
+                floor->SetRoomAt(x, y, roomNew);
+            }
+        }
+    }
+    BuildingWriter w;
+    if (!w.write(building, tbxPath)) {
+        QString error = w.errorString();
+        QMessageBox::warning(this, tr("Error saving building"), error);
+    }
+    delete building;
+}
+
+Room *CheckBuildingsWindow::findExistingKidsBedroom(Building *building, BuildingEditor::Room *roomOld)
+{
+    for (Room *room : building->rooms()) {
+        if (room == roomOld)
+            continue;
+        if ((room->internalName == QLatin1String("kidsbedroom")) &&
+                (room->Color == roomOld->Color) &&
+                (room->Name == kidsBedroomName(roomOld)) &&
+                (room->tiles() == roomOld->tiles())) {
+            return room;
+        }
+    }
+    return nullptr;
+}
+
+QString CheckBuildingsWindow::kidsBedroomName(Room *roomOld)
+{
+    return QStringLiteral("Kids %1").arg(roomOld->Name);
 }
 
 void CheckBuildingsWindow::check(const QString &filePath)
@@ -491,6 +635,9 @@ void CheckBuildingsWindow::check(BuildingMap *bmap, Building *building, Map *map
                 issue(Issue::Sinks, QString::fromLatin1("Room without Sink (%1)").arg(room->Name), roomPos[room].x(), roomPos[room].y(), z);
         }
 
+        for (Room *room : building->rooms()) {
+            checkKidsBedroom(floor, layers, room);
+        }
     }
     delete mapInfo;
 
@@ -512,6 +659,11 @@ void CheckBuildingsWindow::issue(Issue::Type type, const char *detail, int x, in
 void CheckBuildingsWindow::issue(Issue::Type type, const char *detail, BuildingObject *object)
 {
     mCurrentIssueFile->issues += Issue(mCurrentIssueFile, type, QString::fromLatin1(detail), object);
+}
+
+void CheckBuildingsWindow::issue(Issue::Type type, const QRegion &roomRegion, int z)
+{
+    mCurrentIssueFile->issues += Issue(mCurrentIssueFile, type, roomRegion, z);
 }
 
 void CheckBuildingsWindow::updateList(CheckBuildingsWindow::IssueFile *file)

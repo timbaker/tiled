@@ -7,16 +7,20 @@
 #include <QSet>
 #include <QTimer>
 
+class CompositeLayerGroup;
 class QItemSelection;
 
 namespace BuildingEditor {
 class Building;
+class BuildingFloor;
 class BuildingObject;
 class BuildingMap;
+class Room;
 }
 
 namespace Tiled {
 class Map;
+class Tile;
 namespace Internal {
 class FileSystemWatcher;
 }
@@ -63,6 +67,7 @@ private:
             RearrangeGrid,
             MultipleContainers,
             DoorInWall,
+            KidsBedroom,
         };
 
         Issue(IssueFile *file, Type type, const QString &detail, int x, int y, int z) :
@@ -73,6 +78,19 @@ private:
             y(y),
             z(z),
             objectIndex(-1)
+        {
+
+        }
+
+        Issue(IssueFile *file, Type type, const QRegion &roomRegion, int z) :
+            file(file),
+            type(type),
+            detail(QStringLiteral("bedroom -> kidsbedroom")),
+            x(roomRegion.cbegin()->left()),
+            y(roomRegion.cbegin()->top()),
+            z(z),
+            objectIndex(-1),
+            roomRegion(roomRegion)
         {
 
         }
@@ -91,6 +109,7 @@ private:
         int y;
         int z;
         int objectIndex;
+        QRegion roomRegion;
     };
 
     class IssueFile
@@ -111,8 +130,17 @@ private:
     void issue(Issue::Type type, const QString &detail, int x, int y, int z);
     void issue(Issue::Type type, const char *detail, int x, int y, int z);
     void issue(Issue::Type type, const char *detail, BuildingEditor::BuildingObject *object);
+    void issue(Issue::Type type, const QRegion &roomRegion, int z);
     void updateList(IssueFile *file);
     void syncList(IssueFile *file);
+
+    void checkKidsBedroom(BuildingEditor::BuildingFloor *floor, CompositeLayerGroup *layers, BuildingEditor::Room *room);
+    bool isKidsBedroomRegion(CompositeLayerGroup *layers, const QRegion &roomRegion);
+    bool isKidsBedroomRect(CompositeLayerGroup *layers, const QRect &roomRect);
+    bool isKidsBedroomTile(Tiled::Tile *tile);
+    void fixKidsBedroom(const QString &tbxPath, const QRegion &roomRegion, int z);
+    BuildingEditor::Room *findExistingKidsBedroom(BuildingEditor::Building *building, BuildingEditor::Room *roomOld);
+    QString kidsBedroomName(BuildingEditor::Room *roomOld);
 
 private:
     Ui::CheckBuildingsWindow *ui;
@@ -124,6 +152,7 @@ private:
     QList<QString> mWatchedFiles;
     QSet<QString> mChangedFiles;
     QTimer mChangedFilesTimer;
+    QStringList mKidsBedroomTiles;
 };
 
 #endif // CHECKBUILDINGSWINDOW_H

@@ -80,6 +80,13 @@
         </property>
        </widget>
       </item>
+      <item row="4" column="0">
+       <widget class="QCheckBox" name="checkKidsBedroom">
+        <property name="text">
+         <string>Kids Bedroom</string>
+        </property>
+       </widget>
+      </item>
      </layout>
     </item>
     <item row="7" column="0">
