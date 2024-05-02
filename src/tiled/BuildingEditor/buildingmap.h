@@ -31,6 +31,8 @@ class MapComposite;
 namespace Tiled {
 class Map;
 class MapRenderer;
+class ObjectGroup;
+class Tile;
 class TileLayer;
 class Tileset;
 }
@@ -113,6 +115,26 @@ private:
     QMap<BuildingObject*,BuildingObject*> mOriginalToShadowObject;
 };
 
+class BuildingMapEmptyOutsideFill
+{
+public:
+    BuildingMapEmptyOutsideFill(Tiled::Map *map, BuildingFloor *floor);
+    bool isEmptyOutsideSquare(int x, int y);
+    void floodFillScanlineStack(int x, int y);
+    QVector<QRect> cleanupRegion();
+    bool shouldVisit(int x1, int y1, int x2, int y2);
+    bool shouldVisit(int x1, int y1);
+    bool push(int x, int y);
+    bool pop(int &x, int &y);
+    void emptyStack();
+
+    Tiled::Map *mMap;
+    BuildingFloor *mFloor;
+    QRegion mRegion;
+    QVector<QPoint> stack;
+    QSet<Tiled::Tile*> mFloorTiles;
+};
+
 class BuildingMap : public QObject
 {
     Q_OBJECT
@@ -156,6 +178,7 @@ public:
 
     void addRoomDefObjects(Tiled::Map *map);
     void addRoomDefObjects(Tiled::Map *map, BuildingFloor *floor);
+    void addEmptyOutsideObjects(Tiled::Map *map, Tiled::ObjectGroup *objectGroup, BuildingFloor *floor, int roomID);
 
     static int defaultOrientation();
 

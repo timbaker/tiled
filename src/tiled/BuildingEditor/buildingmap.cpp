@@ -427,6 +427,190 @@ void BuildingMap::addRoomDefObjects(Map *map, BuildingFloor *floor)
         ++roomID;
 #endif
     }
+
+    // emptyoutside rooms should only exist above ground level.
+    // We don't know what world level this building will be placed on.
+    addEmptyOutsideObjects(map, objectGroup, floor, roomID);
+}
+
+/////
+
+#include "tiledeffile.h"
+
+BuildingMapEmptyOutsideFill::BuildingMapEmptyOutsideFill(Tiled::Map *map, BuildingFloor *floor) :
+    mMap(map),
+    mFloor(floor)
+{
+    const QString solidfloor(QStringLiteral("solidfloor"));
+    for (Tiled::Tileset *tileset : map->tilesets()) {
+        TileDefTileset *tdts = getTileDefWatcher()->mTileDefFile->tileset(tileset->name());
+        if (tdts == nullptr)
+            continue;
+        for (int i = 0; i < tileset->tileCount(); i++) {
+            if (TileDefTile *tdt = tdts->tileAt(i)) {
+                if (tdt->mProperties.contains(solidfloor)) {
+                    mFloorTiles += tileset->tileAt(i);
+                }
+            }
+        }
+    }
+}
+
+bool BuildingMapEmptyOutsideFill::isEmptyOutsideSquare(int x, int y)
+{
+    if (mFloor->contains(x, y) == false) {
+        return false;
+    }
+    if (mFloor->GetRoomAt(x, y) != nullptr) {
+        return false;
+    }
+    MapLevel *mapLevel = mMap->mapLevelForZ(mFloor->level());
+    for (Tiled::TileLayer *layer : mapLevel->tileLayers()) {
+        if (layer->contains(x, y) == false) {
+            continue;
+        }
+        const Tiled::Cell &cell = layer->cellAt(x, y);
+        if (cell.isEmpty()) {
+            continue;
+        }
+        if (mFloorTiles.contains(cell.tile)) {
+            return true;
+        }
+    }
+    return false;
+}
+
+// Taken from http://lodev.org/cgtutor/floodfill.html#Recursive_Scanline_Floodfill_Algorithm
+// Copyright (c) 2004-2007 by Lode Vandevenne. All rights reserved.
+void BuildingMapEmptyOutsideFill::floodFillScanlineStack(int x, int y)
+{
+    emptyStack();
+    mRegion = QRegion();
+
+    int y1;
+    bool spanLeft, spanRight;
+
+    if (!push(x, y)) return;
+
+    while (pop(x, y)) {
+        y1 = y;
+        while (shouldVisit(x, y1, x, y1 - 1)) {
+            y1--;
+        }
+        spanLeft = spanRight = false;
+        QRect r;
+        int py = y;
+        while (shouldVisit(x, py, x, y1)) {
+            mRegion += QRect(x, y1, 1, 1);
+            if (!spanLeft && x > 0 && shouldVisit(x, y1, x - 1, y1)) {
+                if (!push(x - 1, y1)) return;
+                spanLeft = true;
+            }
+            else if (spanLeft && x > 0 && !shouldVisit(x, y1, x - 1, y1)) {
+                spanLeft = false;
+            } else if (spanLeft && x > 0 && !shouldVisit(x - 1, y1 - 1, x - 1, y1)) {
+                // North wall splits the span.
+                if (!push(x - 1, y1)) return;
+            }
+            if (!spanRight && (x < mFloor->width() - 1) && shouldVisit(x, y1, x + 1, y1)) {
+                if (!push(x + 1, y1)) return;
+                spanRight = true;
+            }
+            else if (spanRight && (x < mFloor->width() - 1) && !shouldVisit(x, y1, x + 1, y1)) {
+                spanRight = false;
+            } else if (spanRight && (x < mFloor->width() - 1) && !shouldVisit(x + 1, y1 - 1, x + 1, y1)) {
+                // North wall splits the span.
+                if (!push(x + 1, y1)) return;
+            }
+            py = y1;
+            y1++;
+        }
+        if (!r.isEmpty())
+            mRegion += r;
+    }
+}
+
+bool BuildingMapEmptyOutsideFill::shouldVisit(int x1, int y1, int x2, int y2)
+{
+    return isEmptyOutsideSquare(x2, y2) && // FIXME: Check for walls?
+            !mRegion.contains(QPoint(x2, y2));
+}
+
+bool BuildingMapEmptyOutsideFill::push(int x, int y)
+{
+    stack += QPoint(x, y);
+    return true;
+}
+
+bool BuildingMapEmptyOutsideFill::pop(int &x, int &y)
+{
+    if (stack.isEmpty()) {
+        return false;
+    }
+    QPoint p = stack.last();
+    x = p.x();
+    y = p.y();
+    stack.pop_back();
+    return true;
+}
+
+void BuildingMapEmptyOutsideFill::emptyStack()
+{
+    stack.resize(0);
+}
+
+/////
+
+// Add "emptyoutside" rooms for areas attached to the building (like balconies).
+void BuildingMap::addEmptyOutsideObjects(Tiled::Map *map, Tiled::ObjectGroup *objectGroup, BuildingFloor *floor, int roomID)
+{
+    Tiled::Internal::TileDefWatcher *tileDefWatcher = getTileDefWatcher();
+    tileDefWatcher->check();
+
+    int delta = (map->mapLevels().size() - 1 - floor->level()) * 3;
+    if (map->orientation() == Map::LevelIsometric)
+        delta = 0;
+    QPoint offset(delta, delta);
+
+    QRegion doneRgn;
+    BuildingMapEmptyOutsideFill fill(map, floor);
+    for (int y = 0, height = floor->height(); y < height; y++) {
+        for (int x = 0, width = floor->width(); x < width; x++) {
+            if (doneRgn.contains({x, y})) {
+                continue;
+            }
+            doneRgn += QRect(x, y, 1, 1);
+            if (floor->GetRoomAt(x, y) != nullptr) {
+                continue;
+            }
+            bool bAdjacentToRoom = false;
+            for (int dy = -1; dy <= 1; dy++) {
+                for (int dx = -1; dx <= 1; dx++) {
+                    if (floor->GetRoomAt(x + dx, y + dy) != nullptr) {
+                        bAdjacentToRoom = true;
+                        break;
+                    }
+                    if (bAdjacentToRoom)
+                        break;
+                }
+            }
+            if (bAdjacentToRoom == false)
+                continue;
+            if (fill.isEmptyOutsideSquare(x, y) == false)
+                continue;
+            fill.floodFillScanlineStack(x, y);
+            doneRgn += fill.mRegion;
+
+            for (QRect rect : cleanupRegion(fill.mRegion)) {
+                QString name = QStringLiteral("emptyoutside#") + QString::number(roomID);
+                MapObject *mapObject = new MapObject(name, QLatin1String("room"),
+                                                     rect.topLeft() + offset,
+                                                     rect.size());
+                objectGroup->addObject(mapObject);
+            }
+            roomID++;
+        }
+    }
 }
 
 int BuildingMap::defaultOrientation()
