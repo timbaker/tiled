@@ -125,6 +125,19 @@ private:
         QList<Issue> issues;
     };
 
+    struct FixSelected
+    {
+        QString path;
+        CheckBuildingsWindow::Issue issue;
+
+        FixSelected(const QString &path, const CheckBuildingsWindow::Issue &issue) :
+            path(path),
+            issue(issue)
+        {
+
+        }
+    };
+
     void check(const QString &filePath);
     void check(BuildingEditor::BuildingMap *bmap, BuildingEditor::Building *building, Tiled::Map *map, const QString &fileName);
     void issue(Issue::Type type, const QString &detail, int x, int y, int z);

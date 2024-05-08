@@ -149,40 +149,34 @@ void CheckBuildingsWindow::fixSelected()
     auto selected = ui->treeWidget->selectedItems();
     if (selected.isEmpty())
         return;
-    QMap<QString,QVector<int>> rearrangeGrid;
+    QList<FixSelected> fixList;
     for (QTreeWidgetItem *item : selected) {
         if (item->parent() == nullptr) {
             int rowFile = ui->treeWidget->indexOfTopLevelItem(item);
             IssueFile *file = mFiles[rowFile];
             for (const Issue &issue : file->issues) {
-                switch (issue.type) {
-                case Issue::Type::RearrangeGrid:
-                    rearrangeGrid[file->path] << issue.x << issue.y << issue.z;
-                    break;
-                case Issue::Type::KidsBedroom:
-                    fixKidsBedroom(file->path, issue.roomRegion, issue.z);
-                    break;
-                default:
-                    break;
-                }
+                fixList += FixSelected(file->path, issue);
             }
             continue;
         }
         int rowFile = ui->treeWidget->indexOfTopLevelItem(item->parent());
         int rowIssue = item->parent()->indexOfChild(item);
         const Issue &issue = mFiles[rowFile]->issues[rowIssue];
-        switch (issue.type) {
+        fixList += FixSelected(mFiles[rowFile]->path, issue);
+    }
+    QMap<QString, QVector<int>> rearrangeGrid;
+    for (const FixSelected& fix : fixList) {
+        switch (fix.issue.type) {
         case Issue::Type::RearrangeGrid:
-            rearrangeGrid[mFiles[rowFile]->path] << issue.x << issue.y << issue.z;
+            rearrangeGrid[fix.path] << fix.issue.x << fix.issue.y << fix.issue.z;
             break;
         case Issue::Type::KidsBedroom:
-            fixKidsBedroom(mFiles[rowFile]->path, issue.roomRegion, issue.z);
+            fixKidsBedroom(fix.path, fix.issue.roomRegion, fix.issue.z);
             break;
         default:
             break;
         }
     }
-
     for (const QString& filePath : rearrangeGrid.keys()) {
         RearrangeTiles::instance()->fixBuilding(filePath, rearrangeGrid[filePath], this);
     }
