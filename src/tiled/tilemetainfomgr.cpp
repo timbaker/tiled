@@ -175,13 +175,17 @@ bool TileMetaInfoMgr::readTxt()
     }
 
     for (const TilesetsTxtFile::Tileset* fileTileset : reader.mTilesets) {
-        Tileset *tileset = new Tileset(fileTileset->mName, 64, 128);
+        QSize tilesetSize = Tiled::getZomboidTilesetSize1x(fileTileset->mName);
+        int tileWidth = tilesetSize.width();
+        int tileHeight = tilesetSize.height();
+        Tileset *tileset = new Tileset(fileTileset->mName, tileWidth, tileHeight);
+        Tiled::setZomboidTileOffset(tileset);
 
         // Don't load the tilesets yet because the user might not have
         // chosen the Tiles directory. The tilesets will be loaded when
         // other code asks for them or when the Tiles directory is changed.
-        int width = fileTileset->mColumns * 64;
-        int height = fileTileset->mRows * 128;
+        int width = fileTileset->mColumns * tileWidth;
+        int height = fileTileset->mRows * tileHeight;
         QString tilesetFileName = fileTileset->mFile + QLatin1String(".png");
         tileset->loadFromNothing(QSize(width, height), tilesetFileName);
         Tile *missingTile = TilesetManager::instance()->missingTile();
@@ -581,10 +585,14 @@ bool TileMetaInfoMgr::addNewTilesets()
         QImageReader ir(fileInfo.absoluteFilePath());
         if (!ir.size().isValid())
             continue;
-        int columns = ir.size().width() / (64 * 2);
-        int rows = ir.size().height() / (64 * 2);
-        Tileset *tileset = new Tileset(tilesetName, 64, 128);
-        tileset->loadFromNothing(QSize(columns * 64, rows * 128), fileInfo.fileName());
+        QSize tilesetSize = Tiled::getZomboidTilesetSize1x(tilesetName);
+        int tileWidth = tilesetSize.width();
+        int tileHeight = tilesetSize.height();
+        int columns = ir.size().width() / (tileWidth * 2);
+        int rows = ir.size().height() / (tileHeight * 2);
+        Tileset *tileset = new Tileset(tilesetName, tileWidth, tileHeight);
+        Tiled::setZomboidTileOffset(tileset);
+        tileset->loadFromNothing(QSize(columns * tileWidth, rows * tileHeight), fileInfo.fileName());
         Tile *missingTile = TilesetManager::instance()->missingTile();
         for (int i = 0; i < tileset->tileCount(); i++)
             tileset->tileAt(i)->setImage(missingTile);
@@ -600,7 +608,11 @@ bool TileMetaInfoMgr::addNewTilesets()
 Tileset *TileMetaInfoMgr::loadTileset(const QString &source)
 {
     QFileInfo info(source);
-    Tileset *ts = new Tileset(info.completeBaseName(), 64, 128);
+    QSize tilesetSize = Tiled::getZomboidTilesetSize1x(info.completeBaseName());
+    int tileWidth = tilesetSize.width();
+    int tileHeight = tilesetSize.height();
+    Tileset *ts = new Tileset(info.completeBaseName(), tileWidth, tileHeight);
+    Tiled::setZomboidTileOffset(ts);
     if (!loadTilesetImage(ts, source)) {
         delete ts;
         return nullptr;

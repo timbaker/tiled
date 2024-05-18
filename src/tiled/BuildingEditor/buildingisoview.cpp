@@ -651,8 +651,10 @@ void BuildingIsoScene::setToolTiles(const FloorTileGrid *tiles,
     }
     mLayerGroupWithToolTiles = layerGroup;
 
+    int TileScale = 2;
     QRectF r = mBuildingMap->mapRenderer()->boundingRect(tiles->bounds().translated(pos), currentLevel())
-            .adjusted(0, -(128-32)*2, 0, 0); // use mMap->drawMargins()
+            .adjusted(-64*TileScale, -(256-32)*TileScale, 64*TileScale, 0); // extra for jumbo trees
+//            .adjusted(0, -(128-32)*2, 0, 0); // use mMap->drawMargins()
     update(r);
 }
 
@@ -1310,8 +1312,10 @@ void BuildingIsoScene::layersUpdated(int level, const QRegion &rgn)
                 mDarkRectangle->setRect(sceneRect);
             }
         }
-        for (QRect r : rgn)
-            item->update(mapRenderer()->boundingRect(r, level).adjusted(0,-(128-32)*2,0,0));
+        int TileScale = 2;
+        for (QRect r : rgn) {
+            item->update(mapRenderer()->boundingRect(r, level).adjusted(-64*TileScale, -(256-32)*TileScale, 64*TileScale, 0)); // // extra for jumbo trees
+        }
     }
 }
 

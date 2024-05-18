@@ -327,10 +327,22 @@ Tileset *MapReaderPrivate::readTileset()
     if (source.isEmpty()) { // Not an external tileset
         const QString name =
                 atts.value(QLatin1String("name")).toString();
+#ifdef ZOMBOID
+        int tileWidth =
+                atts.value(QLatin1String("tilewidth")).toString().toInt();
+        int tileHeight =
+                atts.value(QLatin1String("tileheight")).toString().toInt();
+        if (name.contains(QStringLiteral("JUMBO_"))) {
+            QSize tilesetSize = getZomboidTilesetSize1x(name);
+            tileWidth = tilesetSize.width();
+            tileHeight = tilesetSize.height();
+        }
+#else
         const int tileWidth =
                 atts.value(QLatin1String("tilewidth")).toString().toInt();
         const int tileHeight =
                 atts.value(QLatin1String("tileheight")).toString().toInt();
+#endif
         const int tileSpacing =
                 atts.value(QLatin1String("spacing")).toString().toInt();
         const int margin =
@@ -361,6 +373,9 @@ Tileset *MapReaderPrivate::readTileset()
                     readUnknownElement();
                 }
             }
+#ifdef ZOMBOID
+            Tiled::setZomboidTileOffset(tileset);
+#endif
         }
     } else { // External tileset
         const QString absoluteSource = p->resolveReference(source, mPath);

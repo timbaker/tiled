@@ -43,6 +43,26 @@ using namespace Tiled;
 #define DISPLAY_TILE_WIDTH (map()->tileWidth() * (is2x() ? 2 : 1))
 #define DISPLAY_TILE_HEIGHT (map()->tileHeight() * (is2x() ? 2 : 1))
 
+struct JUMBO
+{
+    QString tilesetName;
+    bool bHasLeaves;
+};
+
+static JUMBO s_jumbo[] = {
+    { QStringLiteral("e_americalholly"), false },
+    { QStringLiteral("e_americanlinden"), true },
+    { QStringLiteral("e_canadianhemlock"), false },
+    { QStringLiteral("e_carolinasilverbell"), true },
+    { QStringLiteral("e_cockspurhawthorn"), true },
+    { QStringLiteral("e_dogwood"), true },
+    { QStringLiteral("e_easternredbud"), false },
+    { QStringLiteral("e_redmaple"), true },
+    { QStringLiteral("e_riverbirch"), true },
+    { QStringLiteral("e_virginiapine"), false },
+    { QStringLiteral("e_yellowwood"), true },
+};
+
 QSize ZLevelRenderer::mapSize() const
 {
     // Map width and height contribute equally in both directions
@@ -301,7 +321,11 @@ void ZLevelRenderer::drawTileLayer(QPainter *painter,
                                                          : img.height();
                     }
 
-                    if (tileWidth == cell.tile->width() * 2) {
+                    QString tilesetName = cell.tile->tileset()->name();
+                    bool bJUMBO = tilesetName.contains(QStringLiteral("JUMBO_"));
+                    if (bJUMBO) {
+                        dx -= tileWidth / 2;
+                    } else if (tileWidth == cell.tile->width() * 2) {
                         m11 *= 2.0f;
                         m22 *= 2.0f;
                         dx += cell.tile->offset().x();
@@ -313,10 +337,18 @@ void ZLevelRenderer::drawTileLayer(QPainter *painter,
                         dy += cell.tile->height() / 2;
                     }
 
+                    if (bJUMBO) {
+                        drawJumboTreeTile_Trunk(cell.tile, painter, baseTransform, x, y, m11, m12, m21, m22);
+                    }
+
                     const QTransform transform(m11, m12, m21, m22, dx, dy);
                     painter->setTransform(transform * baseTransform);
 
                     painter->drawImage(0, 0, img);
+
+                    if (bJUMBO) {
+                        drawJumboTreeTile_Leaves(cell.tile, painter, baseTransform, x, y, m11, m12, m21, m22);
+                    }
                 }
             }
 
@@ -464,7 +496,11 @@ void ZLevelRenderer::drawTileLayerGroup(QPainter *painter, ZTileLayerGroup *laye
                                                              : img.height();
                         }
 
-                        if (tileWidth == tile->width() * 2) {
+                        QString tilesetName = cell->tile->tileset()->name();
+                        bool bJUMBO = tilesetName.contains(QStringLiteral("JUMBO_"));
+                        if (bJUMBO) {
+                            dx -= tileWidth / 2;
+                        } else if (tileWidth == tile->width() * 2) {
                             m11 *= 2.0f;
                             m22 *= 2.0f;
                             dx += tile->offset().x();
@@ -479,12 +515,20 @@ void ZLevelRenderer::drawTileLayerGroup(QPainter *painter, ZTileLayerGroup *laye
                             dy += tile->height() / 2;
                         }
 
+                        if (bJUMBO) {
+                            drawJumboTreeTile_Trunk(cell->tile, painter, baseTransform, x, y, m11, m12, m21, m22);
+                        }
+
                         const QTransform transform(m11, m12, m21, m22, dx, dy);
                         painter->setTransform(transform * baseTransform);
 
                         painter->setOpacity(opacities[i] * opacity);
 
                         painter->drawImage(0, 0, img);
+
+                        if (bJUMBO) {
+                            drawJumboTreeTile_Leaves(cell->tile, painter, baseTransform, x, y, m11, m12, m21, m22);
+                        }
                     }
                 }
             }
@@ -719,4 +763,58 @@ QPolygonF ZLevelRenderer::tileRectToPolygon(const QRectF &rect, int level) const
     polygon << QPointF(tileToPixelCoords(rect.bottomRight(), level));
     polygon << QPointF(tileToPixelCoords(rect.bottomLeft(), level));
     return polygon;
+}
+
+void ZLevelRenderer::drawJumboTreeTile_Trunk(Tile *tile, QPainter *painter, const QTransform &baseTransform, qreal x, qreal y, qreal m11, qreal m12, qreal m21, qreal m22) const
+{
+    int columns = tile->tileset()->columnCount();
+    int row_trunk = 0;
+    int row = tile->id() / columns;
+    if (row < 2) {
+        return;
+    }
+    const int tileWidth = DISPLAY_TILE_WIDTH;
+    Tileset *tileset = tile->tileset();
+    QString tilesetName = tileset->name();
+    for (int i = 0; i < sizeof(s_jumbo) / sizeof(JUMBO); i++) {
+        if (s_jumbo[i].bHasLeaves && tilesetName.startsWith(s_jumbo[i].tilesetName)) {
+            Tile *tile2 = tileset->tileAt(columns * row_trunk + tile->id() % columns);
+            QImage img = tile2->image();
+            QPoint offset = tileset->tileOffset() + tile2->offset();
+            int dx = offset.x() + x;
+            int dy = offset.y() + y - tile2->height();
+            dx -= tileWidth / 2;
+            QTransform transform(m11, m12, m21, m22, dx, dy);
+            painter->setTransform(transform * baseTransform);
+            painter->drawImage(0, 0, img);
+            break;
+        }
+    }
+}
+
+void ZLevelRenderer::drawJumboTreeTile_Leaves(Tile *tile, QPainter *painter, const QTransform &baseTransform, qreal x, qreal y, qreal m11, qreal m12, qreal m21, qreal m22) const
+{
+    int columns = tile->tileset()->columnCount();
+    int row_summer = 3;
+    int row = tile->id() / columns;
+    if (row >= 2) {
+        return;
+    }
+    const int tileWidth = DISPLAY_TILE_WIDTH;
+    Tileset *tileset = tile->tileset();
+    QString tilesetName = tileset->name();
+    for (int i = 0; i < sizeof(s_jumbo) / sizeof(JUMBO); i++) {
+        if (s_jumbo[i].bHasLeaves && tilesetName.startsWith(s_jumbo[i].tilesetName)) {
+            Tile *tile2 = tileset->tileAt(columns * row_summer + tile->id() % columns);
+            QImage img = tile2->image();
+            QPoint offset = tileset->tileOffset() + tile2->offset();
+            int dx = offset.x() + x;
+            int dy = offset.y() + y - tile2->height();
+            dx -= tileWidth / 2;
+            QTransform transform(m11, m12, m21, m22, dx, dy);
+            painter->setTransform(transform * baseTransform);
+            painter->drawImage(0, 0, img);
+            break;
+        }
+    }
 }

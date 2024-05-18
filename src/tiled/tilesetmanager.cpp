@@ -831,7 +831,11 @@ void TilesetImageReaderWorker::work()
         Sleep::msleep(500);
         qDebug() << "TilesetImageReaderThread #" << mID << "loaded" << job.tileset->imageSource();
 #endif
-        Tileset *fromThread = new Tileset(job.tileset->name(), 64, 128);
+        QSize tilesetSize = Tiled::getZomboidTilesetSize1x(job.tileset->imageSource());
+        int tileWidth = tilesetSize.width();
+        int tileHeight = tilesetSize.height();
+        Tileset *fromThread = new Tileset(job.tileset->name(), tileWidth, tileHeight);
+        Tiled::setZomboidTileOffset(fromThread, job.tileset->imageSource());
         fromThread->setImageSource2x(job.tileset->imageSource2x());
         fromThread->loadFromImage(*image, job.tileset->imageSource());
         delete image;

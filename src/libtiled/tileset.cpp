@@ -299,4 +299,35 @@ Tileset *TilesetImageCache::findMatch(Tileset *ts, const QString &imageSource, c
     return NULL;
 }
 
+QSize Tiled::getZomboidTilesetSize1x(const QString &tilesetName)
+{
+    int tileWidth = 64;
+    int tileHeight = 128;
+    if (tilesetName.contains(QStringLiteral("JUMBO_"))) {
+        tileWidth = 64 * 3;
+        tileHeight = 128 * 2;
+    }
+    return QSize(tileWidth, tileHeight);
+}
+
+QPoint Tiled::getZomboidTileOffset(const QString &tilesetName)
+{
+    if (tilesetName.contains(QStringLiteral("JUMBO_"))) {
+        int tileWidth = 64 * 3;
+        return QPoint(-tileWidth / 3, 0);
+    }
+    return QPoint();
+}
+
+void Tiled::setZomboidTileOffset(Tileset *tileset)
+{
+    Tiled::setZomboidTileOffset(tileset, tileset->name());
+}
+
+void Tiled::setZomboidTileOffset(Tileset *tileset, const QString &tilesetName)
+{
+    QPoint offset = Tiled::getZomboidTileOffset(tilesetName);
+    tileset->setTileOffset(offset);
+}
+
 #endif
