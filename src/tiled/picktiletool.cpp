@@ -72,9 +72,9 @@ void PickTileTool::mousePressed(QGraphicsSceneMouseEvent *event)
         QPoint tilePos = mapDocument()->renderer()->pixelToTileCoordsInt(event->scenePos(), lg->level());
         lg->prepareDrawing(mapDocument()->renderer(),
                            mapDocument()->renderer()->boundingRect(
-                               QRect(tilePos - QPoint(4, 4), QSize(9, 9)), lg->level()));
-        for (int ty = tilePos.y() - 4; ty <= tilePos.y() + 4; ty++) {
-            for (int tx = tilePos.x() - 4; tx <= tilePos.x() + 4; tx++) {
+                               QRect(tilePos - QPoint(8, 8), QSize(8*2+1, 8*2+1)), lg->level()));
+        for (int ty = tilePos.y() - 8; ty <= tilePos.y() + 8; ty++) {
+            for (int tx = tilePos.x() - 8; tx <= tilePos.x() + 8; tx++) {
                 QRectF tileBox = mapDocument()->renderer()->boundingRect(QRect(tx, ty, 1, 1), lg->level());
                 cells.resize(0);
                 if (!lg->orderedCellsAt(QPoint(tx, ty), cells, opacities))
@@ -87,7 +87,12 @@ void PickTileTool::mousePressed(QGraphicsSceneMouseEvent *event)
                     }
                     QRect imageBox(test->offset(), test->image().size());
                     QPoint p = QPoint(x, y) - (tileBox.bottomLeft().toPoint() - QPoint(0, test->height()));
-                    if (test->width() == tileBox.width() / 2) {
+
+                    if (test->tileset()->name().contains(QStringLiteral("JUMBO_"))) {
+                        QRectF tileBox2 = tileBox.translated(-64 * 2, 0);
+                        p = QPoint(x, y) - (tileBox2.bottomLeft().toPoint() - QPoint(0, test->height()));
+                    }
+                    else if (test->width() == tileBox.width() / 2) {
                         p = QPoint(x, y) - (tileBox.bottomLeft().toPoint() - QPoint(0, test->height() * 2));
                         p /= 2;
                     }

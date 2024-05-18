@@ -117,8 +117,8 @@ QString BuildingMap::buildingTileAt(int x, int y, const QList<bool> visibleLevel
         CompositeLayerGroup *lgBlend = mBlendMapComposite->layerGroupForLevel(level);
         CompositeLayerGroup *lg = mMapComposite->layerGroupForLevel(level);
         QPoint tilePos = mMapRenderer->pixelToTileCoordsInt(QPoint(x, y), level);
-        for (int ty = tilePos.y() - 4; ty < tilePos.y() + 4; ty++) {
-            for (int tx = tilePos.x() - 4; tx < tilePos.x() + 4; tx++) {
+        for (int ty = tilePos.y() - 8; ty < tilePos.y() + 8; ty++) {
+            for (int tx = tilePos.x() - 8; tx < tilePos.x() + 8; tx++) {
                 QRectF tileBox = mMapRenderer->boundingRect(QRect(tx, ty, 1, 1), level);
                 for (int i = 0; i < lg->layerCount(); i++) {
                     // Automatic building tiles first.
@@ -139,8 +139,12 @@ QString BuildingMap::buildingTileAt(int x, int y, const QList<bool> visibleLevel
                         }
                         QRect imageBox(test->offset(), test->image().size());
                         QPoint p = QPoint(x, y) - (tileBox.bottomLeft().toPoint() - QPoint(0, test->height()));
+                        if (test->tileset()->name().contains(QStringLiteral("JUMBO_"))) {
+                            QRectF tileBox2 = tileBox.translated(-64 * 2, 0);
+                            p = QPoint(x, y) - (tileBox2.bottomLeft().toPoint() - QPoint(0, test->height()));
+                        }
                         // Handle double-size tiles
-                        if (qRound(tileBox.width()) == test->width() * 2) {
+                        else if (qRound(tileBox.width()) == test->width() * 2) {
                             p = QPoint(x, y) - (tileBox.bottomLeft().toPoint() - QPoint(0, test->height() * 2));
                             p.rx() /= 2;
                             p.ry() /= 2;
