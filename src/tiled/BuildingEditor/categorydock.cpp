@@ -772,6 +772,16 @@ void CategoryDock::currentRoofTileChanged(BuildingTileEntry *entry, int which, b
     }
 }
 
+void CategoryDock::currentCeilingChanged(BuildingTileEntry *entry, bool mergeable)
+{
+    if (currentRoom() == nullptr)
+        return;
+    mCurrentDocument->undoStack()->push(new ChangeRoomTile(mCurrentDocument,
+                                                           currentRoom(),
+                                                           Room::Ceiling,
+                                                           entry, mergeable));
+}
+
 void CategoryDock::selectCurrentCategoryTile()
 {
     if (!mCurrentDocument || !mCategory)
@@ -876,6 +886,9 @@ void CategoryDock::selectCurrentCategoryTile()
         else
             currentTile = mCurrentDocument->building()->roofTopTile();
     }
+    if (mCategory->asCeiling() && currentRoom()) {
+        currentTile = currentRoom()->tile(Room::Ceiling);
+    }
     if (currentTile && (currentTile->isNone() || (currentTile->category() == mCategory))) {
         mSynching = true;
         QModelIndex index = ui->tilesetView->index(currentTile);
@@ -954,6 +967,8 @@ void CategoryDock::tileSelectionChanged()
                 currentRoofTileChanged(entry, RoofObject::TileSlope, mergeable);
             else if (category->asRoofTops())
                 currentRoofTileChanged(entry, RoofObject::TileTop, mergeable);
+            else if (category->asCeiling())
+                currentCeilingChanged(entry, mergeable);
             else
                 qFatal("unhandled category in CategoryDock::tileSelectionChanged()");
         }

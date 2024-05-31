@@ -727,6 +727,17 @@ void BuildingFloor::LayoutToSquares()
         }
     }
 
+    // Place ceilings (on the floor layer) from rooms below
+    if (BuildingFloor *floorBelow = this->floorBelow()) {
+        for (int x = 0; x < width(); x++) {
+            for (int y = 0; y < height(); y++) {
+                if (Room *room = floorBelow->GetRoomAt(x, y)) {
+                    squares[x][y].ReplaceFloor(room->tile(Room::Tiles::Ceiling), 0);
+                }
+            }
+        }
+    }
+
     mFlatRoofsWithDepthThree.clear();
     mStairs.clear();
 

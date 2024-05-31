@@ -36,7 +36,8 @@ using namespace BuildingEditor;
 #define VERSION1 1
 #define VERSION2 2
 #define VERSION3 3
-#define VERSION_LATEST VERSION3
+#define VERSION4 4
+#define VERSION_LATEST VERSION4
 
 #if defined(Q_OS_WIN) && (_MSC_VER >= 1600)
 // Hmmmm.  libtiled.dll defines the Properties class as so:

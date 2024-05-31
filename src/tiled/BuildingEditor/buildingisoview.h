@@ -277,6 +277,8 @@ private slots:
     void highlightRoomChanged(bool highlight);
     void showLowerFloorsChanged(bool show);
 
+    void showOnlyFloorsChanged(bool show);
+
     void tilesetAdded(Tiled::Tileset *tileset);
     void tilesetAboutToBeRemoved(Tiled::Tileset *tileset);
     void tilesetRemoved(Tiled::Tileset *tileset);

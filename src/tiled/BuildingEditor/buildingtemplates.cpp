@@ -798,7 +798,8 @@ QStringList Room::enumLabels()
             << BuildingTilesMgr::instance()->catIWallTrim()->label()
             << BuildingTilesMgr::instance()->catFloors()->label()
             << BuildingTilesMgr::instance()->catGrimeFloor()->label()
-            << BuildingTilesMgr::instance()->catGrimeWall()->label();
+            << BuildingTilesMgr::instance()->catGrimeWall()->label()
+            << BuildingTilesMgr::instance()->catCeiling()->label();
 }
 
 QString Room::enumToString(int n)
@@ -815,6 +816,7 @@ int Room::categoryEnum(int n)
     case Floor: return BuildingTilesMgr::Floors;
     case GrimeFloor: return BuildingTilesMgr::GrimeFloor;
     case GrimeWall: return BuildingTilesMgr::GrimeWall;
+    case Ceiling: return BuildingTilesMgr::Ceiling;
     default:
         qFatal("Invalid enum passed to Room::categoryEnum");
         break;
@@ -832,5 +834,6 @@ void Room::initNames()
     mEnumNames += QLatin1String("Floor");
     mEnumNames += QLatin1String("GrimeFloor");
     mEnumNames += QLatin1String("GrimeWall");
+    mEnumNames += QLatin1String("Ceiling");
     Q_ASSERT(mEnumNames.size() == TileCount);
 }

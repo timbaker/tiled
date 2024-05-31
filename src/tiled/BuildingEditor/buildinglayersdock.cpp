@@ -187,9 +187,9 @@ void BuildingLayersDock::currentLayerChanged()
 
 void BuildingLayersDock::layerVisibilityChanged(BuildingFloor *floor, const QString &layerName)
 {
-    if (mDocument) {
+    if (mDocument && (floor == mDocument->currentFloor())) {
         int index = BuildingMap::layerNames(floor->level()).indexOf(layerName);
-        if (index >= 0) {
+        if ((index >= 0) && (index < ui->layers->count())) {
             int row = ui->layers->count() - index - 1;
             ui->layers->item(row)->setCheckState(floor->layerVisibility(layerName) ?
                                                      Qt::Checked : Qt::Unchecked);

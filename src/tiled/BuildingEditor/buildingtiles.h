@@ -112,6 +112,7 @@ public:
     BuildingTileEntry *asCurtains();
     BuildingTileEntry *asShutters();
     BuildingTileEntry *asStairs();
+    BuildingTileEntry *asCeiling();
     BuildingTileEntry *asRoofCap();
     BuildingTileEntry *asRoofSlope();
     BuildingTileEntry *asRoofTop();
@@ -223,6 +224,7 @@ public:
     virtual BuildingTileCategory *asStairs() { return 0; }
     virtual BuildingTileCategory *asGrimeFloor() { return 0; }
     virtual BuildingTileCategory *asGrimeWall() { return 0; }
+    virtual BuildingTileCategory *asCeiling() { return 0; }
     virtual BuildingTileCategory *asRoofCaps() { return 0; }
     virtual BuildingTileCategory *asRoofSlopes() { return 0; }
     virtual BuildingTileCategory *asRoofTops() { return 0; }
@@ -490,6 +492,27 @@ public:
     int shadowToEnum(int shadowIndex);
 };
 
+class BTC_Ceiling : public BuildingTileCategory
+{
+public:
+    enum TileEnum
+    {
+        Ceiling,
+        EnumCount
+    };
+
+    BTC_Ceiling(const QString &label);
+
+    BuildingTileEntry *createEntryFromSingleTile(const QString &tileName);
+
+    bool canAssignNone() const
+    { return true; }
+
+    BuildingTileCategory *asCeiling() { return this; }
+
+    int shadowToEnum(int shadowIndex);
+};
+
 class BTC_RoofCaps : public BuildingTileCategory
 {
 public:
@@ -679,6 +702,7 @@ public:
         RoofCaps,
         RoofSlopes,
         RoofTops,
+        Ceiling,
         Count
     };
 
@@ -762,6 +786,7 @@ public:
     BuildingTileCategory *catWindows() const { return mCatWindows; }
     BuildingTileCategory *catCurtains() const { return mCatCurtains; }
     BuildingTileCategory *catStairs() const { return mCatStairs; }
+    BuildingTileCategory *catCeiling() const { return mCatCeiling; }
     BuildingTileCategory *catRoofCaps() const { return mCatRoofCaps; }
     BuildingTileCategory *catRoofSlopes() const { return mCatRoofSlopes; }
     BuildingTileCategory *catRoofTops() const { return mCatRoofTops; }
@@ -780,7 +805,7 @@ public:
     BuildingTileEntry *defaultWindowTile() const;
     BuildingTileEntry *defaultCurtainsTile() const;
     BuildingTileEntry *defaultStairsTile() const;
-
+    BuildingTileEntry *defaultCeilingTile() const;
     BuildingTileEntry *defaultRoofCapTiles() const;
     BuildingTileEntry *defaultRoofSlopeTiles() const;
     BuildingTileEntry *defaultRoofTopTiles() const;
@@ -834,7 +859,7 @@ private:
     BTC_Windows *mCatWindows;
     BTC_GrimeFloor *mCatGrimeFloor;
     BTC_GrimeWall *mCatGrimeWall;
-
+    BTC_Ceiling *mCatCeiling;
     BTC_RoofCaps *mCatRoofCaps;
     BTC_RoofSlopes *mCatRoofSlopes;
     BTC_RoofTops *mCatRoofTops;

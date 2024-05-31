@@ -349,6 +349,8 @@ BuildingIsoScene::BuildingIsoScene(QObject *parent) :
             this, &BuildingIsoScene::highlightRoomChanged);
     connect(prefs(), &BuildingPreferences::showLowerFloorsChanged,
             this, &BuildingIsoScene::showLowerFloorsChanged);
+    connect(prefs(), &BuildingPreferences::showOnlyFloorsChanged,
+            this, &BuildingIsoScene::showOnlyFloorsChanged);
 
     connect(ToolManager::instance(), &ToolManager::currentToolChanged,
             this, &BuildingIsoScene::currentToolChanged);
@@ -488,6 +490,10 @@ void BuildingIsoScene::setDocument(BuildingDocument *doc)
     connect(mDocument, &BuildingDocument::basementAccessChanged, this, &BuildingIsoScene::basementAccessChanged);
 
     emit documentChanged();
+
+    if (prefs()->showOnlyFloors()) {
+        showOnlyFloorsChanged(true);
+    }
 }
 
 void BuildingIsoScene::clearDocument()
@@ -997,6 +1003,10 @@ void BuildingIsoScene::currentFloorChanged()
     if (BuildingFloor *floor = building()->floor(mCurrentLevel))
         mBuildingMap->suppressTiles(floor, QRegion());
     mCurrentLevel = currentLevel();
+
+    if ((mLoading == false) && prefs()->showOnlyFloors()) {
+        showOnlyFloorsChanged(true);
+    }
 }
 
 void BuildingIsoScene::currentLayerChanged()
@@ -1173,6 +1183,21 @@ void BuildingIsoScene::showLowerFloorsChanged(bool show)
 {
     Q_UNUSED(show)
     highlightFloorChanged(prefs()->highlightFloor());
+}
+
+#include "buildingtmx.h"
+
+void BuildingIsoScene::showOnlyFloorsChanged(bool show)
+{
+    if (!mDocument)
+        return;
+    for (BuildingFloor *floor : mDocument->building()->floors()) {
+        for (const QString& layerName : BuildingTMX::instance()->tileLayerNamesForLevel(floor->level())) {
+            if (layerName == QStringLiteral("Floor"))
+                continue;
+            mDocument->setLayerVisibility(floor, layerName, (show == false) || (floor->level() < mDocument->currentLevel()));
+        }
+    }
 }
 
 void BuildingIsoScene::tilesetAdded(Tileset *tileset)

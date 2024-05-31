@@ -37,7 +37,7 @@ class RoomsDialog : public QDialog
     Q_OBJECT
     
 public:
-    explicit RoomsDialog(const QList<Room *> &rooms, QWidget *parent = 0);
+    explicit RoomsDialog(const QList<Room *> &rooms, Room *initialRoom = nullptr, QWidget *parent = nullptr);
     ~RoomsDialog();
 
     const QList<Room*> rooms() const
@@ -51,6 +51,7 @@ private:
     void setTilePixmap();
     BuildingEditor::BuildingTileEntry *selectedTile();
     QRgb pickColorForNewRoom();
+    void saveSettings();
 
 private slots:
     void roomSelectionChanged();
@@ -65,6 +66,9 @@ private slots:
     void colorChanged(const QColor &color);
     void tileSelectionChanged();
     void chooseTile();
+
+    void accept() override;
+    void reject() override;
 
 private:
     Ui::RoomsDialog *ui;

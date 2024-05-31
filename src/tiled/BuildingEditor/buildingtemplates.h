@@ -42,6 +42,7 @@ public:
         Floor,
         GrimeFloor,
         GrimeWall,
+        Ceiling,
         TileCount
     };
 

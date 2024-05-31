@@ -80,6 +80,7 @@
     <addaction name="actionHighlightFloor"/>
     <addaction name="actionHighlightRoom"/>
     <addaction name="actionShowLowerFloors"/>
+    <addaction name="actionShowOnlyFloors"/>
     <addaction name="actionShowObjects"/>
     <addaction name="actionHighlightUnlitRooms"/>
     <addaction name="separator"/>
@@ -782,6 +783,17 @@
    </property>
    <property name="text">
     <string>Move Basement Access</string>
+   </property>
+  </action>
+  <action name="actionShowOnlyFloors">
+   <property name="checkable">
+    <bool>true</bool>
+   </property>
+   <property name="text">
+    <string>Show Only Floors</string>
+   </property>
+   <property name="shortcut">
+    <string>F</string>
    </property>
   </action>
  </widget>

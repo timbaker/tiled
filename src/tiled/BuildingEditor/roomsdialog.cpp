@@ -18,8 +18,8 @@
 #include "roomsdialog.h"
 #include "ui_roomsdialog.h"
 
+#include "buildingpreferences.h"
 #include "buildingtemplates.h"
-#include "buildingeditorwindow.h"
 #include "buildingtiles.h"
 #include "choosebuildingtiledialog.h"
 
@@ -29,7 +29,7 @@
 
 using namespace BuildingEditor;
 
-RoomsDialog::RoomsDialog(const QList<Room*> &rooms, QWidget *parent) :
+RoomsDialog::RoomsDialog(const QList<Room*> &rooms, Room *initialRoom, QWidget *parent) :
     QDialog(parent),
     ui(new Ui::RoomsDialog),
     mRoom(0),
@@ -57,11 +57,15 @@ RoomsDialog::RoomsDialog(const QList<Room*> &rooms, QWidget *parent) :
     toolBar->addAction(ui->actionMoveDown);
     ui->toolBarLayout->addWidget(toolBar);
 
+    int currentRow = -1;
     foreach (Room *room, rooms) {
         Room *copy = new Room();
         *copy = *room;
         mRooms += copy;
         mRoomsMap[copy] = room;
+        if (room == initialRoom) {
+            currentRow = rooms.indexOf(room);
+        }
     }
 
     setRoomsList();
@@ -84,10 +88,17 @@ RoomsDialog::RoomsDialog(const QList<Room*> &rooms, QWidget *parent) :
     connect(ui->tilesList, &QAbstractItemView::activated, this, &RoomsDialog::chooseTile);
     connect(ui->chooseTile, &QAbstractButton::clicked, this, &RoomsDialog::chooseTile);
 
-    if (rooms.count()) {
-        ui->listWidget->setCurrentRow(0);
-        ui->tilesList->setCurrentRow(0);
+    if (currentRow != -1) {
+        ui->listWidget->setCurrentRow(currentRow);
+        ui->tilesList->setCurrentRow(currentRow);
     }
+
+    QSettings &settings = BuildingPreferences::instance()->settings();
+    settings.beginGroup(QLatin1String("RoomsDialog"));
+    QByteArray geom = settings.value(QLatin1String("geometry")).toByteArray();
+    if (!geom.isEmpty())
+        restoreGeometry(geom);
+    settings.endGroup();
 }
 
 RoomsDialog::~RoomsDialog()
@@ -168,6 +179,7 @@ void RoomsDialog::addRoom()
     room->setTile(Room::InteriorWall, BuildingTilesMgr::instance()->defaultInteriorWall());
     room->setTile(Room::InteriorWallTrim, BuildingTilesMgr::instance()->defaultInteriorWallTrim());
     room->setTile(Room::Floor, BuildingTilesMgr::instance()->defaultFloorTile());
+    room->setTile(Room::Ceiling, BuildingTilesMgr::instance()->defaultCeilingTile());
 
     mRooms += room;
     mRoomsMap[room] = 0;
@@ -336,3 +348,22 @@ void RoomsDialog::chooseTile()
     }
 }
 
+void RoomsDialog::saveSettings()
+{
+    QSettings &settings = BuildingPreferences::instance()->settings();
+    settings.beginGroup(QLatin1String("RoomsDialog"));
+    settings.setValue(QLatin1String("geometry"), saveGeometry());
+    settings.endGroup();
+}
+
+void RoomsDialog::accept()
+{
+    saveSettings();
+    QDialog::accept();
+}
+
+void RoomsDialog::reject()
+{
+    saveSettings();
+    QDialog::reject();
+}

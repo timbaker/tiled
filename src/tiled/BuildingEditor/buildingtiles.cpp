@@ -77,12 +77,14 @@ BuildingTilesMgr::BuildingTilesMgr() :
     mCatRoofCaps = new BTC_RoofCaps(QLatin1String("Roof Caps"));
     mCatRoofSlopes = new BTC_RoofSlopes(QLatin1String("Roof Slopes"));
     mCatRoofTops = new BTC_RoofTops(QLatin1String("Roof Tops"));
+    mCatCeiling = new BTC_Ceiling(QLatin1String("Ceilings"));
 
     mCategories << mCatEWalls << mCatIWalls << mCatEWallTrim << mCatIWallTrim
                    << mCatFloors << mCatDoors << mCatDoorFrames << mCatWindows
                    << mCatCurtains << mCatShutters << mCatStairs
                    << mCatGrimeFloor << mCatGrimeWall
-                   << mCatRoofCaps << mCatRoofSlopes << mCatRoofTops;
+                   << mCatRoofCaps << mCatRoofSlopes << mCatRoofTops
+                   << mCatCeiling;
 
     foreach (BuildingTileCategory *category, mCategories)
         mCategoryByName[category->name()] = category;
@@ -100,6 +102,7 @@ BuildingTilesMgr::BuildingTilesMgr() :
     mCatStairs->setShadowImage(QImage(QLatin1String(":/BuildingEditor/icons/shadow_stairs.png")));
     mCatGrimeFloor->setShadowImage(QImage(QLatin1String(":/BuildingEditor/icons/shadow_grime_floor.png")));
     mCatGrimeWall->setShadowImage(QImage(QLatin1String(":/BuildingEditor/icons/shadow_grime_wall.png")));
+    mCatCeiling->setShadowImage(QImage(QLatin1String(":/BuildingEditor/icons/shadow_floors.png")));
     mCatRoofCaps->setShadowImage(QImage(QLatin1String(":/BuildingEditor/icons/shadow_roof_caps.png")));
     mCatRoofSlopes->setShadowImage(QImage(QLatin1String(":/BuildingEditor/icons/shadow_roof_slopes.png")));
     mCatRoofTops->setShadowImage(QImage(QLatin1String(":/BuildingEditor/icons/shadow_roof_tops.png")));
@@ -707,6 +710,11 @@ BuildingTileEntry *BuildingTilesMgr::defaultStairsTile() const
     return mCatStairs->defaultEntry();
 }
 
+BuildingTileEntry *BuildingTilesMgr::defaultCeilingTile() const
+{
+    return mCatCeiling->defaultEntry();
+}
+
 BuildingTileEntry *BuildingTilesMgr::defaultRoofCapTiles() const
 {
     return mCatRoofCaps->defaultEntry();
@@ -847,6 +855,11 @@ BuildingTileEntry *BuildingTileEntry::asShutters()
 BuildingTileEntry *BuildingTileEntry::asStairs()
 {
     return mCategory->asStairs() ? this : 0;
+}
+
+BuildingTileEntry *BuildingTileEntry::asCeiling()
+{
+    return mCategory->asCeiling() ? this : 0;
 }
 
 BuildingTileEntry *BuildingTileEntry::asRoofCap()
@@ -1098,6 +1111,30 @@ int BTC_Windows::shadowToEnum(int shadowIndex)
 {
     const int map[EnumCount] = {
         West, North
+    };
+    return map[shadowIndex];
+}
+
+/////
+
+BTC_Ceiling::BTC_Ceiling(const QString &label) :
+    BuildingTileCategory(QLatin1String("ceiling"), label, TileEnum::Ceiling)
+{
+    mEnumNames += QLatin1String("Ceiling");
+    Q_ASSERT(mEnumNames.size() == TileEnum::EnumCount);
+}
+
+BuildingTileEntry *BTC_Ceiling::createEntryFromSingleTile(const QString &tileName)
+{
+    BuildingTileEntry *entry = new BuildingTileEntry(this);
+    entry->mTiles[TileEnum::Ceiling] = getTile(tileName);
+    return entry;
+}
+
+int BTC_Ceiling::shadowToEnum(int shadowIndex)
+{
+    const int map[TileEnum::EnumCount] = {
+        TileEnum::Ceiling
     };
     return map[shadowIndex];
 }

@@ -451,6 +451,12 @@ BuildingEditorWindow::BuildingEditorWindow(QWidget *parent) :
     connect(prefs, &BuildingPreferences::showLowerFloorsChanged,
             ui->actionShowLowerFloors, &QAction::setChecked);
 
+    ui->actionShowOnlyFloors->setChecked(prefs->showOnlyFloors());
+    connect(ui->actionShowOnlyFloors, &QAction::toggled,
+            prefs, &BuildingPreferences::setShowOnlyFloors);
+    connect(prefs, &BuildingPreferences::showOnlyFloorsChanged,
+            ui->actionShowOnlyFloors, &QAction::setChecked);
+
     ui->actionShowObjects->setChecked(prefs->showObjects());
     connect(ui->actionShowObjects, &QAction::toggled,
             prefs, &BuildingPreferences::setShowObjects);
@@ -1552,7 +1558,7 @@ void BuildingEditorWindow::roomsDialog()
     if (!mCurrentDocument)
         return;
     QList<Room*> originalRoomList = mCurrentDocument->building()->rooms();
-    RoomsDialog dialog(originalRoomList, this);
+    RoomsDialog dialog(originalRoomList, mCurrentDocument->currentRoom(), this);
     dialog.setWindowTitle(tr("Rooms in building"));
 
     if (dialog.exec() != QDialog::Accepted)

@@ -48,7 +48,11 @@ using namespace BuildingEditor;
 // Added <properties> for the in-game map
 #define VERSION3 3
 
-#define VERSION_LATEST VERSION3
+// version="4"
+// Added Ceiling tile category to rooms
+#define VERSION4 4
+
+#define VERSION_LATEST VERSION4
 
 namespace BuildingEditor {
 
@@ -82,6 +86,7 @@ DECLARE_FAKE_CATEGORY(GrimeWall)
 DECLARE_FAKE_CATEGORY(RoofCaps)
 DECLARE_FAKE_CATEGORY(RoofSlopes)
 DECLARE_FAKE_CATEGORY(RoofTops)
+DECLARE_FAKE_CATEGORY(Ceiling)
 
 #define NEW_FAKE_CATEGORY(C) \
     new Fake_##C(this);
@@ -107,13 +112,15 @@ public:
         mCatRoofCaps = NEW_FAKE_CATEGORY(RoofCaps);
         mCatRoofSlopes = NEW_FAKE_CATEGORY(RoofSlopes);
         mCatRoofTops = NEW_FAKE_CATEGORY(RoofTops);
+        mCatCeiling = NEW_FAKE_CATEGORY(Ceiling);
 
         mCategories << mCatEWalls << mCatIWalls << mCatEWallTrim << mCatIWallTrim
                        << mCatFloors << mCatDoors
                        << mCatDoorFrames << mCatWindows << mCatCurtains
                        << mCatShutters << mCatStairs
                        << mCatGrimeFloor << mCatGrimeWall
-                       << mCatRoofCaps << mCatRoofSlopes << mCatRoofTops;
+                       << mCatRoofCaps << mCatRoofSlopes << mCatRoofTops
+                       << mCatCeiling;
 
         foreach (BuildingTileCategory *category, mCategories) {
             mCategoryByName[category->name()] = category;
@@ -232,6 +239,7 @@ public:
     BuildingTileCategory *catRoofCaps() const { return mCatRoofCaps; }
     BuildingTileCategory *catRoofSlopes() const { return mCatRoofSlopes; }
     BuildingTileCategory *catRoofTops() const { return mCatRoofTops; }
+    BuildingTileCategory *catCeiling() const { return mCatCeiling; }
 
     QList<BuildingTileCategory*> mCategories;
     QMap<QString,BuildingTileCategory*> mCategoryByName;
@@ -260,6 +268,7 @@ public:
     Fake_RoofCaps *mCatRoofCaps;
     Fake_RoofSlopes *mCatRoofSlopes;
     Fake_RoofTops *mCatRoofTops;
+    Fake_Ceiling *mCatCeiling;
 
     QMap<BuildingTileCategory*,bool> mUsedCategories;
 };
@@ -286,6 +295,7 @@ DECLARE_FAKE_GETTILE(GrimeWall)
 DECLARE_FAKE_GETTILE(RoofCaps)
 DECLARE_FAKE_GETTILE(RoofSlopes)
 DECLARE_FAKE_GETTILE(RoofTops)
+DECLARE_FAKE_GETTILE(Ceiling)
 
 } // namespace BuildingEditor
 
@@ -748,12 +758,20 @@ Room *BuildingReaderPrivate::readRoom()
     for (int i = 0; i < Room::TileCount; i++)
         tiles[i] = atts.value(Room::enumToString(i)).toString();
 
+    FakeBuildingTilesMgr *btiles = &mFakeBuildingTilesMgr;
     if (mVersion == VERSION1) {
-        FakeBuildingTilesMgr *btiles = &mFakeBuildingTilesMgr;
         tiles[Room::InteriorWall] = version1TileToEntry(btiles->catIWalls(),
                                                         tiles[Room::InteriorWall]);
         tiles[Room::Floor] = version1TileToEntry(btiles->catFloors(),
                                                  tiles[Room::Floor]);
+    }
+    if (mVersion < VERSION4) {
+        if (internalName.compare(QLatin1String("emptyoutside"), Qt::CaseInsensitive) == 0) {
+            // Skip emptyoutside rooms (usually balconies).
+        } else {
+            tiles[Room::Ceiling] = version1TileToEntry(btiles->catCeiling(),
+                                                       QLatin1String("ceilings_01_0"));
+        }
     }
 
     Room *room = new Room();
@@ -761,8 +779,9 @@ Room *BuildingReaderPrivate::readRoom()
     room->internalName = internalName;
     QStringList rgb = color.split(QLatin1Char(' '), Qt::SkipEmptyParts);
     room->Color = qRgb(rgb[0].toInt(), rgb[1].toInt(), rgb[2].toInt());
-    for (int i = 0; i < Room::TileCount; i++)
+    for (int i = 0; i < Room::TileCount; i++) {
         room->setTile(i, getEntry(tiles[i]));
+    }
 
     xml.skipCurrentElement();
 

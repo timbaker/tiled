@@ -259,7 +259,7 @@ void BuildingTemplatesDialog::nameEdited(const QString &name)
 
 void BuildingTemplatesDialog::editRooms()
 {
-    RoomsDialog dialog(mTemplate->rooms(), this);
+    RoomsDialog dialog(mTemplate->rooms(), nullptr, this);
     dialog.setWindowTitle(tr("Rooms in '%1'").arg(mTemplate->name()));
     if (dialog.exec() == QDialog::Accepted) {
         mTemplate->clearRooms();

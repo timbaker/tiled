@@ -109,6 +109,7 @@ private:
     void currentStairsChanged(BuildingTileEntry *entry, bool mergeable);
     void currentRoomTileChanged(int entryEnum, BuildingTileEntry *entry, bool mergeable);
     void currentRoofTileChanged(BuildingTileEntry *entry, int which, bool mergeable);
+    void currentCeilingChanged(BuildingTileEntry *entry, bool mergeable);
 
     BuildingTileCategory *categoryAt(int row);
     FurnitureGroup *furnitureGroupAt(int row);

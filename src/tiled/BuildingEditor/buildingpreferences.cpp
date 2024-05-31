@@ -30,6 +30,7 @@ static const char *KEY_HIGHLIGHT_FLOOR = "PreviewWindow/HighlightFloor";
 static const char *KEY_HIGHLIGHT_ROOM = "HighlightRoom";
 static const char *KEY_SHOW_WALLS = "PreviewWindow/ShowWalls";
 static const char *KEY_SHOW_LOWER_FLOORS = "PreviewWindow/ShowLowerFloors";
+static const char *KEY_SHOW_ONLY_FLOORS = "PreviewWindow/ShowOnlyFloors";
 static const char *KEY_SHOW_OBJECTS = "PreviewWindow/ShowObjects";
 static const char *KEY_HIGHLIGHT_UNLIT_ROOMS = "HighlightUnlitRooms";
 static const char *KEY_OPENGL = "OpenGL";
@@ -68,6 +69,8 @@ BuildingPreferences::BuildingPreferences(QObject *parent) :
                                  true).toBool();
     mShowLowerFloors = mSettings.value(QLatin1String(KEY_SHOW_LOWER_FLOORS),
                                  true).toBool();
+    mShowOnlyFloors = mSettings.value(QLatin1String(KEY_SHOW_ONLY_FLOORS),
+                                 false).toBool();
     mHighlightUnlitRooms = mSettings.value(QLatin1String(KEY_HIGHLIGHT_UNLIT_ROOMS),
                                  false).toBool();
     mTileScale = mSettings.value(QLatin1String(KEY_TILE_SCALE),
@@ -147,6 +150,15 @@ void BuildingPreferences::setShowLowerFloors(bool show)
     mShowLowerFloors = show;
     mSettings.setValue(QLatin1String(KEY_SHOW_LOWER_FLOORS), mShowLowerFloors);
     emit showLowerFloorsChanged(mShowLowerFloors);
+}
+
+void BuildingPreferences::setShowOnlyFloors(bool show)
+{
+    if (show == mShowOnlyFloors)
+        return;
+    mShowOnlyFloors = show;
+    mSettings.setValue(QLatin1String(KEY_SHOW_ONLY_FLOORS), mShowOnlyFloors);
+    emit showOnlyFloorsChanged(mShowOnlyFloors);
 }
 
 void BuildingPreferences::setShowObjects(bool show)
