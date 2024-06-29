@@ -67,8 +67,11 @@ bool SimpleFile::write(const QString &filePath)
 
     QTextStream ts(&tempFile);
     mIndent = -1;
+#if 1
+    SimpleFileBlock::write(ts, -1);
+#else
     writeBlock(ts, *this);
-
+#endif
     if (tempFile.error() != QFile::NoError) {
         mError = tempFile.errorString();
         return false;
@@ -130,9 +133,14 @@ SimpleFileBlock SimpleFile::readBlock(QTextStream &ts, int &lineNumber, bool &ok
     SimpleFileBlock block;
     block.lineNumber = lineNumber - 1; // approximate
     QString buf;
+    QStringList comments;
     while (!ts.atEnd()) {
         QString line = ts.readLine();
         ++lineNumber;
+        if (line.trimmed().startsWith(QStringLiteral("//"))) {
+            comments += line;
+            continue;
+        }
         if (line.contains(QLatin1Char('='))) {
             int n = line.indexOf(QLatin1Char('='));
             SimpleFileKeyValue kv;
@@ -159,6 +167,8 @@ SimpleFileBlock SimpleFile::readBlock(QTextStream &ts, int &lineNumber, bool &ok
             SimpleFileBlock childBlock = readBlock(ts, lineNumber, ok);
             if (!ok) return block;
             childBlock.name = buf;
+            childBlock.comments = comments;
+            comments.clear();
             block.blocks += childBlock;
             buf.clear();
         }
@@ -201,6 +211,26 @@ void SimpleFile::writeBlock(QTextStream &ts, const SimpleFileBlock &block)
         writeBlock(ts, child);
         ts << indent.text() << "}\n";
     }
+}
+
+/////
+
+void SimpleFileKeyValue::write(QTextStream &ts, int depth) const
+{
+    SimpleFileBlock::INDENT indent(depth);
+    if (this->multiValue && this->values().size() > 1) {
+        ts << indent.text() << this->name << " = [\n";
+        for (int i = 0; i < this->values().size(); i += this->multiValueStride) {
+            SimpleFileBlock::INDENT indent2(depth);
+            QStringList values = this->values().mid(i, this->multiValueStride);
+            ts << indent2.text()
+               << values.join(QLatin1String(" "))
+               << "\n";
+        }
+        ts << indent.text() << "]\n";
+        return;
+    }
+    ts << indent.text() << this->name << " = " << this->value << "\n";
 }
 
 /////
@@ -292,7 +322,7 @@ SimpleFileBlock SimpleFileBlock::block(const QString &name)
     return SimpleFileBlock();
 }
 
-QString SimpleFileBlock::toString(int depth)
+QString SimpleFileBlock::toString(int depth) const
 {
     QString result;
     QTextStream ts(&result);
@@ -300,25 +330,18 @@ QString SimpleFileBlock::toString(int depth)
     return result;
 }
 
-void SimpleFileBlock::write(QTextStream &ts, int depth)
+void SimpleFileBlock::write(QTextStream &ts, int depth) const
 {
-    INDENT indent(depth);
-    foreach (SimpleFileKeyValue kv, values) {
-        if (kv.multiValue && kv.values().size() > 1) {
-            ts << indent.text() << kv.name << " = [\n";
-            for (int i = 0; i < kv.values().size(); i += kv.multiValueStride) {
-                INDENT indent2(depth);
-                QStringList values = kv.values().mid(i, kv.multiValueStride);
-                ts << indent2.text()
-                   << values.join(QLatin1String(" "))
-                   << "\n";
-            }
-            ts << indent.text() << "]\n";
-            continue;
-        }
-        ts << indent.text() << kv.name << " = " << kv.value << "\n";
+    for (const SimpleFileKeyValue& kv : qAsConst(values)) {
+        kv.write(ts, depth);
     }
-    foreach (SimpleFileBlock child, blocks) {
+    INDENT indent(depth);
+    for (const SimpleFileBlock& child : qAsConst(blocks)) {
+        if (child.comments.isEmpty() == false) {
+            for (const QString& comment : qAsConst(child.comments)) {
+                ts << indent.text() << "// " << comment << "\n";
+            }
+        }
         ts << indent.text() << child.name << "\n" << indent.text() << "{\n";
         child.write(ts, depth);
         ts << indent.text() << "}\n";

@@ -148,6 +148,7 @@ SOURCES += aboutdialog.cpp \
     snoweditor.cpp \
     stampbrush.cpp \
     tiledapplication.cpp \
+    tiledeftextfile.cpp \
     tilelayeritem.cpp \
     tileoverlaydialog.cpp \
     tileoverlayfile.cpp \
@@ -373,6 +374,7 @@ HEADERS += aboutdialog.h \
     snoweditor.h \
     stampbrush.h \
     tiledapplication.h \
+    tiledeftextfile.h \
     tilelayeritem.h \
     tileoverlaydialog.h \
     tileoverlayfile.h \

@@ -23,6 +23,7 @@
 #include "addtilesetsdialog.h"
 #include "preferences.h"
 #include "tiledeffile.h"
+#include "tiledeftextfile.h"
 #include "tilesetmanager.h"
 #include "zoomable.h"
 #include "utils.h"
@@ -672,6 +673,10 @@ void TileDefDialog::fileOpen()
 
     fileOpen(fileName);
 
+    if (mTileDefFile == nullptr) {
+        return;
+    }
+
     initStringComboBoxValues();
     updateTilesetListLater();
     updateUI();
@@ -1203,6 +1208,20 @@ QString TileDefDialog::getSaveLocation()
 void TileDefDialog::fileOpen(const QString &fileName)
 {
     TileDefFile *defFile = new TileDefFile;
+    if (fileName.endsWith(QLatin1String(".txt"))) {
+        TileDefTextFile textFile;
+        if (textFile.read(fileName) == false) {
+            QMessageBox::warning(this, tr("Error reading .tiles.txt file"),
+                                 textFile.errorString());
+            delete defFile;
+            return;
+        }
+        for (TileDefTileset *tileset : textFile.tilesets()) {
+            defFile->insertTileset(defFile->tilesets().size(), tileset);
+        }
+        textFile.takeTilesets();
+        defFile->setFileName(fileName.mid(0, fileName.length() - 4));
+    } else
     if (!defFile->read(fileName)) {
         QMessageBox::warning(this, tr("Error reading .tiles file"),
                              defFile->errorString());
@@ -1229,6 +1248,13 @@ bool TileDefDialog::fileSave(const QString &fileName)
     }
 
     mTileDefFile->setFileName(fileName);
+
+    TileDefTextFile txtFile;
+    if (!txtFile.write(fileName + QLatin1String(".txt"), mTileDefFile->tilesets())) {
+        QMessageBox::warning(this, tr("Error writing .tiles file"),
+                             mTileDefFile->errorString());
+    }
+
 #ifdef TDEF_TILES_DIR
     setTilesDir(tilesDir());
 #endif
