@@ -859,6 +859,9 @@ public:
     QStringList tilesetNames() const
     { return mTilesetByName.keys(); }
 
+    void setErrorString(const QString &error)
+    { mError = error; }
+
     QString errorString() const
     { return mError; }
 
@@ -912,6 +915,12 @@ private:
     TileDefProperties mProperties;
     QList<TilePropertyModifier*> mModifiers;
     QString mError;
+};
+
+class TileDefFileReader
+{
+public:
+    bool read(const QString &fileName, Tiled::Internal::TileDefFile &tileDefFile);
 };
 
 } // namespace Internal

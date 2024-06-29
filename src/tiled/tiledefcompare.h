@@ -2,6 +2,7 @@
 #define TILEDEFCOMPARE_H
 
 #include "tiledeffile.h"
+#include "tiledeftextfile.h"
 #include <QMainWindow>
 
 class QListWidgetItem;
@@ -37,8 +38,8 @@ private:
 
 private:
     Ui::TileDefCompare *ui;
-    Tiled::Internal::TileDefFile mPackFile1;
-    Tiled::Internal::TileDefFile mPackFile2;
+    Tiled::Internal::TileDefFile mTileDefFile1;
+    Tiled::Internal::TileDefFile mTileDefFile2;
     Tiled::Internal::TileDefFile mMergedFile;
     QMap<QListWidgetItem*,Tiled::Internal::TileDefTile*> mTileMap1;
     QMap<QListWidgetItem*,Tiled::Internal::TileDefTile*> mTileMap2;

@@ -663,7 +663,7 @@ void TileDefDialog::fileOpen()
 
     QString fileName = QFileDialog::getOpenFileName(this, tr("Choose .tiles file"),
                                                     lastPath,
-                                                    QLatin1String("Tile properties files (*.tiles)"));
+                                                    QLatin1String("Binary properties files (*.tiles);;Text properties files (*.tiles.txt)"));
     if (fileName.isEmpty())
         return;
 
@@ -1196,7 +1196,7 @@ QString TileDefDialog::getSaveLocation()
     }
     QString fileName = QFileDialog::getSaveFileName(this, tr("Save As"),
                                                     suggestedFileName,
-                                                    QLatin1String("Tile properties files (*.tiles)"));
+                                                    QLatin1String("Binary properties files (*.tiles)"));
     if (fileName.isEmpty())
         return QString();
 
@@ -1208,21 +1208,8 @@ QString TileDefDialog::getSaveLocation()
 void TileDefDialog::fileOpen(const QString &fileName)
 {
     TileDefFile *defFile = new TileDefFile;
-    if (fileName.endsWith(QLatin1String(".txt"))) {
-        TileDefTextFile textFile;
-        if (textFile.read(fileName) == false) {
-            QMessageBox::warning(this, tr("Error reading .tiles.txt file"),
-                                 textFile.errorString());
-            delete defFile;
-            return;
-        }
-        for (TileDefTileset *tileset : textFile.tilesets()) {
-            defFile->insertTileset(defFile->tilesets().size(), tileset);
-        }
-        textFile.takeTilesets();
-        defFile->setFileName(fileName.mid(0, fileName.length() - 4));
-    } else
-    if (!defFile->read(fileName)) {
+    TileDefFileReader reader;
+    if (!reader.read(fileName, *defFile)) {
         QMessageBox::warning(this, tr("Error reading .tiles file"),
                              defFile->errorString());
         delete defFile;

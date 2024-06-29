@@ -100,8 +100,12 @@ bool TileDefTextFile::read(const QString &fileName)
 bool TileDefTextFile::write(const QString &fileName, const QList<TileDefTileset *> &tilesets)
 {
     SimpleFile simpleFile;
+    QList<TileDefTileset *> sorted = tilesets;
+    std::sort(sorted.begin(), sorted.end(), [](TileDefTileset *a, TileDefTileset *b) {
+        return a->mName < b->mName;
+    });
 
-    for (TileDefTileset *tileset : qAsConst(tilesets/*mTilesets*/)) {
+    for (TileDefTileset *tileset : qAsConst(sorted)) {
         SimpleFileBlock tilesetBlock;
         tilesetBlock.name = QLatin1String("tileset");
         tilesetBlock.addValue("file", tileset->mName);
@@ -119,7 +123,7 @@ bool TileDefTextFile::write(const QString &fileName, const QList<TileDefTileset 
             if (properties.isEmpty()) {
                 continue;
             }
-            const QStringList keys = properties.keys();
+            const QStringList keys = properties.keys(); // ascending order
             for (const QString& key : keys) {
                 tileBlock.addValue(key, properties[key]);
             }
@@ -133,40 +137,6 @@ bool TileDefTextFile::write(const QString &fileName, const QList<TileDefTileset 
         mError = simpleFile.errorString();
         return false;
     }
-    return true;
-
-#if 0
-    QFile file(fileName);
-    if (!file.open(QIODevice::WriteOnly)) {
-        mError = tr("Error opening file for writing.\n%1").arg(fileName);
-        return false;
-    }
-
-    QDataStream out(&file);
-    out.setByteOrder(QDataStream::LittleEndian);
-
-    out << quint8('t') << quint8('d') << quint8('e') << quint8('f');
-    out << qint32(VERSION_LATEST);
-
-    out << qint32(mTilesets.size());
-    foreach (TileDefTileset *ts, mTilesets) {
-        SaveString(out, ts->mName);
-        SaveString(out, ts->mImageSource); // no path, just file + extension
-        out << qint32(ts->mColumns);
-        out << qint32(ts->mRows);
-        out << qint32(ts->mID);
-        out << qint32(ts->mTiles.size());
-        foreach (TileDefTile *tile, ts->mTiles) {
-            QMap<QString,QString> &properties = tile->mProperties;
-            tile->mPropertyUI.ToProperties(properties);
-            out << qint32(properties.size());
-            foreach (QString key, properties.keys()) {
-                SaveString(out, key);
-                SaveString(out, properties[key]);
-            }
-        }
-    }
-#endif
     return true;
 }
 

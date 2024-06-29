@@ -19,6 +19,7 @@
 
 #include "tiledeffile.h"
 
+#include "tiledeftextfile.h"
 #include "tilesetmanager.h"
 
 #include "tileset.h"
@@ -780,4 +781,26 @@ TilePropertyMgr::~TilePropertyMgr()
 {
     qDeleteAll(mModifiers);
     mInstance = 0;
+}
+
+///// ///// ///// ///// /////
+
+bool TileDefFileReader::read(const QString &fileName, Tiled::Internal::TileDefFile &defFile)
+{
+    if (fileName.endsWith(QLatin1String(".txt"))) {
+        TileDefTextFile textFile;
+        if (textFile.read(fileName) == false) {
+            defFile.setErrorString(textFile.errorString());
+            return false;
+        }
+        for (TileDefTileset *tileset : textFile.takeTilesets()) {
+            defFile.insertTileset(defFile.tilesets().size(), tileset);
+        }
+        defFile.setFileName(fileName.mid(0, fileName.length() - 4));
+        return true;
+    }
+    if (!defFile.read(fileName)) {
+        return false;
+    }
+    return true;
 }

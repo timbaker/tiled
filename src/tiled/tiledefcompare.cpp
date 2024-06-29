@@ -16,9 +16,15 @@
  */
 
 #include "tiledefcompare.h"
-#include "zprogress.h"
-#include "tilemetainfomgr.h"
 #include "ui_tiledefcompare.h"
+
+#include "preferences.h"
+#include "tilemetainfomgr.h"
+#include "tilesetmanager.h"
+#include "zprogress.h"
+
+#include "tile.h"
+#include "tileset.h"
 
 #include <QFileDialog>
 #include <QMessageBox>
@@ -62,7 +68,7 @@ void TileDefCompare::browse1()
 {
     QString f = QFileDialog::getOpenFileName(this, tr("Choose .tiles File"),
                                              ui->packEdit1->text(),
-                                             tr("Pack files (*.tiles)"));
+                                             tr("Binary property files (*.tiles);;Text property files (*.tiles.txt)"));
     if (!f.isEmpty()) {
         ui->packEdit1->setText(QDir::toNativeSeparators(f));
         writeSettings();
@@ -73,7 +79,7 @@ void TileDefCompare::browse2()
 {
     QString f = QFileDialog::getOpenFileName(this, tr("Choose .tiles File"),
                                              ui->packEdit2->text(),
-                                             tr("Pack files (*.tiles)"));
+                                             tr("Binary property files (*.tiles);;Text property files (*.tiles.txt)"));
     if (!f.isEmpty()) {
         ui->packEdit2->setText(QDir::toNativeSeparators(f));
         writeSettings();
@@ -90,26 +96,27 @@ void TileDefCompare::swapPaths()
 void TileDefCompare::compare()
 {
     PROGRESS progress(tr("Reading file 1"), this);
-    if (!mPackFile1.read(ui->packEdit1->text())) {
-        QMessageBox::warning(this, tr("Error reading .tiles file"), mPackFile1.errorString());
+    TileDefFileReader reader;
+    if (!reader.read(ui->packEdit1->text(), mTileDefFile1)) {
+        QMessageBox::warning(this, tr("Error reading .tiles file"), mTileDefFile1.errorString());
         return;
     }
 
     progress.update(tr("Reading file 2"));
-    if (!mPackFile2.read(ui->packEdit2->text())) {
-        QMessageBox::warning(this, tr("Error reading .tiles file"), mPackFile2.errorString());
+    if (!reader.read(ui->packEdit2->text(), mTileDefFile2)) {
+        QMessageBox::warning(this, tr("Error reading .tiles file"), mTileDefFile2.errorString());
         return;
     }
-    if (!mMergedFile.read(ui->packEdit2->text())) {
-        QMessageBox::warning(this, tr("Error reading .tiles file"), mPackFile2.errorString());
+    if (!reader.read(ui->packEdit2->text(), mMergedFile)) {
+        QMessageBox::warning(this, tr("Error reading .tiles file"), mMergedFile.errorString());
         return;
     }
 
     QSet<QString> in1, in2, unique1, unique2;
-    foreach (TileDefTileset *ts, mPackFile1.tilesets()) {
+    for (TileDefTileset *ts : mTileDefFile1.tilesets()) {
         in1.insert(ts->mName);
     }
-    foreach (TileDefTileset *ts, mPackFile2.tilesets()) {
+    for (TileDefTileset *ts : mTileDefFile2.tilesets()) {
         in2.insert(ts->mName);
     }
     unique1 = in1 - in2;
@@ -120,14 +127,14 @@ void TileDefCompare::compare()
     ui->textBrowser->insertHtml(QLatin1String("<b>Unique tilesets in pack 1:</b><br>"));
     QStringList sorted1 = QStringList(unique1.values());
     sorted1.sort();
-    foreach (QString s, sorted1) {
+    for (const QString &s : sorted1) {
         ui->textBrowser->insertPlainText(s + QLatin1String("\n"));
     }
 
     ui->textBrowser->insertHtml(QLatin1String("<br><b>Unique tilesets in pack 2:</b><br>"));
     QStringList sorted2 = QStringList(unique2.values());
     sorted2.sort();
-    foreach (QString s, sorted2) {
+    for (const QString &s : sorted2) {
         ui->textBrowser->insertPlainText(s + QLatin1String("\n"));
     }
 
@@ -139,9 +146,9 @@ void TileDefCompare::compare()
     QSet<QString> shared = in1 & in2;
     QStringList sorted3(shared.begin(), shared.end());
     sorted3.sort();
-    foreach (QString tsName, sorted3) {
-        TileDefTileset *ts1 = mPackFile1.tileset(tsName);
-        TileDefTileset *ts2 = mPackFile2.tileset(tsName);
+    for (const QString &tsName : sorted3) {
+        TileDefTileset *ts1 = mTileDefFile1.tileset(tsName);
+        TileDefTileset *ts2 = mTileDefFile2.tileset(tsName);
         for (int i = 0; i < qMin(ts1->mTiles.size(), ts2->mTiles.size()); i++) {
             if (ts1->mTiles[i]->mProperties != ts2->mTiles[i]->mProperties) {
                 ui->textBrowser->insertPlainText(QString(QLatin1String("%1 %2\n")).arg(tsName).arg(i));
@@ -251,11 +258,6 @@ void TileDefCompare::writeSettings()
     settings.endGroup();
 }
 
-#include "preferences.h"
-#include "tilesetmanager.h"
-#include "tile.h"
-#include "tileset.h"
-
 static Tiled::Tileset *findTileset(QString name)
 {
     foreach (Tiled::Tileset *tileset, TileMetaInfoMgr::instance()->tilesets()) {
@@ -276,3 +278,4 @@ QImage TileDefCompare::getTileImage(TileDefTile *tdt)
     }
     return TilesetManager::instance()->missingTile()->image();
 }
+
