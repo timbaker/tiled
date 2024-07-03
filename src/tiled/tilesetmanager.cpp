@@ -22,12 +22,14 @@
 #include "tilesetmanager.h"
 
 #include "filesystemwatcher.h"
+#include "tiledeffile.h"
 #include "tileset.h"
 
 #include <QImage>
 #ifdef ZOMBOID
 #include "preferences.h"
 #include "tile.h"
+#include "BuildingEditor/buildingfloor.h"
 #include <QDebug>
 #include <QDir>
 #include <QImageReader>
@@ -50,8 +52,8 @@ TilesetManager::TilesetManager():
     const int TILE_WIDTH = 64;
     const int TILE_HEIGHT = 128;
 
-    mInvisibleTileset = new Tileset(QLatin1String("missing"), TILE_WIDTH, TILE_HEIGHT);
-    mInvisibleTileset->setTransparentColor(Qt::white);
+    mInvisibleTileset = new Tileset(QLatin1String("invisible"), TILE_WIDTH, TILE_HEIGHT);
+    mInvisibleTileset->setTransparentColor(Qt::transparent);
     mInvisibleTileset->setMissing(true);
     QString fileName = QLatin1String(":/images/invisible-tile.png");
     if (!mInvisibleTileset->loadFromImage(QImage(fileName), fileName)) {
@@ -143,8 +145,11 @@ TilesetManager::~TilesetManager()
 
 TilesetManager *TilesetManager::instance()
 {
-    if (!mInstance)
+    if (!mInstance) {
         mInstance = new TilesetManager;
+        TileDefWatcher *tileDefWatcher = BuildingEditor::getTileDefWatcher();
+        QObject::connect(tileDefWatcher, &TileDefWatcher::tilePropertiesChanged, mInstance, &TilesetManager::tilePropertiesChanged);
+    }
 
     return mInstance;
 }
@@ -331,6 +336,7 @@ void TilesetManager::fileChangedTimeout()
             if (Tileset *cached = mTilesetImageCache->findMatch(tileset, fileName, fileName2)) {
                 if (tileset->loadFromCache(cached)) {
                     tileset->setMissing(cached->isMissing());
+                    copyPZProperties(cached, tileset);
                     syncTileLayerNames(tileset);
                     emit tilesetChanged(tileset);
                 }
@@ -380,6 +386,7 @@ void TilesetManager::imageLoaded(QImage *image, Tileset *tileset)
                 && candidate->transparentColor() == tileset->transparentColor()) {
             candidate->loadFromCache(tileset);
             candidate->setMissing(false);
+            copyPZProperties(tileset, candidate);
             emit tilesetChanged(candidate);
         }
     }
@@ -410,7 +417,23 @@ void TilesetManager::imageLoaded(Tileset *fromThread, Tileset *tileset)
                 && candidate->transparentColor() == tileset->transparentColor()) {
             candidate->loadFromCache(tileset);
             candidate->setMissing(false);
+            copyPZProperties(tileset, candidate);
             emit tilesetChanged(candidate);
+        }
+    }
+}
+
+void TilesetManager::tilePropertiesChanged()
+{
+    for (Tileset *cached : mTilesetImageCache->mTilesets) {
+        cachePZProperties(cached);
+    }
+    for (Tileset *tileset : tilesets()) {
+        QString imageSource = tileset->imageSource();
+        QString imageSource2x = tileset->imageSource2x();
+        Tileset *cached = mTilesetImageCache->findMatch(tileset, imageSource, imageSource2x);
+        if (cached) {
+            copyPZProperties(cached, tileset);
         }
     }
 }
@@ -433,6 +456,7 @@ void TilesetManager::loadTileset(Tileset *tileset, const QString &imageSource_)
             if (cached->isLoaded()) {
                 tileset->loadFromCache(cached);
                 tileset->setMissing(false);
+                copyPZProperties(cached, tileset);
                 emit tilesetChanged(tileset);
             } else {
                 changeTilesetSource(tileset, imageSource, false);
@@ -443,6 +467,7 @@ void TilesetManager::loadTileset(Tileset *tileset, const QString &imageSource_)
             changeTilesetSource(tileset, imageSource, false);
             tileset->setImageSource2x(imageSource2x);
             cached = mTilesetImageCache->addTileset(tileset);
+            cachePZProperties(cached);
 #if 1 /* QT_POINTER_SIZE == 8 */
             QMetaObject::invokeMethod(mImageReaderWorkers[mNextThreadForJob],
                                       "addJob", Qt::QueuedConnection,
@@ -457,6 +482,7 @@ void TilesetManager::loadTileset(Tileset *tileset, const QString &imageSource_)
             changeTilesetSource(tileset, imageSource, false);
             tileset->setImageSource2x(QString());
             cached = mTilesetImageCache->addTileset(tileset);
+            cachePZProperties(cached);
 #if 1 /* QT_POINTER_SIZE == 8 */
             QMetaObject::invokeMethod(mImageReaderWorkers[mNextThreadForJob],
                                       "addJob", Qt::QueuedConnection,
@@ -482,7 +508,7 @@ void TilesetManager::waitForTilesets(const QList<Tileset *> &tilesets)
 {
     while (true) {
         bool busy = false;
-        for (TilesetImageReaderWorker *worker : mImageReaderWorkers) {
+        for (TilesetImageReaderWorker *worker : qAsConst(mImageReaderWorkers)) {
             if (worker->busy()) {
                 busy = true;
                 break;
@@ -507,6 +533,41 @@ void TilesetManager::waitForTilesets(const QList<Tileset *> &tilesets)
         Q_ASSERT(cached != 0 && !cached->isLoaded());
         if (cached) {
             imageLoaded(image, cached); // deletes image
+        }
+    }
+}
+
+void TilesetManager::cachePZProperties(Tileset *cached)
+{
+    QString tilesetName = QFileInfo(cached->imageSource2x().isEmpty() ? cached->imageSource() : cached->imageSource2x()).completeBaseName();
+    TileDefWatcher *tileDefWatcher = BuildingEditor::getTileDefWatcher();
+    tileDefWatcher->check();
+    QString INVISIBLE = QLatin1String("invisible");
+    if (TileDefTileset *tdts = tileDefWatcher->tileset(tilesetName)) {
+        for (int i = 0; i < cached->tileCount(); i++) {
+            TileDefTile *tdt = tdts->tileAt(i);
+            if (tdt == nullptr)
+                 break;
+#if 1
+            cached->tileAt(i)->setProperties({});
+            if (tdt->mProperties.contains(INVISIBLE)) {
+                cached->tileAt(i)->setProperty(INVISIBLE, QString());
+            }
+#else
+            Properties properties;
+            properties.insert(tdt->mProperties);
+            cached->setProperties(properties);
+#endif
+        }
+    }
+}
+
+void TilesetManager::copyPZProperties(Tileset *src, Tileset *dst)
+{
+    for (int i = 0; i < src->tileCount(); i++) {
+        if (Tile *tileDst = dst->tileAt(i)) {
+            Tile *tileSrc = src->tileAt(i);
+            tileDst->setProperties(tileSrc->properties());
         }
     }
 }

@@ -2417,10 +2417,15 @@ TileDefWatcher::TileDefWatcher() :
 {
     connect(mWatcher, &FileSystemWatcher::fileChanged, this, &TileDefWatcher::fileChanged);
 #ifdef WORLDED
+    preferencesChanged(Preferences::instance()->tilePropertiesFiles());
 #else
     connect(Preferences::instance(), &Preferences::tilePropertiesFilesChanged, this, &TileDefWatcher::preferencesChanged);
     preferencesChanged(Tiled::Internal::Preferences::instance()->tilePropertiesFiles());
 #endif
+
+    mChangedFilesTimer.setInterval(1000);
+    mChangedFilesTimer.setSingleShot(true);
+    connect(&mChangedFilesTimer, &QTimer::timeout, this, &TileDefWatcher::tilePropertiesChanged);
 }
 
 
@@ -2441,26 +2446,38 @@ TileDefTileset *TileDefWatcher::tileset(const QString &tilesetName)
     return nullptr;
 }
 
+TileDefWatcherFile *TileDefWatcher::fileByName(const QString &filePath)
+{
+    for (TileDefWatcherFile *watcherFile : mFiles) {
+        if (watcherFile->mFilePath == filePath) {
+            return watcherFile;
+        }
+    }
+    return nullptr;
+}
+
 void TileDefWatcher::preferencesChanged(const QStringList &tilePropertiesFiles)
 {
     for (const QString &tilePropertiesFilePath : tilePropertiesFiles) {
         QFileInfo fileInfo(tilePropertiesFilePath);
         QString canonicalPath = fileInfo.canonicalFilePath();
-        if (mFiles.contains(canonicalPath)) {
+        TileDefWatcherFile *watcherFile = fileByName(canonicalPath);
+        if (watcherFile != nullptr) {
             continue;
         }
-        TileDefWatcherFile *watcherFile = new TileDefWatcherFile(canonicalPath);
-        mFiles.insert(canonicalPath, watcherFile);
+        watcherFile = new TileDefWatcherFile(canonicalPath);
+        mFiles += watcherFile;
     }
 }
 
 void TileDefWatcher::fileChanged(const QString &path)
 {
     qDebug() << "TileDefWatcher.fileChanged() " << path;
-    if (TileDefWatcherFile *watcherFile = mFiles[path]) {
+    if (TileDefWatcherFile *watcherFile = fileByName(path)) {
         watcherFile->tileDefFileChecked = false;
 //      removePath(path);
 //      addPath(path);
+        mChangedFilesTimer.start();
     }
 }
 

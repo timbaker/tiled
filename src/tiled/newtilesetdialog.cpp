@@ -143,6 +143,7 @@ void NewTilesetDialog::tryAccept()
             }
             imageCache->addTileset(tileset.get());
         }
+        TilesetManager::instance()->copyPZProperties(cached, tileset.get());
     }
     else
 #endif

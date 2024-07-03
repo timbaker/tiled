@@ -202,6 +202,9 @@ public:
 
     void loadTileset(Tileset *tileset, const QString &imageSource);
     void waitForTilesets(const QList<Tileset *> &tilesets = QList<Tileset*>());
+
+    void cachePZProperties(Tileset *cached);
+    void copyPZProperties(Tileset *src, Tileset *dst);
 #endif
 
 signals:
@@ -221,6 +224,7 @@ private slots:
 #ifdef ZOMBOID
     void imageLoaded(QImage *image, Tiled::Tileset *tileset);
     void imageLoaded(Tiled::Tileset *fromThread, Tiled::Tileset *tileset);
+    void tilePropertiesChanged();
 #endif
 
 private:

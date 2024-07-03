@@ -454,8 +454,21 @@ void ZLevelRenderer::drawTileLayerGroup(QPainter *painter, ZTileLayerGroup *laye
                     const Cell *cell = cells[i];
                     if (!cell->isEmpty()) {
                         Tile *tile = cell->tile;
+                        if (tile->properties().contains(QLatin1String("invisible"))) {
+                            if (isShowInvisibleTiles() == false)
+                                continue;
+                            if (g_invisible_tile == nullptr) {
+                                Tileset *ts = new Tileset(QLatin1String("INVISIBLE"), 64, 128);
+                                if (ts->loadFromImage(QImage(QLatin1String(":/images/invisible-tile.png")), QLatin1String(":/images/invisible-tile.png"))) {
+                                    g_invisible_tile = ts->tileAt(0);
+                                }
+                            }
+                            if (g_invisible_tile)
+                                tile = g_invisible_tile;
+
+                        }
                         if (tile->image().isNull()) {
-                            if (g_missing_tile == 0) {
+                            if (g_missing_tile == nullptr) {
                                 Tileset *ts = new Tileset(QLatin1String("MISSING"), 64, 128);
                                 if (ts->loadFromImage(QImage(QLatin1String(":/images/missing-tile.png")), QLatin1String(":/images/missing-tile.png"))) {
                                     g_missing_tile = ts->tileAt(0);
@@ -500,7 +513,7 @@ void ZLevelRenderer::drawTileLayerGroup(QPainter *painter, ZTileLayerGroup *laye
                         QString tilesetName = cell->tile->tileset()->name();
                         bool bJUMBO = tilesetName.contains(QStringLiteral("JUMBO_"));
                         if (bJUMBO) {
-                            dx -= tileWidth / 2;
+                            dx -= tileWidth / 2; // FIXME: Shouldn't Tiled::setZomboidTileOffset() take care of this? Possibly a TileScale=2 issue.
                         } else if (tileWidth == tile->width() * 2) {
                             m11 *= 2.0f;
                             m22 *= 2.0f;
@@ -673,6 +686,7 @@ void ZLevelRenderer::drawFancyRectangle(QPainter *painter,
     pen.setJoinStyle(Qt::RoundJoin);
     pen.setCapStyle(Qt::RoundCap);
     pen.setWidth(2);
+    pen.setCosmetic(true);
     painter->setPen(pen);
     painter->setRenderHint(QPainter::Antialiasing);
     QPolygonF polygon = tileRectToPolygon(tileBounds, level);

@@ -181,6 +181,7 @@ void ZomboidScene::setMapDocument(MapDocument *mapDoc)
         connect(Preferences::instance(), &Preferences::highlightRoomUnderPointerChanged,
                 this, &ZomboidScene::highlightRoomUnderPointerChanged);
         connect(Preferences::instance(), &Preferences::showLotFloorsOnlyChanged, this, &ZomboidScene::showLotFloorsOnlyChanged);
+        connect(Preferences::instance(), &Preferences::showInvisibleTilesChanged, this, &ZomboidScene::showInvisibleTilesChanged);
     }
 }
 
@@ -758,6 +759,12 @@ void ZomboidScene::showLotFloorsOnlyChanged(bool show)
 {
     MapComposite *mc = mMapDocument->mapComposite();
     mc->setShowLotFloorsOnly(show);
+    update();
+}
+
+void ZomboidScene::showInvisibleTilesChanged(bool show)
+{
+    mapDocument()->renderer()->setShowInvisibleTiles(show);
     update();
 }
 

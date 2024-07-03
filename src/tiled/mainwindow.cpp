@@ -313,6 +313,7 @@ MainWindow::MainWindow(QWidget *parent, Qt::WindowFlags flags)
     mUi->actionShowMiniMap->setChecked(preferences->showMiniMap());
     mUi->actionShowTileLayersPanel->setChecked(preferences->showTileLayersPanel());
     mUi->actionShowTileSelection->setChecked(preferences->showTileSelection());
+    mUi->actionShowInvisibleTiles->setChecked(preferences->showInvisibleTiles());
 
     mUi->actionExportNewBinary->setVisible(false);
 #endif
@@ -417,6 +418,8 @@ MainWindow::MainWindow(QWidget *parent, Qt::WindowFlags flags)
             preferences, &Preferences::setShowTileLayersPanel);
     connect(mUi->actionShowTileSelection, &QAction::toggled,
             preferences, &Preferences::setShowTileSelection);
+    connect(mUi->actionShowInvisibleTiles, &QAction::toggled,
+            preferences, &Preferences::setShowInvisibleTiles);
 #endif
     connect(mUi->actionZoomIn, &QAction::triggered, this, &MainWindow::zoomIn);
     connect(mUi->actionZoomOut, &QAction::triggered, this, &MainWindow::zoomOut);
@@ -2887,6 +2890,8 @@ void MainWindow::updateActions()
                                         !mMapDocument->selectedObjects().isEmpty());
     mUi->actionRoomDefRemove->setEnabled(mMapDocument);
     mUi->actionRoomDefUnknownWalls->setEnabled(mMapDocument);
+
+    mUi->actionShowInvisibleTiles->setEnabled(mMapDocument != nullptr);
 #endif
 }
 

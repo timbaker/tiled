@@ -90,6 +90,7 @@ Preferences::Preferences()
     mMiniMapWidth = mSettings->value(QLatin1String("MiniMapWidth"), 256).toInt();
     mShowTileLayersPanel = mSettings->value(QLatin1String("ShowTileLayersPanel"), true).toBool();
     mShowTileSelection = mSettings->value(QLatin1String("ShowTileSelection"), true).toBool();
+    mShowInvisibleTiles = mSettings->value(QLatin1String("ShowInvisibleTiles"), true).toBool();
     mBackgroundColor = QColor(mSettings->value(QLatin1String("BackgroundColor"),
                                                QColor(Qt::darkGray).name()).toString());
     mShowAdjacentMaps = mSettings->value(QLatin1String("ShowAdjacentMaps"), true).toBool();
@@ -592,6 +593,15 @@ void Preferences::setShowTileSelection(bool show)
     mShowTileSelection = show;
     mSettings->setValue(QLatin1String("Interface/ShowTileSelection"), show);
     emit showTileSelectionChanged(mShowTileLayersPanel);
+}
+
+void Preferences::setShowInvisibleTiles(bool show)
+{
+    if (mShowInvisibleTiles == show)
+        return;
+    mShowInvisibleTiles = show;
+    mSettings->setValue(QLatin1String("Interface/ShowInvisibleTiles"), show);
+    emit showInvisibleTilesChanged(mShowInvisibleTiles);
 }
 
 void Preferences::setBackgroundColor(const QColor &bgColor)

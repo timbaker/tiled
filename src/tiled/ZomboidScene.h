@@ -116,6 +116,7 @@ private slots:
 
     void highlightRoomUnderPointerChanged(bool highlight);
     void showLotFloorsOnlyChanged(bool show);
+    void showInvisibleTilesChanged(bool show);
 
     void handlePendingUpdates();
 

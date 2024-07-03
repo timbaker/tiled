@@ -317,9 +317,9 @@ public:
             return NULL;
 
         if (mapFilePath.endsWith(QLatin1String(".tbx")))
-            return readBuilding(&file, QFileInfo(mapFilePath).absolutePath());
+            return readBuilding(&file, QFileInfo(mapFilePath).absoluteFilePath());
 
-        return readMap(&file, QFileInfo(mapFilePath).absolutePath());
+        return readMap(&file, QFileInfo(mapFilePath).absoluteFilePath());
     }
 
     MapInfo *readMap(QIODevice *device, const QString &path)
@@ -375,7 +375,7 @@ public:
 
     MapInfo *readBuilding(QIODevice *device, const QString &path)
     {
-        Q_UNUSED(path)
+        mPath = path;
 
         mError.clear();
         mMapInfo = NULL;
@@ -481,11 +481,16 @@ public:
 
     void readUnknownElement()
     {
-        qDebug() << "Unknown element (fixme):" << xml.name();
+        qDebug() << tr("Unknown element \"%3\"\n\nLine %1, column %2 %4")
+                    .arg(xml.lineNumber())
+                    .arg(xml.columnNumber())
+                    .arg(xml.name())
+                    .arg(mPath);
         xml.skipCurrentElement();
     }
 
     QXmlStreamReader xml;
+    QString mPath;
     MapInfo *mMapInfo;
     QString mError;
 };
@@ -755,8 +760,11 @@ void MapManager::mapLoadedByThread(Map *map, MapInfo *mapInfo)
 
     MapManagerDeferral deferral;
 
+    Tile *invisibleTile = TilesetManager::instance()->invisibleTile();
     Tile *missingTile = TilesetManager::instance()->missingTile();
     foreach (Tileset *tileset, map->missingTilesets()) {
+        if (tileset == invisibleTile->tileset())
+            continue;
         if (tileset == missingTile->tileset())
             continue;
         if (tileset->tileHeight() == missingTile->height() && tileset->tileWidth() == missingTile->width()) {

@@ -27,6 +27,7 @@
 #include <QRegion>
 #include <QString>
 #include <QStringList>
+#include <QTimer>
 #include <QVector>
 
 namespace BuildingEditor {
@@ -372,6 +373,10 @@ public:
 
     void check();
     Tiled::Internal::TileDefTileset *tileset(const QString &tilesetName);
+    TileDefWatcherFile *fileByName(const QString &filePath);
+
+signals:
+    void tilePropertiesChanged();
 
 public slots:
     void preferencesChanged(const QStringList &tilePropertiesFiles);
@@ -379,7 +384,8 @@ public slots:
 
 public:
     Tiled::Internal::FileSystemWatcher *mWatcher;
-    QMap<QString,TileDefWatcherFile*> mFiles;
+    QList<TileDefWatcherFile*> mFiles;
+    QTimer mChangedFilesTimer;
 };
 
 }

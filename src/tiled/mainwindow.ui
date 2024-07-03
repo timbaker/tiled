@@ -128,6 +128,7 @@
     <addaction name="actionSnapToGrid"/>
     <addaction name="actionHighlightCurrentLayer"/>
     <addaction name="actionHighlightRoomUnderPointer"/>
+    <addaction name="actionShowInvisibleTiles"/>
     <addaction name="actionShowLotFloorsOnly"/>
     <addaction name="actionShowMiniMap"/>
     <addaction name="actionShowTileLayersPanel"/>
@@ -697,11 +698,19 @@
     <string>Ctrl+H</string>
    </property>
   </action>
+  <action name="actionShowInvisibleTiles">
+   <property name="checkable">
+    <bool>true</bool>
+   </property>
+   <property name="text">
+    <string>Show Invisible Tiles</string>
+   </property>
+  </action>
  </widget>
  <layoutdefault spacing="6" margin="11"/>
  <resources>
-  <include location="tiled.qrc"/>
   <include location="BuildingEditor/buildingeditor.qrc"/>
+  <include location="tiled.qrc"/>
  </resources>
  <connections/>
 </ui>

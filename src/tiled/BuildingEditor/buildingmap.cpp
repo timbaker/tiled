@@ -134,6 +134,9 @@ QString BuildingMap::buildingTileAt(int x, int y, const QList<bool> visibleLevel
                         test = tlBlend->cellAt(tx, ty).tile; // building tile
                     if (test) {
                         Tile *realTile = test;
+                        if (test->properties().contains(QLatin1String("invisible"))) {
+                            test = TilesetManager::instance()->invisibleTile();
+                        }
                         if (test->image().isNull()) {
                             test = TilesetManager::instance()->missingTile();
                         }
@@ -445,9 +448,11 @@ BuildingMapEmptyOutsideFill::BuildingMapEmptyOutsideFill(Tiled::Map *map, Buildi
     mMap(map),
     mFloor(floor)
 {
+    TileDefWatcher *tileDefWatcher = getTileDefWatcher();
+    tileDefWatcher->check();
     const QString solidfloor(QStringLiteral("solidfloor"));
     for (Tiled::Tileset *tileset : map->tilesets()) {
-        TileDefTileset *tdts = getTileDefWatcher()->tileset(tileset->name());
+        TileDefTileset *tdts = tileDefWatcher->tileset(tileset->name());
         if (tdts == nullptr)
             continue;
         for (int i = 0; i < tileset->tileCount(); i++) {

@@ -119,6 +119,9 @@ public:
     bool showTileSelection() const
     { return mShowTileSelection; }
 
+    bool showInvisibleTiles() const
+    { return mShowInvisibleTiles; }
+
     QColor backgroundColor() const
     { return mBackgroundColor; }
 
@@ -168,6 +171,7 @@ public slots:
     void setShowMiniMap(bool show);
     void setShowTileLayersPanel(bool show);
     void setShowTileSelection(bool show);
+    void setShowInvisibleTiles(bool show);
     void setBackgroundColor(const QColor &bgColor);
     void setShowAdjacentMaps(bool show);
     void setWorldEdFiles(const QStringList &fileNames);
@@ -200,6 +204,7 @@ signals:
     void miniMapWidthChanged(int width);
     void showTileLayersPanelChanged(bool show);
     void showTileSelectionChanged(bool show);
+    void showInvisibleTilesChanged(bool show);
     void backgroundColorChanged(const QColor &color);
     void showAdjacentMapsChanged(bool show);
     void worldEdFilesChanged(const QStringList &fileNames);
@@ -251,6 +256,7 @@ private:
     QColor mTilesetBackgroundColor;
     QString mThumbnailsDirectory;
     bool mShowTileSelection;
+    bool mShowInvisibleTiles;
 #endif
 
     static Preferences *mInstance;
