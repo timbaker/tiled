@@ -72,6 +72,10 @@ private slots:
     void removePZW();
     void raisePZW();
     void lowerPZW();
+    void addPropertiesFile();
+    void removePropertiesFile();
+    void raisePropertiesFile();
+    void lowerPropertiesFile();
     void updateActions();
 #endif // ZOMBOID
 

@@ -128,6 +128,9 @@ public:
     QStringList worldedFiles() const
     { return mWorldEdFiles; }
 
+    QStringList tilePropertiesFiles() const
+    { return mTilePropertiesFiles; }
+
     bool highlightRoomUnderPointer() const
     { return mHighlightRoomUnderPointer; }
 
@@ -168,6 +171,7 @@ public slots:
     void setBackgroundColor(const QColor &bgColor);
     void setShowAdjacentMaps(bool show);
     void setWorldEdFiles(const QStringList &fileNames);
+    void setTilePropertiesFiles(const QStringList &fileNames);
     void setHighlightRoomUnderPointer(bool highlight);
     void setEraserBrushSize(int newSize);
     void setTilesetBackgroundColor(const QColor& color);
@@ -199,6 +203,7 @@ signals:
     void backgroundColorChanged(const QColor &color);
     void showAdjacentMapsChanged(bool show);
     void worldEdFilesChanged(const QStringList &fileNames);
+    void tilePropertiesFilesChanged(const QStringList &fileNames);
     void highlightRoomUnderPointerChanged(bool highlight);
     void eraserBrushSizeChanged(int newSize);
     void tilesetBackgroundColorChanged(const QColor &color);
@@ -240,6 +245,7 @@ private:
     QColor mBackgroundColor;
     bool mShowAdjacentMaps;
     QStringList mWorldEdFiles;
+    QStringList mTilePropertiesFiles;
     bool mHighlightRoomUnderPointer;
     int mEraserBrushSize;
     QColor mTilesetBackgroundColor;

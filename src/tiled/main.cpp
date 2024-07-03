@@ -214,6 +214,15 @@ int main(int argc, char *argv[])
         }
         WorldEd::WorldEdMgr::instance()->addProject(f);
     }
+
+    for (const QString &f : Preferences::instance()->tilePropertiesFiles()) {
+        if (f.isEmpty())
+            continue;
+        if (QFileInfo::exists(f) == false) {
+            QMessageBox::warning(&w, QLatin1String("File Not Found"), QLatin1String("Tile properties file not found.\nChange this in the Preferences.\n%1").arg(f));
+            continue;
+        }
+    }
 #endif // ZOMBOID
 
     QObject::connect(&a, &TiledApplication::fileOpenRequest,

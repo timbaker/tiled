@@ -211,7 +211,8 @@ void ZLevelRenderer::drawGrid(QPainter *painter, const QRectF &rect,
     }
 }
 
-static Tile *g_missing_tile = 0;
+static Tile *g_invisible_tile = nullptr;
+static Tile *g_missing_tile = nullptr;
 
 void ZLevelRenderer::drawTileLayer(QPainter *painter,
                                       const TileLayer *layer,

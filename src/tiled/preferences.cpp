@@ -153,6 +153,21 @@ Preferences::Preferences()
     mThumbnailsDirectory = mSettings->value(QLatin1String("Thumbnails/Directory"), QString()).toString();
 
     mWorldEdFiles = mSettings->value(QLatin1String("WorldEd/ProjectFile")).toStringList();
+    mTilePropertiesFiles = mSettings->value(QLatin1String("TilePropertiesFiles")).toStringList();
+
+    bool bHasNewTileDefinitions = false;
+    for (const QString &f : mTilePropertiesFiles) {
+        if (f.isEmpty())
+            continue;
+        if (f.contains(QLatin1String("newtiledefinitions.tiles"), Qt::CaseInsensitive)) {
+            bHasNewTileDefinitions = true;
+        }
+    }
+    if ((bHasNewTileDefinitions == false) && (mTilesDirectory.isEmpty() == false)) {
+        QFileInfo fileInfo(mTilesDirectory + QLatin1String("/newtiledefinitions.tiles"));
+        mTilePropertiesFiles += QDir::toNativeSeparators(fileInfo.canonicalFilePath());
+        mSettings->setValue(QLatin1String("TilePropertiesFiles"), mTilePropertiesFiles);
+    }
 #endif
 #ifndef ZOMBOID // do this in TilesetManager constructor to avoid infinite loop
     TilesetManager *tilesetManager = TilesetManager::instance();
@@ -605,6 +620,15 @@ void Preferences::setWorldEdFiles(const QStringList &fileNames)
     mWorldEdFiles = fileNames;
     mSettings->setValue(QLatin1String("WorldEd/ProjectFile"), mWorldEdFiles);
     emit worldEdFilesChanged(mWorldEdFiles);
+}
+
+void Preferences::setTilePropertiesFiles(const QStringList &fileNames)
+{
+    if (mTilePropertiesFiles == fileNames)
+        return;
+    mTilePropertiesFiles = fileNames;
+    mSettings->setValue(QLatin1String("TilePropertiesFiles"), mTilePropertiesFiles);
+    emit tilePropertiesFilesChanged(mTilePropertiesFiles);
 }
 
 void Preferences::setHighlightRoomUnderPointer(bool highlight)

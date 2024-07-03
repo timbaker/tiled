@@ -180,6 +180,12 @@ public:
 
     void changeTilesetSource(Tileset *tileset, const QString &source, bool missing);
 
+    Tile *invisibleTile() const
+    { return mInvisibleTile; }
+
+    Tileset *invisibleTileset() const
+    { return mInvisibleTileset; }
+
     Tile *missingTile() const
     { return mMissingTile; }
 
@@ -234,6 +240,9 @@ private:
 
 #ifdef ZOMBOID
     TilesetImageCache *mTilesetImageCache;
+
+    Tileset *mInvisibleTileset;
+    Tile *mInvisibleTile;
 
     Tileset *mMissingTileset;
     Tile *mMissingTile;

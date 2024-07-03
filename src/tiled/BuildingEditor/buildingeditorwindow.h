@@ -227,7 +227,7 @@ private:
     void cropBuilding(const QRect &bounds);
 
     void exportNewBinaryFile(ExportBasementsDialog *dialog, const QString& tbxFilePath, QSet<QString> &northStairTiles, QSet<QString> &westStairTiles, QString &luaCode);
-    void getTopStaircaseTiles(const QString& tileDefFileName, QSet<QString>& northStairTiles, QSet<QString> &westStairTiles);
+    void getTopStaircaseTiles(QSet<QString>& northStairTiles, QSet<QString> &westStairTiles);
     bool getBasementStaircase(Tiled::Map* map, QSet<QString>& northStairTiles, QSet<QString>& westStairTiles, int &stairx, int &stairy, QString& stairDir, bool isBasementAccess);
 
     typedef Tiled::Tileset Tileset; // Hack for signals/slots

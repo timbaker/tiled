@@ -125,11 +125,6 @@ void CheckBuildingsWindow::check()
         mFileSystemWatcher->removePath(path);
     mWatchedFiles.clear();
 
-    QFileInfo fileInfo(Preferences::instance()->tilesDirectory() + QString::fromLatin1("/newtiledefinitions.tiles"));
-    if (fileInfo.exists()) {
-        mTileDefFile.read(fileInfo.absoluteFilePath());
-    }
-
     QStringList filters;
     filters << QLatin1String("*.tbx");
     dir.setNameFilters(filters);
@@ -393,6 +388,7 @@ void CheckBuildingsWindow::check(const QString &filePath)
         Map *map = bmap.mergedMap();
         bmap.addRoomDefObjects(map);
         QSet<Tileset*> usedTilesets = map->usedTilesets();
+        usedTilesets.remove(TilesetManager::instance()->invisibleTileset());
         usedTilesets.remove(TilesetManager::instance()->missingTileset());
         TileMetaInfoMgr::instance()->loadTilesets({usedTilesets.begin(), usedTilesets.end()});
 //            TilesetManager::instance()->removeReferences(map->tilesets());
@@ -423,6 +419,9 @@ void CheckBuildingsWindow::check(BuildingMap *bmap, Building *building, Map *map
         mCurrentIssueFile = new IssueFile(fileName);
         mFiles += mCurrentIssueFile;
     }
+
+    TileDefWatcher *tileDefWatcher = getTileDefWatcher();
+    tileDefWatcher->check();
 
     bool interiorFloor = false;
     MapInfo *mapInfo = MapManager::instance()->newFromMap(map);
@@ -504,7 +503,7 @@ void CheckBuildingsWindow::check(BuildingMap *bmap, Building *building, Map *map
                     if (tile == nullptr) {
                         continue;
                     }
-                    TileDefTileset *tdts = mTileDefFile.tileset(tile->tileset()->name());
+                    TileDefTileset *tdts = tileDefWatcher->tileset(tile->tileset()->name());
 #if 0
                     if (tile != 0 && tile->tileset()->name() == QLatin1String("lighting_indoor_01")) {
                         if (tile->id() == NORTH_SWITCH) {

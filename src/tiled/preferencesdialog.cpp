@@ -165,6 +165,11 @@ PreferencesDialog::PreferencesDialog(QWidget *parent) :
     connect(mUi->removePZW, &QAbstractButton::clicked, this, &PreferencesDialog::removePZW);
     connect(mUi->raisePZW, &QAbstractButton::clicked, this, &PreferencesDialog::raisePZW);
     connect(mUi->lowerPZW, &QAbstractButton::clicked, this, &PreferencesDialog::lowerPZW);
+    connect(mUi->tilePropertiesListWidget, &QListWidget::currentRowChanged, this, &PreferencesDialog::updateActions);
+    connect(mUi->addPZPropertiesFile, &QAbstractButton::clicked, this, &PreferencesDialog::addPropertiesFile);
+    connect(mUi->removePZPropertiesFile, &QAbstractButton::clicked, this, &PreferencesDialog::removePropertiesFile);
+    connect(mUi->raisePZPropertiesFile, &QAbstractButton::clicked, this, &PreferencesDialog::raisePropertiesFile);
+    connect(mUi->lowerPZPropertiesFile, &QAbstractButton::clicked, this, &PreferencesDialog::lowerPropertiesFile);
 #endif // ZOMBOID
 
     connect(mUi->objectTypesTable->selectionModel(),
@@ -354,7 +359,7 @@ void PreferencesDialog::browseWorlded()
 
 void PreferencesDialog::removePZW()
 {
-    mUi->listPZW->takeItem(mUi->listPZW->currentRow());
+    delete mUi->listPZW->takeItem(mUi->listPZW->currentRow());
 }
 
 void PreferencesDialog::raisePZW()
@@ -373,12 +378,46 @@ void PreferencesDialog::lowerPZW()
     mUi->listPZW->setCurrentRow(row + 1);
 }
 
+void PreferencesDialog::addPropertiesFile()
+{
+    QString f = QFileDialog::getOpenFileName(this, tr("Choose .tiles File"),
+                                             QString(),
+                                             tr("Binary property files (*.tiles);;Text property files (*.tiles.txt)"));
+    if (f.isEmpty())
+        return;
+    mUi->tilePropertiesListWidget->addItem(QDir::toNativeSeparators(f));
+}
+
+void PreferencesDialog::removePropertiesFile()
+{
+    delete mUi->tilePropertiesListWidget->takeItem(mUi->tilePropertiesListWidget->currentRow());
+}
+
+void PreferencesDialog::raisePropertiesFile()
+{
+    int row = mUi->tilePropertiesListWidget->currentRow();
+    mUi->tilePropertiesListWidget->insertItem(row - 1, mUi->tilePropertiesListWidget->takeItem(row));
+    mUi->tilePropertiesListWidget->setCurrentRow(row - 1);
+}
+
+void PreferencesDialog::lowerPropertiesFile()
+{
+    int row = mUi->tilePropertiesListWidget->currentRow();
+    mUi->tilePropertiesListWidget->insertItem(row + 1, mUi->tilePropertiesListWidget->takeItem(row));
+    mUi->tilePropertiesListWidget->setCurrentRow(row + 1);
+}
+
 void PreferencesDialog::updateActions()
 {
     int row = mUi->listPZW->currentRow();
     mUi->removePZW->setEnabled(row != -1);
     mUi->raisePZW->setEnabled(row > 0);
     mUi->lowerPZW->setEnabled(row >= 0 && row < mUi->listPZW->count());
+
+    row = mUi->tilePropertiesListWidget->currentRow();
+    mUi->removePZPropertiesFile->setEnabled(row != -1);
+    mUi->raisePZPropertiesFile->setEnabled(row > 0);
+    mUi->lowerPZPropertiesFile->setEnabled(row >= 0 && row < mUi->tilePropertiesListWidget->count());
 }
 #endif // ZOMBOID
 
@@ -424,11 +463,18 @@ void PreferencesDialog::fromPreferences()
     mUi->bgColor->setColor(prefs->backgroundColor());
     mUi->configDirectory->setText(QDir::toNativeSeparators(prefs->configPath()));
     mUi->thumbnailEdit->setText(QDir::toNativeSeparators(prefs->thumbnailsDirectory()));
+
     foreach (QString fileName, prefs->worldedFiles())
         mUi->listPZW->addItem(QDir::toNativeSeparators(fileName));
     if (mUi->listPZW->count())
         mUi->listPZW->setCurrentRow(0);
+
     mUi->showAdjacent->setChecked(prefs->showAdjacentMaps());
+
+    for (const QString &fileName : prefs->tilePropertiesFiles())
+        mUi->tilePropertiesListWidget->addItem(QDir::toNativeSeparators(fileName));
+    if (mUi->tilePropertiesListWidget->count())
+        mUi->tilePropertiesListWidget->setCurrentRow(0);
 #endif
 }
 
@@ -446,6 +492,12 @@ void PreferencesDialog::toPreferences()
     for (int i = 0; i < mUi->listPZW->count(); i++)
         fileNames += mUi->listPZW->item(i)->text();
     prefs->setWorldEdFiles(fileNames);
+
+    fileNames.clear();
+    for (int i = 0; i < mUi->tilePropertiesListWidget->count(); i++) {
+        fileNames += mUi->tilePropertiesListWidget->item(i)->text();
+    }
+    prefs->setTilePropertiesFiles(fileNames);
 #endif
 }
 

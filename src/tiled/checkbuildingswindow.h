@@ -159,7 +159,6 @@ private:
     Ui::CheckBuildingsWindow *ui;
     QList<IssueFile*> mFiles;
     IssueFile *mCurrentIssueFile;
-    Tiled::Internal::TileDefFile mTileDefFile;
 
     Tiled::Internal::FileSystemWatcher *mFileSystemWatcher;
     QList<QString> mWatchedFiles;

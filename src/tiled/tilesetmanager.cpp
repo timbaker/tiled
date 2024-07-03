@@ -50,11 +50,23 @@ TilesetManager::TilesetManager():
     const int TILE_WIDTH = 64;
     const int TILE_HEIGHT = 128;
 
+    mInvisibleTileset = new Tileset(QLatin1String("missing"), TILE_WIDTH, TILE_HEIGHT);
+    mInvisibleTileset->setTransparentColor(Qt::white);
+    mInvisibleTileset->setMissing(true);
+    QString fileName = QLatin1String(":/images/invisible-tile.png");
+    if (!mInvisibleTileset->loadFromImage(QImage(fileName), fileName)) {
+        QImage image(TILE_WIDTH, TILE_HEIGHT, QImage::Format_ARGB32);
+        image.fill(Qt::red);
+        mInvisibleTileset->loadFromImage(image, fileName);
+    }
+    mInvisibleTile = mInvisibleTileset->tileAt(0);
+    mTilesets.insert(mInvisibleTileset, 1);
+
     mMissingTileset = new Tileset(QLatin1String("missing"), TILE_WIDTH, TILE_HEIGHT);
     mMissingTileset->setTransparentColor(Qt::white);
     mMissingTileset->setMissing(true);
 //    QString fileName = QLatin1String(":/BuildingEditor/icons/missing-tile.png");
-    QString fileName = QLatin1String(":/images/missing-tile.png");
+    fileName = QLatin1String(":/images/missing-tile.png");
     if (!mMissingTileset->loadFromImage(QImage(fileName), fileName)) {
         QImage image(TILE_WIDTH, TILE_HEIGHT, QImage::Format_ARGB32);
         image.fill(Qt::red);
@@ -105,6 +117,7 @@ TilesetManager::TilesetManager():
 TilesetManager::~TilesetManager()
 {
 #ifdef ZOMBOID
+    removeReference(mInvisibleTileset);
     removeReference(mMissingTileset);
     removeReference(mNoBlendTileset);
     for (int i = 0; i < mImageReaderThreads.size(); i++) {

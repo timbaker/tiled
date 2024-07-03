@@ -1363,10 +1363,9 @@ void BuildingEditorWindow::exportNewBinary()
         return;
     }
 
-    QString tileDefFileName = TileMetaInfoMgr::instance()->tilesDirectory() + QStringLiteral("/newtiledefinitions.tiles");
     QSet<QString> northStairTiles;
     QSet<QString> westStairTiles;
-    getTopStaircaseTiles(tileDefFileName, northStairTiles, westStairTiles);
+    getTopStaircaseTiles(northStairTiles, westStairTiles);
 
     QString luaCode;
     for (const QString& fileName : fileNames) {
@@ -1918,19 +1917,19 @@ void BuildingEditorWindow::exportNewBinaryFile(ExportBasementsDialog *dialog, co
     qDeleteAll(attributesGrids);
 }
 
-void BuildingEditorWindow::getTopStaircaseTiles(const QString &tileDefFileName, QSet<QString> &northStairTiles, QSet<QString> &westStairTiles)
+void BuildingEditorWindow::getTopStaircaseTiles(QSet<QString> &northStairTiles, QSet<QString> &westStairTiles)
 {
-    Tiled::Internal::TileDefFile tileDefFile;
-    if (tileDefFile.read(tileDefFileName) == false) {
-        return;
-    }
-    for (TileDefTileset* tdts : tileDefFile.tilesets()) {
-        for (TileDefTile* tdt : tdts->mTiles) {
-            if (tdt->mProperties.contains(QStringLiteral("stairsTN"))) {
-                northStairTiles += BuildingTilesMgr::nameForTile(tdt->tileset()->mName, tdt->id());
-            }
-            else if (tdt->mProperties.contains(QStringLiteral("stairsTW"))) {
-                westStairTiles += BuildingTilesMgr::nameForTile(tdt->tileset()->mName, tdt->id());
+    TileDefWatcher *tileDefWatcher = getTileDefWatcher();
+    tileDefWatcher->check();
+    for (TileDefWatcherFile *watcherFile : tileDefWatcher->mFiles) {
+        for (TileDefTileset* tdts : watcherFile->mTileDefFile->tilesets()) {
+            for (TileDefTile* tdt : tdts->mTiles) {
+                if (tdt->mProperties.contains(QStringLiteral("stairsTN"))) {
+                    northStairTiles += BuildingTilesMgr::nameForTile(tdt->tileset()->mName, tdt->id());
+                }
+                else if (tdt->mProperties.contains(QStringLiteral("stairsTW"))) {
+                    westStairTiles += BuildingTilesMgr::nameForTile(tdt->tileset()->mName, tdt->id());
+                }
             }
         }
     }

@@ -700,6 +700,7 @@ void MapImageManager::mapLoaded(MapInfo *mapInfo)
     // FIXME: this shouldn't block the gui.
 #if 1
     QList<Tileset*> usedTilesets = mRenderMapComposite->usedTilesets();
+    usedTilesets.removeAll(TilesetManager::instance()->invisibleTileset());
     usedTilesets.removeAll(TilesetManager::instance()->missingTileset());
     TilesetManager::instance()->waitForTilesets(usedTilesets);
 #else

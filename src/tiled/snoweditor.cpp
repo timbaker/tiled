@@ -335,7 +335,8 @@ void SnowEditor::fileOpen(const QString &filePath)
 {
     PROGRESS progress(tr("Reading %1").arg(QFileInfo(filePath).fileName()));
     mTileDefFile = new TileDefFile();
-    if (!mTileDefFile->read(filePath)) {
+    TileDefFileReader reader;
+    if (!reader.read(filePath, *mTileDefFile)) {
         QMessageBox::warning(this, tr("Error"), mTileDefFile->errorString());
         delete mTileDefFile;
         mTileDefFile = nullptr;
@@ -450,7 +451,7 @@ void SnowEditor::fileOpen()
 
     QString fileName = QFileDialog::getOpenFileName(this, tr("Choose .tiles file"),
                                                     lastPath,
-                                                    QLatin1String("Tile properties files (*.tiles)"));
+                                                    QLatin1String("Binary property files (*.tiles);;Text property files (*.tiles.txt)"));
     if (fileName.isEmpty())
         return;
 

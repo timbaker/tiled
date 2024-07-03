@@ -346,26 +346,40 @@ private:
 } // namespace BuildingEditor
 
 namespace Tiled {
+class Tileset;
 namespace Internal {
 class FileSystemWatcher;
 class TileDefFile;
+class TileDefTileset;
+
+class TileDefWatcherFile
+{
+public:
+    TileDefWatcherFile(const QString &filePath);
+    void check(Tiled::Internal::FileSystemWatcher &watcher);
+
+    QString mFilePath;
+    Tiled::Internal::TileDefFile *mTileDefFile;
+    bool tileDefFileChecked;
+    QString watching;
+};
 
 class TileDefWatcher : public QObject
 {
-        Q_OBJECT
+    Q_OBJECT
 public:
     TileDefWatcher();
 
     void check();
+    Tiled::Internal::TileDefTileset *tileset(const QString &tilesetName);
 
 public slots:
+    void preferencesChanged(const QStringList &tilePropertiesFiles);
     void fileChanged(const QString &path);
 
 public:
     Tiled::Internal::FileSystemWatcher *mWatcher;
-    Tiled::Internal::TileDefFile *mTileDefFile;
-    bool tileDefFileChecked;
-    bool watching;
+    QMap<QString,TileDefWatcherFile*> mFiles;
 };
 
 }

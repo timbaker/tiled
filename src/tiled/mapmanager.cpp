@@ -815,6 +815,7 @@ void MapManager::buildingLoadedByThread(Building *building, MapInfo *mapInfo)
     delete building;
 
     QSet<Tileset*> usedTilesets = map->usedTilesets();
+    usedTilesets.remove(TilesetManager::instance()->invisibleTileset());
     usedTilesets.remove(TilesetManager::instance()->missingTileset());
 
     TileMetaInfoMgr::instance()->loadTilesets({ usedTilesets.begin(), usedTilesets.end() });
