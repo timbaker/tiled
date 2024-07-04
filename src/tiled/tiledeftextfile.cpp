@@ -170,6 +170,7 @@ QList<TileDefTileset *> TileDefTextFile::takeTilesets()
 {
     QList<TileDefTileset*> tilesets = mTilesets;
     mTilesets.clear();
+    mTilesetByName.clear();
     return tilesets;
 }
 

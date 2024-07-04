@@ -208,6 +208,12 @@ void TileDefCompare::saveMerged()
         return;
     };
     mMergedFile.setFileName(fileName);
+
+    TileDefTextFile textFile;
+    if (!textFile.write(fileName + QLatin1String(".txt"), mMergedFile.tilesets())) {
+        QMessageBox::warning(this, tr("Error writing .tiles.txt file"), textFile.errorString());
+        return;
+    };
 }
 
 void TileDefCompare::currentRowChanged(int row)

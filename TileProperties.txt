@@ -899,6 +899,14 @@ property
 property
 {
     Type = Boolean
+    Name = Invisible
+    ShortName = invisible
+    Default = false
+    ReverseLogic = false
+}
+property
+{
+    Type = Boolean
     Name = trans
     ShortName =
     Default = false

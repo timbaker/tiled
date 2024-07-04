@@ -19,6 +19,7 @@
 #include "ui_snoweditor.h"
 
 #include "tiledeffile.h"
+#include "tiledeftextfile.h"
 #include "tilemetainfodialog.h"
 #include "tilemetainfomgr.h"
 #include "tilesetmanager.h"
@@ -354,6 +355,12 @@ bool SnowEditor::fileSave(const QString &filePath)
         return false;
     }
     mTileDefFile->setFileName(filePath);
+
+    TileDefTextFile textFile;
+    if (!textFile.write(filePath + QLatin1String(".txt"), mTileDefFile->tilesets())) {
+        QMessageBox::warning(this, tr("Error"), textFile.errorString());
+        return false;
+    }
     return true;
 }
 

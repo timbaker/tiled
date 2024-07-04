@@ -856,6 +856,8 @@ public:
     const QList<TileDefTileset*> &tilesets() const
     { return mTilesets; }
 
+    QList<TileDefTileset*> takeTilesets();
+
     QStringList tilesetNames() const
     { return mTilesetByName.keys(); }
 

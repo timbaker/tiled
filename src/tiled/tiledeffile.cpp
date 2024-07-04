@@ -208,6 +208,14 @@ TileDefTileset *TileDefFile::tileset(const QString &name) const
     return 0;
 }
 
+QList<TileDefTileset *> TileDefFile::takeTilesets()
+{
+    QList<TileDefTileset*> tilesets = mTilesets;
+    mTilesets.clear();
+    mTilesetByName.clear();
+    return tilesets;
+}
+
 /////
 
 TileDefProperties::TileDefProperties()
@@ -787,6 +795,8 @@ TilePropertyMgr::~TilePropertyMgr()
 
 bool TileDefFileReader::read(const QString &fileName, Tiled::Internal::TileDefFile &defFile)
 {
+    qDeleteAll(defFile.takeTilesets());
+
     if (fileName.endsWith(QLatin1String(".txt"))) {
         TileDefTextFile textFile;
         if (textFile.read(fileName) == false) {

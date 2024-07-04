@@ -1239,7 +1239,7 @@ bool TileDefDialog::fileSave(const QString &fileName)
     TileDefTextFile txtFile;
     if (!txtFile.write(fileName + QLatin1String(".txt"), mTileDefFile->tilesets())) {
         QMessageBox::warning(this, tr("Error writing .tiles file"),
-                             mTileDefFile->errorString());
+                             txtFile.errorString());
     }
 
 #ifdef TDEF_TILES_DIR
