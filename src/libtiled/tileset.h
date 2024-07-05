@@ -54,7 +54,12 @@ public:
     ~TilesetImageCache();
     Tileset *addTileset(Tileset *ts);
     Tileset *findMatch(Tileset *ts, const QString &imageSource, const QString &imageSource2x);
+    void invalidateLookupTables();
+    void checkLookupTables();
+
     QList<Tileset*> mTilesets;
+    QMultiMap<QString,Tileset*> mTilesetByImageSource;
+    QMultiMap<QString,Tileset*> mTilesetByImageSource2x;
 };
 #endif
 

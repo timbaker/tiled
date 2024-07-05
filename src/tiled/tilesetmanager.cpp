@@ -575,6 +575,7 @@ void TilesetManager::copyPZProperties(Tileset *src, Tileset *dst)
 void TilesetManager::changeTilesetSource(Tileset *tileset, const QString &source,
                                          bool missing)
 {
+    mTilesetImageCache->invalidateLookupTables();
     tileset->setImageSource(source);
     tileset->setMissing(missing);
     if (!tileset->imageSource().isEmpty() && !tileset->isMissing()) {

@@ -277,6 +277,7 @@ Tileset *TilesetImageCache::addTileset(Tileset *ts)
     }
 
     mTilesets.append(cached);
+    invalidateLookupTables();
 
 //    qDebug() << "added tileset image " << ts->imageSource() << " to cache";
 
@@ -285,7 +286,13 @@ Tileset *TilesetImageCache::addTileset(Tileset *ts)
 
 Tileset *TilesetImageCache::findMatch(Tileset *ts, const QString &imageSource, const QString &imageSource2x)
 {
-    foreach (Tileset *candidate, mTilesets) {
+    checkLookupTables();
+    QList<Tileset*> candidates;
+    if (imageSource.isEmpty() == false)
+        candidates += mTilesetByImageSource.values(imageSource);
+    if (imageSource2x.isEmpty() == false)
+        candidates += mTilesetByImageSource2x.values(imageSource2x);
+    for (Tileset *candidate : candidates) {
         if (((candidate->imageSource() == imageSource) || (!imageSource2x.isEmpty() && (candidate->imageSource2x() == imageSource2x)))
                 && candidate->tileWidth() == ts->tileWidth()
                 && candidate->tileHeight() == ts->tileHeight()
@@ -297,6 +304,24 @@ Tileset *TilesetImageCache::findMatch(Tileset *ts, const QString &imageSource, c
         }
     }
     return NULL;
+}
+
+void TilesetImageCache::invalidateLookupTables()
+{
+    mTilesetByImageSource.clear();
+    mTilesetByImageSource2x.clear();
+}
+
+void TilesetImageCache::checkLookupTables()
+{
+    if (mTilesetByImageSource.size() > 0)
+        return;
+    for (Tileset *cached : mTilesets) {
+        if (cached->imageSource().isEmpty() == false)
+            mTilesetByImageSource.insert(cached->imageSource(), cached);
+        if (cached->imageSource2x().isEmpty() == false)
+            mTilesetByImageSource2x.insert(cached->imageSource2x(), cached);
+    }
 }
 
 QSize Tiled::getZomboidTilesetSize1x(const QString &tilesetName)
