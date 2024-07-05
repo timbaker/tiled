@@ -305,6 +305,14 @@ property
 }
 property
 {
+    Type = Boolean
+    Name = IsGenericCraftingSurface
+    ShortName =
+    Default = false
+    ReverseLogic = false
+}
+property
+{
     Type = Enum
     Name = signal
     ShortName =

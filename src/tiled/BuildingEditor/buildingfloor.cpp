@@ -543,7 +543,7 @@ void BuildingFloor::LayoutToSquares()
     for (int x = 0; x < width(); x++) {
         for (int y = 0; y < height(); y++) {
             Room *room = mRoomAtPos[x][y];
-            if (room != nullptr && RoofHiding::isEmptyOutside(room->Name))
+            if ((room != nullptr) && RoofHiding::isEmptyOutside(room->internalName))
                 room = nullptr;
             mIndexAtPos[x][y] = room ? mBuilding->indexOf(room) : -1;
             squares[x][y].mExterior = room == 0;
@@ -2423,7 +2423,7 @@ TileDefWatcher::TileDefWatcher() :
     preferencesChanged(Tiled::Internal::Preferences::instance()->tilePropertiesFiles());
 #endif
 
-    mChangedFilesTimer.setInterval(1000);
+    mChangedFilesTimer.setInterval(3000);
     mChangedFilesTimer.setSingleShot(true);
     connect(&mChangedFilesTimer, &QTimer::timeout, this, &TileDefWatcher::tilePropertiesChanged);
 }

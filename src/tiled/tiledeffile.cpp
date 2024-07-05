@@ -357,7 +357,7 @@ void TileDefTileset::resize(int columns, int rows)
 
     mColumns = columns;
     mRows = rows;
-    mTiles = QVector<TileDefTile*>(mColumns * mRows);
+    mTiles.resize(mColumns * mRows);
     for (int y = 0; y < qMin(mRows, oldRows); y++) {
         for (int x = 0; x < qMin(mColumns, oldColumns); x++) {
             mTiles[x + y * mColumns] = oldTiles[x + y * oldColumns];
