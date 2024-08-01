@@ -24,10 +24,12 @@
 #include "buildingwriter.h"
 #include "ui_buildingeditorwindow.h"
 #include "buildingpreferences.h"
+#include "simplefile.h"
 
 #include "mainwindow.h"
 #include "mapmanager.h"
 #include "mapimagemanager.h"
+#include "preferences.h"
 
 #include <QCompleter>
 #include <QDebug>
@@ -295,19 +297,7 @@ WelcomeMode::WelcomeMode(QObject *parent) :
 
     // TODO: set valid RoomTone values from a .txt file
     mRoomToneStrings += QStringLiteral("<NONE>");
-    mRoomToneStrings += QStringLiteral("Generic");
-    mRoomToneStrings += QStringLiteral("Barn");
-    mRoomToneStrings += QStringLiteral("Mall");
-    mRoomToneStrings += QStringLiteral("Warehouse");
-    mRoomToneStrings += QStringLiteral("Prison");
-    mRoomToneStrings += QStringLiteral("Church");
-    mRoomToneStrings += QStringLiteral("Office");
-    mRoomToneStrings += QStringLiteral("Factory");
-    mRoomToneStrings += QStringLiteral("MovieTheater");
-    mRoomToneStrings += QStringLiteral("Basement");
-    mRoomToneStrings += QStringLiteral("Bunker");
-    mRoomToneStrings += QStringLiteral("House");
-    mRoomToneStrings += QStringLiteral("Commercial");
+    readRoomToneTxt();
     ui->roomToneCombo->lineEdit()->setPlaceholderText(QStringLiteral("<NONE>"));
     ui->roomToneCombo->setDuplicatesEnabled(false);
     ui->roomToneCombo->addItems(mRoomToneStrings);
@@ -454,6 +444,36 @@ void WelcomeMode::synchRoomToneCombo()
         }
     }
     mSynchRoomTone = false;
+}
+
+bool WelcomeMode::readRoomToneTxt()
+{
+    QString mError;
+
+    QString txtPath = Tiled::Internal::Preferences::instance()->appConfigPath(QLatin1String("RoomTone.txt"));
+    QFileInfo info(txtPath);
+    if (!info.exists()) {
+        mError = tr("The RoomTone.txt file doesn't exist.");
+        return false;
+    }
+
+    QString path = info.absoluteFilePath();
+    SimpleFile simple;
+    if (!simple.read(path)) {
+        mError = tr("Error reading %1.").arg(path);
+        return false;
+    }
+
+    for (const SimpleFileKeyValue &kv : simple.values) {
+        QString str = kv.name.trimmed();
+        if (str.compare(QLatin1String("version"), Qt::CaseInsensitive) == 0)
+            continue;
+        if (str.isEmpty())
+            continue;
+        mRoomToneStrings += str;
+    }
+
+    return true;
 }
 
 void WelcomeMode::onMapImageChanged(MapImage *mapImage)

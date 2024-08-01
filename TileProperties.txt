@@ -305,11 +305,17 @@ property
 }
 property
 {
-    Type = Boolean
-    Name = IsGenericCraftingSurface
+    Type = Enum
+    Name = GenericCraftingSurface
     ShortName =
-    Default = false
-    ReverseLogic = false
+    Enums
+    {
+        None = 
+        True = true
+        False = false
+    }
+    Default = None
+    ValueAsPropertyName = false
 }
 property
 {

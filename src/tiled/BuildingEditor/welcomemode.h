@@ -101,6 +101,7 @@ private:
     QString currentFilePath();
     void synchLegendCombo();
     void synchRoomToneCombo();
+    bool readRoomToneTxt();
 
 private:
     Ui::WelcomeMode *ui;
