@@ -358,10 +358,14 @@ void TileDefTileset::resize(int columns, int rows)
     mColumns = columns;
     mRows = rows;
     mTiles.resize(mColumns * mRows);
+    mTiles.fill(nullptr);
     for (int y = 0; y < qMin(mRows, oldRows); y++) {
         for (int x = 0; x < qMin(mColumns, oldColumns); x++) {
-            mTiles[x + y * mColumns] = oldTiles[x + y * oldColumns];
-            oldTiles[x + y * oldColumns] = 0;
+            if (TileDefTile *tile = oldTiles[x + y * oldColumns]) {
+                tile->mID = x + y * mColumns;
+                mTiles[x + y * mColumns] = tile;
+                oldTiles[x + y * oldColumns] = nullptr;
+            }
         }
     }
     for (int i = 0; i < mTiles.size(); i++) {
