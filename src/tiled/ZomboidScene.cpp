@@ -182,6 +182,7 @@ void ZomboidScene::setMapDocument(MapDocument *mapDoc)
                 this, &ZomboidScene::highlightRoomUnderPointerChanged);
         connect(Preferences::instance(), &Preferences::showLotFloorsOnlyChanged, this, &ZomboidScene::showLotFloorsOnlyChanged);
         connect(Preferences::instance(), &Preferences::showInvisibleTilesChanged, this, &ZomboidScene::showInvisibleTilesChanged);
+        connect(Preferences::instance(), &Preferences::showCellBorderChanged, this, &ZomboidScene::showCellBorderChanged);
     }
 }
 
@@ -768,6 +769,11 @@ void ZomboidScene::showInvisibleTilesChanged(bool show)
     update();
 }
 
+void ZomboidScene::showCellBorderChanged(bool show)
+{
+    mMapBordersItem->setVisible(show && (mapDocument()->map()->size() == QSize(300, 300)));
+}
+
 void ZomboidScene::handlePendingUpdates()
 {
     MapComposite *mapComposite = mMapDocument->mapComposite();
@@ -809,7 +815,7 @@ void ZomboidScene::handlePendingUpdates()
         polygon << QPointF(mapDocument()->renderer()->tileToPixelCoords(rect.bottomRight()));
         polygon << QPointF(mapDocument()->renderer()->tileToPixelCoords(rect.bottomLeft()));
         mMapBordersItem->setPolygon(polygon);
-        mMapBordersItem->setVisible(mapDocument()->map()->size() == QSize(300, 300));
+        mMapBordersItem->setVisible(Preferences::instance()->showCellBorder() && (mapDocument()->map()->size() == QSize(300, 300)));
 #if 0
         rect = QRect(0, 0,
                      mapDocument()->map()->width(),

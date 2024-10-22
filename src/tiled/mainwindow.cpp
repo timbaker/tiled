@@ -304,6 +304,7 @@ MainWindow::MainWindow(QWidget *parent, Qt::WindowFlags flags)
     undoAction->setShortcuts(QKeySequence::Undo);
     redoAction->setShortcuts(QKeySequence::Redo);
 
+    mUi->actionShowCellBorder->setChecked(preferences->showCellBorder());
     mUi->actionShowGrid->setChecked(preferences->showGrid());
     mUi->actionSnapToGrid->setChecked(preferences->snapToGrid());
     mUi->actionHighlightCurrentLayer->setChecked(preferences->highlightCurrentLayer());
@@ -420,6 +421,8 @@ MainWindow::MainWindow(QWidget *parent, Qt::WindowFlags flags)
             preferences, &Preferences::setShowTileSelection);
     connect(mUi->actionShowInvisibleTiles, &QAction::toggled,
             preferences, &Preferences::setShowInvisibleTiles);
+    connect(mUi->actionShowCellBorder, &QAction::toggled,
+            preferences, &Preferences::setShowCellBorder);
 #endif
     connect(mUi->actionZoomIn, &QAction::triggered, this, &MainWindow::zoomIn);
     connect(mUi->actionZoomOut, &QAction::triggered, this, &MainWindow::zoomOut);

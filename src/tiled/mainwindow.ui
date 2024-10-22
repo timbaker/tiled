@@ -124,6 +124,7 @@
     <property name="title">
      <string>&amp;View</string>
     </property>
+    <addaction name="actionShowCellBorder"/>
     <addaction name="actionShowGrid"/>
     <addaction name="actionSnapToGrid"/>
     <addaction name="actionHighlightCurrentLayer"/>
@@ -704,6 +705,14 @@
    </property>
    <property name="text">
     <string>Show Invisible Tiles</string>
+   </property>
+  </action>
+  <action name="actionShowCellBorder">
+   <property name="checkable">
+    <bool>true</bool>
+   </property>
+   <property name="text">
+    <string>Show Cell Border</string>
    </property>
   </action>
  </widget>

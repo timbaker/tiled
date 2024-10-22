@@ -96,6 +96,7 @@ Preferences::Preferences()
     mShowAdjacentMaps = mSettings->value(QLatin1String("ShowAdjacentMaps"), true).toBool();
     mHighlightRoomUnderPointer = mSettings->value(QLatin1String("HighlightRoomUnderPointer"), false).toBool();
     mTilesetBackgroundColor = QColor(mSettings->value(QLatin1String("TilesetBackgroundColor"), QColor(Qt::white).name()).toString());
+    mShowCellBorder = mSettings->value(QLatin1String("ShowCelLBorder"), true).toBool();
 #endif
     mSettings->endGroup();
 #ifdef ZOMBOID
@@ -674,6 +675,15 @@ void Preferences::setThumbnailsDirectory(const QString &path)
     mThumbnailsDirectory = path;
     mSettings->setValue(QLatin1String("Thumbnails/Directory"), mThumbnailsDirectory);
     emit thumbnailsDirectoryChanged(mThumbnailsDirectory);
+}
+
+void Preferences::setShowCellBorder(bool show)
+{
+    if (mShowCellBorder == show)
+        return;
+    mShowCellBorder = show;
+    mSettings->setValue(QLatin1String("Interface/ShowCellBorder"), mShowCellBorder);
+    emit showCellBorderChanged(mShowCellBorder);
 }
 
 #endif // ZOMBOID

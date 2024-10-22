@@ -149,6 +149,9 @@ public:
     QString thumbnailsDirectory() const
     { return mThumbnailsDirectory; }
 
+    bool showCellBorder() const
+    { return mShowCellBorder; }
+
 #endif // ZOMBOID
 
     /**
@@ -180,6 +183,7 @@ public slots:
     void setEraserBrushSize(int newSize);
     void setTilesetBackgroundColor(const QColor& color);
     void setThumbnailsDirectory(const QString &path);
+    void setShowCellBorder(bool show);
 #endif
 
 signals:
@@ -213,6 +217,7 @@ signals:
     void eraserBrushSizeChanged(int newSize);
     void tilesetBackgroundColorChanged(const QColor &color);
     void thumbnailsDirectoryChanged(const QString &dir);
+    void showCellBorderChanged(bool show);
 #endif
 
 private:
@@ -257,6 +262,7 @@ private:
     QString mThumbnailsDirectory;
     bool mShowTileSelection;
     bool mShowInvisibleTiles;
+    bool mShowCellBorder;
 #endif
 
     static Preferences *mInstance;

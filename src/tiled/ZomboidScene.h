@@ -118,6 +118,8 @@ private slots:
     void showLotFloorsOnlyChanged(bool show);
     void showInvisibleTilesChanged(bool show);
 
+    void showCellBorderChanged(bool show);
+
     void handlePendingUpdates();
 
 public:
