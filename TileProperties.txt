@@ -74,6 +74,14 @@ property
 }
 property
 {
+    Type = Boolean
+    Name = CanAttachAnimal
+    ShortName =
+    Default = false
+    ReverseLogic = false
+}
+property
+{
     Type = String
     Name = CustomName
     ShortName =
@@ -762,6 +770,22 @@ property
 }
 property
 {
+    Type = Boolean
+    Name = Double-Doorframe Left
+    ShortName = DoubleDoor1
+    Default = false
+    ReverseLogic = false
+}
+property
+{
+    Type = Boolean
+    Name = Double-Doorframe Right
+    ShortName = DoubleDoor2
+    Default = false
+    ReverseLogic = false
+}
+property
+{
     Type = Integer
     Name = DoubleDoor
     ShortName =
@@ -1080,6 +1104,30 @@ property
     Default = None
     ValueAsPropertyName = true
 }
+property
+{
+    Name = FasciaEdge
+    Type = Enum
+    ShortName =
+    Enums
+    {
+        None =
+        North =
+        East =
+        South =
+        West =
+        NorthAndEast =
+        SouthAndEast =
+        SouthAndWest =
+        NorthAndWest =
+        NorthEastCorner =
+        SouthEastCorner =
+        SouthWestCorner =
+        NorthWestCorner =
+    }
+    Default = None
+    ValueAsPropertyName = false
+}
 separator
 {
 }
@@ -1174,6 +1222,25 @@ property
     }
     Default = None
     ValueAsPropertyName = true
+}
+property
+{
+    Type = Enum
+    Name = CutawayHint
+    ShortName =
+    Enums
+    {
+        None =
+        Double Door Left = DoubleDoorLeft
+        Double Door Right = DoubleDoorRight
+        Garage Door Left = GarageDoorLeft
+        Garage Door Middle = GarageDoorMiddle
+        Garage Door Right = GarageDoorRight
+        Double Window Left = DoubleWindowLeft
+        Double Window Right = DoubleWindowRight
+    }
+    Default = None
+    ValueAsPropertyName = false
 }
 property
 {
