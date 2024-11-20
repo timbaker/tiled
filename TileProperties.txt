@@ -1780,9 +1780,11 @@ property
     Enums
     {
         None =
+        Farm Gate = FarmGate
         Garage Door = GarageDoor
         Metal Door = MetalDoor
         Metal Gate = MetalGate
+        Metal Pole Gate = MetalPoleGate
         Prison Metal Door = PrisonMetalDoor
         Sliding Glass Door = SlidingGlassDoor
         Small Wood Gate = WoodGateSmall
@@ -1856,6 +1858,31 @@ property
         Sand = Sand
         Ceramic = Ceramic
         Metal = Metal
+    }
+    Default = None
+    ValueAsPropertyName = false
+}
+
+property
+{
+    Type = Enum
+    Name = MaterialType
+    ShortName = 
+    Enums
+    {
+        None =
+        Concrete = Concrete
+        Plaster = Plaster
+        Stone = Stone
+        Woodlog = Woodlog
+        Woodplank = Woodplank
+        Brick = Brick
+        Metal = Metal
+        Glass = Glass
+        Cinderblock = Cinderblock
+        Plastic = Plastic
+        Ceramic = Ceramic
+        Securiglass = Securiglass
     }
     Default = None
     ValueAsPropertyName = false
