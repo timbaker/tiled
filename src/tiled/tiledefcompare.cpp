@@ -67,10 +67,10 @@ TileDefCompare::~TileDefCompare()
 void TileDefCompare::browse1()
 {
     QString f = QFileDialog::getOpenFileName(this, tr("Choose .tiles File"),
-                                             ui->packEdit1->text(),
+                                             ui->packEdit1->currentText(),
                                              tr("Binary property files (*.tiles);;Text property files (*.tiles.txt)"));
     if (!f.isEmpty()) {
-        ui->packEdit1->setText(QDir::toNativeSeparators(f));
+        addRecentFile1(QDir::toNativeSeparators(f));
         writeSettings();
     }
 }
@@ -78,36 +78,37 @@ void TileDefCompare::browse1()
 void TileDefCompare::browse2()
 {
     QString f = QFileDialog::getOpenFileName(this, tr("Choose .tiles File"),
-                                             ui->packEdit2->text(),
+                                             ui->packEdit2->currentText(),
                                              tr("Binary property files (*.tiles);;Text property files (*.tiles.txt)"));
     if (!f.isEmpty()) {
-        ui->packEdit2->setText(QDir::toNativeSeparators(f));
+        addRecentFile2(QDir::toNativeSeparators(f));
         writeSettings();
     }
 }
 
 void TileDefCompare::swapPaths()
 {
-    QString temp = ui->packEdit1->text();
-    ui->packEdit1->setText(ui->packEdit2->text());
-    ui->packEdit2->setText(temp);
+    QString path1 = ui->packEdit1->currentText();
+    QString path2 = ui->packEdit2->currentText();
+    addRecentFile1(path2);
+    addRecentFile2(path1);
 }
 
 void TileDefCompare::compare()
 {
     PROGRESS progress(tr("Reading file 1"), this);
     TileDefFileReader reader;
-    if (!reader.read(ui->packEdit1->text(), mTileDefFile1)) {
+    if (!reader.read(ui->packEdit1->currentText(), mTileDefFile1)) {
         QMessageBox::warning(this, tr("Error reading .tiles file"), mTileDefFile1.errorString());
         return;
     }
 
     progress.update(tr("Reading file 2"));
-    if (!reader.read(ui->packEdit2->text(), mTileDefFile2)) {
+    if (!reader.read(ui->packEdit2->currentText(), mTileDefFile2)) {
         QMessageBox::warning(this, tr("Error reading .tiles file"), mTileDefFile2.errorString());
         return;
     }
-    if (!reader.read(ui->packEdit2->text(), mMergedFile)) {
+    if (!reader.read(ui->packEdit2->currentText(), mMergedFile)) {
         QMessageBox::warning(this, tr("Error reading .tiles file"), mMergedFile.errorString());
         return;
     }
@@ -248,9 +249,11 @@ void TileDefCompare::readSettings()
     if (!geom.isEmpty())
         restoreGeometry(geom);
     QString file1 = settings.value(QLatin1String("file1")).toString();
-    ui->packEdit1->setText(file1);
+    addRecentFile1(file1);
+    ui->packEdit1->setCurrentIndex(0);
     QString file2 = settings.value(QLatin1String("file2")).toString();
-    ui->packEdit2->setText(file2);
+    addRecentFile2(file2);
+    ui->packEdit2->setCurrentIndex(0);
     settings.endGroup();
 }
 
@@ -259,8 +262,8 @@ void TileDefCompare::writeSettings()
     QSettings settings;
     settings.beginGroup(QLatin1String("TileDefCompare"));
     settings.setValue(QLatin1String("geometry"), saveGeometry());
-    settings.setValue(QLatin1String("file1"), ui->packEdit1->text());
-    settings.setValue(QLatin1String("file2"), ui->packEdit2->text());
+    settings.setValue(QLatin1String("file1"), ui->packEdit1->currentText());
+    settings.setValue(QLatin1String("file2"), ui->packEdit2->currentText());
     settings.endGroup();
 }
 
@@ -283,5 +286,77 @@ QImage TileDefCompare::getTileImage(TileDefTile *tdt)
         return ts->tileAt(tdt->id())->image();
     }
     return TilesetManager::instance()->missingTile()->image();
+}
+
+void TileDefCompare::addRecentFile1(const QString &fileName)
+{
+    // Remember the file by its canonical file path
+    const QString canonicalFilePath = QFileInfo(fileName).canonicalFilePath();
+    if (canonicalFilePath.isEmpty())
+        return;
+    QStringList files = recentFiles1();
+    files.removeAll(canonicalFilePath);
+    files.prepend(canonicalFilePath);
+    while (files.size() > MaxRecentFiles) {
+        files.removeLast();
+    }
+    QSettings settings;
+    settings.beginGroup(QLatin1String("TileDefCompare"));
+    settings.setValue(QLatin1String("RecentFiles1"), files);
+    settings.endGroup();
+    setRecentFilesCombo1();
+}
+
+void TileDefCompare::addRecentFile2(const QString &fileName)
+{
+    // Remember the file by its canonical file path
+    const QString canonicalFilePath = QFileInfo(fileName).canonicalFilePath();
+    if (canonicalFilePath.isEmpty())
+        return;
+    QStringList files = recentFiles2();
+    files.removeAll(canonicalFilePath);
+    files.prepend(canonicalFilePath);
+    while (files.size() > MaxRecentFiles) {
+        files.removeLast();
+    }
+    QSettings settings;
+    settings.beginGroup(QLatin1String("TileDefCompare"));
+    settings.setValue(QLatin1String("RecentFiles2"), files);
+    settings.endGroup();
+    setRecentFilesCombo2();
+}
+
+QStringList TileDefCompare::recentFiles1() const
+{
+    QSettings settings;
+    settings.beginGroup(QLatin1String("TileDefCompare"));
+    QStringList paths = settings.value(QLatin1String("RecentFiles1")).toStringList();
+    settings.endGroup();
+    return paths;
+}
+
+QStringList TileDefCompare::recentFiles2() const
+{
+    QSettings settings;
+    settings.beginGroup(QLatin1String("TileDefCompare"));
+    QStringList paths = settings.value(QLatin1String("RecentFiles2")).toStringList();
+    settings.endGroup();
+    return paths;
+}
+
+void TileDefCompare::setRecentFilesCombo1()
+{
+    ui->packEdit1->clear();
+    ui->packEdit1->insertItems(0, recentFiles1());
+    ui->packEdit1->setEnabled(ui->packEdit1->count() > 0);
+    ui->packEdit1->setCurrentIndex(0);
+}
+
+void TileDefCompare::setRecentFilesCombo2()
+{
+    ui->packEdit2->clear();
+    ui->packEdit2->insertItems(0, recentFiles2());
+    ui->packEdit2->setEnabled(ui->packEdit2->count() > 0);
+    ui->packEdit2->setCurrentIndex(0);
 }
 

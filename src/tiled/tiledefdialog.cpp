@@ -353,6 +353,10 @@ TileDefDialog::TileDefDialog(QWidget *parent) :
     ui->propertyFilter->setEnabled(false);
     connect(ui->propertyFilter, &QLineEdit::textEdited, this, &TileDefDialog::propertyFilterEdited);
 
+    ui->valueFilter->setClearButtonEnabled(true);
+    ui->valueFilter->setEnabled(false);
+    connect(ui->valueFilter, &QLineEdit::textEdited, this, &TileDefDialog::valueFilterEdited);
+
     ui->splitter->setStretchFactor(0, 1);
 
     mZoomable->setScale(0.5);
@@ -379,6 +383,7 @@ TileDefDialog::TileDefDialog(QWidget *parent) :
 
     connect(ui->actionNew, &QAction::triggered, this, &TileDefDialog::fileNew);
     connect(ui->actionOpen, &QAction::triggered, this, qOverload<>(&TileDefDialog::fileOpen));
+    connect(ui->actionClearRecentFiles, &QAction::triggered, this, &TileDefDialog::clearRecentFiles);
     connect(ui->actionSave, &QAction::triggered, this, qOverload<>(&TileDefDialog::fileSave));
     connect(ui->actionSaveAs, &QAction::triggered, this, &TileDefDialog::fileSaveAs);
     connect(ui->actionAddTileset, &QAction::triggered, this, &TileDefDialog::addTileset);
@@ -395,6 +400,17 @@ TileDefDialog::TileDefDialog(QWidget *parent) :
             this, &TileDefDialog::tilesetChanged);
 
     connect(Preferences::instance(), &Preferences::tilesetBackgroundColorChanged, this, &TileDefDialog::tilesetBackgroundColorChanged);
+
+    // Add recent file actions to the recent files menu
+    for (int i = 0; i < MaxRecentFiles; ++i)
+    {
+         mRecentFiles[i] = new QAction(this);
+         ui->menuRecentFiles->insertAction(ui->actionClearRecentFiles, mRecentFiles[i]);
+         mRecentFiles[i]->setVisible(false);
+         connect(mRecentFiles[i], &QAction::triggered, this, &TileDefDialog::openRecentFile);
+    }
+    ui->menuRecentFiles->insertSeparator(ui->actionClearRecentFiles);
+    setRecentFilesMenu();
 
     foreach (QObject *o, ui->propertySheet->children())
         if (o->isWidgetType())
@@ -668,6 +684,7 @@ void TileDefDialog::fileOpen()
         return;
 
     settings.setValue(key, QFileInfo(fileName).absolutePath());
+    addRecentFile(fileName);
 
     clearDocument();
 
@@ -682,6 +699,26 @@ void TileDefDialog::fileOpen()
     updateUI();
 
     checkProperties();
+}
+
+void TileDefDialog::openRecentFile()
+{
+    if (!confirmSave())
+        return;
+    QAction *action = qobject_cast<QAction *>(sender());
+    if (action) {
+        QString fileName = action->data().toString();
+        addRecentFile(fileName); // reorder menu entries
+        clearDocument();
+        fileOpen(fileName);
+        if (mTileDefFile == nullptr) {
+            return;
+        }
+        initStringComboBoxValues();
+        updateTilesetListLater();
+        updateUI();
+        checkProperties();
+    }
 }
 
 bool TileDefDialog::fileSave()
@@ -1019,29 +1056,13 @@ void TileDefDialog::tilesetFilterEdited(const QString &text)
 void TileDefDialog::propertyFilterEdited(const QString &text)
 {
     selectCurrentVisibleTileset();
+    applyPropertyFilters();
+}
 
-    const QString trimmed = text.trimmed();
-
-    for (int row = 0; row < ui->tilesets->count(); row++) {
-        QListWidgetItem* item = ui->tilesets->item(row);
-        bool bVisible = trimmed.isEmpty();
-        if (bVisible == false) {
-            QString tilesetName = item->data(Qt::UserRole).toString();
-            if (TileDefTileset *tdts = mTileDefFile->tileset(tilesetName)) {
-                for (TileDefTile *tdt : qAsConst(tdts->mTiles)) {
-                    for (auto it = tdt->mProperties.cbegin(); it != tdt->mProperties.cend(); it++) {
-                        if (it.key().contains(trimmed, Qt::CaseInsensitive) || it.value().contains(trimmed, Qt::CaseInsensitive)) {
-                            bVisible = true;
-                            break;
-                        }
-                    }
-                    if (bVisible)
-                        break;
-                }
-            }
-        }
-        item->setHidden(bVisible == false);
-    }
+void TileDefDialog::valueFilterEdited(const QString &text)
+{
+    selectCurrentVisibleTileset();
+    applyPropertyFilters();
 }
 
 void TileDefDialog::selectCurrentVisibleTileset()
@@ -1077,6 +1098,34 @@ void TileDefDialog::selectCurrentVisibleTileset()
     current = ui->tilesets->currentItem();
     if (current != nullptr)
         ui->tilesets->scrollToItem(current);
+}
+
+void TileDefDialog::applyPropertyFilters()
+{
+    const QString key = ui->propertyFilter->text().trimmed();
+    const QString value = ui->valueFilter->text().trimmed();
+
+    for (int row = 0; row < ui->tilesets->count(); row++) {
+        QListWidgetItem* item = ui->tilesets->item(row);
+        bool bVisible = key.isEmpty() && value.isEmpty();
+        if (bVisible == false) {
+            QString tilesetName = item->data(Qt::UserRole).toString();
+            if (TileDefTileset *tdts = mTileDefFile->tileset(tilesetName)) {
+                for (TileDefTile *tdt : qAsConst(tdts->mTiles)) {
+                    for (auto it = tdt->mProperties.cbegin(); it != tdt->mProperties.cend(); it++) {
+                        if ((key.isEmpty() || it.key().contains(key, Qt::CaseInsensitive)) &&
+                                (value.isEmpty() || it.value().contains(value, Qt::CaseInsensitive))) {
+                            bVisible = true;
+                            break;
+                        }
+                    }
+                    if (bVisible)
+                        break;
+                }
+            }
+        }
+        item->setHidden(bVisible == false);
+    }
 }
 
 void TileDefDialog::tilesetBackgroundColorChanged(const QColor &color)
@@ -1273,6 +1322,7 @@ void TileDefDialog::clearDocument()
 
     ui->tilesetFilter->clear();
     ui->propertyFilter->clear();
+    ui->valueFilter->clear();
 }
 
 void TileDefDialog::changePropertyValues(const QList<TileDefTile *> &defTiles,
@@ -1338,6 +1388,9 @@ void TileDefDialog::setTilesetList()
 
     ui->propertyFilter->setFixedWidth(ui->tilesets->width());
     ui->propertyFilter->setEnabled(ui->tilesets->count() > 0);
+
+    ui->valueFilter->setFixedWidth(ui->tilesets->width());
+    ui->valueFilter->setEnabled(ui->tilesets->count() > 0);
 }
 
 void TileDefDialog::setTilesList()
@@ -1985,6 +2038,64 @@ void TileDefDialog::displayTile(const QString &tileName)
             ui->tiles->setCurrentIndex(ui->tiles->model()->index(mTilesetByName[tilesetName]->tileAt(tileID)));
         }
     }
+}
+
+QStringList TileDefDialog::recentFiles() const
+{
+    QSettings settings;
+    settings.beginGroup(QLatin1String("TileDefDialog"));
+    QStringList paths = settings.value(QLatin1String("RecentFiles")).toStringList();
+    settings.endGroup();
+    return paths;
+}
+
+void TileDefDialog::addRecentFile(const QString &fileName)
+{
+    // Remember the file by its canonical file path
+    const QString canonicalFilePath = QFileInfo(fileName).canonicalFilePath();
+
+    if (canonicalFilePath.isEmpty())
+        return;
+
+    QStringList files = recentFiles();
+    files.removeAll(canonicalFilePath);
+    files.prepend(canonicalFilePath);
+    while (files.size() > MaxRecentFiles)
+        files.removeLast();
+
+    QSettings settings;
+    settings.beginGroup(QLatin1String("TileDefDialog"));
+    settings.setValue(QLatin1String("RecentFiles"), files);
+    settings.endGroup();
+
+    setRecentFilesMenu();
+}
+
+void TileDefDialog::clearRecentFiles()
+{
+    QSettings settings;
+    settings.beginGroup(QLatin1String("TileDefDialog"));
+    settings.setValue(QLatin1String("RecentFiles"), QStringList());
+    settings.endGroup();
+    setRecentFilesMenu();
+}
+
+void TileDefDialog::setRecentFilesMenu()
+{
+    QStringList files = recentFiles();
+    const int numRecentFiles = qMin(files.size(), (int) MaxRecentFiles);
+
+    for (int i = 0; i < numRecentFiles; ++i)
+    {
+        mRecentFiles[i]->setText(QDir::toNativeSeparators(files[i]));
+        mRecentFiles[i]->setData(files[i]);
+        mRecentFiles[i]->setVisible(true);
+    }
+    for (int j = numRecentFiles; j < MaxRecentFiles; ++j)
+    {
+        mRecentFiles[j]->setVisible(false);
+    }
+    ui->menuRecentFiles->setEnabled(numRecentFiles > 0);
 }
 
 /////

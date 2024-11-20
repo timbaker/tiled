@@ -77,6 +77,8 @@ public:
 private slots:
     void fileNew();
     void fileOpen();
+    void openRecentFile();
+    void clearRecentFiles();
     bool fileSave();
     bool fileSaveAs();
 
@@ -115,6 +117,7 @@ private slots:
 
     void tilesetFilterEdited(const QString &text);
     void propertyFilterEdited(const QString &text);
+    void valueFilterEdited(const QString &text);
 
     void tilesetBackgroundColorChanged(const QColor& color);
 
@@ -155,6 +158,12 @@ private:
     void updateWindowTitle();
 
     void selectCurrentVisibleTileset();
+
+    void applyPropertyFilters();
+
+    QStringList recentFiles() const;
+    void addRecentFile(const QString &fileName);
+    void setRecentFilesMenu();
 
 private:
     static TileDefDialog *mInstance;
@@ -224,6 +233,9 @@ private:
     QUndoStack *mUndoStack;
     QToolButton *mUndoButton;
     QToolButton *mRedoButton;
+
+    static const int MaxRecentFiles = 10;
+    QAction* mRecentFiles[MaxRecentFiles];
 };
 
 } // namespace Internal

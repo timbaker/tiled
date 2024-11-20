@@ -5,6 +5,7 @@
 #include "tiledeftextfile.h"
 #include <QMainWindow>
 
+class QComboBox;
 class QListWidgetItem;
 
 namespace Ui {
@@ -35,6 +36,12 @@ private:
     void readSettings();
     void writeSettings();
     QImage getTileImage(Tiled::Internal::TileDefTile *tdt);
+    void addRecentFile1(const QString& fileName);
+    void addRecentFile2(const QString& fileName);
+    QStringList recentFiles1() const;
+    QStringList recentFiles2() const;
+    void setRecentFilesCombo1();
+    void setRecentFilesCombo2();
 
 private:
     Ui::TileDefCompare *ui;
@@ -44,6 +51,7 @@ private:
     QMap<QListWidgetItem*,Tiled::Internal::TileDefTile*> mTileMap1;
     QMap<QListWidgetItem*,Tiled::Internal::TileDefTile*> mTileMap2;
     QMap<QListWidgetItem*,int> mUseMap;
+    static const int MaxRecentFiles = 10;
 };
 
 #endif // TILEDEFCOMPARE_H

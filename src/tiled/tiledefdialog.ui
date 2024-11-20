@@ -42,6 +42,19 @@
             <property name="placeholderText">
              <string>property name</string>
             </property>
+            <property name="clearButtonEnabled">
+             <bool>true</bool>
+            </property>
+           </widget>
+          </item>
+          <item>
+           <widget class="QLineEdit" name="valueFilter">
+            <property name="placeholderText">
+             <string>property value</string>
+            </property>
+            <property name="clearButtonEnabled">
+             <bool>true</bool>
+            </property>
            </widget>
           </item>
           <item>
@@ -117,8 +130,8 @@
             <rect>
              <x>0</x>
              <y>0</y>
-             <width>263</width>
-             <height>1282</height>
+             <width>253</width>
+             <height>1259</height>
             </rect>
            </property>
            <layout class="QGridLayout" name="gridLayout_2">
@@ -687,15 +700,26 @@
      <x>0</x>
      <y>0</y>
      <width>878</width>
-     <height>21</height>
+     <height>17</height>
     </rect>
    </property>
    <widget class="QMenu" name="menuFile">
     <property name="title">
      <string>File</string>
     </property>
+    <widget class="QMenu" name="menuRecentFiles">
+     <property name="title">
+      <string>Recent Files</string>
+     </property>
+     <property name="icon">
+      <iconset resource="tiled.qrc">
+       <normaloff>:/images/16x16/document-open-recent.png</normaloff>:/images/16x16/document-open-recent.png</iconset>
+     </property>
+     <addaction name="actionClearRecentFiles"/>
+    </widget>
     <addaction name="actionNew"/>
     <addaction name="actionOpen"/>
+    <addaction name="menuRecentFiles"/>
     <addaction name="actionSave"/>
     <addaction name="actionSaveAs"/>
     <addaction name="separator"/>
@@ -885,6 +909,11 @@
   <action name="actionTilesDirectory">
    <property name="text">
     <string>Tiles Directory...</string>
+   </property>
+  </action>
+  <action name="actionClearRecentFiles">
+   <property name="text">
+    <string>Clear</string>
    </property>
   </action>
  </widget>

@@ -25,7 +25,14 @@
        </widget>
       </item>
       <item>
-       <widget class="QLineEdit" name="packEdit1"/>
+       <widget class="QComboBox" name="packEdit1">
+        <property name="sizePolicy">
+         <sizepolicy hsizetype="Expanding" vsizetype="Fixed">
+          <horstretch>0</horstretch>
+          <verstretch>0</verstretch>
+         </sizepolicy>
+        </property>
+       </widget>
       </item>
       <item>
        <widget class="QToolButton" name="packBrowse1">
@@ -46,7 +53,14 @@
        </widget>
       </item>
       <item>
-       <widget class="QLineEdit" name="packEdit2"/>
+       <widget class="QComboBox" name="packEdit2">
+        <property name="sizePolicy">
+         <sizepolicy hsizetype="Expanding" vsizetype="Fixed">
+          <horstretch>0</horstretch>
+          <verstretch>0</verstretch>
+         </sizepolicy>
+        </property>
+       </widget>
       </item>
       <item>
        <widget class="QToolButton" name="packBrowse2">
@@ -183,7 +197,7 @@
      <x>0</x>
      <y>0</y>
      <width>800</width>
-     <height>21</height>
+     <height>17</height>
     </rect>
    </property>
   </widget>
