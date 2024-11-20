@@ -263,6 +263,7 @@ private slots:
     void editCopy();
     void editPaste();
     void editDelete();
+    void editDeleteInAllLayers();
 
     void selectAll();
     void selectNone();

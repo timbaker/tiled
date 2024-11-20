@@ -301,6 +301,11 @@ MainWindow::MainWindow(QWidget *parent, Qt::WindowFlags flags)
     mUi->actionCopy->setShortcuts(QKeySequence::Copy);
     mUi->actionPaste->setShortcuts(QKeySequence::Paste);
     mUi->actionDelete->setShortcuts(QKeySequence::Delete);
+#ifdef ZOMBOID
+    QList<QKeySequence> keys1;
+    keys1 += QKeySequence(Qt::CTRL | Qt::Key_Delete);
+    mUi->actionDeleteInAllLayers->setShortcuts(keys1);
+#endif
     undoAction->setShortcuts(QKeySequence::Undo);
     redoAction->setShortcuts(QKeySequence::Redo);
 
@@ -400,6 +405,9 @@ MainWindow::MainWindow(QWidget *parent, Qt::WindowFlags flags)
     connect(mUi->actionCopy, &QAction::triggered, this, &MainWindow::copy);
     connect(mUi->actionPaste, &QAction::triggered, this, &MainWindow::paste);
     connect(mUi->actionDelete, &QAction::triggered, this, &MainWindow::delete_);
+#ifdef ZOMBOID
+    connect(mUi->actionDeleteInAllLayers, &QAction::triggered, this, &MainWindow::deleteInAllLayers);
+#endif
     connect(mUi->actionPreferences, &QAction::triggered,
             this, &MainWindow::openPreferences);
 
@@ -1510,6 +1518,28 @@ void MainWindow::delete_()
 #ifndef ZOMBOID
     mActionHandler->selectNone();
 #endif
+    undoStack->endMacro();
+}
+
+void MainWindow::deleteInAllLayers()
+{
+    if (!mMapDocument)
+        return;
+
+    const QRegion &tileSelection = mMapDocument->tileSelection();
+    if (tileSelection.isEmpty())
+        return;
+
+    QUndoStack *undoStack = mMapDocument->undoStack();
+    undoStack->beginMacro(tr("Delete In All Layers"));
+    int z = mMapDocument->currentLevel();
+    MapLevel *mapLevel = mMapDocument->map()->mapLevelForZ(z);
+    for (TileLayer *tileLayer : mapLevel->tileLayers()) {
+        QRegion tileRegion = tileLayer->region() & tileSelection;
+        if (tileRegion.isEmpty())
+            continue;
+        undoStack->push(new EraseTiles(mMapDocument, tileLayer, tileSelection));
+    }
     undoStack->endMacro();
 }
 
@@ -2835,6 +2865,7 @@ void MainWindow::updateActions()
     mUi->actionCopy->setEnabled(bmpToolSelected ? !bmpSelectionEmpty : canCopy);
     mUi->actionPaste->setEnabled(bmpToolSelected ? mBmpClipboard->canPaste() : mClipboardManager->hasMap());
     mUi->actionDelete->setEnabled(canCopy || !bmpSelectionEmpty);
+    mUi->actionDeleteInAllLayers->setEnabled(canCopy);
 #else
     mUi->actionDelete->setEnabled(canCopy);
 #endif

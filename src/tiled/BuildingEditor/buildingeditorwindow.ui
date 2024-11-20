@@ -60,6 +60,7 @@
     <addaction name="actionCopy"/>
     <addaction name="actionPaste"/>
     <addaction name="actionDelete"/>
+    <addaction name="actionDeleteInAllLayers"/>
     <addaction name="separator"/>
     <addaction name="actionSelectAll"/>
     <addaction name="actionSelectNone"/>
@@ -796,10 +797,19 @@
     <string>F</string>
    </property>
   </action>
+  <action name="actionDeleteInAllLayers">
+   <property name="icon">
+    <iconset resource="../tiled.qrc">
+     <normaloff>:/images/16x16/edit-delete.png</normaloff>:/images/16x16/edit-delete.png</iconset>
+   </property>
+   <property name="text">
+    <string>Delete In All Layers</string>
+   </property>
+  </action>
  </widget>
  <resources>
-  <include location="buildingeditor.qrc"/>
   <include location="../tiled.qrc"/>
+  <include location="buildingeditor.qrc"/>
  </resources>
  <connections/>
 </ui>

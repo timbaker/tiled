@@ -169,6 +169,9 @@ public slots:
     void copy();
     void paste();
     void delete_(); // delete is a reserved word
+#ifdef ZOMBOID
+    void deleteInAllLayers();
+#endif
     void openPreferences();
 
     void zoomIn();

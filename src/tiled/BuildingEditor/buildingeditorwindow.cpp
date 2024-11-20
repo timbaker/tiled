@@ -397,12 +397,17 @@ BuildingEditorWindow::BuildingEditorWindow(QWidget *parent) :
     ui->actionCopy->setShortcuts(QKeySequence::Copy);
     ui->actionPaste->setShortcuts(QKeySequence::Paste);
     ui->actionDelete->setShortcuts(QKeySequence::Delete);
+    QList<QKeySequence> keys1;
+    keys1 += QKeySequence(Qt::CTRL | Qt::Key_Delete);
+    ui->actionDeleteInAllLayers->setShortcuts(keys1);
     ui->actionSelectAll->setShortcuts(QKeySequence::SelectAll);
+
     ui->actionSelectNone->setShortcut(tr("Ctrl+Shift+A"));
     connect(ui->actionCut, &QAction::triggered, this, &BuildingEditorWindow::editCut);
     connect(ui->actionCopy, &QAction::triggered, this, &BuildingEditorWindow::editCopy);
     connect(ui->actionPaste, &QAction::triggered, this, &BuildingEditorWindow::editPaste);
     connect(ui->actionDelete, &QAction::triggered, this, &BuildingEditorWindow::editDelete);
+    connect(ui->actionDeleteInAllLayers, &QAction::triggered, this, &BuildingEditorWindow::editDeleteInAllLayers);
     connect(ui->actionSelectAll, &QAction::triggered, this, &BuildingEditorWindow::selectAll);
     connect(ui->actionSelectNone, &QAction::triggered, this, &BuildingEditorWindow::selectNone);
 
@@ -1454,6 +1459,33 @@ void BuildingEditorWindow::editDelete()
     deleteObjects();
 }
 
+void BuildingEditorWindow::editDeleteInAllLayers()
+{
+    if (!mCurrentDocument)
+        return;
+    if (!mCurrentDocumentStuff->isTile())
+        return;
+    QUndoStack *undoStack = mCurrentDocument->undoStack();
+    undoStack->beginMacro(tr("Delete In All Layers"));
+    QRegion selection = mCurrentDocument->tileSelection();
+    QRect r = selection.boundingRect();
+    BuildingFloor *floor = currentFloor();
+    for (const QString &layerName : floor->grimeLayers()) {
+        FloorTileGrid *tiles = floor->grimeAt(layerName, r);
+        bool changed = tiles->replace(selection.translated(-r.topLeft()), QString());
+        if (changed) {
+            mCurrentDocument->undoStack()->push(
+                        new PaintFloorTiles(mCurrentDocument, floor,
+                                            layerName, selection,
+                                            r.topLeft(), tiles,
+                                            "Delete In All Layers"));
+        } else {
+            delete tiles;
+        }
+    }
+    undoStack->endMacro();
+}
+
 void BuildingEditorWindow::selectAll()
 {
     if (!mCurrentDocument)
@@ -2427,6 +2459,7 @@ void BuildingEditorWindow::updateActions()
         ui->actionSelectAll->setEnabled(!currentLayer().isEmpty());
         ui->actionSelectNone->setEnabled(hasTileSel);
         ui->actionDelete->setEnabled(hasTileSel && !attributeMode);
+        ui->actionDeleteInAllLayers->setEnabled(hasTileSel && !attributeMode);
     } else {
         ui->actionSelectAll->setEnabled(hasDoc);
         bool selectNone = false;

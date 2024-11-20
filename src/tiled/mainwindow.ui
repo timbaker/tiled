@@ -93,6 +93,7 @@
     <addaction name="actionCopy"/>
     <addaction name="actionPaste"/>
     <addaction name="actionDelete"/>
+    <addaction name="actionDeleteInAllLayers"/>
     <addaction name="separator"/>
     <addaction name="actionPreferences"/>
    </widget>
@@ -715,11 +716,20 @@
     <string>Show Cell Border</string>
    </property>
   </action>
+  <action name="actionDeleteInAllLayers">
+   <property name="icon">
+    <iconset resource="tiled.qrc">
+     <normaloff>:/images/16x16/edit-delete.png</normaloff>:/images/16x16/edit-delete.png</iconset>
+   </property>
+   <property name="text">
+    <string>Delete In All Layers</string>
+   </property>
+  </action>
  </widget>
  <layoutdefault spacing="6" margin="11"/>
  <resources>
-  <include location="BuildingEditor/buildingeditor.qrc"/>
   <include location="tiled.qrc"/>
+  <include location="BuildingEditor/buildingeditor.qrc"/>
  </resources>
  <connections/>
 </ui>
