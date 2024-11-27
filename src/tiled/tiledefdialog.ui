@@ -121,6 +121,16 @@
       <widget class="QWidget" name="verticalLayoutWidget">
        <layout class="QVBoxLayout" name="propertiesLayout">
         <item>
+         <widget class="QLineEdit" name="rightPropertyFilter">
+          <property name="placeholderText">
+           <string>property name</string>
+          </property>
+          <property name="clearButtonEnabled">
+           <bool>true</bool>
+          </property>
+         </widget>
+        </item>
+        <item>
          <widget class="QScrollArea" name="scrollArea">
           <property name="widgetResizable">
            <bool>true</bool>
@@ -131,7 +141,7 @@
              <x>0</x>
              <y>0</y>
              <width>253</width>
-             <height>1259</height>
+             <height>1263</height>
             </rect>
            </property>
            <layout class="QGridLayout" name="gridLayout_2">
@@ -153,7 +163,7 @@
                <property name="fieldGrowthPolicy">
                 <enum>QFormLayout::AllNonFixedFieldsGrow</enum>
                </property>
-               <item row="0" column="0">
+               <item row="1" column="0">
                 <widget class="QGroupBox" name="groupBox">
                  <property name="title">
                   <string>Collision Settings</string>
@@ -176,7 +186,7 @@
                  </layout>
                 </widget>
                </item>
-               <item row="1" column="0">
+               <item row="2" column="0">
                 <widget class="QGroupBox" name="groupBox_2">
                  <property name="title">
                   <string>Door Functions</string>
@@ -211,7 +221,7 @@
                  </layout>
                 </widget>
                </item>
-               <item row="2" column="0">
+               <item row="3" column="0">
                 <widget class="QGroupBox" name="groupBox_3">
                  <property name="title">
                   <string>Extra Functions</string>
@@ -227,7 +237,7 @@
                  </layout>
                 </widget>
                </item>
-               <item row="3" column="0">
+               <item row="4" column="0">
                 <widget class="QGroupBox" name="groupBox_5">
                  <property name="title">
                   <string>Floor Settings</string>
@@ -257,7 +267,7 @@
                  </layout>
                 </widget>
                </item>
-               <item row="7" column="0">
+               <item row="8" column="0">
                 <widget class="QGroupBox" name="groupBox_6">
                  <property name="title">
                   <string>Roof Settings</string>
@@ -279,7 +289,7 @@
                  </layout>
                 </widget>
                </item>
-               <item row="8" column="0">
+               <item row="9" column="0">
                 <widget class="QGroupBox" name="groupBox_7">
                  <property name="title">
                   <string>Sheet Settings</string>
@@ -305,7 +315,7 @@
                  </layout>
                 </widget>
                </item>
-               <item row="12" column="0">
+               <item row="13" column="0">
                 <widget class="QGroupBox" name="groupBox_4">
                  <property name="title">
                   <string>Wall Settings</string>
@@ -355,7 +365,7 @@
                  </layout>
                 </widget>
                </item>
-               <item row="9" column="0">
+               <item row="10" column="0">
                 <widget class="QGroupBox" name="groupBox_8">
                  <property name="title">
                   <string>Shelf Settings</string>
@@ -403,7 +413,7 @@
                  </layout>
                 </widget>
                </item>
-               <item row="10" column="0">
+               <item row="11" column="0">
                 <widget class="QGroupBox" name="groupBox_9">
                  <property name="title">
                   <string>Stair Settings</string>
@@ -425,7 +435,7 @@
                  </layout>
                 </widget>
                </item>
-               <item row="11" column="0">
+               <item row="12" column="0">
                 <widget class="QGroupBox" name="groupBox_10">
                  <property name="title">
                   <string>Visibility Functions</string>
@@ -444,7 +454,7 @@
                  </layout>
                 </widget>
                </item>
-               <item row="13" column="0">
+               <item row="14" column="0">
                 <widget class="QGroupBox" name="groupBox_11">
                  <property name="title">
                   <string>Water Functions</string>
@@ -497,7 +507,7 @@
                  </layout>
                 </widget>
                </item>
-               <item row="14" column="0">
+               <item row="15" column="0">
                 <widget class="QGroupBox" name="groupBox_12">
                  <property name="title">
                   <string>Window Functions</string>
@@ -567,7 +577,7 @@
                  </layout>
                 </widget>
                </item>
-               <item row="6" column="0">
+               <item row="7" column="0">
                 <widget class="QGroupBox" name="groupBox_13">
                  <property name="title">
                   <string>Object Settings</string>
@@ -613,7 +623,7 @@
                  </layout>
                 </widget>
                </item>
-               <item row="4" column="0">
+               <item row="5" column="0">
                 <widget class="QGroupBox" name="groupBox_14">
                  <property name="title">
                   <string>Global Settings</string>
@@ -635,7 +645,7 @@
                  </layout>
                 </widget>
                </item>
-               <item row="5" column="0">
+               <item row="6" column="0">
                 <widget class="QGroupBox" name="groupBox_15">
                  <property name="title">
                   <string>Light Settings</string>

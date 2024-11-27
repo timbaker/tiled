@@ -412,14 +412,23 @@ TileDefDialog::TileDefDialog(QWidget *parent) :
     ui->menuRecentFiles->insertSeparator(ui->actionClearRecentFiles);
     setRecentFilesMenu();
 
-    foreach (QObject *o, ui->propertySheet->children())
-        if (o->isWidgetType())
+    foreach (QObject *o, ui->propertySheet->children()) {
+        if (o->isWidgetType()) {
             delete o;
+        }
+    }
     delete ui->propertySheet->layout();
     QFormLayout *form = new QFormLayout(ui->propertySheet);
     ui->propertySheet->setLayout(form);
     form->setRowWrapPolicy(QFormLayout::DontWrapRows);
     form->setFieldGrowthPolicy(QFormLayout::FieldsStayAtSizeHint);
+    mPropertySheetFormLayout = form;
+
+//    form->setVerticalSpacing(4);
+
+    connect(ui->rightPropertyFilter, &QLineEdit::textEdited, this, &TileDefDialog::rightPropertyFilterEdited);
+
+    mPropertySheetWidgets.clear();
 
     foreach (TileDefProperty *prop, mTileDefProperties->mProperties) {
         if (mTileDefProperties->mSeparators.contains(form->rowCount())) {
@@ -1039,6 +1048,52 @@ void TileDefDialog::tilesetChanged(Tileset *tileset)
 {
     if (tileset == mCurrentTileset)
         setTilesList();
+}
+
+void TileDefDialog::rightPropertyFilterEdited(const QString &text)
+{
+    QFormLayout *layout = mPropertySheetFormLayout;
+    if (mPropertySheetWidgets.isEmpty()) {
+        while (layout->rowCount() > 0) {
+            QFormLayout::TakeRowResult trr = layout->takeRow(0);
+            mPropertySheetWidgets += LabelField(trr);
+        }
+    } else {
+        while (layout->rowCount() > 0) {
+            QFormLayout::TakeRowResult trr = layout->takeRow(0);
+            delete trr.labelItem; // doesn't delete the widget
+            delete trr.fieldItem; // doesn't delete the widget
+        }
+    }
+    int visibleBeforeLine = 0;
+    for (const LabelField& lf : mPropertySheetWidgets) {
+        QWidget *label = lf.label;
+        QWidget *field = lf.field;
+        if (label && field) {
+            bool visible = text.isEmpty() || field->objectName().contains(text, Qt::CaseInsensitive);
+            label->setVisible(visible);
+            field->setVisible(visible);
+            if (visible) {
+                layout->addRow(label, field);
+                visibleBeforeLine++;
+            }
+       } else if (field->objectName() == QStringLiteral("line")) {
+            bool visible = visibleBeforeLine > 0;
+            field->setVisible(visible);
+            if (visible) {
+                layout->setWidget(layout->rowCount(), QFormLayout::ItemRole::SpanningRole, field);
+            }
+            visibleBeforeLine = 0;
+        } else {
+            bool visible = text.isEmpty() || field->objectName().contains(text, Qt::CaseInsensitive);
+            field->setVisible(visible);
+            if (visible) {
+                layout->setWidget(layout->rowCount(), QFormLayout::ItemRole::SpanningRole, field);
+                visibleBeforeLine++;
+            }
+        }
+    }
+    layout->invalidate();
 }
 
 void TileDefDialog::tilesetFilterEdited(const QString &text)
@@ -1890,7 +1945,7 @@ void TileDefDialog::checkProperties()
     if (warnings.isEmpty()) {
         return;
     }
-    QString prompt = tr("Some issues were found in the .tiles file.\nYou may need to update your TileProperties.txt file.\nOriginal: %1\nYours: %2")
+    QString prompt = tr("Some issues were found in the .tiles file.\nYou may need to update your TileProperties.txt file.\n\nOriginal: %1\n\nYours: %2")
             .arg(QDir::toNativeSeparators(Preferences::instance()->appConfigPath(TilePropertyMgr::instance()->txtName())))
             .arg(QDir::toNativeSeparators(TilePropertyMgr::instance()->txtPath()));
     BuildingEditor::ListOfStringsDialog dialog(prompt, warnings, this);

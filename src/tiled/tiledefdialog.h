@@ -22,12 +22,14 @@
 
 #include <QMainWindow>
 
+#include <QFormLayout>
 #include <QMap>
 #include <QSet>
 #include <QModelIndex>
 
 class QCheckBox;
 class QComboBox;
+class QLineEdit;
 class QSpinBox;
 class QSplitter;
 class QToolButton;
@@ -115,6 +117,8 @@ private slots:
 
     void tilesetChanged(Tiled::Tileset *tileset);
 
+    void rightPropertyFilterEdited(const QString &text);
+
     void tilesetFilterEdited(const QString &text);
     void propertyFilterEdited(const QString &text);
     void valueFilterEdited(const QString &text);
@@ -194,7 +198,23 @@ private:
     int uniqueTilesetID();
 
 private:
+    struct LabelField
+    {
+        QWidget *label;
+        QWidget *field;
+
+        LabelField(const QFormLayout::TakeRowResult &trr)
+        {
+            label = trr.labelItem ? trr.labelItem->widget() : nullptr;
+            field = trr.fieldItem->widget();
+            delete trr.labelItem;
+            delete trr.fieldItem;
+        }
+    };
+
     Ui::TileDefDialog *ui;
+    QFormLayout *mPropertySheetFormLayout;
+    QList<LabelField> mPropertySheetWidgets;
     Tileset *mCurrentTileset;
     TileDefTileset *mCurrentDefTileset;
     QString mCurrentTilesetName;

@@ -862,6 +862,14 @@ property
 }
 property
 {
+    Type = Boolean
+    Name = BlockRain
+    ShortName =
+    Default = false
+    ReverseLogic = false
+}
+property
+{
     Type = Enum
     Name = Render Layer
     ShortName = RenderLayer
@@ -1219,6 +1227,7 @@ property
         None =
         cutW = cutW
         cutN = cutN
+        NeverCutaway = NeverCutaway
     }
     Default = None
     ValueAsPropertyName = true
@@ -1785,6 +1794,7 @@ property
         Metal Door = MetalDoor
         Metal Gate = MetalGate
         Metal Pole Gate = MetalPoleGate
+        Metal Pole Gate (Small) = MetalPoleGateSmall
         Prison Metal Door = PrisonMetalDoor
         Sliding Glass Door = SlidingGlassDoor
         Small Wood Gate = WoodGateSmall
@@ -1871,18 +1881,32 @@ property
     Enums
     {
         None =
+        Flesh = Flesh
+        Flesh_Hollow = Flesh_Hollow
         Concrete = Concrete
         Plaster = Plaster
         Stone = Stone
-        Woodlog = Woodlog
-        Woodplank = Woodplank
+        Wood = Wood
+        Wood_Solid = Wood_Solid
         Brick = Brick
         Metal = Metal
+        Metal_Large = Metal_Large
+        Metal_Light = Metal_Light
+        Metal_Solid = Metal_Solid
         Glass = Glass
+        Glass_Light = Glass_Light
+        Glass_Solid = Glass_Solid
         Cinderblock = Cinderblock
         Plastic = Plastic
         Ceramic = Ceramic
-        Securiglass = Securiglass
+        Rubber = Rubber
+        Fabric = Fabric
+        Carpet = Carpet
+        Dirt = Dirt
+        Grass = Grass
+        Gravel = Gravel
+        Sand = Sand
+        Snow = Snow
     }
     Default = None
     ValueAsPropertyName = false
