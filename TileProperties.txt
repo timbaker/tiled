@@ -1794,6 +1794,7 @@ property
         Metal Door = MetalDoor
         Metal Gate = MetalGate
         Metal Pole Gate = MetalPoleGate
+        Metal Pole Gate (Double) = MetalPoleGateDouble
         Metal Pole Gate (Small) = MetalPoleGateSmall
         Prison Metal Door = PrisonMetalDoor
         Sliding Glass Door = SlidingGlassDoor
