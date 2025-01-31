@@ -1920,7 +1920,7 @@ void MainWindow::launchWorldEd()
     QString path = QApplication::applicationDirPath();
 #ifdef Q_OS_WIN
     path += QLatin1String("/../WorldEd/PZWorldEd.exe");
-#elif defined(Q_OS_MAC)
+#elif defined(Q_OS_MACOS)
     path += QLatin1String("/../WorldEd/PZWorldEd"); // FIXME: .app ?
 #else
     path += QLatin1String("/../../WorldEd/PZWorldEd.sh");

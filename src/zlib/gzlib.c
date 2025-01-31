@@ -5,6 +5,11 @@
 
 #include "gzguts.h"
 
+#if defined(__APPLE__)
+#include <stdio.h>
+#include <unistd.h>
+#endif
+
 #if defined(_WIN32) && !defined(__BORLANDC__)
 #  define LSEEK _lseeki64
 #else

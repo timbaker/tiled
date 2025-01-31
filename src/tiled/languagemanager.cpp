@@ -53,7 +53,7 @@ LanguageManager::LanguageManager()
     mTranslationsDir = QCoreApplication::applicationDirPath();
 #ifdef Q_OS_WIN32
     mTranslationsDir += QLatin1String("/translations");
-#elif defined(Q_OS_MAC)
+#elif defined(Q_OS_MACOS)
     mTranslationsDir += QLatin1String("/../Translations");
 #else
 #ifdef ZOMBOID

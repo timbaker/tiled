@@ -408,10 +408,10 @@ QString Preferences::appConfigPath() const
 {
 #ifdef Q_OS_WIN
     return QCoreApplication::applicationDirPath();
+#elif defined(Q_OS_MACOS)
+    return QCoreApplication::applicationDirPath() + QLatin1String("/../Config");
 #elif defined(Q_OS_UNIX)
     return QCoreApplication::applicationDirPath() + QLatin1String("/../share/tilezed/config");
-#elif defined(Q_OS_MAC)
-    return QCoreApplication::applicationDirPath() + QLatin1String("/../Config");
 #else
 #error "wtf system is this???"
 #endif
@@ -426,10 +426,10 @@ QString Preferences::docsPath() const
 {
 #ifdef Q_OS_WIN
     return QCoreApplication::applicationDirPath() + QLatin1String("/docs");
+#elif defined(Q_OS_MACOS)
+    return QCoreApplication::applicationDirPath() + QLatin1String("/../Docs");
 #elif defined(Q_OS_UNIX)
     return QCoreApplication::applicationDirPath() + QLatin1String("/../share/tilezed/docs");
-#elif defined(Q_OS_MAC)
-    return QCoreApplication::applicationDirPath() + QLatin1String("/../Docs");
 #else
 #error "wtf system is this???"
 #endif
@@ -444,10 +444,10 @@ QString Preferences::luaPath() const
 {
 #ifdef Q_OS_WIN
     return QCoreApplication::applicationDirPath() + QLatin1String("/lua");
+#elif defined(Q_OS_MACOS)
+    return QCoreApplication::applicationDirPath() + QLatin1String("/../Lua");
 #elif defined(Q_OS_UNIX)
     return QCoreApplication::applicationDirPath() + QLatin1String("/../share/tilezed/lua");
-#elif defined(Q_OS_MAC)
-    return QCoreApplication::applicationDirPath() + QLatin1String("/../Lua");
 #else
 #error "wtf system is this???"
 #endif

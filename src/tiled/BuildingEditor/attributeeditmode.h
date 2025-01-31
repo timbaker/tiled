@@ -22,6 +22,7 @@
 
 #include <QMap>
 #include <QToolBar>
+#include <QToolButton>
 
 class QTabWidget;
 

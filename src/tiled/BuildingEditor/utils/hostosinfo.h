@@ -85,7 +85,7 @@ HostOsInfo::HostOs HostOsInfo::hostOs()
     return HostOsWindows;
 #elif defined(Q_OS_LINUX)
     return HostOsLinux;
-#elif defined(Q_OS_MAC)
+#elif defined(Q_OS_MACOS)
     return HostOsMac;
 #elif defined(Q_OS_UNIX)
     return HostOsOtherUnix;

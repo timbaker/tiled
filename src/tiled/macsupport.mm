@@ -20,6 +20,8 @@
 
 #include "macsupport.h"
 
+#import <AppKit/AppKit.h>
+
 bool MacSupport::isLion()
 {
     NSString *string = [NSString string];

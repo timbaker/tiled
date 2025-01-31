@@ -63,7 +63,7 @@ void PluginManager::loadPlugins()
     QString pluginPath = QCoreApplication::applicationDirPath();
 #ifdef Q_OS_WIN32
     pluginPath += QLatin1String("/plugins/tiled");
-#elif defined(Q_OS_MAC)
+#elif defined(Q_OS_MACOS)
     pluginPath += QLatin1String("/../PlugIns");
 #else
 #ifdef ZOMBOID

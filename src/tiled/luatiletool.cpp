@@ -1036,7 +1036,7 @@ bool LuaToolFile::read(const QString &fileName)
     // In the latter case, we expect Preferences::luaPath() to contain the tool files.
     QDir luaDir = dir.filePath(QLatin1String("lua"));
     if (!luaDir.exists())
-#if defined(Q_OS_MAC)
+#if defined(Q_OS_MACOS)
         luaDir = dir.filePath(QLatin1String("../Lua"));
 #else
         luaDir = dir.filePath(QLatin1String("../lua"));

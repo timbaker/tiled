@@ -53,7 +53,7 @@ MapView::MapView(QWidget *parent)
 #endif
 {
     setTransformationAnchor(QGraphicsView::AnchorViewCenter);
-#ifdef Q_OS_MAC
+#ifdef Q_OS_MACOS
     setFrameStyle(QFrame::NoFrame);
 #endif
 

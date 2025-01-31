@@ -15,7 +15,7 @@ isEmpty(INSTALL_ONLY_BUILD) {
 
 macx {
     DESTDIR = ../../bin/TileZed.app/Contents/Frameworks
-    QMAKE_LFLAGS_SONAME = -Wl,-install_name,@executable_path/../Frameworks/
+    QMAKE_LFLAGS_SONAME = -Wl,-install_name,@rpath/../Frameworks/
 } else {
     DESTDIR = $$top_builddir/lib
 }
