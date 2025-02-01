@@ -68,7 +68,7 @@ void AbstractTool::setEnabled(bool enabled)
 #ifdef ZOMBOID
 void AbstractTool::setHandScrolling(bool handScrolling)
 {
-
+    Q_UNUSED(handScrolling)
 }
 #endif
 

@@ -57,6 +57,8 @@ void PickTileTool::deactivate(MapScene *scene)
 
 void PickTileTool::mouseMoved(const QPointF &pos, Qt::KeyboardModifiers modifiers)
 {
+    Q_UNUSED(modifiers)
+
     if (mapDocument() == nullptr)
         return;
     MapComposite *mc = mapDocument()->mapComposite();
@@ -238,4 +240,5 @@ void PickTileTool::mouseMoved(const QPointF &pos, Qt::KeyboardModifiers modifier
 */
 void PickTileTool::tilePositionChanged(const QPoint &tilePos)
 {
+    Q_UNUSED(tilePos)
 }

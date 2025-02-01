@@ -328,6 +328,7 @@ void MapScene::regionChanged(const QRegion &region, Layer *layer)
 
 void MapScene::currentLevelChanged(int z)
 {
+    Q_UNUSED(z)
     updateCurrentLayerHighlight();
 #ifdef ZOMBOID
     // LevelIsometric orientation may move the grid

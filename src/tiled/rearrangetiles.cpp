@@ -118,6 +118,8 @@ QSize TileDelegate::sizeHint(const QStyleOptionViewItem &option,
                              const QModelIndex &index) const
 {
     Q_UNUSED(option)
+    Q_UNUSED(index)
+
 //    const RearrangeTilesModel *m = static_cast<const RearrangeTilesModel*>(index.model());
     const qreal zoom = mView->zoomable()->scale();
     const int extra = 2 * 2;
@@ -287,21 +289,26 @@ QVariant RearrangeTilesModel::data(const QModelIndex &index, int role) const
 
 bool RearrangeTilesModel::setData(const QModelIndex &index, const QVariant &value, int role)
 {
+    Q_UNUSED(index)
+    Q_UNUSED(value)
+    Q_UNUSED(role)
+#if 0
     if (Item *item = toItem(index)) {
-//        if (role == Qt::BackgroundRole) {
-//            if (value.canConvert<QBrush>()) {
-//                item->mBackground = qvariant_cast<QBrush>(value);
-//                emit dataChanged(index, index);
-//                return true;
-//            }
-//        }
-//        if (role == Qt::DisplayRole) {
-//            if (item->mTile1x && value.canConvert<Tile*>()) {
-//                item->mTile1x = qvariant_cast<Tile*>(value);
-//                return true;
-//            }
-//        }
+       if (role == Qt::BackgroundRole) {
+           if (value.canConvert<QBrush>()) {
+               item->mBackground = qvariant_cast<QBrush>(value);
+               emit dataChanged(index, index);
+               return true;
+           }
+       }
+       if (role == Qt::DisplayRole) {
+           if (item->mTile1x && value.canConvert<Tile*>()) {
+               item->mTile1x = qvariant_cast<Tile*>(value);
+               return true;
+           }
+       }
     }
+#endif
     return false;
 }
 
@@ -508,7 +515,7 @@ bool RearrangeTiles::isRearranged(Tile *tile)
 
 bool RearrangeTiles::isRearranged(const BuildingEditor::FloorTileGrid &tileGrid, int x, int y)
 {
-    for (const RearrangeGrid *grid : qAsConst(mGrids)) {
+    for (const RearrangeGrid *grid : std::as_const(mGrids)) {
         if (tileGrid.matches(x, y, *grid->mOld)) {
             return true;
         }
@@ -545,7 +552,7 @@ void RearrangeTiles::fixBuilding(const QString &filePath, const QVector<int> &xy
             if (BuildingFloor *floor = building->floor(z)) {
                 const auto tileGrids = floor->grime().values();
                 for (FloorTileGrid *tileGrid : tileGrids) {
-                    for (const RearrangeGrid *grid : qAsConst(mGrids)) {
+                    for (const RearrangeGrid *grid : std::as_const(mGrids)) {
                         if (tileGrid->matches(x, y, *grid->mOld)) {
                             tileGrid->replace({x, y}, grid->mNew);
                             fixed = true;
@@ -684,6 +691,8 @@ RearrangeTileset *RearrangeTiles::tileset(const QString &name)
 
 void RearrangeTiles::rearrange(const QString &tilesetName,  const RearrangeIndex &index)
 {
+    Q_UNUSED(tilesetName)
+    Q_UNUSED(index)
 }
 
 void RearrangeTiles::updateUI()

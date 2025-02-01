@@ -76,7 +76,7 @@ WorldCell *WorldEdMgr::cellForMap(const QString &fileName)
     if (mMapWithoutWorld.contains(canonicalPath)) {
         return nullptr;
     }
-    for (World *world : qAsConst(mWorlds)) {
+    for (World *world : std::as_const(mWorlds)) {
         if (mCheckedDocuments.contains(world) == false) {
             auto& nameToCell = mCheckedDocuments[world];
             for (int y = 0; y < world->height(); y++) {

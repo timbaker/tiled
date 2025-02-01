@@ -367,7 +367,7 @@ bool PackSettingsFile::read(const QString &fileName)
 
     QDir dir = QFileInfo(fileName).absoluteDir();
 
-    for (const SimpleFileBlock &block : qAsConst(simple.blocks)) {
+    for (const SimpleFileBlock &block : std::as_const(simple.blocks)) {
         if (block.name == QLatin1String("settings")) {
             mSettings.mPackFileName = QDir::cleanPath(dir.filePath(block.value("packFileName")));
 
@@ -382,7 +382,7 @@ bool PackSettingsFile::read(const QString &fileName)
             QString scaleStr = block.value("scale50");
             mSettings.mScale50 = (scaleStr == QStringLiteral("true"));
 
-            for (const SimpleFileBlock &block2 : qAsConst(block.blocks)) {
+            for (const SimpleFileBlock &block2 : std::as_const(block.blocks)) {
                 if (block2.name == QLatin1String("inputImageDirectory")) {
                     TexturePackSettings::Directory tpd;
                     tpd.mPath = QDir::cleanPath(dir.filePath(block2.value("path")));

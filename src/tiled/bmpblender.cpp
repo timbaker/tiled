@@ -530,7 +530,7 @@ void BmpBlender::imagesToTileGrids(int x1, int y1, int x2, int y2)
 
     for (int y = y1; y <= y2; y++) {
         for (int x = x1; x <= x2; x++) {
-            for (Tiled::SparseTileGrid *tileGrid : qAsConst(mTileGrids)) {
+            for (Tiled::SparseTileGrid *tileGrid : std::as_const(mTileGrids)) {
                 tileGrid->replace(x, y, emptyCell);
             }
             mFakeTileGrid->replace(x, y, emptyCell);

@@ -124,5 +124,7 @@ QRectF ZTileLayerGroup::boundingRect(const MapRenderer *renderer) const
 
 bool ZTileLayerGroup::useImageBlack(int x, int y) const
 {
+    Q_UNUSED(x)
+    Q_UNUSED(y)
     return false;
 }

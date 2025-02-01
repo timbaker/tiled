@@ -953,6 +953,8 @@ bool LuaTileTool::dragged()
 
 QPainterPath LuaTileTool::cursorShape(const QPointF &pos, Qt::KeyboardModifiers modifiers)
 {
+    Q_UNUSED(modifiers)
+
     const MapRenderer *renderer = mapDocument()->renderer();
     int level = mapDocument()->currentLevel();
     QPointF tilePosF = renderer->pixelToTileCoords(pos, level);

@@ -465,7 +465,6 @@ private:
     BuildingDocument *mDocument;
     int mOldIndex;
     int mNewIndex;
-    BuildingFloor *mFloor;
 };
 
 class EmitResizeBuilding : public QUndoCommand

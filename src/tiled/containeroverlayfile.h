@@ -30,7 +30,7 @@ class ContainerOverlayEntry : public AbstractOverlayEntry
 {
 public:
     AbstractOverlay *parent() const override;
-    void setRoomName(const QString& roomName) { mRoomName = roomName; }
+    void setRoomName(const QString& roomName) override { mRoomName = roomName; }
     QString roomName() const override { return mRoomName; }
     QStringList &tiles() override { return mTiles; }
     virtual void setUsage(const QString& usage) override { mUsage = usage; }
@@ -46,15 +46,15 @@ public:
 class ContainerOverlay : public AbstractOverlay
 {
 public:
-    void setTileName(const QString& tileName) { mTileName = tileName; }
+    void setTileName(const QString& tileName) override { mTileName = tileName; }
     QString tileName() override { return mTileName; }
     int entryCount() const override { return mEntries.size(); }
     AbstractOverlayEntry *entry(int index) const override
     {
         return (index >= 0 && index < mEntries.size()) ? mEntries[index] : nullptr;
     }
-    void insertEntry(int index, AbstractOverlayEntry *entry) { mEntries.insert(index, static_cast<ContainerOverlayEntry*>(entry)); }
-    AbstractOverlayEntry *removeEntry(int index) { return mEntries.takeAt(index); }
+    void insertEntry(int index, AbstractOverlayEntry *entry) override { mEntries.insert(index, static_cast<ContainerOverlayEntry*>(entry)); }
+    AbstractOverlayEntry *removeEntry(int index) override { return mEntries.takeAt(index); }
 
     QString mTileName;
     QList<ContainerOverlayEntry*> mEntries;

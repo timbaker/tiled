@@ -846,7 +846,7 @@ void BuildingFloor::LayoutToSquares()
             }
         }
         if (RoofObject *ro = object->asRoof()) {
-            QRect r = ro->bounds();
+ //           QRect r = ro->bounds();
 
             QRect tileRect;
             QVector<RoofObject::RoofTile> tiles;

@@ -170,7 +170,7 @@ bool FancyTabBar::event(QEvent *event)
 }
 
 // Resets hover animation on mouse enter
-void FancyTabBar::enterEvent(QEvent *e)
+void FancyTabBar::enterEvent(QEnterEvent *e)
 {
     Q_UNUSED(e)
     m_hoverRect = QRect();

@@ -297,7 +297,7 @@ void TileCategoryView::dragMoveEvent(QDragMoveEvent *event)
     QAbstractItemView::dragMoveEvent(event);
 
     if (event->isAccepted()) {
-        QModelIndex index = indexAt(event->pos());
+        QModelIndex index = indexAt(event->position().toPoint());
         if (model()->entryAt(index)) {
             // nothing
         } else {

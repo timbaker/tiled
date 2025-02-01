@@ -110,6 +110,7 @@ void TileSelectionItem::currentLayerIndexChanged(int index)
 
 void TileSelectionItem::showTileSelectionChanged(bool show)
 {
+    Q_UNUSED(show)
     update();
 }
 #endif

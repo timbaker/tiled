@@ -161,7 +161,7 @@ public:
     void dragLeaveEvent(QDragLeaveEvent *event) override;
     void dropEvent(QDropEvent *event) override;
 
-    void edit(const QModelIndex& index, EditAbstractOverlay edit);
+    void editOverlay(const QModelIndex& index, EditAbstractOverlay edit);
 
     ContainerOverlayModel *model() const
     { return mModel; }
@@ -201,7 +201,7 @@ public slots:
     void tilesetRemoved(Tiled::Tileset *tileset);
 
 protected:
-    void contextMenuEvent(QContextMenuEvent *event);
+    void contextMenuEvent(QContextMenuEvent *event) override;
 
 private:
     void init();

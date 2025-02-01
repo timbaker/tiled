@@ -182,14 +182,14 @@ void BmpBlendDelegate::paint(QPainter *painter,
         }
     }
 
-    int labelWidth = 0;
+    // int labelWidth = 0;
     QFont font = painter->font();
     QString label = blends[0] ? blends[0]->mainTile : QString();
     if (label.length()) {
         QPen oldPen = painter->pen();
         painter->setPen(Qt::blue);
         painter->setFont(mLabelFont);
-        labelWidth = mLabelFontMetrics.horizontalAdvance(label) + 6;
+        // labelWidth = mLabelFontMetrics.horizontalAdvance(label) + 6;
         painter->drawText(option.rect.left() + extra, option.rect.top() + extra,
                           option.rect.width() - extra * 2, labelHeight, Qt::AlignLeft, label);
         painter->setFont(font);
@@ -534,7 +534,7 @@ bool BmpBlendView::viewportEvent(QEvent *event)
     case QEvent::HoverEnter:
     case QEvent::HoverMove: {
         QModelIndex mouseOver;
-        QPoint pos = static_cast<QHoverEvent*>(event)->pos();
+        QPoint pos = static_cast<QHoverEvent*>(event)->position().toPoint();
         QModelIndex index = indexAt(pos);
         QVector<BmpBlend*> blends = model()->blendsAt(index);
         int blendDir = -1;

@@ -1847,11 +1847,13 @@ void MainWindow::containerOverlayDialog()
     }
     mContainerOverlayDialog->show();
     mContainerOverlayDialog->raise();
+    mContainerOverlayDialog->activateWindow();
 
     TileMetaInfoMgr *mgr = TileMetaInfoMgr::instance();
-    for (Tileset *ts : mgr->tilesets()) {
+    const QList<Tileset*> tilesets = mgr->tilesets();
+    for (Tileset *ts : tilesets) {
         if (ts->isMissing()) {
-            PROGRESS progress(tr("Loading Tilesets.txt tilesets"), this);
+            PROGRESS progress(tr("Loading Tilesets.txt tilesets"), mContainerOverlayDialog);
             mgr->loadTilesets(true);
             TilesetManager::instance()->waitForTilesets();
             break;
@@ -1868,9 +1870,10 @@ void MainWindow::tileOverlayDialog()
     mTileOverlayDialog->raise();
 
     TileMetaInfoMgr *mgr = TileMetaInfoMgr::instance();
-    for (Tileset *ts : mgr->tilesets()) {
+    const QList<Tileset*> tilesets = mgr->tilesets();
+    for (Tileset *ts : tilesets) {
         if (ts->isMissing()) {
-            PROGRESS progress(tr("Loading Tilesets.txt tilesets"), this);
+            PROGRESS progress(tr("Loading Tilesets.txt tilesets"), mTileOverlayDialog);
             mgr->loadTilesets(true);
             TilesetManager::instance()->waitForTilesets();
             break;
@@ -1903,11 +1906,13 @@ void MainWindow::snowEditor()
     }
     mSnowEditor->show();
     mSnowEditor->raise();
+    mSnowEditor->activateWindow();
 
     TileMetaInfoMgr *mgr = TileMetaInfoMgr::instance();
-    for (Tileset *ts : mgr->tilesets()) {
+    const QList<Tileset*> tilesets = mgr->tilesets();
+    for (Tileset *ts : tilesets) {
         if (ts->isMissing()) {
-            PROGRESS progress(tr("Loading Tilesets.txt tilesets"), this);
+            PROGRESS progress(tr("Loading Tilesets.txt tilesets"), mSnowEditor);
             mgr->loadTilesets(true);
             TilesetManager::instance()->waitForTilesets();
             break;

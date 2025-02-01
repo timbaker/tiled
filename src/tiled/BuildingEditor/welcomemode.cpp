@@ -643,7 +643,9 @@ void WelcomeMode::legendIndexChanged(int index)
 void WelcomeMode::legendTextChanged(const QString &text)
 {
     // Called when typing text.
-#if !defined(QT_NO_DEBUG)
+#if defined(QT_NO_DEBUG)
+    Q_UNUSED(text)
+#else
     qDebug() << "legendTextChanged" << text;
 #endif
 }
@@ -704,7 +706,9 @@ void WelcomeMode::roomToneIndexChanged(int index)
 void WelcomeMode::roomToneTextChanged(const QString &text)
 {
     // Called when typing text.
-#if !defined(QT_NO_DEBUG)
+#if defined(QT_NO_DEBUG)
+    Q_UNUSED(text)
+#else
     qDebug() << "roomToneTextChanged" << text;
 #endif
 }

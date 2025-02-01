@@ -94,7 +94,7 @@ bool TexturePacker::pack(const TexturePackSettings &settings)
             const int TILE_HEIGHT = mImageTileSize[str].height() * (mSettings.mScale50 ? 0.5f : 1);
             QList<TileDefTileset*> tileDefTilesets;
             QString tilesetName = QFileInfo(str).baseName();
-            for (const QSharedPointer<TileDefFile> &tileDefFile : qAsConst(tileDefFiles)) {
+            for (const QSharedPointer<TileDefFile> &tileDefFile : std::as_const(tileDefFiles)) {
                 if (TileDefTileset *tdts = tileDefFile->tileset(tilesetName)) {
                     tileDefTilesets += tdts;
                 }

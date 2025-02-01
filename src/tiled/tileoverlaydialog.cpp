@@ -48,13 +48,13 @@ void TileOverlayDialog::showContextMenu(const QModelIndex &index, int entryIndex
     QAction *actionRemove = (entryIndex > 0 && entryIndex < entry->tiles().size()) ? menu.addAction(tr("Remove Tile")) : nullptr;
     QAction *action = menu.exec(event->globalPos());
     if (action == actionEditRoom) {
-        ui->overlayView->edit(index, EditAbstractOverlay::RoomName);
+        ui->overlayView->editOverlay(index, EditAbstractOverlay::RoomName);
     }
     if (action == actionEditUsage) {
-        ui->overlayView->edit(index, EditAbstractOverlay::Usage);
+        ui->overlayView->editOverlay(index, EditAbstractOverlay::Usage);
     }
     if (action == actionEditChance) {
-        ui->overlayView->edit(index, EditAbstractOverlay::Chance);
+        ui->overlayView->editOverlay(index, EditAbstractOverlay::Chance);
     }
     if ((actionRemove != nullptr) && (action == actionRemove)) {
         removeTile(entry, entryIndex);

@@ -79,7 +79,7 @@ bool TileDefTextFile::read(const QString &fileName)
 
     mFileName = path2;
 
-    for (const SimpleFileBlock& block : qAsConst(simple.blocks)) {
+    for (const SimpleFileBlock& block : std::as_const(simple.blocks)) {
         if (block.name == QLatin1String("tileset")) {
             TileDefTileset *tileset = readTileset(block);
             if (tileset == nullptr) {
@@ -105,13 +105,13 @@ bool TileDefTextFile::write(const QString &fileName, const QList<TileDefTileset 
         return a->mName < b->mName;
     });
 
-    for (TileDefTileset *tileset : qAsConst(sorted)) {
+    for (TileDefTileset *tileset : std::as_const(sorted)) {
         SimpleFileBlock tilesetBlock;
         tilesetBlock.name = QLatin1String("tileset");
         tilesetBlock.addValue("file", tileset->mName);
         tilesetBlock.addValue("size", QString(QLatin1String("%1,%2")).arg(tileset->mColumns).arg(tileset->mRows));
         tilesetBlock.addValue("id", QString::number(tileset->mID));
-        for (TileDefTile* tile : qAsConst(tileset->mTiles)) {
+        for (TileDefTile* tile : std::as_const(tileset->mTiles)) {
             SimpleFileBlock tileBlock;
             tileBlock.comments += QString(QStringLiteral("%1_%2").arg(tileset->mName).arg(tile->mID));
             tileBlock.name = QLatin1String("tile");

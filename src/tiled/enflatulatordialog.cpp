@@ -140,6 +140,8 @@ QPointF EnflatulatorFaceItem::toScene(qreal x, qreal y, qreal z)
 
 QPolygonF EnflatulatorFaceItem::toScene(QRectF &r)
 {
+    Q_UNUSED(r)
+
     QPolygonF polygon;
 #if 0
     polygon << QPointF(toScene(r.x(), r.y()));
@@ -252,6 +254,8 @@ void EnflatulatorFaceItem::moveHandle(int handle, const QPointF &scenePos)
             delta = QPoint();
             break;
         }
+        break;
+    case EnflatulatorFace::Roof:
         break;
     }
 
@@ -680,6 +684,7 @@ void EnflatulatorTool::mouseMoveEvent(QGraphicsSceneMouseEvent *event)
 
 void EnflatulatorTool::mouseReleaseEvent(QGraphicsSceneMouseEvent *event)
 {
+    Q_UNUSED(event)
     mMode = NoMode;
 }
 
@@ -790,10 +795,10 @@ void WestNorthTool::mousePressEvent(QGraphicsSceneMouseEvent *event)
 
 void WestNorthTool::mouseMoveEvent(QGraphicsSceneMouseEvent *event)
 {
-
+    Q_UNUSED(event)
 }
 
 void WestNorthTool::mouseReleaseEvent(QGraphicsSceneMouseEvent *event)
 {
-
+    Q_UNUSED(event)
 }

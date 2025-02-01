@@ -541,6 +541,8 @@ void BuildingMapEmptyOutsideFill::floodFillScanlineStack(int x, int y)
 
 bool BuildingMapEmptyOutsideFill::shouldVisit(int x1, int y1, int x2, int y2)
 {
+    Q_UNUSED(x1)
+    Q_UNUSED(y1)
     return isEmptyOutsideSquare(x2, y2) && // FIXME: Check for walls?
             !mRegion.contains(QPoint(x2, y2));
 }
@@ -771,7 +773,6 @@ void BuildingMap::BuildingSquaresToTileLayers(BuildingFloor *floor,
     if (mSuppressTiles.contains(floor))
         suppress = mSuppressTiles[floor];
 
-    int layerIndex = 0;
     foreach (TileLayer *tl, layerGroup->layers()) {
         int section = mLayerToSection[tl->name()];
         if (section == -1) // Skip user-added layers.
@@ -804,7 +805,6 @@ void BuildingMap::BuildingSquaresToTileLayers(BuildingFloor *floor,
             }
         }
         layerGroup->regionAltered(tl); // possibly set mNeedsSynch
-        layerIndex++;
     }
 }
 

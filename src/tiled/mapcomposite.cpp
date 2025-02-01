@@ -186,7 +186,7 @@ void CompositeLayerGroup::prepareDrawing(const MapRenderer *renderer, const QRec
     mPreparedSubMapLayers.resize(0);
     if (mAnyVisibleLayers == false)
         return;
-    for (const SubMapLayers &subMapLayer : qAsConst(mVisibleSubMapLayers)) {
+    for (const SubMapLayers &subMapLayer : std::as_const(mVisibleSubMapLayers)) {
         CompositeLayerGroup *layerGroup = subMapLayer.mLayerGroup;
         if (subMapLayer.mSubMap->isHiddenDuringDrag())
             continue;
@@ -669,6 +669,8 @@ void CompositeLayerGroup::calculateUnlitRoomMask(BuildingEditor::Building *build
 
 bool CompositeLayerGroup::roomHasLightSwitch(BuildingEditor::BuildingFloor *floor, const QRegion &region)
 {
+    Q_UNUSED(floor)
+
     const int NORTH_SWITCH = 0;
     const int WEST_SWITCH = 1;
     const int EAST_SWITCH = 2;

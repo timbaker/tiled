@@ -737,15 +737,15 @@ void ContainerOverlayView::mouseDoubleClickEvent(QMouseEvent *event)
             // FIXME: this base class shouldn't know anything about TileOverlayEntry
             if (TileOverlayEntry* toe = dynamic_cast<TileOverlayEntry*>(entry)) {
                 if (event->pos().x() > visualRect(index).x() + 150) {
-                    edit(index, EditAbstractOverlay::Chance);
+                    editOverlay(index, EditAbstractOverlay::Chance);
                     return;
                 }
             }
-            edit(index, EditAbstractOverlay::RoomName);
+            editOverlay(index, EditAbstractOverlay::RoomName);
             return;
         }
         if (event->pos().y() < visualRect(index).y() + extra + fontHgt * 2) {
-            edit(index, EditAbstractOverlay::Usage);
+            editOverlay(index, EditAbstractOverlay::Usage);
             return;
         }
     }
@@ -802,7 +802,7 @@ void ContainerOverlayView::dropEvent(QDropEvent *event)
     model()->setDropCoords(-1, QModelIndex());
 }
 
-void ContainerOverlayView::edit(const QModelIndex &index, EditAbstractOverlay which)
+void ContainerOverlayView::editOverlay(const QModelIndex &index, EditAbstractOverlay which)
 {
     mDelegate->setEditOrdinal(which);
     QTableView::edit(index);

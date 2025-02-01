@@ -313,7 +313,7 @@ void MixedTilesetView::mouseMoveEvent(QMouseEvent *event)
             mToolTipIndex = index;
             QVariant tooltip = index.data(Qt::ToolTipRole);
             if (tooltip.canConvert<QString>())
-                QToolTip::showText(event->globalPos(), tooltip.toString(), this,
+                QToolTip::showText(event->globalPosition().toPoint(), tooltip.toString(), this,
                                    visualRect(index));
             return;
         } else if (!index.isValid() && mToolTipIndex.isValid()) {

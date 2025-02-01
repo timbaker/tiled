@@ -125,6 +125,7 @@ bool PackFile::read(const QString &fileName)
         page.name = ReadString(in);
         int numEntries = readInt(in);
         bool mask = readInt(in) != 0;
+        (void) mask;
         qDebug() << "PackFile: page=" << page.name << "numEntries=" << numEntries;
 
         for (int n = 0; n < numEntries; n++) {
@@ -195,7 +196,7 @@ bool PackFile::write(const QString &fileName)
 
     out << (qint32) mPages.size();
 
-    for (const PackPage& page : qAsConst(mPages)) {
+    for (const PackPage& page : std::as_const(mPages)) {
         SaveString(out, page.name);
         out << (qint32) page.mInfo.size();
         out << (qint32) 1; // FIXME: mask???

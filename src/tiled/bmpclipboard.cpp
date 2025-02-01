@@ -39,6 +39,7 @@ void BmpClipboard::copySelection(const MapDocument *mapDocument)
 
 void BmpClipboard::pasteSelection(MapDocument *mapDocument)
 {
+    Q_UNUSED(mapDocument)
     BmpBrushTool::instance()->setUseBmpClipboard(true);
     ToolManager::instance()->selectTool(BmpBrushTool::instance());
 }

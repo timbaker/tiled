@@ -525,7 +525,6 @@ Tiled::Properties BuildingDocument::changeBuildingProperties(const Tiled::Proper
 Tiled::PropertiesGrid *BuildingDocument::changeSquareProperties(int level, const QRegion &selection, const Tiled::PropertiesGrid &propertiesGrid)
 {
     BuildingFloor *floor = mBuilding->floor(level);
-    QRect bounds = selection.boundingRect();
     Tiled::PropertiesGrid *result = floor->squarePropertiesGrid()->clone();
     floor->squarePropertiesGrid()->copy(propertiesGrid, selection);
     emit squarePropertiesChanged(floor, selection);

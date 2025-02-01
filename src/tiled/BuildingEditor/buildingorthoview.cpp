@@ -1739,17 +1739,17 @@ void BuildingOrthoView::mouseMoveEvent(QMouseEvent *event)
     if (mHandScrolling) {
         QScrollBar *hBar = horizontalScrollBar();
         QScrollBar *vBar = verticalScrollBar();
-        const QPoint d = event->globalPos() - mLastMousePos;
+        const QPoint d = event->globalPosition().toPoint() - mLastMousePos;
         hBar->setValue(hBar->value() + (isRightToLeft() ? d.x() : -d.x()));
         vBar->setValue(vBar->value() - d.y());
 
-        mLastMousePos = event->globalPos();
+        mLastMousePos = event->globalPosition().toPoint();
         return;
     }
 
     QGraphicsView::mouseMoveEvent(event);
 
-    mLastMousePos = event->globalPos();
+    mLastMousePos = event->globalPosition().toPoint();
     mLastMouseScenePos = mapToScene(viewport()->mapFromGlobal(mLastMousePos));
 
     QPoint tilePos = scene()->sceneToTile(mLastMouseScenePos, scene()->currentLevel());

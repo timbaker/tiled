@@ -179,6 +179,9 @@ void CheckBuildingsWindow::fixSelected()
 
 void CheckBuildingsWindow::selectionChanged(const QItemSelection &selected, const QItemSelection &deselected)
 {
+    Q_UNUSED(selected)
+    Q_UNUSED(deselected)
+
     ui->buttonFixSelected->setEnabled(false);
     const auto items = ui->treeWidget->selectedItems();
     for (QTreeWidgetItem *item : items) {
@@ -217,6 +220,8 @@ void CheckBuildingsWindow::selectionChanged(const QItemSelection &selected, cons
 
 void CheckBuildingsWindow::itemActivated(QTreeWidgetItem *item, int column)
 {
+    Q_UNUSED(column)
+
     if (item->parent() == nullptr)
         return;
     Issue &issue = mFiles[ui->treeWidget->indexOfTopLevelItem(item->parent())]->issues[item->parent()->indexOfChild(item)];
@@ -401,6 +406,8 @@ void CheckBuildingsWindow::check(const QString &filePath)
 
 void CheckBuildingsWindow::check(BuildingMap *bmap, Building *building, Map *map, const QString &fileName)
 {
+    Q_UNUSED(bmap)
+
     const int NORTH_SWITCH = 0;
     const int WEST_SWITCH = 1;
     const int EAST_SWITCH = 2;

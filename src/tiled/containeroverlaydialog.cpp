@@ -982,6 +982,9 @@ void AbstractOverlayDialog::entryUsageEdited(AbstractOverlayEntry *entry, const 
 // FIXME: this base class shouldn't know anything about TileOverlayEntry
 void AbstractOverlayDialog::entryChanceEdited(AbstractOverlayEntry *entry, int chance)
 {
+    Q_UNUSED(entry)
+    Q_UNUSED(index)
+
     QModelIndexList selection = ui->overlayView->selectionModel()->selectedIndexes();
     QList<AbstractOverlayEntry*> entries;
     for (QModelIndex index : selection) {
@@ -1271,7 +1274,9 @@ void ContainerOverlayDialog::tileDropped(AbstractOverlay *overlay, const QString
 
 void ContainerOverlayDialog::showContextMenu(const QModelIndex &index, int entryIndex, QContextMenuEvent *event)
 {
-
+    Q_UNUSED(index)
+    Q_UNUSED(entryIndex)
+    Q_UNUSED(event)
 }
 
 bool ContainerOverlayDialog::fileOpen(const QString &fileName, QList<AbstractOverlay *> &overlays)

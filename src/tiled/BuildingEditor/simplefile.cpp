@@ -332,13 +332,13 @@ QString SimpleFileBlock::toString(int depth) const
 
 void SimpleFileBlock::write(QTextStream &ts, int depth) const
 {
-    for (const SimpleFileKeyValue& kv : qAsConst(values)) {
+    for (const SimpleFileKeyValue& kv : std::as_const(values)) {
         kv.write(ts, depth);
     }
     INDENT indent(depth);
-    for (const SimpleFileBlock& child : qAsConst(blocks)) {
+    for (const SimpleFileBlock& child : std::as_const(blocks)) {
         if (child.comments.isEmpty() == false) {
-            for (const QString& comment : qAsConst(child.comments)) {
+            for (const QString& comment : std::as_const(child.comments)) {
                 ts << indent.text() << "// " << comment << "\n";
             }
         }

@@ -453,7 +453,7 @@ bool LayersPanelView::viewportEvent(QEvent *event)
     case QEvent::HoverEnter:
     case QEvent::HoverMove: {
         QModelIndex mouseOver;
-        QPoint pos = static_cast<QHoverEvent*>(event)->pos();
+        QPoint pos = static_cast<QHoverEvent*>(event)->position().toPoint();
         QModelIndex index = indexAt(pos);
         int layerIndex = model()->layerAt(index);
         if (layerIndex >= 0) {

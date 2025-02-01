@@ -304,7 +304,7 @@ void ObjectEditModeToolBar::roomChanged(Room *room)
 
 void ObjectEditModeToolBar::roofTypeChanged(QAction *action)
 {
-    int index = action->parentWidget()->actions().indexOf(action);
+    int index = qobject_cast<QWidget*>(action->parent())->actions().indexOf(action);
 
     static RoofObject::RoofType roofTypes[] = {
         RoofObject::SlopeW,
@@ -330,7 +330,7 @@ void ObjectEditModeToolBar::roofTypeChanged(QAction *action)
 
 void ObjectEditModeToolBar::roofShallowTypeChanged(QAction *action)
 {
-    int index = action->parentWidget()->actions().indexOf(action);
+    int index = qobject_cast<QWidget*>(action->parent())->actions().indexOf(action);
 
     static RoofObject::RoofType roofTypes[] = {
         RoofObject::ShallowSlopeW,
@@ -351,7 +351,7 @@ void ObjectEditModeToolBar::roofShallowTypeChanged(QAction *action)
 
 void ObjectEditModeToolBar::roofCornerTypeChanged(QAction *action)
 {
-    int index = action->parentWidget()->actions().indexOf(action);
+    int index = qobject_cast<QWidget*>(action->parent())->actions().indexOf(action);
 
     static RoofObject::RoofType roofTypes[] = {
         RoofObject::CornerInnerNW,

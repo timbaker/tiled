@@ -1110,12 +1110,14 @@ void TileDefDialog::tilesetFilterEdited(const QString &text)
 
 void TileDefDialog::propertyFilterEdited(const QString &text)
 {
+    Q_UNUSED(text)
     selectCurrentVisibleTileset();
     applyPropertyFilters();
 }
 
 void TileDefDialog::valueFilterEdited(const QString &text)
 {
+    Q_UNUSED(text)
     selectCurrentVisibleTileset();
     applyPropertyFilters();
 }
@@ -1166,7 +1168,7 @@ void TileDefDialog::applyPropertyFilters()
         if (bVisible == false) {
             QString tilesetName = item->data(Qt::UserRole).toString();
             if (TileDefTileset *tdts = mTileDefFile->tileset(tilesetName)) {
-                for (TileDefTile *tdt : qAsConst(tdts->mTiles)) {
+                for (TileDefTile *tdt : std::as_const(tdts->mTiles)) {
                     for (auto it = tdt->mProperties.cbegin(); it != tdt->mProperties.cend(); it++) {
                         if ((key.isEmpty() || it.key().contains(key, Qt::CaseInsensitive)) &&
                                 (value.isEmpty() || it.value().contains(value, Qt::CaseInsensitive))) {
@@ -1185,6 +1187,7 @@ void TileDefDialog::applyPropertyFilters()
 
 void TileDefDialog::tilesetBackgroundColorChanged(const QColor &color)
 {
+    Q_UNUSED(color)
     if (mCurrentTileset) {
         TileDefTileset *defTileset = mCurrentDefTileset;
         for (int i = 0; i < defTileset->mTiles.size(); i++) {
@@ -1427,7 +1430,7 @@ void TileDefDialog::setTilesetList()
     int maxWidth = 128;
 
     ui->tilesets->clear();
-    for (Tileset *ts : qAsConst(mTilesetByName)) {
+    for (Tileset *ts : std::as_const(mTilesetByName)) {
         QListWidgetItem *item = new QListWidgetItem(ts->name() + QString::fromLatin1(" (%1)").arg(mTileDefFile->tileset(ts->name())->mID));
         if (ts->isMissing())
             item->setForeground(Qt::red);
@@ -1880,7 +1883,7 @@ void TileDefDialog::tilesDirChanged()
 
         // Try to reuse a tileset from our list of removed tilesets.
         bool reused = false;
-        for (Tileset *ts : qAsConst(mRemovedTilesets)) {
+        for (Tileset *ts : std::as_const(mRemovedTilesets)) {
             if ((ts->imageSource() == imageSource) || (!imageSource2x.isEmpty() && (imageSource2x == ts->imageSource2x()))) {
                 mTilesets += ts;
                 mTilesetByName[ts->name()] = ts;
@@ -1908,7 +1911,7 @@ void TileDefDialog::tilesDirChanged()
 
     if (resized.size()) {
         QStringList sl;
-        for (const ResizedTileset& rt : qAsConst(resized)) {
+        for (const ResizedTileset& rt : std::as_const(resized)) {
             bool smaller = rt.oldSize.width() > rt.newSize.width() ||
                     rt.oldSize.height() > rt.newSize.height();
             sl += QString::fromLatin1("%1 - was %2x%3, now %4x%5 - %6")
@@ -1928,7 +1931,7 @@ void TileDefDialog::checkProperties()
 {
     QStringList warnings;
     for (TileDefTileset *tsDef : mTileDefFile->tilesets()) {
-        for (TileDefTile *tdt : qAsConst(tsDef->mTiles)) {
+        for (TileDefTile *tdt : std::as_const(tsDef->mTiles)) {
             for (auto it = tdt->mProperties.cbegin(); it != tdt->mProperties.cend(); it++) {
                 QString propName = it.key();
                 QString propValue = it.value();

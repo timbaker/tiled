@@ -134,7 +134,7 @@ public:
     explicit ContainerOverlayDialog(QWidget *parent = nullptr);
 
 protected slots:
-    void tileDropped(AbstractOverlay *overlay, const QStringList &tileNames);
+    void tileDropped(AbstractOverlay *overlay, const QStringList &tileNames) override;
     void showContextMenu(const QModelIndex &index, int entryIndex, QContextMenuEvent *event);
 
 protected:
