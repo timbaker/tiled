@@ -259,6 +259,7 @@ property
         IsoCombinationWasherDryer = IsoCombinationWasherDryer
         IsoCompost = IsoCompost
         IsoFireplace = IsoFireplace
+        IsoFeedingTrough = IsoFeedingTrough
         IsoMannequin = IsoMannequin
         IsoRadio = IsoRadio
         IsoJukebox = IsoJukebox
@@ -1908,6 +1909,25 @@ property
         Gravel = Gravel
         Sand = Sand
         Snow = Snow
+    }
+    Default = None
+    ValueAsPropertyName = false
+}
+
+property
+{
+    Type = Enum
+    Name = SeatMaterial
+    ShortName = 
+    Enums
+    {
+        None =
+        CastorChair =
+        Fabric =
+        Leather =
+        Metal =
+        Plastic =
+        Wooden =
     }
     Default = None
     ValueAsPropertyName = false
