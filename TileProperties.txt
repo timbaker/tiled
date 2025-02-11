@@ -1802,6 +1802,7 @@ property
         Small Wood Gate = WoodGateSmall
         Wood Door = WoodDoor
         Wood Gate = WoodGate
+        Wood Log Gate = WoodLogGate
         Wood Shack Door = WoodShackDoor
     }
     Default = None
@@ -1872,6 +1873,20 @@ property
         Metal = Metal
     }
     Default = None
+    ValueAsPropertyName = false
+}
+
+property
+{
+    Type = Enum
+    Name = GeneratorSound
+    ShortName =
+    Enums
+    {
+        Generator =
+        OldGenerator =
+    }
+    Default = Generator
     ValueAsPropertyName = false
 }
 
