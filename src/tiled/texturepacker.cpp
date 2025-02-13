@@ -814,10 +814,11 @@ bool TexturePacker::LoadTileNamesFile(QString imageName, int columns)
 
 bool TexturePacker::isSolidFloor(const QList<TileDefTileset *> &tilesets, int tileID) const
 {
-    QString solidfloor = QStringLiteral("solidfloor");
+    static const QString FloorOverlay = QStringLiteral("FloorOverlay");
+    static const QString solidfloor = QStringLiteral("solidfloor");
     for (TileDefTileset *tdts : tilesets) {
         if (TileDefTile *tdt = tdts->tileAt(tileID)) {
-            if (tdt->mProperties.contains(solidfloor)) {
+            if (tdt->mProperties.contains(FloorOverlay) || tdt->mProperties.contains(solidfloor)) {
                 return true;
             }
         }
