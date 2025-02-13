@@ -363,9 +363,17 @@ void FurnitureView::dragMoveEvent(QDragMoveEvent *event)
     QAbstractItemView::dragMoveEvent(event);
 
     if (event->isAccepted()) {
+#if QT_VERSION >= QT_VERSION_CHECK(6, 0, 0)
         QModelIndex index = indexAt(event->position().toPoint());
+#else
+        QModelIndex index = indexAt(event->pos());
+#endif
         if (FurnitureTile *ftile = model()->tileAt(index)) {
+#if QT_VERSION >= QT_VERSION_CHECK(6, 0, 0)
             QPoint dropCoords = mDelegate->dropCoords(event->position().toPoint(), index);
+#else
+            QPoint dropCoords = mDelegate->dropCoords(event->pos(), index);
+#endif
             if (!QRect(0, 0, ftile->width() + 1, ftile->height() + 1).contains(dropCoords)) {
                 model()->setDropCoords(QPoint(-1,-1), QModelIndex());
 //                update(index);

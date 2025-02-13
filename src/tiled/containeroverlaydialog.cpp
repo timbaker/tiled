@@ -983,7 +983,6 @@ void AbstractOverlayDialog::entryUsageEdited(AbstractOverlayEntry *entry, const 
 void AbstractOverlayDialog::entryChanceEdited(AbstractOverlayEntry *entry, int chance)
 {
     Q_UNUSED(entry)
-    Q_UNUSED(index)
 
     QModelIndexList selection = ui->overlayView->selectionModel()->selectedIndexes();
     QList<AbstractOverlayEntry*> entries;

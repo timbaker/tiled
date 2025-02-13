@@ -313,8 +313,12 @@ void MixedTilesetView::mouseMoveEvent(QMouseEvent *event)
             mToolTipIndex = index;
             QVariant tooltip = index.data(Qt::ToolTipRole);
             if (tooltip.canConvert<QString>())
+#if QT_VERSION >= QT_VERSION_CHECK(6, 0, 0)
                 QToolTip::showText(event->globalPosition().toPoint(), tooltip.toString(), this,
                                    visualRect(index));
+#else
+                QToolTip::showText(event->globalPos(), tooltip.toString(), this, visualRect(index));
+#endif
             return;
         } else if (!index.isValid() && mToolTipIndex.isValid()) {
             if (model()->tileAt(mToolTipIndex)) {

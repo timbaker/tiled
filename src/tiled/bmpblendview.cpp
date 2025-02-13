@@ -534,7 +534,11 @@ bool BmpBlendView::viewportEvent(QEvent *event)
     case QEvent::HoverEnter:
     case QEvent::HoverMove: {
         QModelIndex mouseOver;
+#if QT_VERSION >= QT_VERSION_CHECK(6, 0, 0)
         QPoint pos = static_cast<QHoverEvent*>(event)->position().toPoint();
+#else
+        QPoint pos = static_cast<QHoverEvent*>(event)->pos();
+#endif
         QModelIndex index = indexAt(pos);
         QVector<BmpBlend*> blends = model()->blendsAt(index);
         int blendDir = -1;
