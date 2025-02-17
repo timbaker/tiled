@@ -1811,6 +1811,25 @@ property
 
 property
 {
+    Type = Enum
+    Name = ThumpSound
+    ShortName = 
+    Enums
+    {
+        None =
+        ZombieThumpGarageDoor =
+        ZombieThumpGeneric =
+        ZombieThumpMetalPoleGate =
+        ZombieThumpMetal =
+        ZombieThumpWireFence =
+        ZombieThumpWindow =
+    }
+    Default = None
+    ValueAsPropertyName = false
+}
+
+property
+{
     Type = String
     Name = AmbientSound
     ShortName =
