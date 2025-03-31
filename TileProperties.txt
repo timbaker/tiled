@@ -1817,11 +1817,11 @@ property
     Enums
     {
         None =
+        ZombieThumpChainlinkFence =
         ZombieThumpGarageDoor =
         ZombieThumpGeneric =
         ZombieThumpMetalPoleGate =
         ZombieThumpMetal =
-        ZombieThumpWireFence =
         ZombieThumpWindow =
     }
     Default = None
