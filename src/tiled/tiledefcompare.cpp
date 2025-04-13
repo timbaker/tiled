@@ -292,8 +292,10 @@ void TileDefCompare::addRecentFile1(const QString &fileName)
 {
     // Remember the file by its canonical file path
     const QString canonicalFilePath = QFileInfo(fileName).canonicalFilePath();
-    if (canonicalFilePath.isEmpty())
+    if (canonicalFilePath.isEmpty()) {
+        setRecentFilesCombo1();
         return;
+    }
     QStringList files = recentFiles1();
     files.removeAll(canonicalFilePath);
     files.prepend(canonicalFilePath);
@@ -311,8 +313,10 @@ void TileDefCompare::addRecentFile2(const QString &fileName)
 {
     // Remember the file by its canonical file path
     const QString canonicalFilePath = QFileInfo(fileName).canonicalFilePath();
-    if (canonicalFilePath.isEmpty())
+    if (canonicalFilePath.isEmpty()) {
+        setRecentFilesCombo2();
         return;
+    }
     QStringList files = recentFiles2();
     files.removeAll(canonicalFilePath);
     files.prepend(canonicalFilePath);
