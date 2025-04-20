@@ -10,6 +10,10 @@
 #include <unistd.h>
 #endif
 
+#if !defined(__APPLE) && !defined(_WIN32)
+#include <unistd.h>
+#endif
+
 #if defined(_WIN32) && !defined(__BORLANDC__)
 #  define LSEEK _lseeki64
 #else
