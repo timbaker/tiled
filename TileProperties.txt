@@ -1982,3 +1982,51 @@ property
     ValueAsPropertyName = false
 }
 
+separator
+{
+}
+
+property
+{
+    Type = Boolean
+    Name = IsGroundAttached
+    ShortName =
+    Default = false
+    ReverseLogic = false
+}
+
+property
+{
+    Type = Boolean
+    Name = GroundAttachmentN
+    ShortName =
+    Default = false
+    ReverseLogic = false
+}
+
+property
+{
+    Type = Boolean
+    Name = GroundAttachmentS
+    ShortName =
+    Default = false
+    ReverseLogic = false
+}
+
+property
+{
+    Type = Boolean
+    Name = GroundAttachmentE
+    ShortName =
+    Default = false
+    ReverseLogic = false
+}
+
+property
+{
+    Type = Boolean
+    Name = GroundAttachmentW
+    ShortName =
+    Default = false
+    ReverseLogic = false
+}
