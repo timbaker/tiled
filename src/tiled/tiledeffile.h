@@ -58,8 +58,12 @@ public:
     virtual IntegerTileDefProperty *asInteger() { return 0; }
     virtual StringTileDefProperty *asString() { return 0; }
 
+    QString toolTip() const { return mToolTip; }
+    void setToolTip(const QString& tooltip) { mToolTip = tooltip; }
+
     QString mName;
     QString mShortName;
+    QString mToolTip;
 };
 
 class BooleanTileDefProperty : public TileDefProperty

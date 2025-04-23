@@ -6,6 +6,7 @@ property
     Min = 0
     Max = 128
     Default = 0
+    ToolTip = <p>How high a usable surface on this tile is from its base.</p>
 }
 property
 {
@@ -14,6 +15,7 @@ property
     ShortName =
     Default = false
     ReverseLogic = false
+    ToolTip = <p>If true, Surface is interpreted as the base of the object.</p>
 }
 property
 {
@@ -22,6 +24,7 @@ property
     ShortName =
     Default = false
     ReverseLogic = false
+    ToolTip = <p></p>
 }
 property
 {
@@ -31,6 +34,7 @@ property
     Min = 0
     Max = 256
     Default = 0
+    ToolTip = <p>The height of this tile.</p>
 }
 
 separator
@@ -44,6 +48,7 @@ property
     ShortName =
     Default = false
     ReverseLogic = false
+    ToolTip = <p>If true, tile can be moved by players.</p>
 }
 property
 {
@@ -63,6 +68,7 @@ property
     }
     Default = Normal
     ValueAsPropertyName = false
+    ToolTip = <p></p>
 }
 property
 {
@@ -71,6 +77,7 @@ property
     ShortName =
     Default = false
     ReverseLogic = false
+    ToolTip = <p>If true, this tile can share a space with doorframes.</p>
 }
 property
 {
@@ -79,6 +86,7 @@ property
     ShortName =
     Default = false
     ReverseLogic = false
+    ToolTip = <p> Used by wooden poles. If true, animals can be tethered to the tile.</p>
 }
 property
 {
@@ -86,6 +94,7 @@ property
     Name = CustomName
     ShortName =
     Default = 
+    ToolTip = <p></p>
 }
 property
 {
@@ -106,6 +115,7 @@ property
     }
     Default = None
     ValueAsPropertyName = false
+    ToolTip = <p>The tool set required to pick up this tile.</p>
 }
 property
 {
@@ -126,6 +136,7 @@ property
     }
     Default = None
     ValueAsPropertyName = false
+    ToolTip = <p>The tool set required to place this tile.</p>
 }
 property
 {
@@ -135,6 +146,7 @@ property
     Min = 0
     Max = 5
     Default = 0
+    ToolTip = <p></p>
 }
 property
 {
@@ -144,6 +156,7 @@ property
     Min = 0
     Max = 1000
     Default = 0
+    ToolTip = <p>How heavy this tile is.</p>
 }
 property
 {
@@ -152,6 +165,7 @@ property
     ShortName =
     Default = false
     ReverseLogic = false
+    ToolTip = <p></p>
 }
 property
 {
@@ -160,6 +174,7 @@ property
     ShortName =
     Default = false
     ReverseLogic = false
+    ToolTip = <p>Used by curtains. If true, curtains are closed.</p>
 }
 property
 {
@@ -167,6 +182,7 @@ property
     Name = GroupName
     ShortName =
     Default =
+    ToolTip = <p></p>
 }
 property
 {
@@ -183,6 +199,7 @@ property
     }
     Default = None
     ValueAsPropertyName = false
+    ToolTip = <p>The direction the tile is facing. Used when rotating objects.</p>
 }
 property
 {
@@ -227,6 +244,7 @@ property
     }
     Default = None
     ValueAsPropertyName = false
+    ToolTip = <p>Used in multi-tile objects to determine the offset position of this tile relative to the most northwestern tile. Format is &quot;east offset, south offset&quot;.</p>
 }
 property
 {
@@ -235,6 +253,7 @@ property
     ShortName =
     Default = false
     ReverseLogic = false
+    ToolTip = <p></p>
 }
 property
 {
@@ -243,6 +262,7 @@ property
     ShortName =
     Default = false
     ReverseLogic = false
+    ToolTip = <p></p>
 }
 property
 {
@@ -269,6 +289,7 @@ property
     }
     Default = IsoObject
     ValueAsPropertyName = false
+    ToolTip = <p></p>
 }
 property
 {
@@ -276,6 +297,7 @@ property
     Name = Item (full name)
     ShortName = CustomItem
     Default =
+    ToolTip = <p>The technical name of this tile. Always starts with "Base.".</p>
 }
 separator
 {
@@ -287,6 +309,7 @@ property
     ShortName =
     Default = false
     ReverseLogic = false
+    ToolTip = <p>If true, no other objects can be placed on this tile.</p>
 }
 property
 {
@@ -295,6 +318,7 @@ property
 	ShortName = TieSheetRope
 	Default = false
 	ReverseLogic = false
+    ToolTip = <p>If true, sheet rope can be tied to tile, without needing hammer and nails.</p>
 }
 property
 {
@@ -303,6 +327,7 @@ property
     ShortName = IsHigh
     Default = false
     ReverseLogic = false
+    ToolTip = <p>If true, tile occupies the top half of a cell's volume.</p>
 }
 property
 {
@@ -311,6 +336,7 @@ property
     ShortName = IsLow
     Default = false
     ReverseLogic = false
+    ToolTip = <p>If true, tile occupies the bottom half of a cell's volume.</p>
 }
 property
 {
@@ -319,6 +345,7 @@ property
     ShortName =
     Default = false
     ReverseLogic = false
+    ToolTip = <p>If true, this tile can be used to place objects on.</p>
 }
 property
 {
@@ -327,6 +354,7 @@ property
     ShortName =
     Default = false
     ReverseLogic = false
+    ToolTip = <p></p>
 }
 property
 {
@@ -341,6 +369,7 @@ property
     }
     Default = None
     ValueAsPropertyName = false
+    ToolTip = <p>If true, tile can be used for generic crafting. False is used for debug purposes.</p>
 }
 property
 {
@@ -355,6 +384,7 @@ property
     }
     Default = none
     ValueAsPropertyName = false
+    ToolTip = <p>The type of signal this tile can output, either audio only, or audio and video.</p>
 }
 property
 {
@@ -405,6 +435,7 @@ property
     }
     Default = Undefined
     ValueAsPropertyName = false
+    ToolTip = <p>The primary material gained from scrapping this tile.</p>
 }
 property
 {
@@ -453,6 +484,7 @@ property
     }
     Default = Undefined
     ValueAsPropertyName = false
+    ToolTip = <p>The secondary material gained from scrapping this tile.</p>
 }
 property
 {
@@ -500,6 +532,7 @@ property
     }
     Default = Undefined
     ValueAsPropertyName = false
+    ToolTip = <p>The tertiary material gained from scrapping this tile.</p>
 }
 property
 {
@@ -508,6 +541,7 @@ property
     ShortName =
     Default = false
     ReverseLogic = false
+    ToolTip = <p></p>
 }
 property
 {
@@ -516,6 +550,7 @@ property
     ShortName =
     Default = true
     ReverseLogic = false
+    ToolTip = <p></p>
 }
 property
 {
@@ -524,6 +559,7 @@ property
     ShortName =
     Default = true
     ReverseLogic = false
+    ToolTip = <p></p>
 }
 property
 {
@@ -538,6 +574,7 @@ property
     }
     Default = Medium
     ValueAsPropertyName = false
+    ToolTip = <p></p>
 }
 property
 {
@@ -547,6 +584,7 @@ property
     Min = -1
     Max = 100
     Default = -1
+    ToolTip = <p></p>
 }
 
 separator
@@ -560,6 +598,7 @@ property
     ShortName =
     Default = false
     ReverseLogic = false
+    ToolTip = <p>If true, tile is overlaid on a different tile to create small differences in appearance.</p>
 }
 
 property
@@ -568,6 +607,7 @@ property
     Name = FlatTextureOverride
     ShortName = FlatTextureOverride
     Default =
+    ToolTip = <p></p>
 }
 
 property
@@ -578,6 +618,7 @@ property
     Min = -64
     Max = 64
     Default = 0
+    ToolTip = <p></p>
 }                 
 
 property
@@ -586,6 +627,7 @@ property
     Name = BurntTile
     ShortName = BurntTile
     Default =
+    ToolTip = <p>When burnt, the specified tile replaces this tile.</p>
 }
 
 property
@@ -594,6 +636,7 @@ property
     Name = SnowTile
     ShortName = SnowTile
     Default =
+    ToolTip = <p>When snowing, the specified tile replaces this tile.</p>
 }
 
 property
@@ -611,6 +654,7 @@ property
     }
     Default = None
     ValueAsPropertyName = false
+    ToolTip = <p>The coverage type of grime on this tile.</p>
 }
 
 property
@@ -620,6 +664,7 @@ property
     ShortName = lightswitch
     Default = false
     ReverseLogic = false
+    ToolTip = <p>If true, tile can emit light when powered.</p>
 }
 property
 {
@@ -628,6 +673,7 @@ property
     ShortName =
     Default = false
     ReverseLogic = false
+    ToolTip = <p>If true, tile has a reflective surface that can be used for applying makeup, among other things.</p>
 }
 
 property
@@ -637,6 +683,7 @@ property
     ShortName = disableFade
     Default = false
     ReverseLogic = false
+    ToolTip = <p></p>
 }
 
 property
@@ -646,6 +693,7 @@ property
     ShortName = forceFade
     Default = false
     ReverseLogic = false
+    ToolTip = <p></p>
 }
 
 
@@ -657,6 +705,7 @@ property
     Min = 0
     Max = 255
     Default = 0
+    ToolTip = <p>The percentage of red light given off by the light source.</p>
 }
 
 property
@@ -667,6 +716,7 @@ property
     Min = 0
     Max = 255
     Default = 0
+    ToolTip = <p>The percentage of green light given off by the light source.</p>
 }
 
 property
@@ -677,6 +727,7 @@ property
     Min = 0
     Max = 255
     Default = 0
+    ToolTip = <p>The percentage of blue light given off by the light source.</p>
 }
 property
 {
@@ -686,6 +737,7 @@ property
     Min = 0
     Max = 128
     Default = 0
+    ToolTip = <p>The distance light from this light source will travel.</p>
 }
 
 property
@@ -695,6 +747,7 @@ property
     ShortName = streetlight
     Default = false
     ReverseLogic = false
+    ToolTip = <p>If true, tile will emit light when sunlight is low.</p>
 }
 
 property
@@ -705,6 +758,7 @@ property
     ShortName = excludeFromIso
     Default = false
     ReverseLogic = false
+    ToolTip = <p></p>
 }
 property
 {
@@ -713,6 +767,7 @@ property
     ShortName = collideN
     Default = false
     ReverseLogic = false
+    ToolTip = <p>If true, tile will have a north wall collision.</p>
 }
 property
 {
@@ -721,6 +776,7 @@ property
     ShortName = collideW
     Default = false
     ReverseLogic = false
+    ToolTip = <p>If true, tile will have a west wall collision.</p>
 }
 separator
 {
@@ -738,6 +794,7 @@ property
     }
     Default = None
     ValueAsPropertyName = true
+    ToolTip = <p></p>
 }
 property
 {
@@ -752,6 +809,7 @@ property
     }
     Default = None
     ValueAsPropertyName = true
+    ToolTip = <p></p>
 }
 property
 {
@@ -760,6 +818,7 @@ property
     ShortName = doorTrans
     Default = false
     ReverseLogic = false
+    ToolTip = <p>If true, tile is a door with a window.</p>
 }
 property
 {
@@ -768,6 +827,7 @@ property
     ShortName = forceLocked
     Default = false
     ReverseLogic = false
+    ToolTip = <p>If true, door always starts locked.</p>
 }
 property
 {
@@ -776,6 +836,7 @@ property
     ShortName = DoubleDoor1
     Default = false
     ReverseLogic = false
+    ToolTip = <p>If true, tile is the southern or eastern most tile of a two-tile-spanning doorframe.</p>
 }
 property
 {
@@ -784,6 +845,7 @@ property
     ShortName = DoubleDoor2
     Default = false
     ReverseLogic = false
+    ToolTip = <p>If true, tile is the northern or western most tile of a two tile spanning doorframe.</p>
 }
 property
 {
@@ -793,6 +855,7 @@ property
     Min = 0
     Max = 8
     Default = 0
+    ToolTip = <p></p>
 }
 property
 {
@@ -802,6 +865,7 @@ property
     Min = 0
     Max = 6
     Default = 0
+    ToolTip = <p>Determines the relative position of this tile in a garage door. 1, 2 & 3 are closed left, middle, right. 4, 5, & 6 are open left, middle, right.</p>
 }
 property
 {
@@ -810,6 +874,7 @@ property
     ShortName = InteriorSide
     Default = false
     ReverseLogic = false
+    ToolTip = <p>If true, tile is interior side of garage door.</p>
 }
 separator
 {
@@ -821,6 +886,7 @@ property
     ShortName = bed
     Default = false
     ReverseLogic = false
+    ToolTip = <p>If true, tile is marked as a bed for players to rest or sleep on.</p>
 }
 property
 {
@@ -836,6 +902,7 @@ property
     }
     Default = None
     ValueAsPropertyName = false
+    ToolTip = <p>Sets the quality of the bed. Higher quality means more restful sleep.</p>
 }
 property
 {
@@ -844,6 +911,7 @@ property
     ShortName =
     Default = false
     ReverseLogic = false
+    ToolTip = <p>If true, tile is overlaid on the floor.</p>
 }
 property
 {
@@ -852,6 +920,7 @@ property
     ShortName = solidfloor
     Default = false
     ReverseLogic = false
+    ToolTip = <p>If true, tile is a solid floor.</p>
 }
 property
 {
@@ -860,6 +929,7 @@ property
     ShortName = diamondFloor
     Default = false
     ReverseLogic = false
+    ToolTip = <p></p>
 }
 property
 {
@@ -868,6 +938,7 @@ property
     ShortName =
     Default = false
     ReverseLogic = false
+    ToolTip = <p>If true, tile shields all tiles placed below it from rain.</p>
 }
 property
 {
@@ -881,6 +952,7 @@ property
     }
     Default = Default
     ValueAsPropertyName = false
+    ToolTip = <p>Determines the render layer for this tile, either as part of the floor or not.</p>
 }
 property
 {
@@ -895,6 +967,7 @@ property
     }
     Default = Flat
     ValueAsPropertyName = false
+    ToolTip = <p></p>
 }
 property
 {
@@ -903,6 +976,7 @@ property
     ShortName = exterior
     Default = true
     ReverseLogic = false
+    ToolTip = <p>If true, tile is indoors. Is true by default.</p>
 }
 property
 {
@@ -911,6 +985,7 @@ property
     ShortName = transparentFloor
     Default = false
     ReverseLogic = false
+    ToolTip = <p>If true, tile is a floor that can be seen through, either a glass floor or a metal mesh floor.</p>
 }
 property
 {
@@ -927,6 +1002,7 @@ property
     }
     Default = None
     ValueAsPropertyName = true
+    ToolTip = <p>Marks tile as curtains.</p>
 }
 separator
 {
@@ -944,6 +1020,7 @@ property
     }
     Default = None
     ValueAsPropertyName = true
+    ToolTip = <p></p>
 }
 property
 {
@@ -958,6 +1035,7 @@ property
     }
     Default = NoEffect
     ValueAsPropertyName = false
+    ToolTip = <p></p>
 }
 property
 {
@@ -966,6 +1044,7 @@ property
     ShortName = invisible
     Default = false
     ReverseLogic = false
+    ToolTip = <p>If true, tile is invisible.</p>
 }
 property
 {
@@ -974,6 +1053,7 @@ property
     ShortName =
     Default = false
     ReverseLogic = false
+    ToolTip = <p></p>
 }
 property
 {
@@ -982,6 +1062,7 @@ property
     ShortName =
     Default = false
     ReverseLogic = false
+    ToolTip = <p>If true, tile is marked as a bush, slowing player movement through tile.</p>
 }
 property
 {
@@ -990,6 +1071,7 @@ property
     ShortName =
     Default = false
     ReverseLogic = false
+    ToolTip = <p></p>
 }
 property
 {
@@ -998,6 +1080,7 @@ property
     ShortName =
     Default = false
     ReverseLogic = false
+    ToolTip = <p></p>
 }
 property
 {
@@ -1006,6 +1089,7 @@ property
     ShortName =
     Default = false
     ReverseLogic = false
+    ToolTip = <p></p>
 }
 property
 {
@@ -1014,6 +1098,7 @@ property
     ShortName =
     Default = false
     ReverseLogic = false
+    ToolTip = <p></p>
 }
 separator
 {
@@ -1024,6 +1109,7 @@ property
     Name = ContainerType
     ShortName = container
     Default =
+    ToolTip = <p>Determines the type of container.</p>
 }
 property
 {
@@ -1033,6 +1119,7 @@ property
     Min = 0
     Max = 100
     Default = 0
+    ToolTip = <p></p>
 }
 property
 {
@@ -1041,6 +1128,7 @@ property
     ShortName =
     Default = false
     ReverseLogic = false
+    ToolTip = <p></p>
 }
 property
 {
@@ -1055,6 +1143,7 @@ property
     }
     Default = Normal
     ValueAsPropertyName = false
+    ToolTip = <p></p>
 }
 property
 {
@@ -1063,6 +1152,7 @@ property
     ShortName =
     Default = false
     ReverseLogic = false
+    ToolTip = <p>If true, tile has a freezer.</p>
 }
 property
 {
@@ -1072,6 +1162,7 @@ property
     Min = 0
     Max = 50
     Default = 0
+    ToolTip = <p>Determines the capacity of this tile's freezer.</p>
 }
 property
 {
@@ -1086,6 +1177,7 @@ property
     }
     Default = Normal
     ValueAsPropertyName = false
+    ToolTip = <p>Marks the location of the freezer within the tile.</p>
 }
 property
 {
@@ -1094,6 +1186,7 @@ property
     ShortName =
     Default = false
     ReverseLogic = false
+    ToolTip = <p>If true, tile is a wheelie bin.</p>
 }
 separator
 {
@@ -1112,6 +1205,7 @@ property
     }
     Default = None
     ValueAsPropertyName = true
+    ToolTip = <p>Marks tile as a roof tile, used in cutaway logic.</p>
 }
 property
 {
@@ -1136,6 +1230,7 @@ property
     }
     Default = None
     ValueAsPropertyName = false
+    ToolTip = <p>Marks tile as a fascia; a decorative band applied to the top of a wall.</p>
 }
 separator
 {
@@ -1159,6 +1254,7 @@ property
     }
     Default = None
     ValueAsPropertyName = true
+    ToolTip = <p></p>
 }
 separator
 {
@@ -1180,6 +1276,7 @@ property
     }
     Default = None
     ValueAsPropertyName = true
+    ToolTip = <p>Marks tile as part of a set of stairs.</p>
 }
 separator
 {
@@ -1209,6 +1306,7 @@ property
     Default = None
     ValueAsPropertyName = true
     ExtraPropertyIfSet = wall
+    ToolTip = <p>Determines the wall type and direction.</p>
 }
 property
 {
@@ -1217,6 +1315,7 @@ property
     ShortName =
     Default = false
     ReverseLogic = false
+    ToolTip = <p>If true, players can attack through tile using spears, but no other weapon.</p>
 }      
 property
 {
@@ -1232,6 +1331,7 @@ property
     }
     Default = None
     ValueAsPropertyName = true
+    ToolTip = <p><i>NeverCutaway</i> means the object will not be cut away. <i>Cut</i> will make the tile cutaway as if it were a wall.</p>
 }
 property
 {
@@ -1251,6 +1351,7 @@ property
     }
     Default = None
     ValueAsPropertyName = false
+    ToolTip = <p>Used by multi-tile doors and windows. When set, this determines how the cutaway behaves.</p>
 }
 property
 {
@@ -1258,6 +1359,7 @@ property
     Name = CornerWestWall
     ShortName =
     Default = 
+    ToolTip = <p>The specific west facing wall that makes up half of this corner wall. This is used when players destroy the north facing wall of a corner.</p>
 }
 property
 {
@@ -1265,6 +1367,7 @@ property
     Name = CornerNorthWall
     ShortName =
     Default = 
+    ToolTip = <p>The specific north facing wall that makes up half of this corner wall. This is used when players destroy the west facing wall of a corner.</p>
 }
 property
 {
@@ -1273,6 +1376,7 @@ property
     ShortName =
     Default = false
     ReverseLogic = false
+    ToolTip = <p>If true, players can't climb over tile.</p>
 }              
 property
 {
@@ -1281,6 +1385,7 @@ property
     ShortName =
     Default = false
     ReverseLogic = false
+    ToolTip = <p>If true, tile is a wall that can be climbed over from west to east, or vice versa.</p>
 }              
 property
 {
@@ -1289,6 +1394,7 @@ property
     ShortName =
     Default = false
     ReverseLogic = false
+    ToolTip = <p>If true, tile is a wall that can be climbed over from north to south, or vice versa.</p>
 }              
 property
 {
@@ -1296,6 +1402,7 @@ property
     Name = PaintingType
     ShortName =
     Default = 
+    ToolTip = <p>Determines the type of paintable object this tile is.</p>
 }
 property
 {
@@ -1304,6 +1411,7 @@ property
     ShortName =
     Default = false
     ReverseLogic = false
+    ToolTip = <p>If true, tile can be painted.</p>
 }
 property
 {
@@ -1312,6 +1420,7 @@ property
     ShortName =
     Default = false
     ReverseLogic = false
+    ToolTip = <p>If true, tile can be hopped over from north to south, or vice versa.</p>
 }
 property
 {
@@ -1320,6 +1429,7 @@ property
     ShortName =
     Default = false
     ReverseLogic = false
+    ToolTip = <p>If true, tile can be hopped over from west to east, or vice versa.</p>
 }
 property
 {
@@ -1329,6 +1439,7 @@ property
     Min = 0
     Max = 10000
     Default = 0
+    ToolTip = <p></p>
 }
 property
 {
@@ -1337,6 +1448,7 @@ property
     ShortName =
     Default = false
     ReverseLogic = false
+    ToolTip = <p>If true, tile is a decorative element attached to a wall.</p>
 }
 property
 {
@@ -1345,6 +1457,7 @@ property
     ShortName =
     Default = false
     ReverseLogic = false
+    ToolTip = <p>If true, tile ignores cutaway logic and is always visible on screen.</p>
 }
 property
 {
@@ -1353,6 +1466,7 @@ property
     ShortName =
     Default = false
     ReverseLogic = false
+    ToolTip = <p>If true, tile is attached to the north wall [top right].</p>
 }
 property
 {
@@ -1361,6 +1475,7 @@ property
     ShortName =
     Default = false
     ReverseLogic = false
+    ToolTip = <p> If true, tile is attached to the south wall [bottom left].</p>
 }
 property
 {
@@ -1369,6 +1484,7 @@ property
     ShortName =
     Default = false
     ReverseLogic = false
+    ToolTip = <p>If true, tile is attached to the east wall [bottom right].</p>
 }
 property
 {
@@ -1377,6 +1493,7 @@ property
     ShortName =
     Default = false
     ReverseLogic = false
+    ToolTip = <p>If true, tile is attached to the west wall [top left].</p>
 }
 property
 {
@@ -1385,6 +1502,7 @@ property
     ShortName =
     Default = false
     ReverseLogic = false
+    ToolTip = <p>If true, tile is attached to both north and west walls [top left and top right].</p>
 }
 property
 {
@@ -1393,6 +1511,7 @@ property
     ShortName =
     Default = false
     ReverseLogic = false
+    ToolTip = <p>If true, tile is attached to both south and east walls [bottom left and bottom right].</p>
 }
 property
 {
@@ -1401,6 +1520,7 @@ property
     ShortName =
     Default = false
     ReverseLogic = false
+    ToolTip = <p>If true, tile is attached to the floor.</p>
 }
 property
 {
@@ -1409,6 +1529,7 @@ property
     ShortName =
     Default = false
     ReverseLogic = false
+    ToolTip = <p>If true, tile is attached to the ceiling.</p>
 }
 separator
 {
@@ -1421,6 +1542,7 @@ property
     Min = 0
     Max = 1000000
     Default = 0
+    ToolTip = <p></p>
 }
 property
 {
@@ -1430,6 +1552,7 @@ property
     Min = 0
     Max = 1000000
     Default = 0
+    ToolTip = <p></p>
 }
 property
 {
@@ -1438,6 +1561,7 @@ property
     ShortName = waterPiped
     Default = false
     ReverseLogic = false
+    ToolTip = <p>If true, tile is plumbed directly to the water grid. Used on tiles such as sinks, washing machines, etc.</p>
 }
 
 property
@@ -1447,6 +1571,7 @@ property
     ShortName = taintedWater
     Default = false
     ReverseLogic = false
+    ToolTip = <p>If true, water is unsafe for consumption.</p>
 }
 
 property
@@ -1456,6 +1581,7 @@ property
     ShortName = water
     Default = false
     ReverseLogic = false
+    ToolTip = <p>If true, tile is water.</p>
 }
 
 property
@@ -1466,6 +1592,7 @@ property
     Min = 0
     Max = 1000
     Default = 0
+    ToolTip = <p></p>
 }
 
 separator
@@ -1484,6 +1611,7 @@ property
     }
     Default = None
     ValueAsPropertyName = true
+    ToolTip = <p>Marks tile as window.</p>
 }
 property
 {
@@ -1493,6 +1621,7 @@ property
     Min = -1000
     Max = 1000
     Default = 0
+    ToolTip = <p></p>
 }
 property
 {
@@ -1502,6 +1631,7 @@ property
     Min = -1000
     Max = 1000
     Default = 0
+    ToolTip = <p></p>
 }
 property
 {
@@ -1511,6 +1641,7 @@ property
     Min = -1000
     Max = 1000
     Default = 0
+    ToolTip = <p></p>
 }
 property
 {
@@ -1519,6 +1650,7 @@ property
     ShortName =
     Default = false
     ReverseLogic = false
+    ToolTip = <p>If true, tile contains a window that cannot be unlocked with a key, such as shop windows or barred windows in prison cells.</p>
 }
 property
 {
@@ -1527,6 +1659,7 @@ property
     ShortName = makeWindowInvincible
     Default = false
     ReverseLogic = false
+    ToolTip = <p>If true, window can't be broken.</p>
 }
 property
 {
@@ -1535,6 +1668,7 @@ property
     ShortName = othe
     Default = false
     ReverseLogic = false
+    ToolTip = <p></p>
 }
 
 separator
@@ -1555,6 +1689,7 @@ property
     }
     Default = None
     ValueAsPropertyName = false
+    ToolTip = <p>The size of the tree.</p>
 }
 
 property
@@ -1564,6 +1699,7 @@ property
     ShortName = canBeCut
     Default = false
     ReverseLogic = false
+    ToolTip = <p>Used by tall grass. If true, tile can be removed from the ground.</p>
 }
 
 property
@@ -1573,6 +1709,7 @@ property
     ShortName = canBeRemoved
     Default = false
     ReverseLogic = false
+    ToolTip = <p></p>
 }
 
 property
@@ -1583,6 +1720,7 @@ property
     Min = 0
     Max = 1000000
     Default = 0
+    ToolTip = <p></p>
 }
 
 property
@@ -1592,6 +1730,7 @@ property
     ShortName = vegitation
     Default = false
     ReverseLogic = false
+    ToolTip = <p></p>
 }
 
 property
@@ -1601,6 +1740,7 @@ property
     ShortName = propaneTank
     Default = false
     ReverseLogic = false
+    ToolTip = <p>If true, marks the tile as containing a propane tank</p>
 }
 
 separator
@@ -1615,6 +1755,7 @@ property
     Min = -1000
     Max = 1000
     Default = 0
+    ToolTip = <p></p>
 }
 property
 {
@@ -1623,6 +1764,7 @@ property
     ShortName = 
     Default = false
     ReverseLogic = false
+    ToolTip = <p></p>
 }
 property
 {
@@ -1631,6 +1773,7 @@ property
     ShortName = 
     Default = false
     ReverseLogic = false
+    ToolTip = <p></p>
 }
 
 separator
@@ -1644,6 +1787,7 @@ property
     ShortName = HitByCar
     Default = false
     ReverseLogic = false
+    ToolTip = <p>If true, tile can collide with cars.</p>
 }
 property
 {
@@ -1652,6 +1796,7 @@ property
     ShortName = StopCar
     Default = false
     ReverseLogic = false
+    ToolTip = <p>If true, tile will stop cars upon collision.</p>
 }
 property
 {
@@ -1661,6 +1806,7 @@ property
     Min = 0
     Max = 120
     Default = 0
+    ToolTip = <p>The minimum speed of a vehicle, in KpH, for this tile to be damaged.</p>
 }
 property
 {
@@ -1670,6 +1816,7 @@ property
     Min = 0
     Max = 34
     Default = 0
+    ToolTip = <p></p>
 }
 property
 {
@@ -1677,6 +1824,7 @@ property
     Name = Damaged Sprite (by car)
     ShortName = DamagedSprite
     Default = 
+    ToolTip = <p>When hit by a car, the tile named in this property replaces the existing tile.</p>
 }
 property
 {
@@ -1696,6 +1844,7 @@ property
     }
     Default = None
     ValueAsPropertyName = false
+    ToolTip = <p>Sets the basic shape for collision.</p>
 }
 property
 {
@@ -1703,6 +1852,7 @@ property
     Name = PhysicsMesh
     ShortName =
     Default =
+    ToolTip = <p></p>
 }
 property
 {
@@ -1719,6 +1869,7 @@ property
     }
     Default = None
     ValueAsPropertyName = false
+    ToolTip = <p></p>
 }
 property
 {
@@ -1728,6 +1879,7 @@ property
     Min = 0
     Max = 100
     Default = 0
+    ToolTip = <p></p>
 }
 property
 {
@@ -1737,6 +1889,7 @@ property
     Min = 0
     Max = 100
     Default = 0
+    ToolTip = <p></p>
 }
 
 separator
@@ -1750,6 +1903,7 @@ property
     ShortName =
     Default = false
     ReverseLogic = false
+    ToolTip = <p>If true, tile will be affected by wind movement.</p>
 }
 property
 {
@@ -1759,6 +1913,7 @@ property
     Min = 1
     Max = 3
     Default = 1
+    ToolTip = <p></p>
 }
 
 separator
@@ -1780,6 +1935,7 @@ property
     }
     Default = None
     ValueAsPropertyName = false
+    ToolTip = <p></p>
 }
 
 property
@@ -1807,6 +1963,7 @@ property
     }
     Default = None
     ValueAsPropertyName = false
+    ToolTip = <p></p>
 }
 
 property
@@ -1826,6 +1983,7 @@ property
     }
     Default = None
     ValueAsPropertyName = false
+    ToolTip = <p>The sound made when a zombie hits this tile.</p>
 }
 
 property
@@ -1834,6 +1992,7 @@ property
     Name = AmbientSound
     ShortName =
     Default = 
+    ToolTip = <p></p>
 }
 
 property
@@ -1850,6 +2009,7 @@ property
     }
     Default = None
     ValueAsPropertyName = false
+    ToolTip = <p></p>
 }
 
 property
@@ -1871,6 +2031,7 @@ property
     }
     Default = None
     ValueAsPropertyName = false
+    ToolTip = <p></p>
 }
 
 property
@@ -1893,6 +2054,7 @@ property
     }
     Default = None
     ValueAsPropertyName = false
+    ToolTip = <p></p>
 }
 
 property
@@ -1907,6 +2069,7 @@ property
     }
     Default = Generator
     ValueAsPropertyName = false
+    ToolTip = <p></p>
 }
 
 property
@@ -1946,6 +2109,7 @@ property
     }
     Default = None
     ValueAsPropertyName = false
+    ToolTip = <p></p>
 }
 
 property
@@ -1965,6 +2129,7 @@ property
     }
     Default = None
     ValueAsPropertyName = false
+    ToolTip = <p></p>
 }
 
 property
@@ -1980,6 +2145,7 @@ property
     }
     Default = Generic
     ValueAsPropertyName = false
+    ToolTip = <p></p>
 }
 
 separator

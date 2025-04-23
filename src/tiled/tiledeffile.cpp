@@ -578,6 +578,10 @@ bool TilePropertyMgr::addProperty(SimpleFileBlock &block)
     QString Type = block.value("Type");
     QString Name = block.value("Name");
     QString ShortName = block.value("ShortName");
+    QString ToolTip = block.value("ToolTip").trimmed();
+    if (ToolTip == QStringLiteral("<p></p>")) {
+        ToolTip.clear();
+    }
 
     if (Name.isEmpty()) {
         mError = tr("Empty or missing Name value.\n\n%2").arg(block.toString());
@@ -598,6 +602,7 @@ bool TilePropertyMgr::addProperty(SimpleFileBlock &block)
         bool ReverseLogic = toBoolean("ReverseLogic", block, ok);
         if (!ok) return false;
         mProperties.addBoolean(Name, ShortName, Default, ReverseLogic);
+        mProperties.property(Name)->setToolTip(ToolTip);
         return true;
     }
 
@@ -614,12 +619,14 @@ bool TilePropertyMgr::addProperty(SimpleFileBlock &block)
             return false;
         }
         mProperties.addInteger(Name, ShortName, Min, Max, Default);
+        mProperties.property(Name)->setToolTip(ToolTip);
         return true;
     }
 
     if (Type == QLatin1String("String")) {
         QString Default = block.value("Default");
         mProperties.addString(Name, ShortName, Default);
+        mProperties.property(Name)->setToolTip(ToolTip);
         return true;
     }
 
@@ -646,6 +653,7 @@ bool TilePropertyMgr::addProperty(SimpleFileBlock &block)
         QString ExtraPropertyIfSet = block.value("ExtraPropertyIfSet");
         mProperties.addEnum(Name, ShortName, enums, shortEnums, Default,
                             ValueAsPropertyName, ExtraPropertyIfSet);
+        mProperties.property(Name)->setToolTip(ToolTip);
         return true;
     }
 

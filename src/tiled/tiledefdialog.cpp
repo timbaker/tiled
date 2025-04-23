@@ -42,6 +42,7 @@
 #include <QImageReader>
 #include <QLineEdit>
 #include <QMessageBox>
+#include <QProxyStyle>
 #include <QScrollBar>
 #include <QSettings>
 #include <QToolBar>
@@ -58,6 +59,21 @@ inline QDebug noise() { return QDebug(QtDebugMsg); }
 
 using namespace Tiled;
 using namespace Tiled::Internal;
+
+class MyProxyStyle : public QProxyStyle
+{
+public:
+    using QProxyStyle::QProxyStyle;
+
+    int styleHint(StyleHint hint, const QStyleOption* option = nullptr, const QWidget* widget = nullptr, QStyleHintReturn* returnData = nullptr) const override
+    {
+        if (hint == QStyle::SH_ToolTip_WakeUpDelay)
+        {
+            return 0;
+        }
+        return QProxyStyle::styleHint(hint, option, widget, returnData);
+    }
+};
 
 /////
 
@@ -268,6 +284,8 @@ TileDefDialog::TileDefDialog(QWidget *parent) :
 {
     ui->setupUi(this);
 
+    QProxyStyle* style = new MyProxyStyle(qApp->style());
+
     ui->statusbar->hide();
 
     /////
@@ -444,6 +462,8 @@ TileDefDialog::TileDefDialog(QWidget *parent) :
             connect(w, &QAbstractButton::toggled, this, &TileDefDialog::checkboxToggled);
             mCheckBoxes[p->mName] = w;
             form->setWidget(form->rowCount(), QFormLayout::SpanningRole, w);
+            w->setToolTip(prop->toolTip());
+            w->setStyle(style);
             continue;
         }
         if (IntegerTileDefProperty *p = prop->asInteger()) {
@@ -459,6 +479,10 @@ TileDefDialog::TileDefDialog(QWidget *parent) :
 #endif
             mSpinBoxes[p->mName] = w;
             form->addRow(p->mName, w);
+            w->setToolTip(prop->toolTip());
+            w->setStyle(style);
+            form->labelForField(w)->setToolTip(prop->toolTip());
+            form->labelForField(w)->setStyle(style);
             continue;
         }
         if (StringTileDefProperty *p = prop->asString()) {
@@ -471,6 +495,10 @@ TileDefDialog::TileDefDialog(QWidget *parent) :
             connect(w->lineEdit(), &QLineEdit::editingFinished, this, &TileDefDialog::stringEdited);
             mComboBoxes[p->mName] = w;
             form->addRow(p->mName, w);
+            w->setToolTip(prop->toolTip());
+            w->setStyle(style);
+            form->labelForField(w)->setToolTip(prop->toolTip());
+            form->labelForField(w)->setStyle(style);
             continue;
         }
         if (EnumTileDefProperty *p = prop->asEnum()) {
@@ -486,6 +514,10 @@ TileDefDialog::TileDefDialog(QWidget *parent) :
 #endif
             mComboBoxes[p->mName] = w;
             form->addRow(p->mName, w);
+            w->setToolTip(prop->toolTip());
+            w->setStyle(style);
+            form->labelForField(w)->setToolTip(prop->toolTip());
+            form->labelForField(w)->setStyle(style);
             continue;
         }
     }
