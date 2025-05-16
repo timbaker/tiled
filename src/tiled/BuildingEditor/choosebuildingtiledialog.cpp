@@ -162,6 +162,11 @@ void ChooseBuildingTileDialog::tilesDialog()
     dialog->reparent(this);
     dialog->exec();
     dialog->reparent(saveParent);
+#if 1
+    // BUG: The underlying window for 'dialog' is destroyed behind our back, without deleting the Qt object.
+    // External WM_DESTROY received for  QWidgetWindow(0x28c00e56f90, name="BuildingTilesDialogWindow") , parent:  QWindow(0x0) , transient parent:  QWidgetWindow(0x28c27cb2f60, name="BuildingEditorWindowWindow")
+    dialog->deleteInstance();
+#endif
 
     if (dialog->changes()) {
         setTilesList(mCategory);

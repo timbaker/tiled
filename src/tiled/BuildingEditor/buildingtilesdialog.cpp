@@ -835,6 +835,7 @@ BuildingTilesDialog::BuildingTilesDialog(QWidget *parent) :
 BuildingTilesDialog::~BuildingTilesDialog()
 {
     delete ui;
+    mInstance = nullptr;
 }
 
 bool BuildingTilesDialog::changes()
@@ -860,7 +861,9 @@ void BuildingTilesDialog::reparent(QWidget *parent)
 {
     if (parent == parentWidget()) return;
     QPoint savePosition = pos();
+    Qt::WindowModality modality = windowModality();
     setParent(parent, windowFlags());
+    setWindowModality(modality);
     move(savePosition);
 }
 
