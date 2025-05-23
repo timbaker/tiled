@@ -10,6 +10,12 @@ edges {
         ne = 'overlay_grime_floor_01_39',
         se = 'overlay_grime_floor_01_30',
         sw = 'overlay_grime_floor_01_31',
+    },
+    outer = {
+        nw = 'overlay_grime_floor_01_84',
+        ne = 'overlay_grime_floor_01_83',
+        se = 'overlay_grime_floor_01_82',
+        sw = 'overlay_grime_floor_01_85',
     }
 }
 
