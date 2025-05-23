@@ -101,6 +101,7 @@ LuaTileTool::LuaTileTool(const QString &scriptFileName,
 
     mCursorItem->setPen(QPen(QColor(0,255,0,96), 1));
     mCursorItem->setBrush(QColor(0,255,0,64));
+    mCursorItem->setZValue(10000);
 }
 
 LuaTileTool::~LuaTileTool()
