@@ -34,7 +34,7 @@ property
     Min = 0
     Max = 256
     Default = 0
-    ToolTip = <p>Defines tile height</p>
+    ToolTip = <p>Defines tile height.</p>
 }
 
 separator
@@ -244,7 +244,7 @@ property
     }
     Default = None
     ValueAsPropertyName = false
-    ToolTip = <p>Used in multi-tile objects to determine the offset position of this tile relative to the most northwestern tile. Format is "east offset, south offset".</p>
+    ToolTip = <p>Used in multi-tile objects to determine the offset position of this tile relative to the most northwestern tile. Format is "east offset, south offset"</p>
 }
 property
 {
@@ -289,7 +289,7 @@ property
     }
     Default = IsoObject
     ValueAsPropertyName = false
-    ToolTip = <p>Defines tile behaviour</p>
+    ToolTip = <p>Defines tile behaviour.</p>
 }
 property
 {
@@ -705,7 +705,7 @@ property
     Min = 0
     Max = 255
     Default = 0
-    ToolTip = <p>Defines percentage of red light given off by the light source.</p>
+    ToolTip = <p>Defines amount of red light given off by the light source.</p>
 }
 
 property
@@ -716,7 +716,7 @@ property
     Min = 0
     Max = 255
     Default = 0
-    ToolTip = <p>Defines percentage of green light given off by the light source.</p>
+    ToolTip = <p>Defines amount of green light given off by the light source.</p>
 }
 
 property
@@ -727,7 +727,7 @@ property
     Min = 0
     Max = 255
     Default = 0
-    ToolTip = <p>Defines percentage of blue light given off by the light source.</p>
+    ToolTip = <p>Defines amount of blue light given off by the light source.</p>
 }
 
 property
@@ -920,7 +920,7 @@ property
     }
     Default = None
     ValueAsPropertyName = true
-    ToolTip = <p>Defines tile as chair</p>
+    ToolTip = <p>Defines tile as chair.</p>
 }
 property
 {
@@ -1457,7 +1457,7 @@ property
     Min = 0
     Max = 10000
     Default = 0
-    ToolTip = <p>Defines stealth bonus given to players for sneaking near tile,</p>
+    ToolTip = <p>Defines stealth bonus given to players for sneaking near tile.</p>
 }
 property
 {
@@ -1561,7 +1561,7 @@ property
 property
 {
     Type = Boolean
-    Name = attachedtoGlass
+    Name = AttachedToGlass
     ShortName =
     Default = false
     ReverseLogic = false
@@ -1628,7 +1628,7 @@ property
     Min = 0
     Max = 1000
     Default = 0
-    ToolTip = <p></p>
+    ToolTip = <p>Defines amount of fuel tile starts with.</p>
 }
 
 separator
@@ -1647,7 +1647,7 @@ property
     }
     Default = None
     ValueAsPropertyName = true
-    ToolTip = <p>Marks tile as window.</p>
+    ToolTip = <p>Defines tile as window.</p>
 }
 property
 {
@@ -1747,7 +1747,7 @@ property
     Min = 0
     Max = 1000000
     Default = 0
-    ToolTip = <p></p>
+    ToolTip = <p>Defines required energy for tile to catch fire.</p>
 }
 
 property
@@ -1757,7 +1757,7 @@ property
     ShortName = vegitation
     Default = false
     ReverseLogic = false
-    ToolTip = <p></p>
+    ToolTip = <p>If true, tile has grass.</p>
 }
 
 property
@@ -1767,7 +1767,7 @@ property
     ShortName = propaneTank
     Default = false
     ReverseLogic = false
-    ToolTip = <p>If true, marks tile as containing a propane tank</p>
+    ToolTip = <p>If true, marks tile as containing a propane tank.</p>
 }
 
 separator
@@ -1871,7 +1871,7 @@ property
     }
     Default = None
     ValueAsPropertyName = false
-    ToolTip = <p>Sets basic collision shape</p>
+    ToolTip = <p>Defines basic collision shape.</p>
 }
 property
 {
@@ -1879,7 +1879,7 @@ property
     Name = PhysicsMesh
     ShortName =
     Default =
-    ToolTip = <p></p>
+    ToolTip = <p>Defines detailed collision shape.</p>
 }
 property
 {
@@ -2096,7 +2096,7 @@ property
     }
     Default = Generator
     ValueAsPropertyName = false
-    ToolTip = <p></p>
+    ToolTip = <p>Defines sound made by generator.</p>
 }
 
 property
