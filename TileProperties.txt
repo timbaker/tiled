@@ -24,7 +24,7 @@ property
     ShortName =
     Default = false
     ReverseLogic = false
-    ToolTip = <p></p>
+    ToolTip = <p>If true, tile can be placed on surfaces in any orientation, ignoring direction surface is positioned.</p>
 }
 property
 {
@@ -584,7 +584,7 @@ property
     Min = -1
     Max = 100
     Default = -1
-    ToolTip = <p></p>
+    ToolTip = <p>Used in the code, but no tiles have this property.</p>
 }
 
 separator
@@ -600,26 +600,6 @@ property
     ReverseLogic = false
     ToolTip = <p>If true, tile is overlaid on a different tile to create small differences in appearance.</p>
 }
-
-property
-{
-    Type = String
-    Name = FlatTextureOverride
-    ShortName = FlatTextureOverride
-    Default =
-    ToolTip = <p></p>
-}
-
-property
-{
-    Type = Integer
-    Name = FlatTextureOffset
-    ShortName = FlatTextureOffset
-    Min = -64
-    Max = 64
-    Default = 0
-    ToolTip = <p></p>
-}                 
 
 property
 {
@@ -669,6 +649,15 @@ property
 property
 {
     Type = Boolean
+    Name = HasLightOnSprite
+    ShortName = 
+    Default = false
+    ReverseLogic = false
+    ToolTip = <p>If true, tile has accompanying light tile in <tileset name>_on sheet.</p>
+}
+property
+{
+    Type = Boolean
     Name = IsMirror
     ShortName =
     Default = false
@@ -676,15 +665,7 @@ property
     ToolTip = <p>If true, tile has a reflective surface that can be used for applying makeup, among other things.</p>
 }
 
-property
-{
-    Type = Boolean
-    Name = Disable Fade
-    ShortName = disableFade
-    Default = false
-    ReverseLogic = false
-    ToolTip = <p></p>
-}
+
 
 property
 {
@@ -693,7 +674,7 @@ property
     ShortName = forceFade
     Default = false
     ReverseLogic = false
-    ToolTip = <p></p>
+    ToolTip = <p>If true, tile is forced to fade when players occupy a room behind it.</p>
 }
 
 
@@ -751,16 +732,7 @@ property
     ToolTip = <p>If true, tile will emit light when sunlight is low.</p>
 }
 
-property
-{
-    Type = Boolean
-    Name = excludeFromIso
-    Name = excludeFromIso
-    ShortName = excludeFromIso
-    Default = false
-    ReverseLogic = false
-    ToolTip = <p></p>
-}
+
 property
 {
     Type = Boolean
@@ -947,8 +919,47 @@ property
     ShortName = diamondFloor
     Default = false
     ReverseLogic = false
-    ToolTip = <p></p>
+    ToolTip = <p>If true, tile is completely flat floor.</p>
 }
+property
+{
+    Type = Enum
+    Name = FloorMaterial
+    ShortName =
+    Enums
+    {
+        None =
+        Burnt = Burnt
+        Clay = Clay
+        Dirt = Dirt
+        Dirt with patchy grass = Dirt_Grass
+        Grass - Dark = Grass_Dark
+        Grass - Medium = Grass_Medium
+		Grass - Light = Grass_Light
+        Road - Type 1 = Road_01
+        Road - Type 2 = Road_02
+        Road - Type 3 = Road_03
+        Road - Type 4 = Road_04
+        Road - Type 5 = Road_05
+		Road - Type 6 = Road_06
+        Road - Type 7 = Road_07
+        Sand = Sand
+        Water = Water
+    }
+    Default = None
+    ValueAsPropertyName = false
+    ToolTip = <p>Defines material of natural floor.</p>
+}
+property
+{
+    Type = Boolean
+    Name = grassFloor
+    ShortName =
+    Default = false
+    ReverseLogic = false
+	ToolTip = <p>If true, tile is grass floor.</p>
+}
+
 property
 {
     Type = Boolean
@@ -1038,7 +1049,7 @@ property
     }
     Default = None
     ValueAsPropertyName = true
-    ToolTip = <p></p>
+    ToolTip = <p>Defines how tile blocks movement and vision. "Solid" blocks both, "SolidTransparent" only blocks movement.</p>
 }
 property
 {
@@ -1071,7 +1082,7 @@ property
     ShortName =
     Default = false
     ReverseLogic = false
-    ToolTip = <p></p>
+    ToolTip = <p>Used in the code, but no tiles have this property.</p>
 }
 property
 {
@@ -1089,7 +1100,7 @@ property
     ShortName =
     Default = false
     ReverseLogic = false
-    ToolTip = <p></p>
+    ToolTip = <p>If true, tile ignores square lighting and uses global ambient lighting instead.</p>
 }
 property
 {
@@ -1098,17 +1109,9 @@ property
     ShortName =
     Default = false
     ReverseLogic = false
-    ToolTip = <p></p>
+    ToolTip = <p>If true, tile will always render, ignoring cutaway system.</p>
 }
-property
-{
-    Type = Boolean
-    Name = PreSeen
-    ShortName =
-    Default = false
-    ReverseLogic = false
-    ToolTip = <p></p>
-}
+
 property
 {
     Type = Boolean
@@ -1116,7 +1119,7 @@ property
     ShortName =
     Default = false
     ReverseLogic = false
-    ToolTip = <p></p>
+    ToolTip = <p>If true, tile uses same colour at each vertex, as opposed to standard walls where colour can vary per vertex.</p>
 }
 separator
 {
@@ -1200,6 +1203,15 @@ property
 property
 {
     Type = Boolean
+    Name = NoFreezer
+    ShortName =
+    Default = false
+    ReverseLogic = false
+	ToolTip = <p>If true, tile doesn't contain freezer.</p>
+}
+property
+{
+    Type = Boolean
     Name = WheelieBin
     ShortName =
     Default = false
@@ -1227,6 +1239,16 @@ property
 }
 property
 {
+    Type = Integer
+    Name = RoofGroup
+    ShortName = 
+    Min = 0
+	Max = 100
+    Default = 0
+    ToolTip = <p>Defines which roof group tile belongs to.</p>
+}
+property
+{
     Name = FasciaEdge
     Type = Enum
     ShortName =
@@ -1249,6 +1271,15 @@ property
     Default = None
     ValueAsPropertyName = false
     ToolTip = <p>Marks tile as a fascia; a decorative band applied to the top of a wall.</p>
+}
+property
+{
+    Type = Boolean
+    Name = isEave
+    ShortName =
+    Default = false
+    ReverseLogic = false
+    ToolTip = <p>If true, tile is an eave.</p>
 }
 separator
 {
@@ -1325,6 +1356,14 @@ property
     ValueAsPropertyName = true
     ExtraPropertyIfSet = wall
     ToolTip = <p>Defines wall type and direction.</p>
+}
+property
+{
+    Type = String
+    Name = RoofWallStart
+    ShortName = 
+    Default =
+    ToolTip = <p>Defines first tile of visually identical roof walls.</p>
 }
 property
 {
@@ -1493,7 +1532,7 @@ property
     ShortName =
     Default = false
     ReverseLogic = false
-    ToolTip = <p> If true, tile is attached to south wall [bottom left].</p>
+    ToolTip = <p>If true, tile is attached to south wall [bottom left].</p>
 }
 property
 {
@@ -1698,6 +1737,7 @@ property
     ToolTip = <p>If true, window can't be broken.</p>
 }
 
+
 separator
 {
 }
@@ -1843,7 +1883,7 @@ property
     Min = 0
     Max = 34
     Default = 0
-    ToolTip = <p></p>
+    ToolTip = <p>Used in the code, but no tiles have this property.</p>
 }
 property
 {
@@ -1923,6 +1963,7 @@ separator
 {
 }
 
+
 property
 {
     Type = Boolean
@@ -1932,15 +1973,21 @@ property
     ReverseLogic = false
     ToolTip = <p>If true, tile will be affected by wind movement.</p>
 }
+
 property
 {
-    Type = Integer
-    Name = WindType
-    ShortName =
-    Min = 1
-    Max = 3
-    Default = 1
-    ToolTip = <p></p>
+    Type = Enum
+    Name = Wind Speed
+    ShortName = WindType
+	Enums
+	{
+		0.05 = 1
+		0.21 = 2
+		0.54 = 3
+	}
+    Default = 0.05
+	ValueAsPropertyName = false
+    ToolTip = <p>Defines required wind speed for tile to sway.</p>
 }
 
 separator
@@ -2007,6 +2054,7 @@ property
         ZombieThumpMetalPoleGate =
         ZombieThumpMetal =
         ZombieThumpWindow =
+        ZombieThumpWood =
     }
     Default = None
     ValueAsPropertyName = false
@@ -2024,6 +2072,42 @@ property
 
 property
 {
+    Type = String
+    Name = ContainerOpenSound
+    ShortName =
+    Default = 
+    ToolTip = <p>Defines the sound played when opening a container in the loot window.</p>
+}
+
+property
+{
+    Type = String
+    Name = ContainerCloseSound
+    ShortName =
+    Default = 
+    ToolTip = <p>Defines the sound played when closing a container in the loot window.</p>
+}
+
+property
+{
+    Type = String
+    Name = ContainerPutSound
+    ShortName =
+    Default = 
+    ToolTip = <p>Defines the sound played when transfering an item into a container.</p>
+}
+
+property
+{
+    Type = String
+    Name = ContainerTakeSound
+    ShortName =
+    Default = 
+    ToolTip = <p>Defines the sound played when transfering an item from a container.</p>
+}
+
+property
+{
     Type = Enum
     Name = FenceTypeHigh
     ShortName = 
@@ -2036,7 +2120,7 @@ property
     }
     Default = None
     ValueAsPropertyName = false
-    ToolTip = <p></p>
+    ToolTip = <p>Defines material of high fence.</p>
 }
 
 property
@@ -2058,7 +2142,7 @@ property
     }
     Default = None
     ValueAsPropertyName = false
-    ToolTip = <p></p>
+    ToolTip = <p>Defines material of low fence.</p>
 }
 
 property
@@ -2081,7 +2165,7 @@ property
     }
     Default = None
     ValueAsPropertyName = false
-    ToolTip = <p></p>
+    ToolTip = <p>Defines footstep sound of tile when traversed.</p>
 }
 
 property
@@ -2136,7 +2220,7 @@ property
     }
     Default = None
     ValueAsPropertyName = false
-    ToolTip = <p></p>
+    ToolTip = <p>Defines sound made by attacking moveable objects.</p>
 }
 
 property
@@ -2156,7 +2240,7 @@ property
     }
     Default = None
     ValueAsPropertyName = false
-    ToolTip = <p></p>
+    ToolTip = <p>Defines material of seat.</p>
 }
 
 property
@@ -2172,7 +2256,7 @@ property
     }
     Default = Generic
     ValueAsPropertyName = false
-    ToolTip = <p></p>
+    ToolTip = <p>Defines sink material.</p>
 }
 
 separator
@@ -2182,44 +2266,210 @@ separator
 property
 {
     Type = Boolean
-    Name = IsGroundAttached
+    Name = natureFloor
     ShortName =
     Default = false
     ReverseLogic = false
+	ToolTip = <p>If true, tile is natural floor.</p>
+}
+property
+{
+    Type = Boolean
+    Name = IsFloorAttached
+    ShortName =
+    Default = false
+    ReverseLogic = false
+	ToolTip = <p>If true, tile is attached to natural floor.</p>
+}
+property
+{
+    Type = Boolean
+    Name = FloorAttachmentN
+    ShortName =
+    Default = false
+    ReverseLogic = false
+	ToolTip = <p>If true, tile has natural blend across north edge.</p>
+}
+property
+{
+    Type = Boolean
+    Name = FloorAttachmentS
+    ShortName =
+    Default = false
+    ReverseLogic = false
+	ToolTip = <p>If true, tile has natural blend across south edge.</p>
+}
+property
+{
+    Type = Boolean
+    Name = FloorAttachmentE
+    ShortName =
+    Default = false
+    ReverseLogic = false
+	ToolTip = <p>If true, tile has natural blend across east edge.</p>
+}
+property
+{
+    Type = Boolean
+    Name = FloorAttachmentW
+    ShortName =
+    Default = false
+    ReverseLogic = false
+	ToolTip = <p>If true, tile has natural blend across west edge.</p>
+}
+
+separator
+{
 }
 
 property
 {
     Type = Boolean
-    Name = GroundAttachmentN
+    Name = Microwave
     ShortName =
     Default = false
     ReverseLogic = false
+	ToolTip = <p>If true, tile is microwave.</p>
 }
 
 property
 {
     Type = Boolean
-    Name = GroundAttachmentS
+    Name = TV
     ShortName =
     Default = false
     ReverseLogic = false
+	ToolTip = <p>If true, tile is TV.</p>
 }
 
 property
 {
     Type = Boolean
-    Name = GroundAttachmentE
+    Name = IsFridge
     ShortName =
     Default = false
     ReverseLogic = false
+	ToolTip = <p>If true, tile is fridge.</p>
 }
 
 property
 {
     Type = Boolean
-    Name = GroundAttachmentW
+    Name = livingRoom
     ShortName =
     Default = false
     ReverseLogic = false
+	ToolTip = <p>If true, tile is located in a living room.</p>
+}
+
+property
+{
+    Type = Boolean
+    Name = TreatAsWallOrder
+    ShortName =
+    Default = false
+    ReverseLogic = false
+    ToolTip = <p>If true, tile will always draw on top of all other objects on square. Used for shower doors.</p>
+}
+
+property
+{
+    Type = Enum
+    Name = WallType
+    ShortName = 
+    Enums
+    {
+		None =
+        Wall = wall
+        Doorframe = doorframe
+        Windowframe = windowsframe
+    }
+    Default = None
+    ValueAsPropertyName = false
+    ToolTip = <p>Defines sink material.</p>
+}
+
+
+separator
+{
+}
+
+property
+{
+    Type = Boolean
+    Name = THE BELOW PROPERTIES HAVE BEEN MARKED FOR DELETION. IF THIS IS AN ERROR, PLEASE CONTACT FOX CHAOTICA
+    ShortName = InvalidProperty
+    Default = false
+    ReverseLogic = false
+    ToolTip = <p>Don't set this, this is intended to be a label.</p>
+}
+
+property
+{
+    Type = String
+    Name = FlatTextureOverride
+    ShortName = FlatTextureOverride
+    Default =
+    ToolTip = <p>Unused - No line of code references this property. Will be removed at some future date.</p>
+}
+
+property
+{
+    Type = Boolean
+    Name = Disable Fade
+    ShortName = disableFade
+    Default = false
+    ReverseLogic = false
+    ToolTip = <p>Unused - No line of code references this property. Will be removed at some future date.</p>
+}
+
+property
+{
+    Type = Boolean
+    Name = excludeFromIso
+    Name = excludeFromIso
+    ShortName = excludeFromIso
+    Default = false
+    ReverseLogic = false
+    ToolTip = <p>Unused - No line of code references this property. Will be removed at some future date.</p>
+}
+
+property
+{
+    Type = Boolean
+    Name = PreSeen
+    ShortName =
+    Default = false
+    ReverseLogic = false
+    ToolTip = <p>Unused - No line of code references this property. Will be removed at some future date.</p>
+}
+
+property
+{
+    Type = Boolean
+    Name = Other
+    ShortName = othe
+    Default = false
+    ReverseLogic = false
+    ToolTip = <p>Unused - No line of code references this property. Will be removed at some future date.</p>
+}
+
+property
+{
+    Type = Integer
+    Name = SpeedFactor
+    ShortName = 
+    Min = 0
+    Max = 100
+    Default = 0
+    ToolTip = <p>Unused - No line of code references this property. Will be removed at some future date.</p>
+}
+
+property
+{
+    Type = String
+    Name = ModularScript
+    ShortName =
+    Default = 
+    ToolTip = <p>Unused - No line of code references this property. Will be removed at some future date.</p>
 }
