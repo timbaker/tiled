@@ -62,6 +62,7 @@ bool SimpleFile::write(const QString &filePath)
         mError = tempFile.errorString();
         return false;
     }
+    (void) tempFile.fileName();
 
     replaceValue("version", QString::number(mVersion), false);
 
