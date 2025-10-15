@@ -225,6 +225,10 @@ property
         3,1 = 3,1
         3,2 = 3,2
         3,3 = 3,3
+		4,0 = 4,0
+		5,0 = 5,0
+		6,0 = 6,0
+		7,0 = 7,0
         0,0,1 = 0,0,1
         0,1,1 = 0,1,1
         0,2,1 = 0,2,1
@@ -241,10 +245,14 @@ property
         3,1,1 = 3,1,1
         3,2,1 = 3,2,1
         3,3,1 = 3,3,1
+		4,0,1 = 4,0,1
+		5,0,1 = 5,0,1
+		6,0,1 = 6,0,1
+		7,0,1 = 7,0,1
     }
     Default = None
     ValueAsPropertyName = false
-    ToolTip = <p>Used in multi-tile objects to determine the offset position of this tile relative to the most northwestern tile. Format is "east offset, south offset"</p>
+    ToolTip = <p>Used in multi-tile objects to determine the offset position of this tile relative to the most northwestern tile. Format is "east offset, south offset, vertical offset [if greater than 0]"</p>
 }
 property
 {
@@ -1033,6 +1041,56 @@ property
     ValueAsPropertyName = true
     ToolTip = <p>Marks tile as curtains.</p>
 }
+property
+{
+    Type = Integer
+    Name = LightFilterR
+    ShortName =
+    Min = 0
+    Max = 255
+    Default = 0
+    ToolTip = <p>Defines the red component of light after passing through a closed curtain.</p>
+}
+property
+{
+    Type = Integer
+    Name = LightFilterG
+    ShortName =
+    Min = 0
+    Max = 255
+    Default = 0
+    ToolTip = <p>Defines the green component of light after passing through a closed curtain.</p>
+}
+property
+{
+    Type = Integer
+    Name = LightFilterB
+    ShortName =
+    Min = 0
+    Max = 255
+    Default = 0
+    ToolTip = <p>Defines the blue component of light after passing through a closed curtain.</p>
+}
+property
+{
+    Type = Integer
+    Name = LightFilterIntensity
+    ShortName =
+    Min = 0
+    Max = 100
+    Default = 0
+    ToolTip = <p>Defines the percentage of incoming light allowed to pass through a closed curtain.</p>
+}
+property
+{
+    Type = Integer
+    Name = LightFilterMix
+    ShortName =
+    Min = 0
+    Max = 100
+    Default = 0
+    ToolTip = <p>Defines the percentage of incoming light color to preserve as it passes through a closed curtain.</p>
+}
 separator
 {
 }
@@ -1169,6 +1227,15 @@ property
 property
 {
     Type = Boolean
+    Name = IsFridge
+    ShortName =
+    Default = false
+    ReverseLogic = false
+	ToolTip = <p>If true, tile is fridge.</p>
+}
+property
+{
+    Type = Boolean
     Name = Freezer
     ShortName =
     Default = false
@@ -1208,6 +1275,15 @@ property
     Default = false
     ReverseLogic = false
 	ToolTip = <p>If true, tile doesn't contain freezer.</p>
+}
+property
+{
+    Type = Boolean
+    Name = Microwave
+    ShortName =
+    Default = false
+    ReverseLogic = false
+	ToolTip = <p>If true, tile is microwave.</p>
 }
 property
 {
@@ -2325,16 +2401,6 @@ separator
 property
 {
     Type = Boolean
-    Name = Microwave
-    ShortName =
-    Default = false
-    ReverseLogic = false
-	ToolTip = <p>If true, tile is microwave.</p>
-}
-
-property
-{
-    Type = Boolean
     Name = TV
     ShortName =
     Default = false
@@ -2342,15 +2408,6 @@ property
 	ToolTip = <p>If true, tile is TV.</p>
 }
 
-property
-{
-    Type = Boolean
-    Name = IsFridge
-    ShortName =
-    Default = false
-    ReverseLogic = false
-	ToolTip = <p>If true, tile is fridge.</p>
-}
 
 property
 {
@@ -2387,89 +2444,4 @@ property
     Default = None
     ValueAsPropertyName = false
     ToolTip = <p>Defines sink material.</p>
-}
-
-
-separator
-{
-}
-
-property
-{
-    Type = Boolean
-    Name = THE BELOW PROPERTIES HAVE BEEN MARKED FOR DELETION. IF THIS IS AN ERROR, PLEASE CONTACT FOX CHAOTICA
-    ShortName = InvalidProperty
-    Default = false
-    ReverseLogic = false
-    ToolTip = <p>Don't set this, this is intended to be a label.</p>
-}
-
-property
-{
-    Type = String
-    Name = FlatTextureOverride
-    ShortName = FlatTextureOverride
-    Default =
-    ToolTip = <p>Unused - No line of code references this property. Will be removed at some future date.</p>
-}
-
-property
-{
-    Type = Boolean
-    Name = Disable Fade
-    ShortName = disableFade
-    Default = false
-    ReverseLogic = false
-    ToolTip = <p>Unused - No line of code references this property. Will be removed at some future date.</p>
-}
-
-property
-{
-    Type = Boolean
-    Name = excludeFromIso
-    Name = excludeFromIso
-    ShortName = excludeFromIso
-    Default = false
-    ReverseLogic = false
-    ToolTip = <p>Unused - No line of code references this property. Will be removed at some future date.</p>
-}
-
-property
-{
-    Type = Boolean
-    Name = PreSeen
-    ShortName =
-    Default = false
-    ReverseLogic = false
-    ToolTip = <p>Unused - No line of code references this property. Will be removed at some future date.</p>
-}
-
-property
-{
-    Type = Boolean
-    Name = Other
-    ShortName = othe
-    Default = false
-    ReverseLogic = false
-    ToolTip = <p>Unused - No line of code references this property. Will be removed at some future date.</p>
-}
-
-property
-{
-    Type = Integer
-    Name = SpeedFactor
-    ShortName = 
-    Min = 0
-    Max = 100
-    Default = 0
-    ToolTip = <p>Unused - No line of code references this property. Will be removed at some future date.</p>
-}
-
-property
-{
-    Type = String
-    Name = ModularScript
-    ShortName =
-    Default = 
-    ToolTip = <p>Unused - No line of code references this property. Will be removed at some future date.</p>
 }
