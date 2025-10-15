@@ -341,15 +341,15 @@ void ZomboidScene::updateCurrentLayerHighlight()
     }
 
     QGraphicsItem *currentItem = nullptr;
-    if (currentLayer) {
-        currentItem = mLayerItems[currentLayerIndex];
-    } else {
+//    if (currentLayer) {
+//        currentItem = mLayerItems[currentLayerIndex];
+//    } else {
         Q_ASSERT(mTileLayerGroupItems.contains(currentLevel));
         if (mTileLayerGroupItems.contains(currentLevel))
             currentItem = mTileLayerGroupItems[currentLevel];
         else
             return;
-    }
+//    }
 
     // Hide items above the current item
     int index = 0;
