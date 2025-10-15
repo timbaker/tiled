@@ -215,7 +215,7 @@ bool PackFile::write(const QString &fileName)
         b.buffer().reserve(250 * 1024);
         b.open(QIODevice::WriteOnly);
 //        b.open(QIODevice::ReadWrite);
-        page.image.save(&b, "PNG");
+        page.image.save(&b, "PNG", 100);
         out << qint32(b.buffer().length());
         out.writeRawData(b.buffer().data(), b.buffer().length());
 #if 0

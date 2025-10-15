@@ -73,7 +73,7 @@ void PackExtractDialog::accept()
                     QPainter painter(&image);
                     painter.drawImage(tex.ox, tex.oy, page.image, tex.x, tex.y, tex.w, tex.h);
                     painter.end();
-                    image.save(outputDir.filePath(tex.name + QLatin1String(".png")));
+                    image.save(outputDir.filePath(tex.name + QLatin1String(".png")), "PNG", 100);
                 }
             }
         }
