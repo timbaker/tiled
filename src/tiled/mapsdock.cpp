@@ -48,15 +48,33 @@ MapsDock::MapsDock(MainWindow *mainWindow, QWidget *parent)
     QVBoxLayout *layout = new QVBoxLayout(widget);
     layout->setContentsMargins(2, 2, 2, 2);
 
+    QHBoxLayout *filterLayout = new QHBoxLayout;
+    QLabel *label = new QLabel(tr("Find:"));
+    QLineEdit *edit = mFilterEdit = new QLineEdit();
+    edit->setClearButtonEnabled(true);
+    QToolButton *findPrev = mFindPrev = new QToolButton(this);
+    findPrev->setIcon(QIcon(QStringLiteral(":images/16x16/go-up.png")));
+    QToolButton *findNext = mFindNext = new QToolButton(this);
+    findNext->setIcon(QIcon(QStringLiteral(":images/16x16/go-down.png")));
+    filterLayout->addWidget(label);
+    filterLayout->addWidget(edit);
+    filterLayout->addWidget(findPrev);
+    filterLayout->addWidget(findNext);
+    findPrev->setEnabled(false);
+    findNext->setEnabled(false);
+    connect(edit, &QLineEdit::textEdited, this, &MapsDock::findTextEdited);
+    connect(findPrev, &QToolButton::clicked, this, &MapsDock::findPrev);
+    connect(findNext, &QToolButton::clicked, this, &MapsDock::findNext);
+
     mPreviewLabel->setFrameShape(QFrame::StyledPanel);
     mPreviewLabel->setFrameShadow(QFrame::Plain);
     mPreviewLabel->setMinimumHeight(128);
     mPreviewLabel->setAlignment(Qt::AlignCenter);
 
     QHBoxLayout *dirLayout = new QHBoxLayout;
-    QLabel *label = new QLabel(tr("Folder:"));
+    label = new QLabel(tr("Folder:"));
 
-    QLineEdit *edit = mDirectoryEdit = new QLineEdit();
+    edit = mDirectoryEdit = new QLineEdit();
     QFileSystemModel *model = new QFileSystemModel(this);
     model->setRootPath(QDir::rootPath());
     model->setFilter(QDir::AllDirs | QDir::Dirs | QDir::Drives | QDir::NoDotAndDotDot);
@@ -70,6 +88,7 @@ MapsDock::MapsDock(MainWindow *mainWindow, QWidget *parent)
     dirLayout->addWidget(edit);
     dirLayout->addWidget(button);
 
+    layout->addLayout(filterLayout);
     layout->addWidget(mMapsView);
     layout->addWidget(mPreviewLabel);
     layout->addLayout(dirLayout);
@@ -98,6 +117,161 @@ MapsDock::MapsDock(MainWindow *mainWindow, QWidget *parent)
             mMapsView, &QWidget::setVisible);
 }
 
+void MapsDock::findTextEdited(const QString &text)
+{
+    if (text.isEmpty()) {
+        mFindPrev->setEnabled(false);
+        mFindNext->setEnabled(false);
+        return;
+    }
+    QModelIndex current = mMapsView->currentIndex();
+    if (!current.isValid()) {
+        current = mMapsView->model()->index(0, 0, mMapsView->rootIndex());
+    }
+    QModelIndexList indices = mMapsView->model()->match(current, Qt::DisplayRole, text, -1, Qt::MatchFlag::MatchContains | Qt::MatchFlag::MatchWrap);
+    if (indices.isEmpty()) {
+        mFindPrev->setEnabled(false);
+        mFindNext->setEnabled(false);
+        return;
+    }
+    std::sort(indices.begin(), indices.end(), [](const QModelIndex& a, const QModelIndex& b) {
+        if (a.row() != b.row()) {
+            return a.row() < b.row(); // Sort by row first
+        }
+        return a.column() < b.column(); // Then by column
+    });
+    if (indices.contains(current)) {
+        mMapsView->setCurrentIndex(current);
+        mMapsView->scrollTo(current);
+        return;
+    }
+    int prev = -1, next = -1;
+    for (int i = 0; i < indices.size(); i++) {
+        const QModelIndex index2 = indices[i];
+        if (index2.row() < current.row()) {
+            prev = i;
+        } else if (index2.row() > current.row()) {
+            next = i;
+            break;
+        }
+    }
+    mFindPrev->setEnabled(prev != -1);
+    mFindNext->setEnabled(next != indices.size() - 1);
+    QModelIndex index = (next != -1) ? indices[next] : indices.first();
+    mMapsView->setCurrentIndex(index);
+    mMapsView->scrollTo(index);
+}
+
+void MapsDock::findPrev()
+{
+    QString text = mFilterEdit->text();
+    if (text.isEmpty()) {
+        return;
+    }
+    QModelIndex current = mMapsView->currentIndex();
+    QModelIndexList indices = mMapsView->model()->match(current, Qt::DisplayRole, text, -1, Qt::MatchFlag::MatchContains | Qt::MatchFlag::MatchWrap);
+    if (indices.isEmpty()) {
+        return;
+    }
+    std::sort(indices.begin(), indices.end(), [](const QModelIndex& a, const QModelIndex& b) {
+        if (a.row() != b.row()) {
+            return a.row() < b.row(); // Sort by row first
+        }
+        return a.column() < b.column(); // Then by column
+    });
+    int prev = -1, next = -1;
+    for (int i = 0; i < indices.size(); i++) {
+        const QModelIndex index2 = indices[i];
+        if (index2.row() < current.row()) {
+            prev = i;
+        } else if (index2.row() > current.row()) {
+            next = i;
+            break;
+        }
+    }
+    if (prev == -1) {
+        mMapsView->setCurrentIndex(current);
+        mMapsView->scrollTo(current);
+        return;
+    }
+    QModelIndex index = indices[prev];
+    mMapsView->setCurrentIndex(index);
+    mMapsView->scrollTo(index);
+}
+
+void MapsDock::findNext()
+{
+    QString text = mFilterEdit->text();
+    if (text.isEmpty()) {
+        return;
+    }
+    QModelIndex current = mMapsView->currentIndex();
+    QModelIndexList indices = mMapsView->model()->match(current, Qt::DisplayRole, text, -1, Qt::MatchFlag::MatchContains | Qt::MatchFlag::MatchWrap);
+    if (indices.isEmpty()) {
+        return;
+    }
+    std::sort(indices.begin(), indices.end(), [](const QModelIndex& a, const QModelIndex& b) {
+        if (a.row() != b.row()) {
+            return a.row() < b.row(); // Sort by row first
+        }
+        return a.column() < b.column(); // Then by column
+    });
+    int prev = -1, next = -1;
+    for (int i = 0; i < indices.size(); i++) {
+        const QModelIndex index2 = indices[i];
+        if (index2.row() < current.row()) {
+            prev = i;
+        } else if (index2.row() > current.row()) {
+            next = i;
+            break;
+        }
+    }
+    if (next == -1) {
+        mMapsView->setCurrentIndex(current);
+        mMapsView->scrollTo(current);
+        return;
+    }
+    QModelIndex index = indices[next];
+    mMapsView->setCurrentIndex(index);
+    mMapsView->scrollTo(index);
+}
+
+void MapsDock::updateFindButtons()
+{
+    QString text = mFilterEdit->text();
+    QModelIndexList selectedRows = mMapsView->selectionModel()->selectedRows();
+    if (text.isEmpty() || selectedRows.isEmpty()) {
+        mFindPrev->setEnabled(false);
+        mFindNext->setEnabled(false);
+        return;
+    }
+    QModelIndex current = mMapsView->currentIndex();
+    QModelIndexList indices = mMapsView->model()->match(current, Qt::DisplayRole, text, -1, Qt::MatchFlag::MatchContains | Qt::MatchFlag::MatchWrap);
+    if (indices.isEmpty()) {
+        mFindPrev->setEnabled(false);
+        mFindNext->setEnabled(false);
+        return;
+    }
+    std::sort(indices.begin(), indices.end(), [](const QModelIndex& a, const QModelIndex& b) {
+        if (a.row() != b.row()) {
+            return a.row() < b.row(); // Sort by row first
+        }
+        return a.column() < b.column(); // Then by column
+    });
+    int prev = -1, next = -1;
+    for (int i = 0; i < indices.size(); i++) {
+        const QModelIndex index2 = indices[i];
+        if (index2.row() < current.row()) {
+            prev = i;
+        } else if (index2.row() > current.row()) {
+            next = i;
+            break;
+        }
+    }
+    mFindPrev->setEnabled(prev != -1);
+    mFindNext->setEnabled(next != -1);
+}
+
 void MapsDock::browse()
 {
     QString f = QFileDialog::getExistingDirectory(this, tr("Choose the Maps Folder"),
@@ -122,6 +296,7 @@ void MapsDock::onMapsDirectoryChanged()
 
 void MapsDock::selectionChanged()
 {
+    updateFindButtons();
     QModelIndexList selectedRows = mMapsView->selectionModel()->selectedRows();
     if (selectedRows.isEmpty()) {
         mPreviewLabel->setPixmap(QPixmap());
