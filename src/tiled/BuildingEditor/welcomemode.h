@@ -82,6 +82,10 @@ public slots:
     void editedMapsDirectory();
     void selectionChanged();
 
+    void findTextEdited(const QString& text);
+    void findPrev();
+    void findNext();
+
     void onMapImageChanged(MapImage *mapImage);
     void mapImageFailedToLoad(MapImage *mapImage);
 
@@ -102,6 +106,7 @@ private:
     void synchLegendCombo();
     void synchRoomToneCombo();
     bool readRoomToneTxt();
+    void updateFindButtons();
 
 private:
     Ui::WelcomeMode *ui;

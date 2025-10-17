@@ -143,6 +143,7 @@ void MapsDock::findTextEdited(const QString &text)
     if (indices.contains(current)) {
         mMapsView->setCurrentIndex(current);
         mMapsView->scrollTo(current);
+        updateFindButtons();
         return;
     }
     int prev = -1, next = -1;
@@ -292,6 +293,8 @@ void MapsDock::onMapsDirectoryChanged()
 {
     Preferences *prefs = Preferences::instance();
     mDirectoryEdit->setText(QDir::toNativeSeparators(prefs->mapsDirectory()));
+    mMapsView->setCurrentIndex(mMapsView->model()->index(0, 0, mMapsView->rootIndex()));
+    updateFindButtons();
 }
 
 void MapsDock::selectionChanged()

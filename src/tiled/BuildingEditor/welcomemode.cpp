@@ -311,6 +311,12 @@ WelcomeMode::WelcomeMode(QObject *parent) :
 
     connect(BuildingEditorWindow::instance(), &BuildingEditorWindow::recentFilesChanged,
             this, &WelcomeMode::setRecentFiles);
+
+    ui->findPrev->setEnabled(false);
+    ui->findNext->setEnabled(false);
+    connect(ui->findEdit, &QLineEdit::textEdited, this, &WelcomeMode::findTextEdited);
+    connect(ui->findPrev, &QToolButton::clicked, this, &WelcomeMode::findPrev);
+    connect(ui->findNext, &QToolButton::clicked, this, &WelcomeMode::findNext);
 }
 
 void WelcomeMode::readSettings(QSettings &settings)
@@ -360,10 +366,13 @@ void WelcomeMode::onMapsDirectoryChanged()
     mFSModel->setRootPath(mapsDir.canonicalPath());
     ui->treeView->setRootIndex(mFSModel->index(mapsDir.absolutePath()));
     ui->dirEdit->setText(QDir::toNativeSeparators(prefs->mapsDirectory()));
+    ui->treeView->setCurrentIndex(ui->treeView->model()->index(0, 0, ui->treeView->rootIndex()));
+    updateFindButtons();
 }
 
 void WelcomeMode::selectionChanged()
 {
+    updateFindButtons();
     synchLegendCombo();
     synchRoomToneCombo();
 
@@ -385,6 +394,163 @@ void WelcomeMode::selectionChanged()
     }
     mPreviewMapImage = mapImage;
 }
+
+void WelcomeMode::findTextEdited(const QString &text)
+{
+    if (text.isEmpty()) {
+        ui->findPrev->setEnabled(false);
+        ui->findNext->setEnabled(false);
+        return;
+    }
+    QModelIndex current = ui->treeView->currentIndex();
+    if (!current.isValid()) {
+        current = ui->treeView->model()->index(0, 0, ui->treeView->rootIndex());
+    }
+    QModelIndexList indices = ui->treeView->model()->match(current, Qt::DisplayRole, text, -1, Qt::MatchFlag::MatchContains | Qt::MatchFlag::MatchWrap);
+    if (indices.isEmpty()) {
+        ui->findPrev->setEnabled(false);
+        ui->findNext->setEnabled(false);
+        return;
+    }
+    std::sort(indices.begin(), indices.end(), [](const QModelIndex& a, const QModelIndex& b) {
+        if (a.row() != b.row()) {
+            return a.row() < b.row(); // Sort by row first
+        }
+        return a.column() < b.column(); // Then by column
+    });
+    if (indices.contains(current)) {
+        ui->treeView->setCurrentIndex(current);
+        ui->treeView->scrollTo(current);
+        updateFindButtons();
+        return;
+    }
+    int prev = -1, next = -1;
+    for (int i = 0; i < indices.size(); i++) {
+        const QModelIndex index2 = indices[i];
+        if (index2.row() < current.row()) {
+            prev = i;
+        } else if (index2.row() > current.row()) {
+            next = i;
+            break;
+        }
+    }
+    ui->findPrev->setEnabled(prev != -1);
+    ui->findNext->setEnabled(next != indices.size() - 1);
+    QModelIndex index = (next != -1) ? indices[next] : indices.first();
+    ui->treeView->setCurrentIndex(index);
+    ui->treeView->scrollTo(index);
+}
+
+void WelcomeMode::findPrev()
+{
+    QString text = ui->findEdit->text();
+    if (text.isEmpty()) {
+        return;
+    }
+    QModelIndex current = ui->treeView->currentIndex();
+    QModelIndexList indices = ui->treeView->model()->match(current, Qt::DisplayRole, text, -1, Qt::MatchFlag::MatchContains | Qt::MatchFlag::MatchWrap);
+    if (indices.isEmpty()) {
+        return;
+    }
+    std::sort(indices.begin(), indices.end(), [](const QModelIndex& a, const QModelIndex& b) {
+        if (a.row() != b.row()) {
+            return a.row() < b.row(); // Sort by row first
+        }
+        return a.column() < b.column(); // Then by column
+    });
+    int prev = -1, next = -1;
+    for (int i = 0; i < indices.size(); i++) {
+        const QModelIndex index2 = indices[i];
+        if (index2.row() < current.row()) {
+            prev = i;
+        } else if (index2.row() > current.row()) {
+            next = i;
+            break;
+        }
+    }
+    if (prev == -1) {
+        ui->treeView->setCurrentIndex(current);
+        ui->treeView->scrollTo(current);
+        return;
+    }
+    QModelIndex index = indices[prev];
+    ui->treeView->setCurrentIndex(index);
+    ui->treeView->scrollTo(index);
+}
+
+void WelcomeMode::findNext()
+{
+    QString text = ui->findEdit->text();
+    if (text.isEmpty()) {
+        return;
+    }
+    QModelIndex current = ui->treeView->currentIndex();
+    QModelIndexList indices = ui->treeView->model()->match(current, Qt::DisplayRole, text, -1, Qt::MatchFlag::MatchContains | Qt::MatchFlag::MatchWrap);
+    if (indices.isEmpty()) {
+        return;
+    }
+    std::sort(indices.begin(), indices.end(), [](const QModelIndex& a, const QModelIndex& b) {
+        if (a.row() != b.row()) {
+            return a.row() < b.row(); // Sort by row first
+        }
+        return a.column() < b.column(); // Then by column
+    });
+    int prev = -1, next = -1;
+    for (int i = 0; i < indices.size(); i++) {
+        const QModelIndex index2 = indices[i];
+        if (index2.row() < current.row()) {
+            prev = i;
+        } else if (index2.row() > current.row()) {
+            next = i;
+            break;
+        }
+    }
+    if (next == -1) {
+        ui->treeView->setCurrentIndex(current);
+        ui->treeView->scrollTo(current);
+        return;
+    }
+    QModelIndex index = indices[next];
+    ui->treeView->setCurrentIndex(index);
+    ui->treeView->scrollTo(index);
+}
+
+void WelcomeMode::updateFindButtons()
+{
+    QString text = ui->findEdit->text();
+    QModelIndexList selectedRows = ui->treeView->selectionModel()->selectedRows();
+    if (text.isEmpty() || selectedRows.isEmpty()) {
+        ui->findPrev->setEnabled(false);
+        ui->findNext->setEnabled(false);
+        return;
+    }
+    QModelIndex current = ui->treeView->currentIndex();
+    QModelIndexList indices = ui->treeView->model()->match(current, Qt::DisplayRole, text, -1, Qt::MatchFlag::MatchContains | Qt::MatchFlag::MatchWrap);
+    if (indices.isEmpty()) {
+        ui->findPrev->setEnabled(false);
+        ui->findNext->setEnabled(false);
+        return;
+    }
+    std::sort(indices.begin(), indices.end(), [](const QModelIndex& a, const QModelIndex& b) {
+        if (a.row() != b.row()) {
+            return a.row() < b.row(); // Sort by row first
+        }
+        return a.column() < b.column(); // Then by column
+    });
+    int prev = -1, next = -1;
+    for (int i = 0; i < indices.size(); i++) {
+        const QModelIndex index2 = indices[i];
+        if (index2.row() < current.row()) {
+            prev = i;
+        } else if (index2.row() > current.row()) {
+            next = i;
+            break;
+        }
+    }
+    ui->findPrev->setEnabled(prev != -1);
+    ui->findNext->setEnabled(next != -1);
+}
+
 
 void WelcomeMode::synchLegendCombo()
 {
