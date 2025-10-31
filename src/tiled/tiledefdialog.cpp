@@ -383,7 +383,7 @@ TileDefDialog::TileDefDialog(QWidget *parent) :
 
     ui->tiles->setSelectionMode(QAbstractItemView::ExtendedSelection);
     ui->tiles->model()->setShowHeaders(false);
-    ui->tiles->model()->setShowLabels(true);
+    ui->tiles->model()->setShowLabels(false);
     ui->tiles->model()->setHighlightLabelledItems(true);
 
     connect(ui->tilesets, &QListWidget::currentRowChanged,
