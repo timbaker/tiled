@@ -51,7 +51,7 @@ public:
     { }
 
     void paint(QPainter *painter, const QStyleOptionViewItem &option,
-               const QModelIndex &index) const;
+               const QModelIndex &index) const override;
 
     QSize sizeHint(const QStyleOptionViewItem &option,
                    const QModelIndex &index) const;
@@ -152,7 +152,8 @@ void TileDelegate::paint(QPainter *painter,
     // Draw the tile image
 //    const QVariant display = index.model()->data(index, Qt::DisplayRole);
 //    const QPixmap tileImage = display.value<QPixmap>();
-    const int tileWidth = tile->tileset()->tileWidth() * mView->zoomable()->scale();
+    const qreal tileWidth = tile->tileset()->tileWidth() * mView->zoomable()->scale();
+    const qreal tileHeight = tile->tileset()->tileHeight() * mView->zoomable()->scale();
 
     if (mView->zoomable()->smoothTransform())
         painter->setRenderHint(QPainter::SmoothPixmapTransform);
@@ -161,14 +162,16 @@ void TileDelegate::paint(QPainter *painter,
     const int labelHeight = m->showLabels() ? fm.lineSpacing() : 0;
     const int dw = option.rect.width() - tileWidth;
     const QMargins margins = tile->drawMargins(mView->zoomable()->scale());
-    QRect imageRect = option.rect.adjusted(dw/2 + margins.left(), extra + margins.top(),
-                                           -(dw - dw/2) - margins.right(), -extra - labelHeight - margins.bottom());
+    QRectF imageRect(option.rect.x() + dw / 2 + margins.left(),
+                     option.rect.y() + extra + margins.top(),
+                     tileWidth - margins.left() - margins.right(), tileHeight - margins.top() - margins.bottom());
     painter->drawImage(imageRect, tile->image());
 
     if (Tile *overlay = m->overlayTile(index)) {
         const QMargins margins = overlay->drawMargins(mView->zoomable()->scale());
-        QRect imageRect = option.rect.adjusted(dw/2 + margins.left(), extra + margins.top(),
-                                               -(dw - dw/2) - margins.right(), -extra - labelHeight - margins.bottom());
+        QRectF imageRect(option.rect.x() + dw / 2 + margins.left(),
+                         option.rect.y() + extra + margins.top(),
+                         tileWidth - margins.left() - margins.right(), tileHeight - margins.top() - margins.bottom());
         painter->drawImage(imageRect, overlay->image());
     }
 
