@@ -728,6 +728,7 @@ void TilesetDock::refreshTilesetMenu()
 #include <QMessageBox>
 #include <QMimeData>
 #include <QScrollBar>
+#include <QSplitter>
 #include <QToolBar>
 #include <QToolButton>
 #include <QUrl>
@@ -963,6 +964,7 @@ TilesetDock::TilesetDock(QWidget *parent):
     tilesetNamesLayout->addWidget(mTilesetNamesView);
     tilesetNamesLayout->addWidget(toolbar);
 
+#ifdef TILESET_LIST_FIXED_WIDTH
     QWidget *outer = new QWidget(this);
     QHBoxLayout *outerLayout = new QHBoxLayout(outer);
     outerLayout->setSpacing(5);
@@ -970,6 +972,21 @@ TilesetDock::TilesetDock(QWidget *parent):
     outerLayout->addLayout(tilesetNamesLayout);
     outerLayout->addLayout(tilesetLayout);
     setWidget(outer);
+#else
+    QSplitter *splitterH = new QSplitter(this);
+    splitterH->setObjectName(QStringLiteral("splitter1"));
+    splitterH->setChildrenCollapsible(false);
+    mSplitter = splitterH;
+    QWidget *layoutWidget1 = new QWidget(splitterH);
+    layoutWidget1->setLayout(tilesetNamesLayout);
+    layoutWidget1->setObjectName(QStringLiteral("layoutWidget1"));
+    splitterH->addWidget(layoutWidget1);
+    QWidget *layoutWidget2 = new QWidget(splitterH);
+    layoutWidget2->setObjectName(QStringLiteral("layoutWidget2"));
+    layoutWidget2->setLayout(tilesetLayout);
+    splitterH->addWidget(layoutWidget2);
+    setWidget(splitterH);
+#endif
 
     retranslateUi();
     setAcceptDrops(true);
@@ -1020,6 +1037,35 @@ void TilesetDock::setMapDocument(MapDocument *mapDocument)
     }
 
     updateActions();
+}
+
+void TilesetDock::writeSettings(QSettings &settings)
+{
+#ifndef TILESET_LIST_FIXED_WIDTH
+    settings.beginGroup(QLatin1String("TilesetDock"));
+    QVariantList v;
+    for (int size : mSplitter->sizes()) {
+        v += size;
+    }
+    settings.setValue(tr("%1/sizes").arg(mSplitter->objectName()), v);
+    settings.endGroup();
+#endif
+}
+
+void TilesetDock::readSettings(QSettings &settings)
+{
+#ifndef TILESET_LIST_FIXED_WIDTH
+    settings.beginGroup(QLatin1String("TilesetDock"));
+    QVariant v = settings.value(tr("%1/sizes").arg(mSplitter->objectName()));
+    if (v.canConvert(QVariant::List)) {
+        QList<int> sizes;
+        for (QVariant v2 : v.toList()) {
+            sizes += v2.toInt();
+        }
+        mSplitter->setSizes(sizes);
+    }
+    settings.endGroup();
+#endif
 }
 
 void TilesetDock::tilePicked(Tile *tile)
@@ -1516,20 +1562,25 @@ void TilesetDock::setTilesetNamesList()
             foreach (Tileset *ts, mTilesets)
                 mTilesetByName.insert(ts->name(), ts);
         }
-
+#ifdef TILESET_LIST_FIXED_WIDTH
         int maxWidth = 64;
         QFontMetrics fm = mTilesetNamesView->fontMetrics(); // FIXME: same font used by QPainter?
-        foreach (Tileset *ts, mTilesets) {
+#endif
+        for (Tileset *ts : mTilesets) {
             QListWidgetItem *item = new QListWidgetItem(ts->name());
             if (ts->isMissing())
                 item->setForeground(Qt::red);
             item->setFlags(item->flags() | Qt::ItemIsEditable);
             mTilesetNamesView->addItem(item);
+#ifdef TILESET_LIST_FIXED_WIDTH
             maxWidth = qMax(maxWidth, fm.horizontalAdvance(ts->name()));
+#endif
         }
+#ifdef TILESET_LIST_FIXED_WIDTH
         mTilesetNamesView->setFixedWidth(maxWidth + 16 +
             mTilesetNamesView->verticalScrollBar()->sizeHint().width());
         mFilter->setFixedWidth(mTilesetNamesView->width());
+#endif
         mFilter->setEnabled(true);
     }
 

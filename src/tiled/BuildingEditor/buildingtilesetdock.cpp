@@ -50,6 +50,10 @@ BuildingTilesetDock::BuildingTilesetDock(QWidget *parent) :
 {
     ui->setupUi(this);
 
+#ifndef TILESET_LIST_FIXED_WIDTH
+    mSplitter = ui->splitter;
+#endif
+
     connect(ui->filter, &QLineEdit::textEdited, this, &BuildingTilesetDock::filterEdited);
 
     mIconTileLayer = QIcon(QLatin1String(":/images/16x16/layer-tile.png"));
@@ -124,6 +128,35 @@ void BuildingTilesetDock::firstTimeSetup()
 {
     if (!ui->tilesets->count())
         setTilesetList(); // TileMetaInfoMgr signals might have done this already.
+}
+
+void BuildingTilesetDock::writeSettings(QSettings &settings)
+{
+#ifndef TILESET_LIST_FIXED_WIDTH
+    settings.beginGroup(QLatin1String("TilesetDock"));
+    QVariantList v;
+    for (int size : mSplitter->sizes()) {
+        v += size;
+    }
+    settings.setValue(tr("%1/sizes").arg(mSplitter->objectName()), v);
+    settings.endGroup();
+#endif
+}
+
+void BuildingTilesetDock::readSettings(QSettings &settings)
+{
+#ifndef TILESET_LIST_FIXED_WIDTH
+    settings.beginGroup(QLatin1String("TilesetDock"));
+    QVariant v = settings.value(tr("%1/sizes").arg(mSplitter->objectName()));
+    if (v.canConvert(QVariant::List)) {
+        QList<int> sizes;
+        for (QVariant v2 : v.toList()) {
+            sizes += v2.toInt();
+        }
+        mSplitter->setSizes(sizes);
+    }
+    settings.endGroup();
+#endif
 }
 
 void BuildingTilesetDock::currentDocumentChanged(BuildingDocument *document)
@@ -211,19 +244,25 @@ void BuildingTilesetDock::setTilesetList()
 {
     ui->tilesets->clear();
 
+#ifdef TILESET_LIST_FIXED_WIDTH
     int width = 64;
     QFontMetrics fm = ui->tilesets->fontMetrics();
+#endif
     foreach (Tileset *tileset, TileMetaInfoMgr::instance()->tilesets()) {
         QListWidgetItem *item = new QListWidgetItem();
         item->setText(tileset->name());
         if (tileset->isMissing())
             item->setForeground(Qt::red);
         ui->tilesets->addItem(item);
+#ifdef TILESET_LIST_FIXED_WIDTH
         width = qMax(width, fm.horizontalAdvance(tileset->name()));
+#endif
     }
+#ifdef TILESET_LIST_FIXED_WIDTH
     int sbw = ui->tilesets->verticalScrollBar()->sizeHint().width();
     ui->tilesets->setFixedWidth(width + 16 + sbw);
     ui->filter->setFixedWidth(ui->tilesets->width());
+#endif
 
     filterEdited(ui->filter->text());
 }

@@ -168,6 +168,8 @@ class QComboBox;
 class QListWidget;
 class QListWidgetItem;
 class QMenu;
+class QSettings;
+class QSplitter;
 class QToolBar;
 class QToolButton;
 
@@ -208,6 +210,10 @@ public:
      * Returns the currently selected tile.
      */
     Tile *currentTile() const { return mCurrentTile; }
+
+    void writeSettings(QSettings& settings);
+    void readSettings(QSettings& settings);
+
 
 public slots:
     void tilePicked(Tiled::Tile *tile);
@@ -312,6 +318,9 @@ private:
     QIcon mIconTileLayer;
     QIcon mIconTileLayerStop;
 
+#ifndef TILESET_LIST_FIXED_WIDTH
+    QSplitter *mSplitter;
+#endif
     TilesetView *mTilesetView;
     QListWidget *mTilesetNamesView;
 

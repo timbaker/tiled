@@ -310,6 +310,7 @@ void TileEditMode::readSettings(QSettings &settings)
     settings.beginGroup(QLatin1String("TileEditMode"));
     mMainWindow->readSettings(settings);
     mFurnitureDock->readSettings(settings);
+    mTilesetDock->readSettings(settings);
     settings.endGroup();
 }
 
@@ -318,6 +319,7 @@ void TileEditMode::writeSettings(QSettings &settings)
     settings.beginGroup(QLatin1String("TileEditMode"));
     mMainWindow->writeSettings(settings);
     mFurnitureDock->writeSettings(settings);
+    mTilesetDock->writeSettings(settings);
     settings.endGroup();
 }
 

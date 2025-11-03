@@ -3199,6 +3199,7 @@ void MainWindow::writeSettings()
     mSettings.setValue(QLatin1String("scrollY"), scrollY);
     mSettings.setValue(QLatin1String("selectedLayer"), selectedLayer);
     mSettings.endGroup();
+    mTilesetDock->writeSettings(mSettings);
 }
 
 void MainWindow::readSettings()
@@ -3224,6 +3225,7 @@ void MainWindow::readSettings()
     qreal scale = mSettings.value(QLatin1String("TileLayersPanel/scale"), 0.25).toReal();
     mTileLayersPanel->setScale(scale);
     mSettings.endGroup();
+    mTilesetDock->readSettings(mSettings);
     updateRecentFiles();
 }
 

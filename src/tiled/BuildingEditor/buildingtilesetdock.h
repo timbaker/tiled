@@ -26,6 +26,9 @@
 #include <QDockWidget>
 #include <QIcon>
 
+class QSettings;
+class QSplitter;
+
 namespace Ui {
 class BuildingTilesetDock;
 }
@@ -59,6 +62,9 @@ public:
     ~BuildingTilesetDock();
     
     void firstTimeSetup();
+
+    void writeSettings(QSettings& settings);
+    void readSettings(QSettings& settings);
 
 private:
     void changeEvent(QEvent *event);
@@ -106,6 +112,9 @@ private:
     QAction *mActionSwitchLayer;
 #ifdef BUILDINGED_SA
     Tiled::Internal::ColorButton *mBackgroundColorButton;
+#endif
+#ifndef TILESET_LIST_FIXED_WIDTH
+    QSplitter *mSplitter;
 #endif
 };
 
