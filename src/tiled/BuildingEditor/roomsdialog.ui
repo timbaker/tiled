@@ -57,7 +57,17 @@
            </widget>
           </item>
           <item>
-           <widget class="QLineEdit" name="name"/>
+           <widget class="QComboBox" name="name">
+            <property name="sizePolicy">
+             <sizepolicy hsizetype="Expanding" vsizetype="Fixed">
+              <horstretch>0</horstretch>
+              <verstretch>0</verstretch>
+             </sizepolicy>
+            </property>
+            <property name="editable">
+             <bool>true</bool>
+            </property>
+           </widget>
           </item>
          </layout>
         </item>
@@ -71,7 +81,17 @@
            </widget>
           </item>
           <item>
-           <widget class="QLineEdit" name="internalName"/>
+           <widget class="QComboBox" name="internalName">
+            <property name="sizePolicy">
+             <sizepolicy hsizetype="Expanding" vsizetype="Fixed">
+              <horstretch>0</horstretch>
+              <verstretch>0</verstretch>
+             </sizepolicy>
+            </property>
+            <property name="editable">
+             <bool>true</bool>
+            </property>
+           </widget>
           </item>
          </layout>
         </item>
@@ -88,6 +108,13 @@
            <widget class="Tiled::Internal::ColorButton" name="color">
             <property name="text">
              <string>...</string>
+            </property>
+           </widget>
+          </item>
+          <item>
+           <widget class="QToolButton" name="randomColor">
+            <property name="text">
+             <string>random</string>
             </property>
            </widget>
           </item>
@@ -144,6 +171,13 @@
               </property>
               <property name="text">
                <string>TextLabel</string>
+              </property>
+             </widget>
+            </item>
+            <item>
+             <widget class="QToolButton" name="clearTile">
+              <property name="text">
+               <string>Clear</string>
               </property>
              </widget>
             </item>

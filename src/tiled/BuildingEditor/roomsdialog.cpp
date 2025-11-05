@@ -23,8 +23,16 @@
 #include "buildingtiles.h"
 #include "choosebuildingtiledialog.h"
 
+#include "preferences.h"
+#include "simplefile.h"
 #include "tile.h"
 
+#include <QCompleter>
+#include <QDebug>
+#include <QFileInfo>
+#include <QLineEdit>
+#include <QMessageBox>
+#include <QRandomGenerator>
 #include <QToolBar>
 
 using namespace BuildingEditor;
@@ -34,7 +42,8 @@ RoomsDialog::RoomsDialog(const QList<Room*> &rooms, Room *initialRoom, QWidget *
     ui(new Ui::RoomsDialog),
     mRoom(0),
     mRoomItem(0),
-    mTileRow(-1)
+    mTileRow(-1),
+    mRoomColorSet(compareQColors)
 {
     ui->setupUi(this);
 
@@ -68,6 +77,24 @@ RoomsDialog::RoomsDialog(const QList<Room*> &rooms, Room *initialRoom, QWidget *
         }
     }
 
+    ui->name->completer()->setCompletionMode(QCompleter::PopupCompletion);
+    ui->name->completer()->setCaseSensitivity(Qt::CaseInsensitive);
+    ui->name->completer()->setFilterMode(Qt::MatchContains);
+
+    ui->internalName->completer()->setCompletionMode(QCompleter::PopupCompletion);
+    ui->internalName->completer()->setCaseSensitivity(Qt::CaseInsensitive);
+    ui->internalName->completer()->setFilterMode(Qt::MatchContains);
+
+    readRoomNamesDotTxt(mRoomNames);
+    QStringList roomLabels, roomInternalNames;
+    for (const RoomName& roomName : mRoomNames) {
+        roomLabels << roomName.label;
+        roomInternalNames << roomName.internalName;
+    }
+
+    ui->name->insertItems(0, roomLabels);
+    ui->internalName->insertItems(0, roomInternalNames);
+
     setRoomsList();
 
     synchUI();
@@ -80,13 +107,15 @@ RoomsDialog::RoomsDialog(const QList<Room*> &rooms, Room *initialRoom, QWidget *
     connect(ui->actionMoveUp, &QAction::triggered, this, &RoomsDialog::moveRoomUp);
     connect(ui->actionMoveDown, &QAction::triggered, this, &RoomsDialog::moveRoomDown);
 
-    connect(ui->name, &QLineEdit::textEdited, this, &RoomsDialog::nameEdited);
-    connect(ui->internalName, &QLineEdit::textEdited, this, &RoomsDialog::internalNameEdited);
+    connect(ui->name, &QComboBox::currentTextChanged, this, &RoomsDialog::nameEdited);
+    connect(ui->internalName, &QComboBox::currentTextChanged, this, &RoomsDialog::internalNameEdited);
     connect(ui->color, &Tiled::Internal::ColorButton::colorChanged, this, &RoomsDialog::colorChanged);
     connect(ui->tilesList, &QListWidget::itemSelectionChanged,
             this, &RoomsDialog::tileSelectionChanged);
     connect(ui->tilesList, &QAbstractItemView::activated, this, &RoomsDialog::chooseTile);
+    connect(ui->clearTile, &QAbstractButton::clicked, this, &RoomsDialog::clearTile);
     connect(ui->chooseTile, &QAbstractButton::clicked, this, &RoomsDialog::chooseTile);
+    connect(ui->randomColor, &QAbstractButton::clicked, this, &RoomsDialog::randomiseColor);
 
     if (currentRow != -1) {
         ui->listWidget->setCurrentRow(currentRow);
@@ -112,6 +141,87 @@ Room *RoomsDialog::originalRoom(Room *dialogRoom) const
     return mRoomsMap[dialogRoom];
 }
 
+bool BuildingEditor::compareQColors(const QColor& a, const QColor& b)
+{
+    return a.rgba() < b.rgba(); // Comparing RGBA values is a simple way
+}
+
+void RoomsDialog::readRoomNamesDotTxt(QList<RoomName> &rooms)
+{
+    mRoomColorSet.clear();
+
+    QString filePath;
+
+    // Read the application's RoomNames.txt
+    filePath = Tiled::Internal::Preferences::instance()->appConfigPath(QStringLiteral("RoomNames.txt"));
+    readRoomNamesDotTxt(filePath, rooms);
+
+    // Read the user's optional RoomNames.txt
+    filePath = Tiled::Internal::Preferences::instance()->configPath(QStringLiteral("RoomNames.txt"));
+    readRoomNamesDotTxt(filePath, rooms);
+}
+
+void RoomsDialog::readRoomNamesDotTxt(const QString &fileName, QList<RoomName> &rooms)
+{
+    SimpleFile simpleFile;
+    if (!simpleFile.read(fileName)) {
+        if (QFileInfo::exists(fileName)) {
+            QMessageBox::warning(this, QStringLiteral("Error reading RoomNames.txt"),
+                                 QStringLiteral("Failed to open %1").arg(fileName));
+        }
+        return;
+    }
+
+    QRandomGenerator *generator = QRandomGenerator::global();
+    for (const SimpleFileBlock &block : simpleFile.blocks) {
+        if (block.name == QStringLiteral("room")) {
+            RoomName roomName;
+            roomName.internalName = block.value("internal").trimmed();
+            roomName.label = block.value("label").trimmed();
+            if (block.hasValue("color") && !block.value("color").trimmed().isEmpty()) {
+                QColor color = QColor(block.value("color").trimmed());
+                if (color.isValid()) {
+                    roomName.color = color;
+                }
+            }
+            if (!roomName.color.isValid()) {
+                QColor randomColor;
+                do {
+                    int red = generator->bounded(256); // 0 to 255
+                    int green = generator->bounded(256); // 0 to 255
+                    int blue = generator->bounded(256); // 0 to 255
+                    randomColor = QColor(red, green, blue);
+                } while (mRoomColorSet.find(randomColor) != mRoomColorSet.end());
+                roomName.color = randomColor;
+            }
+            mRoomColorSet.insert(roomName.color);
+            if (!roomName.label.isEmpty() && !roomName.internalName.isEmpty()) {
+                rooms += roomName;
+            }
+        }
+    }
+}
+
+int RoomsDialog::findRoomNameByLabel(const QString &label) const
+{
+    for (int i = 0; i < mRoomNames.size(); i++) {
+        if (mRoomNames[i].label.contains(label, Qt::CaseInsensitive)) {
+            return i;
+        }
+    }
+    return -1;
+}
+
+int RoomsDialog::findRoomNameByInternalName(const QString &internalName) const
+{
+    for (int i = 0; i < mRoomNames.size(); i++) {
+        if (mRoomNames[i].internalName.contains(internalName, Qt::CaseInsensitive)) {
+            return i;
+        }
+    }
+    return -1;
+}
+
 void RoomsDialog::setRoomsList()
 {
     QListWidget *w = ui->listWidget;
@@ -135,15 +245,33 @@ void RoomsDialog::synchUI()
     ui->internalName->setEnabled(mRoom != 0);
     ui->color->setEnabled(mRoom != 0);
     ui->tilesList->setEnabled(mRoom != 0);
+
+    bool enabled = false;
+    if (mRoom != nullptr && mTileRow != -1) {
+        BuildingTileCategory *category = BuildingTilesMgr::instance()->category(mRoom->categoryEnum(mTileRow));
+        enabled = category->canAssignNone();
+    }
+    ui->clearTile->setEnabled(enabled);
+
     ui->chooseTile->setEnabled(mRoom != 0);
 
     if (mRoom) {
-        ui->name->setText(mRoom->Name);
-        ui->internalName->setText(mRoom->internalName);
+        int index = ui->name->findText(mRoom->Name);
+        if (index != -1) {
+            ui->name->setCurrentIndex(index);
+        } else {
+            ui->name->setCurrentText(mRoom->Name);
+        }
+        index = ui->internalName->findText(mRoom->internalName);
+        if (index != -1) {
+            ui->internalName->setCurrentIndex(index);
+        } else {
+            ui->internalName->setCurrentText(mRoom->internalName);
+        }
         ui->color->setColor(mRoom->Color);
     } else {
-        ui->name->clear();
-        ui->internalName->clear();
+        ui->name->lineEdit()->clear();
+        ui->internalName->lineEdit()->clear();
     }
     setTilePixmap();
 }
@@ -188,7 +316,7 @@ void RoomsDialog::addRoom()
     ui->listWidget->setCurrentRow(mRooms.count() - 1);
 
     ui->name->setFocus();
-    ui->name->selectAll();
+    ui->name->lineEdit()->selectAll();
 }
 
 void RoomsDialog::removeRoom()
@@ -224,7 +352,7 @@ void RoomsDialog::duplicateRoom()
     ui->listWidget->setCurrentRow(index + 1);
 
     ui->name->setFocus();
-    ui->name->selectAll();
+    ui->name->lineEdit()->selectAll();
 }
 
 void RoomsDialog::moveRoomUp()
@@ -257,25 +385,40 @@ void RoomsDialog::moveRoomDown()
 
 void RoomsDialog::nameEdited(const QString &name)
 {
-    if (mRoom != 0) {
-        mRoom->Name = name;
-        mRoomItem->setText(name);
+    if (mRoom == nullptr) {
+        return;
     }
+    mRoom->Name = name;
+    mRoomItem->setText(name);
 }
 
 void RoomsDialog::internalNameEdited(const QString &name)
 {
-    if (mRoom != 0) {
-        mRoom->internalName = name;
+    if (mRoom == nullptr) {
+        return;
+    }
+    if (mRoom->internalName == name) {
+        return;
+    }
+    mRoom->internalName = name;
+    int roomNameIndex = findRoomNameByInternalName(name);
+    if (roomNameIndex != -1) {
+        ui->color->setColor(mRoomNames[roomNameIndex].color);
     }
 }
 
 void RoomsDialog::colorChanged(const QColor &color)
 {
-    if (mRoom != 0) {
-        mRoom->Color = color.rgba();
-        mRoomItem->setData(Qt::DecorationRole, color);
+    if (mRoom == nullptr) {
+        return;
     }
+    mRoom->Color = color.rgba();
+    mRoomItem->setData(Qt::DecorationRole, color);
+}
+
+void RoomsDialog::randomiseColor()
+{
+    ui->color->setColor(pickColorForNewRoom());
 }
 
 void RoomsDialog::tileSelectionChanged()
@@ -308,27 +451,29 @@ BuildingTileEntry *RoomsDialog::selectedTile()
 
 QRgb RoomsDialog::pickColorForNewRoom()
 {
-    // Pick an unused color from this default list of room colors.
-    // TODO: Add more colors.
-    QList<QRgb> colors;
-    colors += qRgb(200, 200, 200);
-    colors += qRgb(128, 128, 128);
-    colors += qRgb(255, 0, 0);
-    colors += qRgb(0, 255, 0);
-    colors += qRgb(0, 0, 255);
-    colors += qRgb(0, 255, 255);
-    colors += qRgb(255, 255, 0);
-    colors += qRgb(255, 200, 0);
-    colors += qRgb(255, 150, 0);
-    colors += qRgb(255, 110, 0);
+    std::set<QColor, decltype(&compareQColors)> colors(compareQColors);
+    colors.insert(mRoomColorSet.cbegin(), mRoomColorSet.cend());
+    for (Room *room : mRooms) {
+        colors.insert(room->Color);
+    }
+    QColor randomColor;
+    QRandomGenerator *generator = QRandomGenerator::global();
+    do {
+        int red = generator->bounded(256); // 0 to 255
+        int green = generator->bounded(256); // 0 to 255
+        int blue = generator->bounded(256); // 0 to 255
+        randomColor = QColor(red, green, blue);
+    } while (colors.find(randomColor) != colors.end());
+    return randomColor.rgb();
+}
 
-    QRgb color = qRgb(255,255,255);
-    foreach (Room *room, mRooms)
-        colors.removeOne(room->Color);
-    if (colors.count())
-        color = colors.first();
-
-    return color;
+void RoomsDialog::clearTile()
+{
+    BuildingTileCategory *category = BuildingTilesMgr::instance()->category(mRoom->categoryEnum(mTileRow));
+    if (category->canAssignNone()) {
+        mRoom->setTile(mTileRow, category->noneTileEntry());
+        setTilePixmap();
+    }
 }
 
 void RoomsDialog::chooseTile()

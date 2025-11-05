@@ -21,6 +21,8 @@
 #include <QDialog>
 #include <QMap>
 
+#include <set>
+
 class QListWidgetItem;
 
 namespace Ui {
@@ -31,6 +33,16 @@ namespace BuildingEditor {
 
 class BuildingTileEntry;
 class Room;
+
+class RoomName
+{
+public:
+    QString label;
+    QString internalName;
+    QColor color;
+};
+
+extern bool compareQColors(const QColor& a, const QColor& b);
 
 class RoomsDialog : public QDialog
 {
@@ -46,6 +58,10 @@ public:
     Room *originalRoom(Room *dialogRoom) const;
 
 private:
+    void readRoomNamesDotTxt(QList<RoomName> &roomNames);
+    void readRoomNamesDotTxt(const QString &fileName, QList<RoomName> &roomNames);
+    int findRoomNameByLabel(const QString &label) const;
+    int findRoomNameByInternalName(const QString &internalName) const;
     void setRoomsList();
     void synchUI();
     void setTilePixmap();
@@ -64,7 +80,9 @@ private slots:
     void nameEdited(const QString &name);
     void internalNameEdited(const QString &name);
     void colorChanged(const QColor &color);
+    void randomiseColor();
     void tileSelectionChanged();
+    void clearTile();
     void chooseTile();
 
     void accept() override;
@@ -77,6 +95,8 @@ private:
     Room *mRoom;
     QListWidgetItem *mRoomItem;
     int mTileRow;
+    std::set<QColor, decltype(&compareQColors)> mRoomColorSet;
+    QList<RoomName> mRoomNames;
 };
 
 } // namespace BuildingEditor

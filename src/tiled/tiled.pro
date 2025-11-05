@@ -632,6 +632,7 @@ configTxtFiles.path = $${CONFIG_PREFIX}
 configTxtFiles.files = \
     $${top_srcdir}/LuaTools.txt \
     $${top_srcdir}/Rearrange.txt \
+    $${top_srcdir}/RoomNames.txt \
     $${top_srcdir}/RoomTone.txt \
     $${top_srcdir}/TileProperties.txt \
     $${top_srcdir}/Tilesets.txt
