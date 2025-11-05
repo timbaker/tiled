@@ -34,6 +34,8 @@ NewBuildingDialog::NewBuildingDialog(QWidget *parent) :
 {
     ui->setupUi(this);
 
+    setWindowFlags(windowFlags() & ~Qt::WindowContextHelpButtonHint);
+
     QSettings &settings = BuildingPreferences::instance()->settings();
     QString templateName = settings.value(QLatin1String(KEY_TEMPLATE)).toString();
 
@@ -44,6 +46,8 @@ NewBuildingDialog::NewBuildingDialog(QWidget *parent) :
             ui->comboBox->setCurrentIndex(ui->comboBox->count() - 1);
         }
     }
+
+    ui->width->setFocus();
 }
 
 NewBuildingDialog::~NewBuildingDialog()
