@@ -247,7 +247,7 @@ void RoomsDialog::synchUI()
     ui->tilesList->setEnabled(mRoom != 0);
 
     bool enabled = false;
-    if (mRoom != nullptr && mTileRow != -1) {
+    if ((selectedTile() != nullptr) && !selectedTile()->isNone()) {
         BuildingTileCategory *category = BuildingTilesMgr::instance()->category(mRoom->categoryEnum(mTileRow));
         enabled = category->canAssignNone();
     }
@@ -472,7 +472,7 @@ void RoomsDialog::clearTile()
     BuildingTileCategory *category = BuildingTilesMgr::instance()->category(mRoom->categoryEnum(mTileRow));
     if (category->canAssignNone()) {
         mRoom->setTile(mTileRow, category->noneTileEntry());
-        setTilePixmap();
+        synchUI();
     }
 }
 
@@ -488,7 +488,7 @@ void RoomsDialog::chooseTile()
     if (dialog.exec() == QDialog::Accepted) {
         if (BuildingTileEntry *entry = dialog.selectedTile()) {
             mRoom->setTile(mTileRow, entry);
-            setTilePixmap();
+            synchUI();
         }
     }
 }

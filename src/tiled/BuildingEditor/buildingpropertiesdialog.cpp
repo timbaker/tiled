@@ -74,7 +74,7 @@ BuildingPropertiesDialog::~BuildingPropertiesDialog()
 
 void BuildingPropertiesDialog::synchUI()
 {
-    if (mTileRow == -1) {
+    if ((selectedTile() == nullptr) || selectedTile()->isNone()) {
         ui->clearTile->setEnabled(false);
     } else {
         BuildingTileCategory *category = BuildingTilesMgr::instance()->category(mDocument->building()->categoryEnum(mTileRow));
@@ -121,7 +121,7 @@ void BuildingPropertiesDialog::clearTile()
     BuildingTileCategory *category = BuildingTilesMgr::instance()->category(mDocument->building()->categoryEnum(mTileRow));
     if (category->canAssignNone()) {
         mTiles[mTileRow] = category->noneTileEntry();
-        setTilePixmap();
+        synchUI();
     }
 }
 
@@ -136,7 +136,7 @@ void BuildingPropertiesDialog::chooseTile()
     if (dialog.exec() == QDialog::Accepted) {
         if (BuildingTileEntry *entry = dialog.selectedTile()) {
             mTiles[mTileRow] = entry;
-            setTilePixmap();
+            synchUI();
         }
     }
 }
