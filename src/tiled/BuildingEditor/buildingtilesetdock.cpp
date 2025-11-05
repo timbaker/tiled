@@ -40,6 +40,8 @@ using namespace BuildingEditor;
 using namespace Tiled;
 using namespace Tiled::Internal;
 
+#define HORIZONTAL_SCROLLBAR_FIX 1
+
 BuildingTilesetDock::BuildingTilesetDock(QWidget *parent) :
     QDockWidget(parent),
     ui(new Ui::BuildingTilesetDock),
@@ -52,6 +54,11 @@ BuildingTilesetDock::BuildingTilesetDock(QWidget *parent) :
 
 #ifndef TILESET_LIST_FIXED_WIDTH
     mSplitter = ui->splitter;
+#endif
+
+#if HORIZONTAL_SCROLLBAR_FIX
+    // https://stackoverflow.com/questions/44633066/qlistwidget-horizontal-scrollbar-causes-selection-to-go-out-of-view
+    ui->tilesets->setAutoScroll(false);
 #endif
 
     connect(ui->filter, &QLineEdit::textEdited, this, &BuildingTilesetDock::filterEdited);
@@ -305,6 +312,30 @@ void BuildingTilesetDock::currentTilesetChanged(int row)
     if (row >= 0)
         mCurrentTileset = TileMetaInfoMgr::instance()->tileset(row);
     setTilesList();
+
+#if HORIZONTAL_SCROLLBAR_FIX
+    const QRect rect = ui->tilesets->visualItemRect(ui->tilesets->currentItem());
+    if (!rect.isValid()) {
+        return;
+    }
+    const QRect viewport = ui->tilesets->viewport()->rect();
+    if (viewport.contains(rect)) {
+        return;
+    }
+    const bool above = rect.top() < viewport.top();
+    const bool below = rect.bottom() > viewport.bottom();
+    // Like QCommonListViewBase::verticalScrollToValue() but value is divided by item height.
+    // The original code seems to assume the scrollbar min/max are pixel values.
+    int value = ui->tilesets->verticalScrollBar()->value();
+    int spacing = ui->tilesets->spacing();
+    QRect adjusted = rect.adjusted(-spacing, -spacing, spacing, spacing);
+    if (above) {
+        value += adjusted.top() / rect.height();
+    } else if (below) {
+        value += qMin(adjusted.top(), adjusted.bottom() + 1 - viewport.height() + (viewport.height() % rect.height())) / rect.height();
+    }
+    ui->tilesets->verticalScrollBar()->setValue(value);
+#endif
 }
 
 void BuildingTilesetDock::tileSelectionChanged()

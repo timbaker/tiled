@@ -714,6 +714,7 @@ void TilesetDock::refreshTilesetMenu()
 #include "utils.h"
 #include "zoomable.h"
 
+#include "qmath.h"
 #include <QAction>
 #include <QApplication>
 #include <QClipboard>
@@ -733,6 +734,8 @@ void TilesetDock::refreshTilesetMenu()
 #include <QToolButton>
 #include <QUrl>
 #include <QVBoxLayout>
+
+#define HORIZONTAL_SCROLLBAR_FIX 1
 
 using namespace Tiled;
 using namespace Tiled::Internal;
@@ -840,6 +843,11 @@ TilesetDock::TilesetDock(QWidget *parent):
     setObjectName(QLatin1String("TilesetDock"));
 
     mTilesetView->setModel(new TilesetModel(0, mTilesetView));
+
+#if HORIZONTAL_SCROLLBAR_FIX
+    // https://stackoverflow.com/questions/44633066/qlistwidget-horizontal-scrollbar-causes-selection-to-go-out-of-view
+    mTilesetNamesView->setAutoScroll(false);
+#endif
 
     connect(mTilesetNamesView, &QListWidget::currentRowChanged,
             this, &TilesetDock::currentTilesetChanged);
@@ -1125,6 +1133,30 @@ void TilesetDock::currentTilesetChanged(int row)
     setTilesetList();
     updateCurrentTiles();
     updateActions();
+
+#if HORIZONTAL_SCROLLBAR_FIX
+    const QRect rect = mTilesetNamesView->visualItemRect(mTilesetNamesView->currentItem());
+    if (!rect.isValid()) {
+        return;
+    }
+    const QRect viewport = mTilesetNamesView->viewport()->rect();
+    if (viewport.contains(rect)) {
+        return;
+    }
+    const bool above = rect.top() < viewport.top();
+    const bool below = rect.bottom() > viewport.bottom();
+    // Like QCommonListViewBase::verticalScrollToValue() but value is divided by item height.
+    // The original code seems to assume the scrollbar min/max are pixel values.
+    int value = mTilesetNamesView->verticalScrollBar()->value();
+    int spacing = mTilesetNamesView->spacing();
+    QRect adjusted = rect.adjusted(-spacing, -spacing, spacing, spacing);
+    if (above) {
+        value += adjusted.top() / rect.height();
+    } else if (below) {
+        value += qMin(adjusted.top(), adjusted.bottom() + 1 - viewport.height() + (viewport.height() % rect.height())) / rect.height();
+    }
+    mTilesetNamesView->verticalScrollBar()->setValue(value);
+#endif
 }
 
 void TilesetDock::tilesetItemChanged(QListWidgetItem *item)
