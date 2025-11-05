@@ -150,6 +150,7 @@ public:
     QStringList tileChoices;
     QString targetLayer;
     QRgb condition;
+    bool obsolete = false;
 
     BmpRule(const BmpRule *other) :
         label(other->label),
@@ -157,19 +158,20 @@ public:
         color(other->color),
         tileChoices(other->tileChoices),
         targetLayer(other->targetLayer),
-        condition(other->condition)
+        condition(other->condition),
+        obsolete(other->obsolete)
     {}
     BmpRule(const QString &label, int bitmapIndex, QRgb col,
-            const QStringList &tiles, const QString &layer, QRgb condition) :
+            const QStringList &tiles, const QString &layer, QRgb condition,
+            bool obsolete) :
         label(label),
         bitmapIndex(bitmapIndex),
         color(col),
         tileChoices(tiles),
         targetLayer(layer),
-        condition(condition)
+        condition(condition),
+        obsolete(obsolete)
     {}
-    BmpRule(const QString &label, int bitmapIndex, QRgb col, QString tile,
-            QString layer, QRgb condition);
 };
 
 class TILEDSHARED_EXPORT BmpBlend

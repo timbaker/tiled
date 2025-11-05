@@ -29,7 +29,7 @@
    <item row="0" column="0">
     <widget class="QTabWidget" name="tabWidget">
      <property name="currentIndex">
-      <number>2</number>
+      <number>0</number>
      </property>
      <widget class="QWidget" name="tab">
       <attribute name="title">
@@ -61,6 +61,13 @@
           <widget class="QToolButton" name="expandCollapse">
            <property name="text">
             <string>Collapse</string>
+           </property>
+          </widget>
+         </item>
+         <item>
+          <widget class="QCheckBox" name="showObsolete">
+           <property name="text">
+            <string>Show Obsolete</string>
            </property>
           </widget>
          </item>
@@ -450,6 +457,11 @@ This is a permanent per-map setting.</string>
  </widget>
  <customwidgets>
   <customwidget>
+   <class>Tiled::Internal::MixedTilesetView</class>
+   <extends>QTableView</extends>
+   <header>BuildingEditor/mixedtilesetview.h</header>
+  </customwidget>
+  <customwidget>
    <class>Tiled::Internal::BmpRuleView</class>
    <extends>QTableView</extends>
    <header>bmpruleview.h</header>
@@ -458,11 +470,6 @@ This is a permanent per-map setting.</string>
    <class>Tiled::Internal::BmpBlendView</class>
    <extends>QTableView</extends>
    <header>bmpblendview.h</header>
-  </customwidget>
-  <customwidget>
-   <class>Tiled::Internal::MixedTilesetView</class>
-   <extends>QTableView</extends>
-   <header>BuildingEditor/mixedtilesetview.h</header>
   </customwidget>
  </customwidgets>
  <resources>

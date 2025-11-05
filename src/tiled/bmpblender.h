@@ -65,7 +65,7 @@ public:
 
 private:
     void AddRule(const QString &label, int bitmapIndex, QRgb col, const QStringList &tiles,
-                 const QString &layer, QRgb condition);
+                 const QString &layer, QRgb condition, bool obsolete);
 
     QRgb rgbFromString(const QString &string, bool &ok);
     QRgb rgbFromStringList(const QStringList &rgb, bool &ok);

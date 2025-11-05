@@ -129,6 +129,8 @@ public:
     bool isExpanded() const
     { return mExpanded; }
 
+    void setShowObsolete(bool show);
+
 signals:
     void layerNameClicked(int layerIndex);
 
@@ -144,6 +146,7 @@ private:
     int mMaxHeaderWidth;
     bool mIgnoreMouse;
     bool mExpanded;
+    bool mShowObsolete = false;
 };
 
 } // namespace Internal

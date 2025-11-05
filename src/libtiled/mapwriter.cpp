@@ -652,6 +652,9 @@ void MapWriterPrivate::writeBmpSettings(QXmlStreamWriter &w,
         w.writeAttribute(QLatin1String("tileChoices"), tileChoices.join(QLatin1String(" ")));
         w.writeAttribute(QLatin1String("targetLayer"), rule->targetLayer);
         w.writeAttribute(QLatin1String("condition"), rgbString(rule->condition));
+        if (rule->obsolete) {
+            w.writeAttribute(QLatin1String("obsolete"), QStringLiteral("true"));
+        }
         w.writeEndElement(); // <rule>
     }
     w.writeEndElement(); // <rules>

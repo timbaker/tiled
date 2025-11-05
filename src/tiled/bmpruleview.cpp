@@ -120,6 +120,13 @@ void BmpRuleDelegate::paint(QPainter *painter,
         painter->setOpacity(opacity);
     }
 #endif
+    if (rule->obsolete) {
+        const qreal opacity = painter->opacity();
+        painter->setOpacity(1.0);
+        painter->fillRect(option.rect, Qt::Dense6Pattern);
+        painter->setOpacity(opacity);
+    }
+
     // This requires the view's setMouseTracking(true)
     if (option.state & QStyle::State_MouseOver) {
         const qreal opacity = painter->opacity();
@@ -182,7 +189,7 @@ void BmpRuleDelegate::paint(QPainter *painter,
     QFont font = painter->font();
     if (rule->label.size()) {
         QPen oldPen = painter->pen();
-        painter->setPen(Qt::blue);
+        painter->setPen(rule->obsolete ? Qt::gray : Qt::blue);
         painter->setFont(mLabelFont);
         labelWidth = mLabelFontMetrics.horizontalAdvance(rule->label) + 6;
         painter->drawText(option.rect.left() + extra, option.rect.top() + extra,
@@ -655,6 +662,8 @@ void BmpRuleView::setRules(const Map *map)
         TileMetaInfoMgr::instance()->loadTilesets({tilesets.begin(), tilesets.end()});
     }
     model()->setRules(map);
+
+    setShowObsolete(mShowObsolete);
 }
 
 void BmpRuleView::setExpanded(bool expanded)
@@ -664,6 +673,21 @@ void BmpRuleView::setExpanded(bool expanded)
         model()->scaleChanged(mZoomable->scale());
         visualRect(currentIndex());
         QMetaObject::invokeMethod(this, "scrollToCurrentItem", Qt::QueuedConnection);
+    }
+}
+
+void BmpRuleView::setShowObsolete(bool show)
+{
+    mShowObsolete = show;
+    for (int row = 0; row < model()->rowCount(); row++) {
+        BmpRule *rule = model()->ruleAt(model()->index(row, 0));
+        if (rule != nullptr && rule->obsolete) {
+            if (show) {
+                showRow(row);
+            } else {
+                hideRow(row);
+            }
+        }
     }
 }
 

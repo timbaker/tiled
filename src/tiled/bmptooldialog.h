@@ -71,6 +71,7 @@ private slots:
     void synchBlendTilesView();
 
     void expandCollapse();
+    void showObsoleteChanged();
 
     void reloadRules();
     void importRules();

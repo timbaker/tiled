@@ -1111,12 +1111,15 @@ void MapReaderPrivate::readBmpRules()
             bool ok;
             QRgb color = rgbFromString(atts.value(QLatin1String("color")).toString(), ok);
             QStringList tileChoices = atts.value(QLatin1String("tileChoices")).toString().split(QLatin1Char(' '));
-            for (int i = 0; i < tileChoices.size(); i++)
-                if (tileChoices[i] == QLatin1String("null"))
+            for (int i = 0; i < tileChoices.size(); i++) {
+                if (tileChoices[i] == QLatin1String("null")) {
                     tileChoices[i].clear();
+                }
+            }
             QString targetLayer = atts.value(QLatin1String("targetLayer")).toString();
             QRgb condition = rgbFromString(atts.value(QLatin1String("condition")).toString(), ok);
-            rules += new BmpRule(label, bitmapIndex, color, tileChoices, targetLayer, condition);
+            bool obsolete = atts.value(QLatin1String("obsolete")) == QStringLiteral("true");
+            rules += new BmpRule(label, bitmapIndex, color, tileChoices, targetLayer, condition, obsolete);
             xml.skipCurrentElement();
         } else {
             readUnknownElement();

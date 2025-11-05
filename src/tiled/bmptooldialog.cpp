@@ -151,11 +151,15 @@ BmpToolDialog::BmpToolDialog(QWidget *parent) :
 
     ui->tabWidget->setCurrentIndex(0);
 
+    ui->tableView->setShowObsolete(ui->showObsolete->isChecked());
+
     connect(ui->tableView->selectionModel(), &QItemSelectionModel::currentChanged,
             this, &BmpToolDialog::currentRuleChanged);
 
     connect(ui->expandCollapse, &QAbstractButton::clicked,
             this, &BmpToolDialog::expandCollapse);
+    connect(ui->showObsolete, &QAbstractButton::clicked,
+            this, &BmpToolDialog::showObsoleteChanged);
     ui->tableView->zoomable()->connectToComboBox(ui->scaleCombo);
 
     connect(ui->blendView, &BmpBlendView::blendHighlighted,
@@ -336,6 +340,11 @@ void BmpToolDialog::expandCollapse()
     mExpanded = !mExpanded;
 
     ui->tableView->setExpanded(mExpanded);
+}
+
+void BmpToolDialog::showObsoleteChanged()
+{
+    ui->tableView->setShowObsolete(ui->showObsolete->isChecked());
 }
 
 void BmpToolDialog::reloadRules()
