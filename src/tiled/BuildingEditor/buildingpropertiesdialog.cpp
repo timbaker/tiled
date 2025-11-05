@@ -50,6 +50,7 @@ BuildingPropertiesDialog::BuildingPropertiesDialog(BuildingDocument *doc,
     connect(ui->tilesList, &QListWidget::itemSelectionChanged,
             this, &BuildingPropertiesDialog::tileSelectionChanged);
     connect(ui->tilesList, &QAbstractItemView::activated, this, &BuildingPropertiesDialog::chooseTile);
+    connect(ui->clearTile, &QAbstractButton::clicked, this, &BuildingPropertiesDialog::clearTile);
     connect(ui->chooseTile, &QAbstractButton::clicked, this, &BuildingPropertiesDialog::chooseTile);
 
     connect(ui->rooms, &QAbstractButton::clicked,
@@ -73,6 +74,12 @@ BuildingPropertiesDialog::~BuildingPropertiesDialog()
 
 void BuildingPropertiesDialog::synchUI()
 {
+    if (mTileRow == -1) {
+        ui->clearTile->setEnabled(false);
+    } else {
+        BuildingTileCategory *category = BuildingTilesMgr::instance()->category(mDocument->building()->categoryEnum(mTileRow));
+        ui->clearTile->setEnabled(category->canAssignNone());
+    }
     setTilePixmap();
 }
 
@@ -97,7 +104,7 @@ void BuildingPropertiesDialog::setTilePixmap()
 BuildingTileEntry *BuildingPropertiesDialog::selectedTile()
 {
     if (mTileRow == -1)
-        return 0;
+        return nullptr;
 
     BuildingTileEntry *entry = mTiles[mTileRow];
     return entry ? entry : BuildingTilesMgr::instance()->noneTileEntry();
@@ -107,6 +114,15 @@ void BuildingPropertiesDialog::accept()
 {
     apply();
     QDialog::accept();
+}
+
+void BuildingPropertiesDialog::clearTile()
+{
+    BuildingTileCategory *category = BuildingTilesMgr::instance()->category(mDocument->building()->categoryEnum(mTileRow));
+    if (category->canAssignNone()) {
+        mTiles[mTileRow] = category->noneTileEntry();
+        setTilePixmap();
+    }
 }
 
 void BuildingPropertiesDialog::chooseTile()

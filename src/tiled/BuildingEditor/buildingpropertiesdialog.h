@@ -44,6 +44,7 @@ public:
     
 private slots:
     void tileSelectionChanged();
+    void clearTile();
     void chooseTile();
     void bbclicked(QAbstractButton *button);
 
