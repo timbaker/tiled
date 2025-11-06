@@ -652,10 +652,10 @@
     <string>Draw Tiles</string>
    </property>
    <property name="toolTip">
-    <string>Draw Tiles (B)</string>
+    <string>Draw Tiles (1)</string>
    </property>
    <property name="shortcut">
-    <string>B</string>
+    <string>1</string>
    </property>
   </action>
   <action name="actionSelectTiles">
@@ -670,10 +670,10 @@
     <string>Select Tiles</string>
    </property>
    <property name="toolTip">
-    <string>Select Tiles (R)</string>
+    <string>Select Tiles (2)</string>
    </property>
    <property name="shortcut">
-    <string>R</string>
+    <string>2</string>
    </property>
   </action>
   <action name="actionPickTiles">
@@ -688,10 +688,10 @@
     <string>Pick Tiles</string>
    </property>
    <property name="toolTip">
-    <string>Pick Tiles (P)</string>
+    <string>Pick Tiles (3)</string>
    </property>
    <property name="shortcut">
-    <string>P</string>
+    <string>3</string>
    </property>
   </action>
   <action name="actionViewsPlaceholder">
