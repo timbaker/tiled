@@ -136,6 +136,7 @@ PreferencesDialog::PreferencesDialog(QWidget *parent) :
 
 #ifdef ZOMBOID
     mUi->tabWidget->setCurrentIndex(0);
+    mUi->themeCombo->setCurrentText(Preferences::instance()->theme());
 #endif
 
     fromPreferences();
@@ -170,6 +171,7 @@ PreferencesDialog::PreferencesDialog(QWidget *parent) :
     connect(mUi->removePZPropertiesFile, &QAbstractButton::clicked, this, &PreferencesDialog::removePropertiesFile);
     connect(mUi->raisePZPropertiesFile, &QAbstractButton::clicked, this, &PreferencesDialog::raisePropertiesFile);
     connect(mUi->lowerPZPropertiesFile, &QAbstractButton::clicked, this, &PreferencesDialog::lowerPropertiesFile);
+    connect(mUi->themeCombo, qOverload<int>(&QComboBox::currentIndexChanged), this, &PreferencesDialog::themeChanged);
 #endif // ZOMBOID
 
     connect(mUi->objectTypesTable->selectionModel(),
@@ -405,6 +407,12 @@ void PreferencesDialog::lowerPropertiesFile()
     int row = mUi->tilePropertiesListWidget->currentRow();
     mUi->tilePropertiesListWidget->insertItem(row + 1, mUi->tilePropertiesListWidget->takeItem(row));
     mUi->tilePropertiesListWidget->setCurrentRow(row + 1);
+}
+
+void PreferencesDialog::themeChanged(int index)
+{
+    QString text = mUi->themeCombo->currentText();
+    Preferences::instance()->setTheme(text);
 }
 
 void PreferencesDialog::updateActions()

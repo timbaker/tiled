@@ -81,7 +81,7 @@ LinkItem::LinkItem(const QString &text1, const QString &text2, QGraphicsItem *pa
     mBoundingRect.setRight(400);
     bg->setRect(mBoundingRect);
 
-    //        setFlag(ItemHasNoContents);
+//    setFlag(ItemHasNoContents);
     setAcceptHoverEvents(true);
 }
 
@@ -162,6 +162,8 @@ WelcomeMode::WelcomeMode(QObject *parent) :
     mWidget = new QWidget;
     mWidget->setObjectName(QLatin1String("WelcomeModeWidget"));
     ui->setupUi(mWidget);
+
+    ui->graphicsView->setBackgroundBrush(Qt::gray);
 
     QGraphicsScene *scene = new QGraphicsScene(ui->graphicsView);
     ui->graphicsView->setScene(scene);

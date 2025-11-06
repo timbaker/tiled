@@ -76,6 +76,7 @@ private slots:
     void removePropertiesFile();
     void raisePropertiesFile();
     void lowerPropertiesFile();
+    void themeChanged(int index);
     void updateActions();
 #endif // ZOMBOID
 

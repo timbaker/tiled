@@ -86,10 +86,12 @@ void LayersPanelDelegate::paint(QPainter *painter,
     QBrush brush = qvariant_cast<QBrush>(m->data(index, Qt::BackgroundRole));
     painter->fillRect(option.rect, brush);
 
+    const QPen oldPen = painter->pen();
+
     if (index.row() > 0 && !(option.state & QStyle::State_Selected)) {
         painter->setPen(Qt::darkGray);
         painter->drawLine(option.rect.topLeft(), option.rect.topRight());
-        painter->setPen(Qt::black);
+        painter->setPen(oldPen);
     }
 
     // Note: BuildingTilesMgr::instance()->noneTiledTile() is used for valid
@@ -145,8 +147,6 @@ void LayersPanelDelegate::paint(QPainter *painter,
         painter->setOpacity(opacity);
     }
 
-    const QPen oldPen = painter->pen();
-
     // Rect around current layer
     if (option.state & QStyle::State_Selected) {
         QPen pen;
@@ -166,7 +166,7 @@ void LayersPanelDelegate::paint(QPainter *painter,
         painter->setFont(newFont);
     }
     if (!tile)
-        painter->setPen(Qt::gray);
+        painter->setPen(option.palette.color(QPalette::Disabled, QPalette::Text));
     painter->drawText(option.rect.left(), option.rect.top() + 2,
                       option.rect.width(), labelHeight, Qt::AlignHCenter, name);
     if (!tile)
@@ -707,7 +707,7 @@ void TileLayersPanel::setList()
         int layerIndex = mDocument->map()->layers().indexOf(tl);
         mView->prependLayer(layerName, tile, layerIndex);
 
-        QBrush brush(tl->isVisible() ? Qt::white : Qt::lightGray);
+        QBrush brush(tl->isVisible() ? palette().color(QPalette::Window) : Qt::lightGray);
         mView->model()->setData(mView->model()->index(layerIndex), brush, Qt::BackgroundRole);
         ++index;
     }
@@ -790,7 +790,7 @@ void TileLayersPanel::layerChanged(int index)
         if (mi.isValid()) {
             QString name = MapComposite::layerNameWithoutPrefix(layer);
             mView->model()->setData(mi, name, Qt::DecorationRole);
-            QBrush brush(layer->isVisible() ? Qt::white : Qt::lightGray);
+            QBrush brush(layer->isVisible() ? palette().color(QPalette::Window) : Qt::lightGray);
             mView->model()->setData(mi, brush, Qt::BackgroundRole);
         }
     }

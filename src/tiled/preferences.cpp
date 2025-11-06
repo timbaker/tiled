@@ -28,8 +28,9 @@
 #endif
 
 #ifdef ZOMBOID
-#include <QCoreApplication>
+#include <QApplication>
 #include <QDir>
+#include <QTextStream>
 #endif
 #include <QDesktopServices>
 #include <QFileInfo>
@@ -97,6 +98,7 @@ Preferences::Preferences()
     mHighlightRoomUnderPointer = mSettings->value(QLatin1String("HighlightRoomUnderPointer"), false).toBool();
     mTilesetBackgroundColor = QColor(mSettings->value(QLatin1String("TilesetBackgroundColor"), QColor(Qt::white).name()).toString());
     mShowCellBorder = mSettings->value(QLatin1String("ShowCelLBorder"), true).toBool();
+    mTheme = mSettings->value(QLatin1String("Theme"), QLatin1String("Default")).toString();
 #endif
     mSettings->endGroup();
 #ifdef ZOMBOID
@@ -684,6 +686,39 @@ void Preferences::setShowCellBorder(bool show)
     mShowCellBorder = show;
     mSettings->setValue(QLatin1String("Interface/ShowCellBorder"), mShowCellBorder);
     emit showCellBorderChanged(mShowCellBorder);
+}
+
+void Preferences::setTheme(const QString &theme)
+{
+    if (mTheme == theme) {
+        return;
+    }
+    mTheme = theme;
+    applyTheme();
+}
+
+void Preferences::applyTheme() const
+{
+    mSettings->setValue(QLatin1String("Interface/Theme"), mTheme);
+    if (mTheme == QStringLiteral("Default")) {
+        qApp->setStyleSheet(QString());
+        return;
+    }
+    QString resource;
+    if (mTheme == QStringLiteral("QDarkStyle (Dark)")) {
+        resource = QStringLiteral(":qdarkstyle/dark/darkstyle.qss");
+    } else if (mTheme == QStringLiteral("QDarkStyle (Light)")) {
+        resource = QStringLiteral(":qdarkstyle/light/lightstyle.qss");
+    } else {
+        return;
+    }
+    QFile theme_file(resource);
+    theme_file.open(QFile::ReadOnly | QFile::Text);
+    if(theme_file.isOpen()) {
+        QTextStream ts(&theme_file);
+        qApp->setStyleSheet(ts.readAll());        //set the theme here!
+        theme_file.close();
+    }
 }
 
 #endif // ZOMBOID

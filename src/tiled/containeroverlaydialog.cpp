@@ -902,7 +902,7 @@ void AbstractOverlayDialog::tilesetChanged(Tileset *tileset)
 
     int row = TileMetaInfoMgr::instance()->indexOf(tileset);
     if (QListWidgetItem *item = ui->tilesetList->item(row))
-        item->setForeground(tileset->isMissing() ? Qt::red : Qt::black);
+        item->setForeground(tileset->isMissing() ? Qt::red : ui->tilesetList->palette().color(QPalette::Text));
 }
 
 void AbstractOverlayDialog::tileDropped(AbstractOverlay *overlay, const QStringList &tileNames)

@@ -373,7 +373,7 @@ void BuildingTilesetDock::tilesetChanged(Tileset *tileset)
 
     int row = TileMetaInfoMgr::instance()->indexOf(tileset);
     if (QListWidgetItem *item = ui->tilesets->item(row))
-        item->setForeground(tileset->isMissing() ? Qt::red : Qt::black);
+        item->setForeground(tileset->isMissing() ? Qt::red : ui->tilesets->palette().color(QPalette::Text));
 }
 
 void BuildingTilesetDock::tileLayerNameChanged(BuildingTilesetDock::Tile *tile)

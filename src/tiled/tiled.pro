@@ -574,7 +574,10 @@ FORMS += aboutdialog.ui \
     rearrangetiles.ui
 
 RESOURCES += tiled.qrc \
-    BuildingEditor/buildingeditor.qrc
+    BuildingEditor/buildingeditor.qrc \
+    qdarkstyle/dark/darkstyle.qrc \
+    qdarkstyle/light/lightstyle.qrc
+
 macx {
     TARGET = TileZed
     QMAKE_INFO_PLIST = Info.plist

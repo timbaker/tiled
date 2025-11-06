@@ -183,6 +183,7 @@ int main(int argc, char *argv[])
         Preferences::instance()->setUseOpenGL(false);
 
 #ifdef ZOMBOID
+    Preferences::instance()->applyTheme();
     if (a.isRunning()) {
         if (!commandLine.filesToOpen().isEmpty()) {
             foreach (const QString &fileName, commandLine.filesToOpen())

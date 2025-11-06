@@ -152,6 +152,11 @@ public:
     bool showCellBorder() const
     { return mShowCellBorder; }
 
+    QString theme() const
+    { return mTheme; }
+
+    void applyTheme() const;
+
 #endif // ZOMBOID
 
     /**
@@ -184,6 +189,7 @@ public slots:
     void setTilesetBackgroundColor(const QColor& color);
     void setThumbnailsDirectory(const QString &path);
     void setShowCellBorder(bool show);
+    void setTheme(const QString &theme);
 #endif
 
 signals:
@@ -263,6 +269,7 @@ private:
     bool mShowTileSelection;
     bool mShowInvisibleTiles;
     bool mShowCellBorder;
+    QString mTheme;
 #endif
 
     static Preferences *mInstance;

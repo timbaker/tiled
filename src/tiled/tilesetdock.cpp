@@ -1253,7 +1253,7 @@ void TilesetDock::tilesetChanged(Tileset *tileset)
     if (mTilesets.contains(tileset)) {
         int row = mTilesets.indexOf(tileset);
         if (QListWidgetItem *item = mTilesetNamesView->item(row))
-            item->setForeground(tileset->isMissing() ? Qt::red : Qt::black);
+            item->setForeground(tileset->isMissing() ? Qt::red : mTilesetNamesView->palette().color(QPalette::Text));
     }
 }
 
