@@ -705,7 +705,9 @@ void Preferences::applyTheme() const
         return;
     }
     QString resource;
-    if (mTheme == QStringLiteral("QDarkStyle (Dark)")) {
+    if (mTheme == QStringLiteral("Breeze (Dark)")) {
+        resource = QStringLiteral(":breeze/dark/stylesheet.qss");
+    } else if (mTheme == QStringLiteral("QDarkStyle (Dark)")) {
         resource = QStringLiteral(":qdarkstyle/dark/darkstyle.qss");
     } else if (mTheme == QStringLiteral("QDarkStyle (Light)")) {
         resource = QStringLiteral(":qdarkstyle/light/lightstyle.qss");

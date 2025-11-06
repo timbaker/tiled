@@ -149,6 +149,11 @@
               </item>
               <item>
                <property name="text">
+                <string>Breeze (Dark)</string>
+               </property>
+              </item>
+              <item>
+               <property name="text">
                 <string>QDarkStyle (Dark)</string>
                </property>
               </item>

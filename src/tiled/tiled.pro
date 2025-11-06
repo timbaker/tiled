@@ -576,7 +576,8 @@ FORMS += aboutdialog.ui \
 RESOURCES += tiled.qrc \
     BuildingEditor/buildingeditor.qrc \
     qdarkstyle/dark/darkstyle.qrc \
-    qdarkstyle/light/lightstyle.qrc
+    qdarkstyle/light/lightstyle.qrc \
+    breeze/breeze.qrc
 
 macx {
     TARGET = TileZed
