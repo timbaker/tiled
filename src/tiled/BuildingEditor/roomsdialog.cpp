@@ -32,6 +32,7 @@
 #include <QFileInfo>
 #include <QLineEdit>
 #include <QMessageBox>
+#include <QPainter>
 #include <QRandomGenerator>
 #include <QToolBar>
 
@@ -114,6 +115,7 @@ RoomsDialog::RoomsDialog(const QList<Room*> &rooms, Room *initialRoom, QWidget *
             this, &RoomsDialog::tileSelectionChanged);
     connect(ui->tilesList, &QAbstractItemView::activated, this, &RoomsDialog::chooseTile);
     connect(ui->clearTile, &QAbstractButton::clicked, this, &RoomsDialog::clearTile);
+    connect(ui->randomTile, &QAbstractButton::clicked, this, &RoomsDialog::randomTile);
     connect(ui->chooseTile, &QAbstractButton::clicked, this, &RoomsDialog::chooseTile);
     connect(ui->randomColor, &QAbstractButton::clicked, this, &RoomsDialog::randomiseColor);
 
@@ -122,12 +124,7 @@ RoomsDialog::RoomsDialog(const QList<Room*> &rooms, Room *initialRoom, QWidget *
         ui->tilesList->setCurrentRow(currentRow);
     }
 
-    QSettings &settings = BuildingPreferences::instance()->settings();
-    settings.beginGroup(QLatin1String("RoomsDialog"));
-    QByteArray geom = settings.value(QLatin1String("geometry")).toByteArray();
-    if (!geom.isEmpty())
-        restoreGeometry(geom);
-    settings.endGroup();
+    readSettings();
 }
 
 RoomsDialog::~RoomsDialog()
@@ -253,7 +250,8 @@ void RoomsDialog::synchUI()
     }
     ui->clearTile->setEnabled(enabled);
 
-    ui->chooseTile->setEnabled(mRoom != 0);
+    ui->randomTile->setEnabled(mRoom != nullptr);
+    ui->chooseTile->setEnabled(mRoom != nullptr);
 
     if (mRoom) {
         int index = ui->name->findText(mRoom->Name);
@@ -429,12 +427,16 @@ void RoomsDialog::tileSelectionChanged()
     synchUI();
 }
 
-
 void RoomsDialog::setTilePixmap()
 {
     if (BuildingTileEntry *entry = selectedTile()) {
         Tiled::Tile *tile = BuildingTilesMgr::instance()->tileFor(entry->displayTile());
-        ui->tileLabel->setPixmap(QPixmap::fromImage(tile->finalImage(64, 128)));
+        QPixmap pixmap(64, 128);
+        pixmap.fill(Tiled::Internal::Preferences::instance()->tilesetBackgroundColor());
+        QPainter painter(&pixmap);
+        painter.drawImage(0, 0, tile->finalImage(64, 128));
+        painter.end();
+        ui->tileLabel->setPixmap(pixmap);
     } else {
         ui->tileLabel->clear();
     }
@@ -476,6 +478,18 @@ void RoomsDialog::clearTile()
     }
 }
 
+void RoomsDialog::randomTile()
+{
+    BuildingTileCategory *category = BuildingTilesMgr::instance()->category(mRoom->categoryEnum(mTileRow));
+    QList<BuildingTileEntry*> entries = category->entries();
+    if (category->canAssignNone()) {
+        entries += category->noneTileEntry();
+    }
+    QRandomGenerator *rand = QRandomGenerator::global();
+    mRoom->setTile(mTileRow, entries.at(rand->bounded(entries.size())));
+    synchUI();
+}
+
 void RoomsDialog::chooseTile()
 {
     BuildingTileCategory *category = BuildingTilesMgr::instance()->category(
@@ -498,6 +512,16 @@ void RoomsDialog::saveSettings()
     QSettings &settings = BuildingPreferences::instance()->settings();
     settings.beginGroup(QLatin1String("RoomsDialog"));
     settings.setValue(QLatin1String("geometry"), saveGeometry());
+    settings.endGroup();
+}
+
+void RoomsDialog::readSettings()
+{
+    QSettings &settings = BuildingPreferences::instance()->settings();
+    settings.beginGroup(QLatin1String("RoomsDialog"));
+    QByteArray geom = settings.value(QLatin1String("geometry")).toByteArray();
+    if (!geom.isEmpty())
+        restoreGeometry(geom);
     settings.endGroup();
 }
 

@@ -68,6 +68,7 @@ private:
     BuildingEditor::BuildingTileEntry *selectedTile();
     QRgb pickColorForNewRoom();
     void saveSettings();
+    void readSettings();
 
 private slots:
     void roomSelectionChanged();
@@ -83,6 +84,7 @@ private slots:
     void randomiseColor();
     void tileSelectionChanged();
     void clearTile();
+    void randomTile();
     void chooseTile();
 
     void accept() override;

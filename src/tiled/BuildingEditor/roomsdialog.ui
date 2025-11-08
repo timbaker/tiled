@@ -182,6 +182,13 @@
              </widget>
             </item>
             <item>
+             <widget class="QToolButton" name="randomTile">
+              <property name="text">
+               <string>Random</string>
+              </property>
+             </widget>
+            </item>
+            <item>
              <widget class="QToolButton" name="chooseTile">
               <property name="text">
                <string>Choose...</string>

@@ -69,6 +69,7 @@
 #include "zprogress.h"
 
 #include "maplevel.h"
+#include "maprenderer.h"
 #include "tile.h"
 #include "tileset.h"
 
@@ -254,6 +255,17 @@ void EditorWindowPerDocumentStuff::focusOn(int x, int y, int z, int objectIndex)
     if (objectIndex >= 0 && objectIndex < floor->objectCount()) {
         BuildingObject *bo = floor->object(objectIndex);
         document()->setSelectedObjects(QSet<BuildingObject*>() << bo);
+    }
+}
+
+void EditorWindowPerDocumentStuff::setInitialPosition()
+{
+    if (mInitialPositionSet) {
+        return;
+    }
+    mInitialPositionSet = true;
+    if (mIsoView != nullptr) {
+        mIsoView->centerOn(mIsoView->scene()->mapRenderer()->tileToPixelCoords(mDocument->building()->bounds().center()));
     }
 }
 
@@ -1255,8 +1267,10 @@ void BuildingEditorWindow::currentDocumentChanged(BuildingDocument *doc)
     updateActions();
     updateWindowTitle();
 
-    if (mCurrentDocumentStuff && !mWelcomeMode->isActive())
+    if (mCurrentDocumentStuff && !mWelcomeMode->isActive()) {
+        mCurrentDocumentStuff->setInitialPosition();
         mCurrentDocumentStuff->restoreTool();
+    }
 
     mDocumentChanging = false;
 }

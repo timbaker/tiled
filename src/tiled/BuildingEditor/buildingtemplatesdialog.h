@@ -53,8 +53,16 @@ private slots:
     void exportTemplates();
     void nameEdited(const QString &name);
     void editRooms();
+    void clearTile();
+    void randomTile();
     void chooseTile();
     void synchUI();
+    void accept() override;
+    void reject() override;
+
+private:
+    void saveSettings();
+    void readSettings();
 
 private:
     void setTilePixmap();

@@ -133,6 +133,8 @@ public:
     BuildingIsoView *isoView() const { return mIsoView; }
     BuildingIsoView *tileView() const { return mTileView; }
 
+    void setInitialPosition();
+
 public slots:
     void autoSaveCheck();
     void autoSaveTimeout();
@@ -149,6 +151,7 @@ private:
     BaseTool *mPrevTileTool;
     BaseTool *mPrevAttributeTool;
     bool mMissingTilesetsReported;
+    bool mInitialPositionSet = false;
 
     // Hack to keep iso/tile view position and scale synched.
     QPointF mIsoViewsCenter;

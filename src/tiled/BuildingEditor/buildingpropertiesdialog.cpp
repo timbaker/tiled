@@ -21,16 +21,19 @@
 #include "building.h"
 #include "buildingdocument.h"
 #include "buildingeditorwindow.h"
-#include "buildingfloor.h"
 #include "buildingobjects.h"
+#include "buildingpreferences.h"
 #include "buildingtemplates.h"
 #include "buildingtiles.h"
 #include "buildingundoredo.h"
 #include "choosebuildingtiledialog.h"
 
+#include "preferences.h"
 #include "tile.h"
 
+#include <QPainter>
 #include <QPushButton>
+#include <QRandomGenerator>
 
 using namespace BuildingEditor;
 
@@ -51,6 +54,7 @@ BuildingPropertiesDialog::BuildingPropertiesDialog(BuildingDocument *doc,
             this, &BuildingPropertiesDialog::tileSelectionChanged);
     connect(ui->tilesList, &QAbstractItemView::activated, this, &BuildingPropertiesDialog::chooseTile);
     connect(ui->clearTile, &QAbstractButton::clicked, this, &BuildingPropertiesDialog::clearTile);
+    connect(ui->randomTile, &QAbstractButton::clicked, this, &BuildingPropertiesDialog::randomTile);
     connect(ui->chooseTile, &QAbstractButton::clicked, this, &BuildingPropertiesDialog::chooseTile);
 
     connect(ui->rooms, &QAbstractButton::clicked,
@@ -65,6 +69,8 @@ BuildingPropertiesDialog::BuildingPropertiesDialog(BuildingDocument *doc,
 
     ui->tilesList->setCurrentRow(0);
     synchUI();
+
+    readSettings();
 }
 
 BuildingPropertiesDialog::~BuildingPropertiesDialog()
@@ -80,6 +86,8 @@ void BuildingPropertiesDialog::synchUI()
         BuildingTileCategory *category = BuildingTilesMgr::instance()->category(mDocument->building()->categoryEnum(mTileRow));
         ui->clearTile->setEnabled(category->canAssignNone());
     }
+    ui->randomTile->setEnabled(mTileRow != -1);
+    ui->chooseTile->setEnabled(mTileRow != -1);
     setTilePixmap();
 }
 
@@ -95,7 +103,12 @@ void BuildingPropertiesDialog::setTilePixmap()
 {
     if (BuildingTileEntry *entry = selectedTile()) {
         Tiled::Tile *tile = BuildingTilesMgr::instance()->tileFor(entry->displayTile());
-        ui->tileLabel->setPixmap(QPixmap::fromImage(tile->finalImage(64, 128)));
+        QPixmap pixmap(64, 128);
+        pixmap.fill(Tiled::Internal::Preferences::instance()->tilesetBackgroundColor());
+        QPainter painter(&pixmap);
+        painter.drawImage(0, 0, tile->finalImage(64, 128));
+        painter.end();
+        ui->tileLabel->setPixmap(pixmap);
     } else {
         ui->tileLabel->clear();
     }
@@ -110,19 +123,56 @@ BuildingTileEntry *BuildingPropertiesDialog::selectedTile()
     return entry ? entry : BuildingTilesMgr::instance()->noneTileEntry();
 }
 
+void BuildingPropertiesDialog::saveSettings()
+{
+    QSettings &settings = BuildingPreferences::instance()->settings();
+    settings.beginGroup(QLatin1String("BuildingPropertiesDialog"));
+    settings.setValue(QLatin1String("geometry"), saveGeometry());
+    settings.endGroup();
+}
+
+void BuildingPropertiesDialog::readSettings()
+{
+    QSettings &settings = BuildingPreferences::instance()->settings();
+    settings.beginGroup(QLatin1String("BuildingPropertiesDialog"));
+    QByteArray geom = settings.value(QLatin1String("geometry")).toByteArray();
+    if (!geom.isEmpty())
+        restoreGeometry(geom);
+    settings.endGroup();
+}
+
 void BuildingPropertiesDialog::accept()
 {
     apply();
+    saveSettings();
     QDialog::accept();
+}
+
+void BuildingPropertiesDialog::reject()
+{
+    saveSettings();
+    QDialog::reject();
 }
 
 void BuildingPropertiesDialog::clearTile()
 {
     BuildingTileCategory *category = BuildingTilesMgr::instance()->category(mDocument->building()->categoryEnum(mTileRow));
     if (category->canAssignNone()) {
-        mTiles[mTileRow] = category->noneTileEntry();
+        mTiles[mTileRow] = BuildingTilesMgr::instance()->noneTileEntry();
         synchUI();
     }
+}
+
+void BuildingPropertiesDialog::randomTile()
+{
+    BuildingTileCategory *category = BuildingTilesMgr::instance()->category(mDocument->building()->categoryEnum(mTileRow));
+    QList<BuildingTileEntry*> entries = category->entries();
+    if (category->canAssignNone()) {
+        entries += category->noneTileEntry();
+    }
+    QRandomGenerator *rand = QRandomGenerator::global();
+    mTiles[mTileRow] = entries.at(rand->bounded(entries.size()));
+    synchUI();
 }
 
 void BuildingPropertiesDialog::chooseTile()
