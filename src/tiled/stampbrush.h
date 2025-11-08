@@ -142,8 +142,12 @@ private:
         Line,           // hold shift: a line
         LineStartSet,   // when you have defined a starting point,
                         // cancel with right click
+#ifdef ZOMBOID
+        Erase          // Ctrl + left click
+#else
         Circle,         // hold Shift + Ctrl: a circle
         CircleMidSet
+#endif
     };
 
     /**

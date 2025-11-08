@@ -210,20 +210,36 @@ void StampBrush::tilePositionChanged(const QPoint &)
         configureBrush(calculateLine(mStampReferenceX, mStampReferenceY,
                                      mStampX, mStampY));
         break;
+#ifndef ZOMBOID
     case CircleMidSet:
         configureBrush(rasterEllipse(mStampReferenceX, mStampReferenceY,
                                      mStampX, mStampY));
         break;
+#endif
     case Capture:
         brushItem()->setTileRegion(capturedArea());
         break;
     case Line:
+#ifndef ZOMBOID
     case Circle:
+#endif
         updatePosition();
         break;
     case Free:
         updatePosition();
         break;
+#ifdef ZOMBOID
+    case Erase:
+        foreach (const QPoint &p, calculateLine(x, y, mStampX, mStampY)) {
+            // Must updatePosition() at each point along the line,
+            // because brushItem()->tileRegion() is used as the mask
+            // region to PaintTileLayer (see doPaint).
+            brushItem()->setTileLayerPosition(p);
+            doPaint(true, p.x(), p.y());
+        }
+        brushItem()->setTileLayerPosition(QPoint(mStampX, mStampY));
+        break;
+#endif
     }
 }
 
@@ -239,23 +255,34 @@ void StampBrush::mousePressed(QGraphicsSceneMouseEvent *event)
             mStampReferenceY = mStampY;
             mBrushBehavior = LineStartSet;
             break;
+#ifndef ZOMBOID
         case Circle:
             mStampReferenceX = mStampX;
             mStampReferenceY = mStampY;
             mBrushBehavior = CircleMidSet;
             break;
+#endif
         case LineStartSet:
             doPaint(false, 0, 0);
             mStampReferenceX = mStampX;
             mStampReferenceY = mStampY;
             break;
+#ifndef ZOMBOID
         case CircleMidSet:
             doPaint(false, 0, 0);
             break;
+#endif
         case Paint:
             beginPaint();
             break;
         case Free:
+#ifdef ZOMBOID
+            if (event->modifiers() & Qt::ControlModifier) {
+                mBrushBehavior = Erase;
+                doPaint(false, mStampX, mStampY);
+                break;
+            }
+#endif
             beginPaint();
             mBrushBehavior = Paint;
             break;
@@ -291,6 +318,9 @@ void StampBrush::mouseReleased(QGraphicsSceneMouseEvent *event)
         }
         break;
     case Paint:
+#ifdef ZOMBOID
+    case Erase:
+#endif
         if (event->button() == Qt::LeftButton)
             mBrushBehavior = Free;
     default:
@@ -340,11 +370,18 @@ void StampBrush::configureBrush(const QVector<QPoint> &list)
 
 void StampBrush::modifiersChanged(Qt::KeyboardModifiers modifiers)
 {
+#ifdef ZOMBOID
+    if (!mStamp) {
+        TileLayer *stamp = new TileLayer(QString(), tilePosition().x(), tilePosition().y(), 1, 1);
+        setStamp(stamp);
+    }
+#endif
     if (!mStamp)
         return;
 
     if (modifiers & Qt::ShiftModifier) {
         mBrushBehavior = Line;
+#ifndef ZOMBOID
         if (modifiers & Qt::ControlModifier) {
             mBrushBehavior = Circle;
             // while finding the mid point, there is no need to show
@@ -352,14 +389,17 @@ void StampBrush::modifiersChanged(Qt::KeyboardModifiers modifiers)
             brushItem()->setTileLayer(0);
             brushItem()->setTileRegion(QRect(tilePosition(), QSize(1, 1)));
         }
+#endif
     } else {
         mBrushBehavior = Free;
     }
 
     switch (mBrushBehavior) {
+#ifndef ZOMBOID
     case Circle:
         // do not update brushItems tilelayer by setStamp
         break;
+#endif
     default:
         if (mIsRandom)
             setRandomStamp();
@@ -368,6 +408,12 @@ void StampBrush::modifiersChanged(Qt::KeyboardModifiers modifiers)
 
         updatePosition();
     }
+#ifdef ZOMBOID
+    brushItem()->setErasing((modifiers & Qt::ControlModifier) != 0);
+    if (brushItem()->isErasing() && brushItem()->tileRegion().isEmpty()) {
+        brushItem()->setTileRegion(QRect(tilePosition(), QSize(1, 1)));
+    }
+#endif
 }
 
 void StampBrush::languageChanged()
@@ -499,6 +545,22 @@ void StampBrush::doPaint(bool mergeable, int whereX, int whereY)
                                               stamp->width(),
                                               stamp->height())))
         return;
+
+#ifdef ZOMBOID
+    if (mBrushBehavior == BrushBehavior::Erase) {
+        TileLayer *stampCopy = (TileLayer*) tileLayer->clone();
+        stampCopy->erase();
+        PaintTileLayer *paint = new PaintTileLayer(mapDocument(), tileLayer,
+                                                   whereX, whereY, stampCopy,
+                                                   brushItem()->tileRegion(),
+                                                   true);
+        delete stampCopy;
+        paint->setMergeable(mergeable);
+        mapDocument()->undoStack()->push(paint);
+        mapDocument()->emitRegionEdited(brushItem()->tileRegion(), tileLayer);
+        return;
+    }
+#endif
 
     PaintTileLayer *paint = new PaintTileLayer(mapDocument(), tileLayer,
 #ifdef ZOMBOID

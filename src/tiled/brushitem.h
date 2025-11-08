@@ -85,6 +85,11 @@ public:
                const QStyleOptionGraphicsItem *option,
                QWidget *widget = 0);
 
+#ifdef ZOMBOID
+    void setErasing(bool b);
+    bool isErasing() const { return mErasing; }
+#endif
+
 private:
     void updateBoundingRect();
 
@@ -92,6 +97,9 @@ private:
     TileLayer *mTileLayer;
     QRegion mRegion;
     QRectF mBoundingRect;
+#ifdef ZOMBOID
+    bool mErasing = false;
+#endif
 };
 
 } // namespace Internal

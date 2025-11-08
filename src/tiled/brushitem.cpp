@@ -112,7 +112,11 @@ void BrushItem::paint(QPainter *painter,
         painter->setOpacity(0.75);
 #ifdef ZOMBOID
         mTileLayer->setLevel(mMapDocument->currentLevel());
-        renderer->drawTileLayer(painter, mTileLayer, option->exposedRect);
+        if (isErasing()) {
+            highlight.setRgb(0, 0, 0, highlight.alpha());
+        } else {
+            renderer->drawTileLayer(painter, mTileLayer, option->exposedRect);
+        }
         painter->setOpacity(opacity);
 
         renderer->drawTileSelection(painter, mRegion, highlight,
@@ -134,6 +138,17 @@ void BrushItem::paint(QPainter *painter,
     }
 #endif
 }
+
+#ifdef ZOMBOID
+void BrushItem::setErasing(bool b)
+{
+    if (mErasing == b) {
+        return;
+    }
+    mErasing = b;
+    update();
+}
+#endif
 
 void BrushItem::updateBoundingRect()
 {
