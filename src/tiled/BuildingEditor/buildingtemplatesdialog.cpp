@@ -23,16 +23,20 @@
 #include "buildingtiles.h"
 #include "choosebuildingtiledialog.h"
 #include "choosetemplatesdialog.h"
-#include "roomsdialog.h"
+#include "templatedocument.h"
+#include "templateroomsdialog.h"
 
 #include "preferences.h"
 #include "tile.h"
+#include "utils.h"
 
 #include <QFileDialog>
 #include <QMessageBox>
 #include <QPainter>
 #include <QRandomGenerator>
 #include <QToolBar>
+#include <QUndoGroup>
+#include <QUndoStack>
 
 using namespace BuildingEditor;
 
@@ -40,9 +44,29 @@ BuildingTemplatesDialog::BuildingTemplatesDialog(QWidget *parent) :
     QDialog(parent),
     ui(new Ui::BuildingTemplatesDialog),
     mTemplate(0),
-    mTileRow(-1)
+    mTileRow(-1),
+    mUndoGroup(new QUndoGroup(this)),
+    mUndoStack(new QUndoStack(this))
 {
     ui->setupUi(this);
+
+    mUndoGroup->addStack(mUndoStack);
+    mUndoGroup->setActiveStack(mUndoStack);
+
+    {
+        mUndoAction = mUndoGroup->createUndoAction(this, tr("Undo"));
+        mRedoAction = mUndoGroup->createRedoAction(this, tr("Redo"));
+        mUndoAction->setShortcuts(QKeySequence::Undo);
+        mRedoAction->setShortcuts(QKeySequence::Redo);
+        QIcon undoIcon(QLatin1String(":images/16x16/edit-undo.png"));
+        undoIcon.addFile(QLatin1String(":images/24x24/edit-undo.png"));
+        QIcon redoIcon(QLatin1String(":images/16x16/edit-redo.png"));
+        redoIcon.addFile(QLatin1String(":images/24x24/edit-redo.png"));
+        mUndoAction->setIcon(undoIcon);
+        mRedoAction->setIcon(redoIcon);
+        Tiled::Utils::setThemeIcon(mUndoAction, "edit-undo");
+        Tiled::Utils::setThemeIcon(mRedoAction, "edit-redo");
+    }
 
     ui->tilesList->clear();
     ui->tilesList->addItems(BuildingTemplate::enumTileNames());
@@ -65,7 +89,7 @@ BuildingTemplatesDialog::BuildingTemplatesDialog(QWidget *parent) :
     toolBar->addAction(ui->actionExport);
     ui->toolBarLayout->addWidget(toolBar);
 
-    foreach (BuildingTemplate *btemplate, mgr()->templates()) {
+    for (BuildingTemplate *btemplate : mgr()->templates()) {
         BuildingTemplate *clone = new BuildingTemplate(btemplate);
         mTemplates += clone;
         ui->templatesList->addItem(btemplate->name());
@@ -267,12 +291,17 @@ void BuildingTemplatesDialog::nameEdited(const QString &name)
 
 void BuildingTemplatesDialog::editRooms()
 {
-    RoomsDialog dialog(mTemplate->rooms(), nullptr, this);
+    /// TODO: Full undo-redo for edits made by this dialog.
+    /// Currently, only TemplateRoomsDialog uses undo/redo.
+    mUndoStack->clear();
+
+    TemplateDocument document(mTemplate);
+    TemplateRoomsDialog dialog(&document, nullptr, this);
     dialog.setWindowTitle(tr("Rooms in '%1'").arg(mTemplate->name()));
     if (dialog.exec() == QDialog::Accepted) {
-        mTemplate->clearRooms();
-        foreach (Room *dialogRoom, dialog.rooms())
-            mTemplate->addRoom(new Room(dialogRoom));
+//        mTemplate->clearRooms();
+//        foreach (Room *dialogRoom, dialog.rooms())
+//            mTemplate->addRoom(new Room(dialogRoom));
     }
 }
 

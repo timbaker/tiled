@@ -199,6 +199,15 @@ public:
 
     void focusOn(const QString &file, int x, int y, int z, int objectIndex);
 
+    QUndoGroup *undoGroup() const
+    { return mUndoGroup; }
+
+    QAction *undoAction() const
+    { return mUndoAction; }
+
+    QAction *redoAction() const
+    { return mRedoAction; }
+
 private:
     BuildingDocumentMgr *docman() const;
 
@@ -329,6 +338,8 @@ private:
     BuildingDocument *mCurrentDocument;
     EditorWindowPerDocumentStuff *mCurrentDocumentStuff;
     QUndoGroup *mUndoGroup;
+    QAction *mUndoAction;
+    QAction *mRedoAction;
     QSettings &mSettings;
     QString mError;
     bool mSynching;

@@ -280,9 +280,11 @@ void ReorderRoom::swap()
 
 /////
 
-ChangeRoom::ChangeRoom(BuildingDocument *doc, Room *room, const Room *data) :
+ChangeRoom::ChangeRoom(BuildingDocument *doc, Room *room, const Room *data, Change change, int tileIndex) :
     QUndoCommand(QCoreApplication::translate("Undo Commands", "Change Room")),
     mDocument(doc),
+    mChange(change),
+    mTileIndex(tileIndex),
     mRoom(room),
     mData(new Room(data))
 {
@@ -291,6 +293,27 @@ ChangeRoom::ChangeRoom(BuildingDocument *doc, Room *room, const Room *data) :
 ChangeRoom::~ChangeRoom()
 {
     delete mData;
+}
+
+int ChangeRoom::id() const
+{
+    return UndoCmd_ChangeRoom;
+}
+
+bool ChangeRoom::mergeWith(const QUndoCommand *other)
+{
+    if (other->id() != id()) {
+        return false;
+    }
+    if (mChange == Change::Tile) {
+        return false;
+    }
+    const ChangeRoom *other1 = static_cast<const ChangeRoom*>(other);
+    if (other1->mRoom != mRoom || other1->mChange != mChange || other1->mTileIndex != mTileIndex) {
+        return false;
+    }
+    // other->redo() was called to change the room, we don't need to udpate mData here, as that is the original state of mRoom.
+    return true;
 }
 
 void ChangeRoom::swap()

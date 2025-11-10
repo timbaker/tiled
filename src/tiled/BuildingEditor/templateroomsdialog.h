@@ -1,5 +1,5 @@
 /*
- * Copyright 2012, Tim Baker <treectrl@users.sf.net>
+ * Copyright 2025, Tim Baker <treectrl@users.sf.net>
  *
  * This program is free software; you can redistribute it and/or modify it
  * under the terms of the GNU General Public License as published by the Free
@@ -15,10 +15,11 @@
  * this program. If not, see <http://www.gnu.org/licenses/>.
  */
 
-#ifndef ROOMSDIALOG_H
-#define ROOMSDIALOG_H
+#ifndef TEMPLATEROOMSDIALOG_H
+#define TEMPLATEROOMSDIALOG_H
 
 #include "BuildingEditor/buildingdocument.h"
+#include "BuildingEditor/templatedocument.h"
 #include <QDialog>
 #include <QMap>
 
@@ -26,6 +27,7 @@
 
 class QListWidgetItem;
 class QToolButton;
+class QUndoStack;
 
 namespace Ui {
 class RoomsDialog;
@@ -33,8 +35,11 @@ class RoomsDialog;
 
 namespace BuildingEditor {
 
+class BuildingTemplate;
+class BuildingTemplatesDialog;
 class BuildingTileEntry;
 class Room;
+class TemplateDocument;
 
 class RoomName
 {
@@ -46,13 +51,13 @@ public:
 
 extern bool compareQColors(const QColor& a, const QColor& b);
 
-class RoomsDialog : public QDialog
+class TemplateRoomsDialog : public QDialog
 {
     Q_OBJECT
     
 public:
-    explicit RoomsDialog(BuildingDocument *doc, Room *initialRoom = nullptr, QWidget *parent = nullptr);
-    ~RoomsDialog();
+    explicit TemplateRoomsDialog(TemplateDocument *doc, Room *initialRoom = nullptr, BuildingTemplatesDialog *parent = nullptr);
+    ~TemplateRoomsDialog();
 
 private:
     void readRoomNamesDotTxt(QList<RoomName> &roomNames);
@@ -98,7 +103,10 @@ private slots:
 
 private:
     Ui::RoomsDialog *ui;
-    BuildingDocument *mDocument;
+    TemplateDocument *mDocument;
+    BuildingTemplate *mTemplate;
+    QUndoGroup *mUndoGroup;
+    QUndoStack *mUndoStack;
     Room *mRoom;
     QListWidgetItem *mRoomItem;
     int mTileRow;
@@ -110,4 +118,4 @@ private:
 
 } // namespace BuildingEditor
 
-#endif // ROOMSDIALOG_H
+#endif // TEMPLATEROOMSDIALOG_H

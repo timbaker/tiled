@@ -728,6 +728,16 @@ int BuildingTemplate::categoryEnum(int n)
     return 0;
 }
 
+void BuildingTemplate::insertRoom(int index, Room *room)
+{
+    RoomList.insert(index, room);
+}
+
+Room *BuildingTemplate::removeRoom(int index)
+{
+    return RoomList.takeAt(index);
+}
+
 QString BuildingTemplate::enumToString(int n)
 {
     initNames();

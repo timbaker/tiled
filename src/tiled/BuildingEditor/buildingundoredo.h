@@ -51,7 +51,8 @@ enum {
     UndoCmd_ChangeEWall = 1002,
     UndoCmd_ChangeWallForRoom = 1003,
     UndoCmd_ChangeFloorForRoom = 1004,
-    UndoCmd_ChangeObjectTile = 1005
+    UndoCmd_ChangeObjectTile = 1005,
+    UndoCmd_ChangeRoom = 1006,
 };
 
 class ChangeRoomAtPosition : public QUndoCommand
@@ -268,16 +269,29 @@ private:
 class ChangeRoom : public QUndoCommand
 {
 public:
-    ChangeRoom(BuildingDocument *doc, Room *room, const Room *data);
+    enum struct Change
+    {
+        Name,
+        InternalName,
+        Color,
+        Tile
+    };
+
+    ChangeRoom(BuildingDocument *doc, Room *room, const Room *data, Change change, int tileINdex);
     ~ChangeRoom();
 
-    void undo() { swap(); }
-    void redo() { swap(); }
+    int id() const override;
+    bool mergeWith(const QUndoCommand *other) override;
+
+    void undo() override { swap(); }
+    void redo() override { swap(); }
 
 private:
     void swap();
 
     BuildingDocument *mDocument;
+    Change mChange;
+    int mTileIndex;
     Room *mRoom;
     Room *mData;
 };

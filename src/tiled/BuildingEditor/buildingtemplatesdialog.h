@@ -20,6 +20,10 @@
 
 #include <QDialog>
 
+class QAction;
+class QUndoGroup;
+class QUndoStack;
+
 namespace Ui {
 class BuildingTemplatesDialog;
 }
@@ -35,12 +39,24 @@ class BuildingTemplatesDialog : public QDialog
     Q_OBJECT
     
 public:
-    explicit BuildingTemplatesDialog(QWidget *parent = 0);
+    explicit BuildingTemplatesDialog(QWidget *parent = nullptr);
     ~BuildingTemplatesDialog();
 
     const QList<BuildingTemplate*> &templates() const
     { return mTemplates; }
-    
+
+    QUndoGroup *undoGroup() const
+    { return mUndoGroup; }
+
+    QUndoStack *undoStack() const
+    { return mUndoStack; }
+
+    QAction *undoAction() const
+    { return mUndoAction; }
+
+    QAction *redoAction() const
+    { return mRedoAction; }
+
 private slots:
     void templateSelectionChanged();
     void tileSelectionChanged();
@@ -75,6 +91,10 @@ private:
     QList<BuildingTemplate*> mTemplates;
     BuildingTemplate *mTemplate;
     int mTileRow;
+    QUndoGroup *mUndoGroup;
+    QUndoStack *mUndoStack;
+    QAction *mUndoAction;
+    QAction *mRedoAction;
 };
 
 } // namespace BuildingEditor

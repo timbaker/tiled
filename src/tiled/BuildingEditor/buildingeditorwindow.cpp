@@ -377,20 +377,20 @@ BuildingEditorWindow::BuildingEditorWindow(QWidget *parent) :
     connect(ui->actionDownLevel, &QAction::triggered,
             this, &BuildingEditorWindow::downLevel);
 
-    QAction *undoAction = mUndoGroup->createUndoAction(this, tr("Undo"));
-    QAction *redoAction = mUndoGroup->createRedoAction(this, tr("Redo"));
-    undoAction->setShortcuts(QKeySequence::Undo);
-    redoAction->setShortcuts(QKeySequence::Redo);
+    mUndoAction = mUndoGroup->createUndoAction(this, tr("Undo"));
+    mRedoAction = mUndoGroup->createRedoAction(this, tr("Redo"));
+    mUndoAction->setShortcuts(QKeySequence::Undo);
+    mRedoAction->setShortcuts(QKeySequence::Redo);
     QIcon undoIcon(QLatin1String(":images/16x16/edit-undo.png"));
     undoIcon.addFile(QLatin1String(":images/24x24/edit-undo.png"));
     QIcon redoIcon(QLatin1String(":images/16x16/edit-redo.png"));
     redoIcon.addFile(QLatin1String(":images/24x24/edit-redo.png"));
-    undoAction->setIcon(undoIcon);
-    redoAction->setIcon(redoIcon);
-    Tiled::Utils::setThemeIcon(undoAction, "edit-undo");
-    Tiled::Utils::setThemeIcon(redoAction, "edit-redo");
-    ui->menuEdit->insertAction(ui->menuEdit->actions().at(0), undoAction);
-    ui->menuEdit->insertAction(ui->menuEdit->actions().at(1), redoAction);
+    mUndoAction->setIcon(undoIcon);
+    mRedoAction->setIcon(redoIcon);
+    Tiled::Utils::setThemeIcon(mUndoAction, "edit-undo");
+    Tiled::Utils::setThemeIcon(mRedoAction, "edit-redo");
+    ui->menuEdit->insertAction(ui->menuEdit->actions().at(0), mUndoAction);
+    ui->menuEdit->insertAction(ui->menuEdit->actions().at(1), mRedoAction);
     ui->menuEdit->insertSeparator(ui->menuEdit->actions().at(2));
 
     QIcon newIcon = ui->actionNewBuilding->icon();
@@ -1600,15 +1600,16 @@ void BuildingEditorWindow::buildingGrime()
 
 void BuildingEditorWindow::roomsDialog()
 {
-    if (!mCurrentDocument)
+    if (mCurrentDocument == nullptr) {
         return;
+    }
     QList<Room*> originalRoomList = mCurrentDocument->building()->rooms();
-    RoomsDialog dialog(originalRoomList, mCurrentDocument->currentRoom(), this);
+    RoomsDialog dialog(mCurrentDocument, mCurrentDocument->currentRoom(), this);
     dialog.setWindowTitle(tr("Rooms in building"));
 
     if (dialog.exec() != QDialog::Accepted)
         return;
-
+#if 0
     mCurrentDocument->undoStack()->beginMacro(tr("Edit Rooms"));
 
     QList<Room*> deletedRooms = originalRoomList;
@@ -1667,6 +1668,7 @@ void BuildingEditorWindow::roomsDialog()
     }
 
     mCurrentDocument->undoStack()->endMacro();
+#endif
 }
 
 void BuildingEditorWindow::roomAdded(Room *room)

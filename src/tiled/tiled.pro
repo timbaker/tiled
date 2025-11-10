@@ -65,6 +65,9 @@ SOURCES += aboutdialog.cpp \
     BuildingEditor/buildingattributesdock.cpp \
     BuildingEditor/buildingkeyvaluesdialog.cpp \
     BuildingEditor/exportbasementsdialog.cpp \
+    BuildingEditor/templatedocument.cpp \
+    BuildingEditor/templateroomsdialog.cpp \
+    BuildingEditor/templateundoredo.cpp \
     abstractobjecttool.cpp \
     abstracttiletool.cpp \
     abstracttool.cpp \
@@ -287,6 +290,9 @@ HEADERS += aboutdialog.h \
     BuildingEditor/buildingattributesdock.h \
     BuildingEditor/buildingkeyvaluesdialog.h \
     BuildingEditor/exportbasementsdialog.h \
+    BuildingEditor/templatedocument.h \
+    BuildingEditor/templateroomsdialog.h \
+    BuildingEditor/templateundoredo.h \
     abstractobjecttool.h \
     abstractoverlay.h \
     abstracttiletool.h \

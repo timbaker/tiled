@@ -1,5 +1,5 @@
 /*
- * Copyright 2012, Tim Baker <treectrl@users.sf.net>
+ * Copyright 2025, Tim Baker <treectrl@users.sf.net>
  *
  * This program is free software; you can redistribute it and/or modify it
  * under the terms of the GNU General Public License as published by the Free
@@ -15,7 +15,7 @@
  * this program. If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include "roomsdialog.h"
+#include "templateroomsdialog.h"
 #include "ui_roomsdialog.h"
 
 #include "building.h"
@@ -23,8 +23,11 @@
 #include "buildingfloor.h"
 #include "buildingpreferences.h"
 #include "buildingtemplates.h"
+#include "buildingtemplatesdialog.h"
 #include "buildingtiles.h"
 #include "choosebuildingtiledialog.h"
+#include "templatedocument.h"
+#include "templateundoredo.h"
 
 #include "preferences.h"
 #include "simplefile.h"
@@ -44,10 +47,13 @@
 
 using namespace BuildingEditor;
 
-RoomsDialog::RoomsDialog(BuildingDocument *doc, Room *initialRoom, QWidget *parent) :
+TemplateRoomsDialog::TemplateRoomsDialog(TemplateDocument *doc, Room *initialRoom, BuildingTemplatesDialog *parent) :
     QDialog(parent),
     ui(new Ui::RoomsDialog),
     mDocument(doc),
+    mTemplate(doc->templ8()),
+    mUndoGroup(parent->undoGroup()),
+    mUndoStack(parent->undoStack()),
     mRoom(nullptr),
     mRoomItem(nullptr),
     mTileRow(-1),
@@ -93,11 +99,10 @@ RoomsDialog::RoomsDialog(BuildingDocument *doc, Room *initialRoom, QWidget *pare
     ui->internalName->insertItems(0, roomInternalNames);
 
     {
-        QUndoGroup *mUndoGroup = BuildingEditorWindow::instance()->undoGroup();
-        QAction *undoAction = BuildingEditorWindow::instance()->undoAction();
-        QAction *redoAction = BuildingEditorWindow::instance()->redoAction();
-        connect(mUndoGroup, &QUndoGroup::undoTextChanged, this, &RoomsDialog::undoTextChanged);
-        connect(mUndoGroup, &QUndoGroup::redoTextChanged, this, &RoomsDialog::redoTextChanged);
+        QAction *undoAction = parent->undoAction();
+        QAction *redoAction = parent->redoAction();
+        connect(mUndoGroup, &QUndoGroup::undoTextChanged, this, &TemplateRoomsDialog::undoTextChanged);
+        connect(mUndoGroup, &QUndoGroup::redoTextChanged, this, &TemplateRoomsDialog::redoTextChanged);
 
         mUndoButton = new QToolButton(this);
         mUndoButton->setText(QStringLiteral("Undo"));
@@ -125,10 +130,10 @@ RoomsDialog::RoomsDialog(BuildingDocument *doc, Room *initialRoom, QWidget *pare
         connect(mUndoGroup, &QUndoGroup::canRedoChanged, mRedoButton, &QWidget::setEnabled);
         connect(mRedoButton, &QAbstractButton::clicked, redoAction, &QAction::triggered);
 
-        connect(mDocument, &BuildingDocument::roomAdded, this, &RoomsDialog::roomAdded);
-        connect(mDocument, &BuildingDocument::roomRemoved, this, &RoomsDialog::roomRemoved);
-        connect(mDocument, &BuildingDocument::roomChanged, this, &RoomsDialog::roomChanged);
-        connect(mDocument, &BuildingDocument::roomsReordered, this, &RoomsDialog::roomsReordered);
+        connect(mDocument, &TemplateDocument::roomAdded, this, &TemplateRoomsDialog::roomAdded);
+        connect(mDocument, &TemplateDocument::roomRemoved, this, &TemplateRoomsDialog::roomRemoved);
+        connect(mDocument, &TemplateDocument::roomChanged, this, &TemplateRoomsDialog::roomChanged);
+        connect(mDocument, &TemplateDocument::roomsReordered, this, &TemplateRoomsDialog::roomsReordered);
     }
 
     setRoomsList();
@@ -136,25 +141,25 @@ RoomsDialog::RoomsDialog(BuildingDocument *doc, Room *initialRoom, QWidget *pare
     synchUI();
 
     connect(ui->listWidget, &QListWidget::itemSelectionChanged,
-            this, &RoomsDialog::roomSelectionChanged);
-    connect(ui->actionAdd, &QAction::triggered, this, &RoomsDialog::addRoom);
-    connect(ui->actionDuplicate, &QAction::triggered, this, &RoomsDialog::duplicateRoom);
-    connect(ui->actionRemove, &QAction::triggered, this, &RoomsDialog::removeRoom);
-    connect(ui->actionMoveUp, &QAction::triggered, this, &RoomsDialog::moveRoomUp);
-    connect(ui->actionMoveDown, &QAction::triggered, this, &RoomsDialog::moveRoomDown);
+            this, &TemplateRoomsDialog::roomSelectionChanged);
+    connect(ui->actionAdd, &QAction::triggered, this, &TemplateRoomsDialog::addRoom);
+    connect(ui->actionDuplicate, &QAction::triggered, this, &TemplateRoomsDialog::duplicateRoom);
+    connect(ui->actionRemove, &QAction::triggered, this, &TemplateRoomsDialog::removeRoom);
+    connect(ui->actionMoveUp, &QAction::triggered, this, &TemplateRoomsDialog::moveRoomUp);
+    connect(ui->actionMoveDown, &QAction::triggered, this, &TemplateRoomsDialog::moveRoomDown);
 
-    connect(ui->name, &QComboBox::currentTextChanged, this, &RoomsDialog::nameEdited);
-    connect(ui->internalName, &QComboBox::currentTextChanged, this, &RoomsDialog::internalNameEdited);
-    connect(ui->color, &Tiled::Internal::ColorButton::colorChanged, this, &RoomsDialog::colorChanged);
+    connect(ui->name, &QComboBox::currentTextChanged, this, &TemplateRoomsDialog::nameEdited);
+    connect(ui->internalName, &QComboBox::currentTextChanged, this, &TemplateRoomsDialog::internalNameEdited);
+    connect(ui->color, &Tiled::Internal::ColorButton::colorChanged, this, &TemplateRoomsDialog::colorChanged);
     connect(ui->tilesList, &QListWidget::itemSelectionChanged,
-            this, &RoomsDialog::tileSelectionChanged);
-    connect(ui->tilesList, &QAbstractItemView::activated, this, &RoomsDialog::chooseTile);
-    connect(ui->clearTile, &QAbstractButton::clicked, this, &RoomsDialog::clearTile);
-    connect(ui->randomTile, &QAbstractButton::clicked, this, &RoomsDialog::randomTile);
-    connect(ui->chooseTile, &QAbstractButton::clicked, this, &RoomsDialog::chooseTile);
-    connect(ui->randomColor, &QAbstractButton::clicked, this, &RoomsDialog::randomiseColor);
+            this, &TemplateRoomsDialog::tileSelectionChanged);
+    connect(ui->tilesList, &QAbstractItemView::activated, this, &TemplateRoomsDialog::chooseTile);
+    connect(ui->clearTile, &QAbstractButton::clicked, this, &TemplateRoomsDialog::clearTile);
+    connect(ui->randomTile, &QAbstractButton::clicked, this, &TemplateRoomsDialog::randomTile);
+    connect(ui->chooseTile, &QAbstractButton::clicked, this, &TemplateRoomsDialog::chooseTile);
+    connect(ui->randomColor, &QAbstractButton::clicked, this, &TemplateRoomsDialog::randomiseColor);
 
-    int currentRow = mDocument->building()->indexOf(initialRoom);
+    int currentRow = mTemplate->indexOf(initialRoom);
     if (currentRow != -1) {
         ui->listWidget->setCurrentRow(currentRow);
         ui->tilesList->setCurrentRow(currentRow);
@@ -163,17 +168,12 @@ RoomsDialog::RoomsDialog(BuildingDocument *doc, Room *initialRoom, QWidget *pare
     readSettings();
 }
 
-RoomsDialog::~RoomsDialog()
+TemplateRoomsDialog::~TemplateRoomsDialog()
 {
     delete ui;
 }
 
-bool BuildingEditor::compareQColors(const QColor& a, const QColor& b)
-{
-    return a.rgba() < b.rgba(); // Comparing RGBA values is a simple way
-}
-
-void RoomsDialog::readRoomNamesDotTxt(QList<RoomName> &rooms)
+void TemplateRoomsDialog::readRoomNamesDotTxt(QList<RoomName> &rooms)
 {
     mRoomColorSet.clear();
 
@@ -188,7 +188,7 @@ void RoomsDialog::readRoomNamesDotTxt(QList<RoomName> &rooms)
     readRoomNamesDotTxt(filePath, rooms);
 }
 
-void RoomsDialog::readRoomNamesDotTxt(const QString &fileName, QList<RoomName> &rooms)
+void TemplateRoomsDialog::readRoomNamesDotTxt(const QString &fileName, QList<RoomName> &rooms)
 {
     SimpleFile simpleFile;
     if (!simpleFile.read(fileName)) {
@@ -229,16 +229,16 @@ void RoomsDialog::readRoomNamesDotTxt(const QString &fileName, QList<RoomName> &
     }
 }
 
-QListWidgetItem *RoomsDialog::itemFor(Room *room)
+QListWidgetItem *TemplateRoomsDialog::itemFor(Room *room)
 {
-    int index = mDocument->building()->indexOf(room);
-    if (index >= 0 && index < mDocument->building()->roomCount()) {
+    int index = mTemplate->indexOf(room);
+    if (index >= 0 && index < mTemplate->roomCount()) {
         return ui->listWidget->item(index);
     }
     return nullptr;
 }
 
-int RoomsDialog::findRoomNameByLabel(const QString &label) const
+int TemplateRoomsDialog::findRoomNameByLabel(const QString &label) const
 {
     for (int i = 0; i < mRoomNames.size(); i++) {
         if (mRoomNames[i].label.contains(label, Qt::CaseInsensitive)) {
@@ -248,7 +248,7 @@ int RoomsDialog::findRoomNameByLabel(const QString &label) const
     return -1;
 }
 
-int RoomsDialog::findRoomNameByInternalName(const QString &internalName) const
+int TemplateRoomsDialog::findRoomNameByInternalName(const QString &internalName) const
 {
     for (int i = 0; i < mRoomNames.size(); i++) {
         if (mRoomNames[i].internalName.contains(internalName, Qt::CaseInsensitive)) {
@@ -258,12 +258,12 @@ int RoomsDialog::findRoomNameByInternalName(const QString &internalName) const
     return -1;
 }
 
-void RoomsDialog::setRoomsList()
+void TemplateRoomsDialog::setRoomsList()
 {
-    int index = mDocument->building()->indexOf(mRoom);
+    int index = mTemplate->indexOf(mRoom);
     QListWidget *w = ui->listWidget;
     w->clear();
-    for (Room *room : mDocument->building()->rooms()) {
+    for (Room *room : mTemplate->rooms()) {
         QListWidgetItem *item = new QListWidgetItem(room->Name);
         item->setData(Qt::DecorationRole, QColor(room->Color));
         w->addItem(item);
@@ -273,14 +273,14 @@ void RoomsDialog::setRoomsList()
     }
 }
 
-void RoomsDialog::synchUI()
+void TemplateRoomsDialog::synchUI()
 {
     const bool hasRoom = mRoom != nullptr;
-    int roomIndex = hasRoom ? mDocument->building()->indexOf(mRoom) : -1;
+    int roomIndex = hasRoom ? mTemplate->indexOf(mRoom) : -1;
     ui->actionDuplicate->setEnabled(hasRoom);
     ui->actionRemove->setEnabled(hasRoom);
     ui->actionMoveUp->setEnabled(roomIndex > 0);
-    ui->actionMoveDown->setEnabled(roomIndex >= 0 && roomIndex < mDocument->building()->roomCount() - 1);
+    ui->actionMoveDown->setEnabled(roomIndex >= 0 && roomIndex < mTemplate->roomCount() - 1);
 
     ui->name->setEnabled(hasRoom);
     ui->internalName->setEnabled(hasRoom);
@@ -295,8 +295,8 @@ void RoomsDialog::synchUI()
     }
     ui->clearTile->setEnabled(enabled);
 
-    ui->randomTile->setEnabled(hasRoom);
-    ui->chooseTile->setEnabled(hasRoom);
+    ui->randomTile->setEnabled(mRoom != nullptr);
+    ui->chooseTile->setEnabled(mRoom != nullptr);
 
     if (mRoom) {
         int index = ui->name->findText(mRoom->Name);
@@ -319,13 +319,13 @@ void RoomsDialog::synchUI()
     setTilePixmap();
 }
 
-void RoomsDialog::roomSelectionChanged()
+void TemplateRoomsDialog::roomSelectionChanged()
 {
     QList<QListWidgetItem*> selection = ui->listWidget->selectedItems();
     QListWidgetItem *item = selection.count() ? selection.first() : 0;
     if (item != nullptr) {
         mRoomItem = item;
-        mRoom = mDocument->building()->room(ui->listWidget->row(mRoomItem));
+        mRoom = mTemplate->room(ui->listWidget->row(mRoomItem));
     } else {
         mRoomItem = nullptr;
         mRoom = nullptr;
@@ -333,11 +333,11 @@ void RoomsDialog::roomSelectionChanged()
     synchUI();
 }
 
-void RoomsDialog::addRoom()
+void TemplateRoomsDialog::addRoom()
 {
     // Pick a default unused name for the new room.
     QStringList names;
-    for (Room *room : mDocument->building()->rooms()) {
+    for (Room *room : mTemplate->rooms()) {
         names += room->internalName;
     }
     int n = 1;
@@ -353,59 +353,39 @@ void RoomsDialog::addRoom()
     room->setTile(Room::Floor, BuildingTilesMgr::instance()->defaultFloorTile());
     room->setTile(Room::Ceiling, BuildingTilesMgr::instance()->defaultCeilingTile());
 
-    mDocument->undoStack()->push(new AddRoom(mDocument, mDocument->building()->roomCount(), room));
-
-//    setRoomsList();
-//    ui->listWidget->setCurrentRow(mDocument->building()->roomCount() - 1);
+    mUndoStack->push(new TemplateAddRoom(mDocument, mTemplate->roomCount(), room));
 
     ui->name->setFocus();
     ui->name->lineEdit()->selectAll();
 }
 
-void RoomsDialog::removeRoom()
+void TemplateRoomsDialog::removeRoom()
 {
     if (mRoom == nullptr) {
         return;
     }
-    int index = mDocument->building()->indexOf(mRoom);
-    mDocument->undoStack()->beginMacro(QStringLiteral("Remove Room"));
-    for (BuildingFloor *floor : mDocument->building()->floors()) {
-        bool changed = false;
-        QVector<QVector<Room*> > grid = floor->grid();
-        for (int x = 0; x < grid.size(); x++) {
-            for (int y = 0; y < grid[x].size(); y++) {
-                if (grid[x][y] == mRoom) {
-                    grid[x][y] = nullptr;
-                    changed = true;
-                }
-            }
-        }
-        if (changed) {
-            mDocument->undoStack()->push(new SwapFloorGrid(mDocument, floor, grid, "Remove Room From Floor"));
-        }
-    }
-    mDocument->undoStack()->push(new RemoveRoom(mDocument, index));
-    mDocument->undoStack()->endMacro();
+    int index = mTemplate->indexOf(mRoom);
+    mUndoStack->push(new TemplateRemoveRoom(mDocument, index));
     mRoom = nullptr;
     mRoomItem = nullptr;
 //    setRoomsList();
-    if (index == mDocument->building()->roomCount()) {
-        index = mDocument->building()->roomCount() - 1;
+    if (index == mTemplate->roomCount()) {
+        index = mTemplate->roomCount() - 1;
     }
     ui->listWidget->setCurrentRow(index);
 }
 
-void RoomsDialog::duplicateRoom()
+void TemplateRoomsDialog::duplicateRoom()
 {
     if (mRoom == nullptr)
         return;
 
-    int index = mDocument->building()->indexOf(mRoom);
+    int index = mTemplate->indexOf(mRoom);
 
     Room *room = new Room(mRoom);
     room->Color = pickColorForNewRoom();
 
-    mDocument->undoStack()->push(new AddRoom(mDocument, index + 1, room));
+    mUndoStack->push(new TemplateAddRoom(mDocument, index + 1, room));
 
     setRoomsList();
     ui->listWidget->setCurrentRow(index + 1);
@@ -414,35 +394,35 @@ void RoomsDialog::duplicateRoom()
     ui->name->lineEdit()->selectAll();
 }
 
-void RoomsDialog::moveRoomUp()
+void TemplateRoomsDialog::moveRoomUp()
 {
     if (mRoom == nullptr) {
          return;
     }
-    int index = mDocument->building()->indexOf(mRoom);
+    int index = mTemplate->indexOf(mRoom);
     if (index <= 0) {
         return;
     }
-    mDocument->undoStack()->push(new ReorderRoom(mDocument, index - 1, mRoom));
+    mUndoStack->push(new TemplateReorderRoom(mDocument, index - 1, mRoom));
     setRoomsList();
     ui->listWidget->setCurrentRow(index - 1);
 }
 
-void RoomsDialog::moveRoomDown()
+void TemplateRoomsDialog::moveRoomDown()
 {
     if (mRoom == nullptr) {
          return;
     }
-    int index = mDocument->building()->indexOf(mRoom);
-    if (index == mDocument->building()->roomCount() - 1) {
+    int index = mTemplate->indexOf(mRoom);
+    if (index == mTemplate->roomCount() - 1) {
         return;
     }
-    mDocument->undoStack()->push(new ReorderRoom(mDocument, index + 1, mRoom));
+    mUndoStack->push(new TemplateReorderRoom(mDocument, index + 1, mRoom));
     setRoomsList();
     ui->listWidget->setCurrentRow(index + 1);
 }
 
-void RoomsDialog::nameEdited(const QString &name)
+void TemplateRoomsDialog::nameEdited(const QString &name)
 {
     if (mRoom == nullptr) {
         return;
@@ -452,10 +432,10 @@ void RoomsDialog::nameEdited(const QString &name)
     }
     Room editedRoom(mRoom);
     editedRoom.Name = name;
-    mDocument->undoStack()->push(new ChangeRoom(mDocument, mRoom, &editedRoom, ChangeRoom::Change::Name, -1));
+    mUndoStack->push(new TemplateChangeRoom(mDocument, mRoom, &editedRoom, TemplateChangeRoom::Change::Name, -1));
 }
 
-void RoomsDialog::internalNameEdited(const QString &name)
+void TemplateRoomsDialog::internalNameEdited(const QString &name)
 {
     if (mRoom == nullptr) {
         return;
@@ -470,10 +450,10 @@ void RoomsDialog::internalNameEdited(const QString &name)
         editedRoom.Color = mRoomNames[roomNameIndex].color.rgba();
 //        ui->color->setColor();
     }
-    mDocument->undoStack()->push(new ChangeRoom(mDocument, mRoom, &editedRoom, ChangeRoom::Change::InternalName, -1));
+    mUndoStack->push(new TemplateChangeRoom(mDocument, mRoom, &editedRoom, TemplateChangeRoom::Change::InternalName, -1));
 }
 
-void RoomsDialog::colorChanged(const QColor &color)
+void TemplateRoomsDialog::colorChanged(const QColor &color)
 {
     if (mRoom == nullptr) {
         return;
@@ -483,15 +463,15 @@ void RoomsDialog::colorChanged(const QColor &color)
     }
     Room editedRoom(mRoom);
     editedRoom.Color = color.rgba();
-    mDocument->undoStack()->push(new ChangeRoom(mDocument, mRoom, &editedRoom, ChangeRoom::Change::Color, -1));
+    mUndoStack->push(new TemplateChangeRoom(mDocument, mRoom, &editedRoom, TemplateChangeRoom::Change::Color, -1));
 }
 
-void RoomsDialog::randomiseColor()
+void TemplateRoomsDialog::randomiseColor()
 {
     ui->color->setColor(pickColorForNewRoom());
 }
 
-void RoomsDialog::tileSelectionChanged()
+void TemplateRoomsDialog::tileSelectionChanged()
 {
     QList<QListWidgetItem*> selection = ui->tilesList->selectedItems();
     QListWidgetItem *item = selection.count() ? selection.first() : 0;
@@ -499,7 +479,7 @@ void RoomsDialog::tileSelectionChanged()
     synchUI();
 }
 
-void RoomsDialog::setTilePixmap()
+void TemplateRoomsDialog::setTilePixmap()
 {
     if (BuildingTileEntry *entry = selectedTile()) {
         Tiled::Tile *tile = BuildingTilesMgr::instance()->tileFor(entry->displayTile());
@@ -514,7 +494,7 @@ void RoomsDialog::setTilePixmap()
     }
 }
 
-BuildingTileEntry *RoomsDialog::selectedTile()
+BuildingTileEntry *TemplateRoomsDialog::selectedTile()
 {
     if (mRoom == 0 || mTileRow == -1)
         return 0;
@@ -523,11 +503,11 @@ BuildingTileEntry *RoomsDialog::selectedTile()
     return entry ? entry : BuildingTilesMgr::instance()->noneTileEntry();
 }
 
-QRgb RoomsDialog::pickColorForNewRoom()
+QRgb TemplateRoomsDialog::pickColorForNewRoom()
 {
     std::set<QColor, decltype(&compareQColors)> colors(compareQColors);
     colors.insert(mRoomColorSet.cbegin(), mRoomColorSet.cend());
-    for (Room *room : mDocument->building()->rooms()) {
+    for (Room *room : mTemplate->rooms()) {
         colors.insert(room->Color);
     }
     QColor randomColor;
@@ -541,17 +521,17 @@ QRgb RoomsDialog::pickColorForNewRoom()
     return randomColor.rgb();
 }
 
-void RoomsDialog::clearTile()
+void TemplateRoomsDialog::clearTile()
 {
     BuildingTileCategory *category = BuildingTilesMgr::instance()->category(mRoom->categoryEnum(mTileRow));
     if (category->canAssignNone()) {
         Room editedRoom(mRoom);
         editedRoom.setTile(mTileRow, category->noneTileEntry());
-        mDocument->undoStack()->push(new ChangeRoom(mDocument, mRoom, &editedRoom, ChangeRoom::Change::Tile, mTileRow));
+        mUndoStack->push(new TemplateChangeRoom(mDocument, mRoom, &editedRoom, TemplateChangeRoom::Change::Tile, mTileRow));
     }
 }
 
-void RoomsDialog::randomTile()
+void TemplateRoomsDialog::randomTile()
 {
     BuildingTileCategory *category = BuildingTilesMgr::instance()->category(mRoom->categoryEnum(mTileRow));
     QList<BuildingTileEntry*> entries = category->entries();
@@ -561,10 +541,10 @@ void RoomsDialog::randomTile()
     QRandomGenerator *rand = QRandomGenerator::global();
     Room editedRoom(mRoom);
     editedRoom.setTile(mTileRow, entries.at(rand->bounded(entries.size())));
-    mDocument->undoStack()->push(new ChangeRoom(mDocument, mRoom, &editedRoom, ChangeRoom::Change::Tile, mTileRow));
+    mUndoStack->push(new TemplateChangeRoom(mDocument, mRoom, &editedRoom, TemplateChangeRoom::Change::Tile, mTileRow));
 }
 
-void RoomsDialog::chooseTile()
+void TemplateRoomsDialog::chooseTile()
 {
     BuildingTileCategory *category = BuildingTilesMgr::instance()->category(
                 mRoom->categoryEnum(mTileRow));
@@ -577,19 +557,19 @@ void RoomsDialog::chooseTile()
         if (BuildingTileEntry *entry = dialog.selectedTile()) {
             Room editedRoom(mRoom);
             editedRoom.setTile(mTileRow, entry);
-            mDocument->undoStack()->push(new ChangeRoom(mDocument, mRoom, &editedRoom, ChangeRoom::Change::Tile, mTileRow));
+            mUndoStack->push(new TemplateChangeRoom(mDocument, mRoom, &editedRoom, TemplateChangeRoom::Change::Tile, mTileRow));
         }
     }
 }
 
-void RoomsDialog::roomAdded(Room *room)
+void TemplateRoomsDialog::roomAdded(Room *room)
 {
     setRoomsList();
-    ui->listWidget->setCurrentRow(mDocument->building()->indexOf(room));
+    ui->listWidget->setCurrentRow(mTemplate->indexOf(room));
     synchUI();
 }
 
-void RoomsDialog::roomRemoved(Room *room)
+void TemplateRoomsDialog::roomRemoved(Room *room)
 {
     if (room == mRoom) {
         mRoom = nullptr;
@@ -598,7 +578,7 @@ void RoomsDialog::roomRemoved(Room *room)
     synchUI();
 }
 
-void RoomsDialog::roomChanged(Room *room)
+void TemplateRoomsDialog::roomChanged(Room *room)
 {
     if (QListWidgetItem *item = itemFor(room)) {
         item->setText(room->Name);
@@ -607,47 +587,47 @@ void RoomsDialog::roomChanged(Room *room)
     synchUI();
 }
 
-void RoomsDialog::roomsReordered()
+void TemplateRoomsDialog::roomsReordered()
 {
     setRoomsList();
     synchUI();
 }
 
-void RoomsDialog::undoTextChanged(const QString &text)
+void TemplateRoomsDialog::undoTextChanged(const QString &text)
 {
     mUndoButton->setToolTip(text);
 }
 
-void RoomsDialog::redoTextChanged(const QString &text)
+void TemplateRoomsDialog::redoTextChanged(const QString &text)
 {
     mRedoButton->setToolTip(text);
 }
 
-void RoomsDialog::saveSettings()
+void TemplateRoomsDialog::saveSettings()
 {
     QSettings &settings = BuildingPreferences::instance()->settings();
-    settings.beginGroup(QLatin1String("RoomsDialog"));
+    settings.beginGroup(QLatin1String("TemplateRoomsDialog"));
     settings.setValue(QLatin1String("geometry"), saveGeometry());
     settings.endGroup();
 }
 
-void RoomsDialog::readSettings()
+void TemplateRoomsDialog::readSettings()
 {
     QSettings &settings = BuildingPreferences::instance()->settings();
-    settings.beginGroup(QLatin1String("RoomsDialog"));
+    settings.beginGroup(QLatin1String("TemplateRoomsDialog"));
     QByteArray geom = settings.value(QLatin1String("geometry")).toByteArray();
     if (!geom.isEmpty())
         restoreGeometry(geom);
     settings.endGroup();
 }
 
-void RoomsDialog::accept()
+void TemplateRoomsDialog::accept()
 {
     saveSettings();
     QDialog::accept();
 }
 
-void RoomsDialog::reject()
+void TemplateRoomsDialog::reject()
 {
     saveSettings();
     QDialog::reject();
