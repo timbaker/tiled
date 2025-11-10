@@ -254,9 +254,9 @@ function gateTile(x, y, west)
     local f = resolveTiles(FENCE)
     local cur = self:currentLayer():tileAt(x, y)
     if cur == f.west1 or cur == f.west2 then
-	return f.gate_space_w
+	return f.gate_space_w or map:noneTile()
     elseif cur == f.north1 or cur == f.north2 then
-	return f.gate_space_n
+	return f.gate_space_n or map:noneTile()
     elseif west then
 	return f.gate_door_w
     else

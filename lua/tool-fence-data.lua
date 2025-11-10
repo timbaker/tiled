@@ -151,20 +151,6 @@ fence {
 }
 
 fence {
-    label = 'Short Black Metal',
-    west1 = 'fencing_01_2',
-    west2 = 'fencing_01_2',
-    gate_space_w = 'fencing_01_14',
-    gate_door_w = 'fixtures_doors_fences_01_0',
-    north1 = 'fencing_01_1',
-    north2 = 'fencing_01_1',
-    gate_space_n = 'fencing_01_15',
-    gate_door_n = 'fixtures_doors_fences_01_1',
-    nw = 'fencing_01_3',
-    post = 'fencing_01_0'
-}
-
-fence {
     label = 'Tall Concrete',
     west1 = 'fencing_01_40',
     west2 = 'fencing_01_40',
