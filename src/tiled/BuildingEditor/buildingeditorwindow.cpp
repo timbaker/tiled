@@ -2348,6 +2348,11 @@ void BuildingEditorWindow::initActionManager()
     actionManager->registerAction(ui->actionPickTiles, CONTEXT_TOOLS, CATEGORY_TOOL_TILE, QStringLiteral("Tools.Tile.Pick"));
 
     connect(actionManager, &ActionManager::shortcutEdited, ToolManager::instance(), &ToolManager::shortcutEdited);
+
+    // Do this after all ToolManager::register() calls.
+    QString error;
+    mActionManager->load(error);
+    mActionManager->emitShortcutEditedForAllActions();
 }
 
 void BuildingEditorWindow::keyboardShortcuts()
