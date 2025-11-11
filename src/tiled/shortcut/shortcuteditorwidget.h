@@ -34,6 +34,7 @@ class ShortcutEditorDelegate;
 class ShortcutEditorModel;
 
 QT_BEGIN_NAMESPACE
+class QSettings;
 class QTreeView;
 QT_END_NAMESPACE
 
@@ -47,6 +48,9 @@ public:
     ~ShortcutEditorWidget() override = default;
 
     void setModelData();
+
+    void saveSettings(QSettings &settings);
+    void readSettings(QSettings &settings);
 
 signals:
     void shortcutEdited(QAction *action);

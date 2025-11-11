@@ -26,6 +26,7 @@
 
 #include "shortcuteditorwidget.h"
 
+#include "qsettings.h"
 #include "shortcuteditordelegate.h"
 #include "shortcuteditormodel.h"
 
@@ -58,12 +59,27 @@ ShortcutEditorWidget::ShortcutEditorWidget(ActionManager *actionManager, QWidget
     clearAction->setShortcut(Qt::Key_Delete);
     addAction(clearAction);
 
-    m_model->setActions();
+    setModelData();
 }
 
 void ShortcutEditorWidget::setModelData()
 {
     m_model->setActions();
+    m_view->expandAll();
+}
+
+void ShortcutEditorWidget::saveSettings(QSettings &settings)
+{
+    QHeaderView *header = m_view->header();
+    settings.setValue(QStringLiteral("column0"), header->sectionSize(0));
+}
+
+void ShortcutEditorWidget::readSettings(QSettings &settings)
+{
+    QHeaderView *header = m_view->header();
+    bool ok;
+    int size0 = settings.value(QStringLiteral("column0")).toInt(&ok);
+    header->resizeSection(0, ok ? std::max(size0, header->minimumSectionSize()) : header->sectionSize(0));
 }
 
 void ShortcutEditorWidget::clearShortcut()

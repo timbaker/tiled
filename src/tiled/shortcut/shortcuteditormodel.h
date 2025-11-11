@@ -58,6 +58,7 @@ class ShortcutEditorModel : public QAbstractItemModel
 
         ShortcutEditorModelItem *child(int row) const;
         int childCount() const;
+        void deleteChildren();
         int columnCount() const;
         QVariant data(int column) const;
         int row() const;

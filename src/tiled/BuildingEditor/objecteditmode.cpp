@@ -64,7 +64,7 @@ ObjectEditModeToolBar::ObjectEditModeToolBar(ObjectEditMode *mode, QWidget *pare
 
     Ui::BuildingEditorWindow *actions = BuildingEditorWindow::instance()->actionIface();
 
-    addAction(actions->actionPecil);
+    addAction(actions->actionPencil);
     addAction(actions->actionWall);
     addAction(actions->actionSelectRooms);
     addSeparator();

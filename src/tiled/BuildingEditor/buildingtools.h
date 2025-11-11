@@ -27,6 +27,8 @@
 #include <QSet>
 #include <QSize>
 
+class ActionManager;
+
 class QAction;
 class QGraphicsItem;
 class QGraphicsPathItem;
@@ -146,6 +148,9 @@ public:
     void clearDocument();
     void setEditor(BuildingBaseScene *editor);
     BuildingBaseScene *currentEditor() const { return mCurrentEditor; }
+
+public slots:
+    void shortcutEdited(QAction *action);
 
 signals:
     void currentEditorChanged();

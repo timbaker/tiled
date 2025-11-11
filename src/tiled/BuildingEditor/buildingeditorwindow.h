@@ -26,6 +26,9 @@
 #include <QTimer>
 #include <QVector>
 
+class ActionManager;
+class KeyboardShortcutWindow;
+
 class QComboBox;
 class QLabel;
 class QSplitter;
@@ -242,6 +245,8 @@ private:
     void getTopStaircaseTiles(QSet<QString>& northStairTiles, QSet<QString> &westStairTiles);
     bool getBasementStaircase(Tiled::Map* map, QSet<QString>& northStairTiles, QSet<QString>& westStairTiles, int &stairx, int &stairy, QString& stairDir, bool isBasementAccess);
 
+    void initActionManager();
+
     typedef Tiled::Tileset Tileset; // Hack for signals/slots
 
 signals:
@@ -305,6 +310,8 @@ private slots:
 
     void templatesDialog();
 
+    void keyboardShortcuts();
+
 public slots:
     void floorsDialog();
     void roomsDialog();
@@ -337,6 +344,8 @@ private:
     Ui::BuildingEditorWindow *ui;
     BuildingDocument *mCurrentDocument;
     EditorWindowPerDocumentStuff *mCurrentDocumentStuff;
+    ActionManager *mActionManager = nullptr;
+    KeyboardShortcutWindow *mKeyboardShortcutWindow = nullptr;
     QUndoGroup *mUndoGroup;
     QAction *mUndoAction;
     QAction *mRedoAction;

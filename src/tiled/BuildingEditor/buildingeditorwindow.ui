@@ -66,6 +66,7 @@
     <addaction name="actionSelectNone"/>
     <addaction name="separator"/>
     <addaction name="actionPreferences"/>
+    <addaction name="actionKeyboardShortcuts"/>
    </widget>
    <widget class="QMenu" name="menuView">
     <property name="title">
@@ -189,7 +190,7 @@
     <string>New...</string>
    </property>
   </action>
-  <action name="actionPecil">
+  <action name="actionPencil">
    <property name="checkable">
     <bool>true</bool>
    </property>
@@ -198,7 +199,7 @@
      <normaloff>:/BuildingEditor/icons/icon_pencil.png</normaloff>:/BuildingEditor/icons/icon_pencil.png</iconset>
    </property>
    <property name="text">
-    <string>Pecil</string>
+    <string>Pencil</string>
    </property>
    <property name="toolTip">
     <string>Draw Room</string>
@@ -815,10 +816,15 @@
     <string>Delete In All Layers</string>
    </property>
   </action>
+  <action name="actionKeyboardShortcuts">
+   <property name="text">
+    <string>Keyboard Shortcuts</string>
+   </property>
+  </action>
  </widget>
  <resources>
-  <include location="../tiled.qrc"/>
   <include location="buildingeditor.qrc"/>
+  <include location="../tiled.qrc"/>
  </resources>
  <connections/>
 </ui>

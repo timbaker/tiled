@@ -60,6 +60,9 @@
 #include "fancytabwidget.h"
 #include "utils/stylehelper.h"
 
+#include "shortcut/actionmanager.h"
+#include "shortcut/keyboardshortcutwindow.h"
+
 #include "preferences.h"
 #include "tilemetainfodialog.h"
 #include "tilemetainfomgr.h"
@@ -349,7 +352,7 @@ BuildingEditorWindow::BuildingEditorWindow(QWidget *parent) :
     connect(docman(), &BuildingDocumentMgr::currentDocumentChanged,
             this, &BuildingEditorWindow::currentDocumentChanged);
 
-    PencilTool::instance()->setAction(ui->actionPecil);
+    PencilTool::instance()->setAction(ui->actionPencil);
     SelectMoveRoomsTool::instance()->setAction(ui->actionSelectRooms);
     DoorTool::instance()->setAction(ui->actionDoor);
     WallTool::instance()->setAction(ui->actionWall);
@@ -426,6 +429,7 @@ BuildingEditorWindow::BuildingEditorWindow(QWidget *parent) :
     connect(mUndoGroup, &QUndoGroup::cleanChanged, this, &BuildingEditorWindow::updateWindowTitle);
 
     connect(ui->actionPreferences, &QAction::triggered, this, &BuildingEditorWindow::preferences);
+    connect(ui->actionKeyboardShortcuts, &QAction::triggered, this, &BuildingEditorWindow::keyboardShortcuts);
 
     connect(ui->actionNewBuilding, &QAction::triggered, this, &BuildingEditorWindow::newBuilding);
     connect(ui->actionOpen, &QAction::triggered, this, &BuildingEditorWindow::openBuilding);
@@ -569,6 +573,8 @@ BuildingEditorWindow::BuildingEditorWindow(QWidget *parent) :
     connect(docman(), &BuildingDocumentMgr::currentDocumentChanged,
             this, &BuildingEditorWindow::reportMissingTilesets);
 
+    initActionManager();
+
     readSettings();
 
     updateActions();
@@ -596,6 +602,9 @@ void BuildingEditorWindow::closeEvent(QCloseEvent *event)
     if (confirmAllSave()) {
         writeSettings();
         docman()->closeAllDocuments();
+        if (mKeyboardShortcutWindow != nullptr) {
+            mKeyboardShortcutWindow->close();
+        }
         event->accept(); // doesn't destroy us
     } else
         event->ignore();
@@ -2252,6 +2261,106 @@ void BuildingEditorWindow::templatesDialog()
 
     BuildingTemplates::instance()->replaceTemplates(dialog.templates());
     BuildingTemplates::instance()->writeTxt(this);
+}
+
+void BuildingEditorWindow::initActionManager()
+{
+    const QString fileName = Preferences::instance()->userPath(QStringLiteral("shortcuts/BuildingEd.txt"));
+    mActionManager = new ActionManager(fileName, this);
+
+    const QString CONTEXT_MENU = QStringLiteral("Menu");
+    const QString CATEGORY_MENU_FILE = QStringLiteral("File");
+    const QString CATEGORY_MENU_EDIT = QStringLiteral("Edit");
+    const QString CATEGORY_MENU_VIEW = QStringLiteral("View");
+    const QString CATEGORY_MENU_BUILDING = QStringLiteral("Building");
+    const QString CATEGORY_MENU_FLOOR = QStringLiteral("Floor");
+
+    ActionManager *actionManager = mActionManager;
+    actionManager->registerAction(ui->actionNewBuilding, CONTEXT_MENU, CATEGORY_MENU_FILE, QStringLiteral("Menu.File.New"));
+    actionManager->registerAction(ui->actionOpen, CONTEXT_MENU, CATEGORY_MENU_FILE, QStringLiteral("Menu.File.Open"));
+    actionManager->registerAction(ui->actionSave, CONTEXT_MENU, CATEGORY_MENU_FILE, QStringLiteral("Menu.File.Save"));
+    actionManager->registerAction(ui->actionSaveAs, CONTEXT_MENU, CATEGORY_MENU_FILE, QStringLiteral("Menu.File.SaveAs"));
+    actionManager->registerAction(ui->actionClose, CONTEXT_MENU, CATEGORY_MENU_FILE, QStringLiteral("Menu.File.Close"));
+
+    actionManager->registerAction(mUndoAction, CONTEXT_MENU, CATEGORY_MENU_EDIT, QStringLiteral("Menu.Edit.Undo"));
+    actionManager->registerAction(mRedoAction, CONTEXT_MENU, CATEGORY_MENU_EDIT, QStringLiteral("Menu.Edit.Redo"));
+    actionManager->registerAction(ui->actionCut, CONTEXT_MENU, CATEGORY_MENU_EDIT, QStringLiteral("Menu.Edit.Cut"));
+    actionManager->registerAction(ui->actionCopy, CONTEXT_MENU, CATEGORY_MENU_EDIT, QStringLiteral("Menu.Edit.Copy"));
+    actionManager->registerAction(ui->actionPaste, CONTEXT_MENU, CATEGORY_MENU_EDIT, QStringLiteral("Menu.Edit.Paste"));
+    actionManager->registerAction(ui->actionDelete, CONTEXT_MENU, CATEGORY_MENU_EDIT, QStringLiteral("Menu.Edit.Delete"));
+    actionManager->registerAction(ui->actionDeleteInAllLayers, CONTEXT_MENU, CATEGORY_MENU_EDIT, QStringLiteral("Menu.Edit.DeleteInAllLayers"));
+    actionManager->registerAction(ui->actionSelectAll, CONTEXT_MENU, CATEGORY_MENU_EDIT, QStringLiteral("Menu.Edit.SelectAll"));
+    actionManager->registerAction(ui->actionSelectNone, CONTEXT_MENU, CATEGORY_MENU_EDIT, QStringLiteral("Menu.Edit.SelectNone"));
+    actionManager->registerAction(ui->actionPreferences, CONTEXT_MENU, CATEGORY_MENU_EDIT, QStringLiteral("Menu.Edit.KeyboardShortcuts"));
+    actionManager->registerAction(ui->actionKeyboardShortcuts, CONTEXT_MENU, CATEGORY_MENU_EDIT, QStringLiteral("Menu.Edit.KeyboardShortcuts"));
+
+    actionManager->registerAction(ui->actionShowGrid, CONTEXT_MENU, CATEGORY_MENU_VIEW, QStringLiteral("Menu.View.ShowGrid"));
+    actionManager->registerAction(ui->actionHighlightFloor, CONTEXT_MENU, CATEGORY_MENU_VIEW, QStringLiteral("Menu.View.HighlightCurrentFloor"));
+    actionManager->registerAction(ui->actionHighlightRoom, CONTEXT_MENU, CATEGORY_MENU_VIEW, QStringLiteral("Menu.View.HighlightRoom"));
+    actionManager->registerAction(ui->actionShowLowerFloors, CONTEXT_MENU, CATEGORY_MENU_VIEW, QStringLiteral("Menu.View.ShowLowerFloors"));
+    actionManager->registerAction(ui->actionShowOnlyFloors, CONTEXT_MENU, CATEGORY_MENU_VIEW, QStringLiteral("Menu.View.ShowOnlyFloors"));
+    actionManager->registerAction(ui->actionHighlightUnlitRooms, CONTEXT_MENU, CATEGORY_MENU_VIEW, QStringLiteral("Menu.View.HighlightUnlitRooms"));
+    actionManager->registerAction(ui->actionZoomIn, CONTEXT_MENU, CATEGORY_MENU_VIEW, QStringLiteral("Menu.View.ZoomIn"));
+    actionManager->registerAction(ui->actionZoomOut, CONTEXT_MENU, CATEGORY_MENU_VIEW, QStringLiteral("Menu.View.ZoomOut"));
+    actionManager->registerAction(ui->actionNormalSize, CONTEXT_MENU, CATEGORY_MENU_VIEW, QStringLiteral("Menu.View.ZoomNormal"));
+
+    actionManager->registerAction(ui->actionCropToMinimum, CONTEXT_MENU, CATEGORY_MENU_BUILDING, QStringLiteral("Menu.Building.CropToMinimum"));
+    actionManager->registerAction(ui->actionCropToSelection, CONTEXT_MENU, CATEGORY_MENU_BUILDING, QStringLiteral("Menu.Building.CropToSelection"));
+    actionManager->registerAction(ui->actionResize, CONTEXT_MENU, CATEGORY_MENU_BUILDING, QStringLiteral("Menu.Building.Resize"));
+    actionManager->registerAction(ui->actionFlipHorizontal, CONTEXT_MENU, CATEGORY_MENU_BUILDING, QStringLiteral("Menu.Building.FlipHorizontal"));
+    actionManager->registerAction(ui->actionFlipVertical, CONTEXT_MENU, CATEGORY_MENU_BUILDING, QStringLiteral("Menu.Building.FlipVertical"));
+    actionManager->registerAction(ui->actionRotateLeft, CONTEXT_MENU, CATEGORY_MENU_BUILDING, QStringLiteral("Menu.Building.RotateLeft"));
+    actionManager->registerAction(ui->actionRotateRight, CONTEXT_MENU, CATEGORY_MENU_BUILDING, QStringLiteral("Menu.Building.RotateRight"));
+    actionManager->registerAction(ui->actionBuildingProperties, CONTEXT_MENU, CATEGORY_MENU_BUILDING, QStringLiteral("Menu.Building.Properties"));
+    actionManager->registerAction(ui->actionKeyValues, CONTEXT_MENU, CATEGORY_MENU_BUILDING, QStringLiteral("Menu.Building.KeyValues"));
+    actionManager->registerAction(ui->actionGrime, CONTEXT_MENU, CATEGORY_MENU_BUILDING, QStringLiteral("Menu.Building.Grime"));
+    actionManager->registerAction(ui->actionRooms, CONTEXT_MENU, CATEGORY_MENU_BUILDING, QStringLiteral("Menu.Building.Rooms"));
+    actionManager->registerAction(ui->actionTemplates, CONTEXT_MENU, CATEGORY_MENU_BUILDING, QStringLiteral("Menu.Building.Templates"));
+    actionManager->registerAction(ui->actionTiles, CONTEXT_MENU, CATEGORY_MENU_BUILDING, QStringLiteral("Menu.Building.Tiles"));
+    actionManager->registerAction(ui->actionTemplateFromBuilding, CONTEXT_MENU, CATEGORY_MENU_BUILDING, QStringLiteral("Menu.Building.TemplateFrom"));
+
+    actionManager->registerAction(ui->actionInsertFloorAbove, CONTEXT_MENU, CATEGORY_MENU_FLOOR, QStringLiteral("Menu.Floor.AddFloorAbove"));
+    actionManager->registerAction(ui->actionInsertFloorBelow, CONTEXT_MENU, CATEGORY_MENU_FLOOR, QStringLiteral("Menu.Floor.AddFloorBelow"));
+    actionManager->registerAction(ui->actionRemoveFloor, CONTEXT_MENU, CATEGORY_MENU_FLOOR, QStringLiteral("Menu.Floor.RemoveFloor"));
+    actionManager->registerAction(ui->actionFloors, CONTEXT_MENU, CATEGORY_MENU_FLOOR, QStringLiteral("Menu.Floor.Floors"));
+    actionManager->registerAction(ui->actionUpLevel, CONTEXT_MENU, CATEGORY_MENU_FLOOR, QStringLiteral("Menu.Floor.UpLevel"));
+    actionManager->registerAction(ui->actionDownLevel, CONTEXT_MENU, CATEGORY_MENU_FLOOR, QStringLiteral("Menu.Floor.DownLevel"));
+
+    const QString CONTEXT_TOOLS = QStringLiteral("Tools");
+    const QString CATEGORY_TOOL_OBJECT = QStringLiteral("Object");
+    const QString CATEGORY_TOOL_TILE = QStringLiteral("Tile");
+
+    actionManager->registerAction(ui->actionPencil, CONTEXT_TOOLS, CATEGORY_TOOL_OBJECT, QStringLiteral("Tools.Object.Pencil"));
+    actionManager->registerAction(ui->actionWall, CONTEXT_TOOLS, CATEGORY_TOOL_OBJECT, QStringLiteral("Tools.Object."));
+    actionManager->registerAction(ui->actionSelectRooms, CONTEXT_TOOLS, CATEGORY_TOOL_OBJECT, QStringLiteral("Tools.Object.SelectRoom"));
+    actionManager->registerAction(ui->actionDoor, CONTEXT_TOOLS, CATEGORY_TOOL_OBJECT, QStringLiteral("Tools.Object."));
+    actionManager->registerAction(ui->actionWindow, CONTEXT_TOOLS, CATEGORY_TOOL_OBJECT, QStringLiteral("Tools.Object."));
+    actionManager->registerAction(ui->actionStairs, CONTEXT_TOOLS, CATEGORY_TOOL_OBJECT, QStringLiteral("Tools.Object."));
+    actionManager->registerAction(ui->actionRoof, CONTEXT_TOOLS, CATEGORY_TOOL_OBJECT, QStringLiteral("Tools.Object."));
+    actionManager->registerAction(ui->actionRoofShallow, CONTEXT_TOOLS, CATEGORY_TOOL_OBJECT, QStringLiteral("Tools.Object."));
+    actionManager->registerAction(ui->actionRoofCorner, CONTEXT_TOOLS, CATEGORY_TOOL_OBJECT, QStringLiteral("Tools.Object."));
+    actionManager->registerAction(ui->actionFurniture, CONTEXT_TOOLS, CATEGORY_TOOL_OBJECT, QStringLiteral("Tools.Object."));
+    actionManager->registerAction(ui->actionSelectObject, CONTEXT_TOOLS, CATEGORY_TOOL_OBJECT, QStringLiteral("Tools.Object."));
+    actionManager->registerAction(ui->actionBasementAccessTool, CONTEXT_TOOLS, CATEGORY_TOOL_OBJECT, QStringLiteral("Tools.Object.BasementAccess"));
+
+    actionManager->registerAction(ui->actionDrawTiles, CONTEXT_TOOLS, CATEGORY_TOOL_TILE, QStringLiteral("Tools.Tile.Draw"));
+    actionManager->registerAction(ui->actionSelectTiles, CONTEXT_TOOLS, CATEGORY_TOOL_TILE, QStringLiteral("Tools.Tile.Select"));
+    actionManager->registerAction(ui->actionPickTiles, CONTEXT_TOOLS, CATEGORY_TOOL_TILE, QStringLiteral("Tools.Tile.Pick"));
+
+    connect(actionManager, &ActionManager::shortcutEdited, ToolManager::instance(), &ToolManager::shortcutEdited);
+}
+
+void BuildingEditorWindow::keyboardShortcuts()
+{
+    QString error;
+    mActionManager->load(error);
+    mActionManager->emitShortcutEditedForAllActions();
+    if (mKeyboardShortcutWindow == nullptr) {
+        mKeyboardShortcutWindow = new KeyboardShortcutWindow(mActionManager, &mSettings, QStringLiteral("TileZed/KeyboardShortcutsWindow"), this);
+        mKeyboardShortcutWindow->setAttribute(Qt::WA_DeleteOnClose, false);
+    }
+    mKeyboardShortcutWindow->show();
+    mKeyboardShortcutWindow->raise();
 }
 
 void BuildingEditorWindow::tilesDialog()

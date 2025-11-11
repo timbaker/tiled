@@ -69,6 +69,7 @@ void KeyboardShortcutWindow::saveSettings()
 {
     mSettings->beginGroup(mSettingsKey);
     mSettings->setValue(QStringLiteral("geometry"), saveGeometry());
+    mEditorWidget->saveSettings(*mSettings);
     mSettings->endGroup();
 }
 
@@ -79,6 +80,7 @@ void KeyboardShortcutWindow::readSettings()
     if (!geom.isEmpty()) {
         restoreGeometry(geom);
     }
+    mEditorWidget->readSettings(*mSettings);
     mSettings->endGroup();
 }
 

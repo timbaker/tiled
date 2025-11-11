@@ -65,6 +65,7 @@ void BaseTool::setEditor(BuildingBaseScene *editor)
 void BaseTool::setAction(QAction *action)
 {
     mAction = action;
+    mAction->setData(QVariant::fromValue<BaseTool*>(this));
     connect(mAction, &QAction::triggered, this, &BaseTool::makeCurrent);
 }
 
@@ -256,6 +257,19 @@ void ToolManager::setEditor(BuildingBaseScene *editor)
     }
 
     emit currentEditorChanged();
+}
+
+void ToolManager::shortcutEdited(QAction *action)
+{
+    if (!action->data().canConvert<BaseTool*>()) {
+        return;
+    }
+//    BaseTool *tool = action->data().value<BaseTool*>();
+    if (action->shortcut().toString().isEmpty()) {
+        action->setToolTip(action->text());
+    } else {
+        action->setToolTip(QStringLiteral("%1 (%2)").arg(action->text(), action->shortcut().toString()));
+    }
 }
 
 void ToolManager::currentToolStatusTextChanged()

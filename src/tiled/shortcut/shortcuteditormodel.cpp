@@ -67,6 +67,12 @@ int ShortcutEditorModel::ShortcutEditorModelItem::childCount() const
     return m_childItems.count();
 }
 
+void ShortcutEditorModel::ShortcutEditorModelItem::deleteChildren()
+{
+    qDeleteAll(m_childItems);
+    m_childItems.clear();
+}
+
 int ShortcutEditorModel::ShortcutEditorModelItem::columnCount() const
 {
     return m_itemData.count();
@@ -130,6 +136,7 @@ ShortcutEditorModel::~ShortcutEditorModel()
 void ShortcutEditorModel::setActions()
 {
     beginResetModel();
+    m_rootItem->deleteChildren();
     setupModelData(m_rootItem);
     endResetModel();
 }

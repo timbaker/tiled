@@ -780,7 +780,6 @@ void MainWindow::closeEvent(QCloseEvent *event)
 
         if (mKeyboardShortcutWindow != nullptr) {
             mKeyboardShortcutWindow->close();
-            mKeyboardShortcutWindow = nullptr;
         }
 
         /*
@@ -2029,7 +2028,7 @@ void MainWindow::initActionManager()
     actionManager->registerAction(mUi->actionShowMiniMap, CONTEXT_MENU, CATEGORY_MENU_VIEW, QStringLiteral("Menu.View.ShowMiniMap"));
     actionManager->registerAction(mUi->actionShowTileLayersPanel, CONTEXT_MENU, CATEGORY_MENU_VIEW, QStringLiteral("Menu.View.ShowTileLayersPanel"));
     actionManager->registerAction(mUi->actionShowTileSelection, CONTEXT_MENU, CATEGORY_MENU_VIEW, QStringLiteral("Menu.View.ShowTileSelection"));
-    actionManager->registerAction(mUi->actionZoomIn, CONTEXT_MENU, CATEGORY_MENU_VIEW, QStringLiteral("Menu.View.ZoonIn"));
+    actionManager->registerAction(mUi->actionZoomIn, CONTEXT_MENU, CATEGORY_MENU_VIEW, QStringLiteral("Menu.View.ZoomIn"));
     actionManager->registerAction(mUi->actionZoomOut, CONTEXT_MENU, CATEGORY_MENU_VIEW, QStringLiteral("Menu.View.ZoomOut"));
     actionManager->registerAction(mUi->actionZoomNormal, CONTEXT_MENU, CATEGORY_MENU_VIEW, QStringLiteral("Menu.View.ZoomNormal"));
 
