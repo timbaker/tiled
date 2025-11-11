@@ -148,6 +148,12 @@ SOURCES += aboutdialog.cpp \
     resizemapobject.cpp \
     saveasimagedialog.cpp \
     selectionrectangle.cpp \
+    shortcut/actionmanager.cpp \
+    shortcut/keyboardshortcutfile.cpp \
+    shortcut/keyboardshortcutwindow.cpp \
+    shortcut/shortcuteditordelegate.cpp \
+    shortcut/shortcuteditormodel.cpp \
+    shortcut/shortcuteditorwidget.cpp \
     snoweditor.cpp \
     stampbrush.cpp \
     tiledapplication.cpp \
@@ -377,6 +383,12 @@ HEADERS += aboutdialog.h \
     resizemapobject.h \
     saveasimagedialog.h \
     selectionrectangle.h \
+    shortcut/actionmanager.h \
+    shortcut/keyboardshortcutfile.h \
+    shortcut/keyboardshortcutwindow.h \
+    shortcut/shortcuteditordelegate.h \
+    shortcut/shortcuteditormodel.h \
+    shortcut/shortcuteditorwidget.h \
     snoweditor.h \
     stampbrush.h \
     tiledapplication.h \
@@ -548,6 +560,7 @@ FORMS += aboutdialog.ui \
     BuildingEditor/templatefrombuildingdialog.ui \
     BuildingEditor/resizebuildingdialog.ui \
     BuildingEditor/listofstringsdialog.ui \
+    shortcut/keyboardshortcutwindow.ui \
     snoweditor.ui \
     tilemetainfodialog.ui \
     BuildingEditor/buildingfloorsdialog.ui \

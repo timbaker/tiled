@@ -288,6 +288,8 @@ void StampBrush::mousePressed(QGraphicsSceneMouseEvent *event)
             break;
         case Capture:
             break;
+        case Erase:
+            break;
         }
     } else {
 #ifdef ZOMBOID

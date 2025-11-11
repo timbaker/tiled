@@ -96,6 +96,7 @@
     <addaction name="actionDeleteInAllLayers"/>
     <addaction name="separator"/>
     <addaction name="actionPreferences"/>
+    <addaction name="actionKeyboardShortcuts"/>
    </widget>
    <widget class="QMenu" name="menuHelp">
     <property name="title">
@@ -723,6 +724,11 @@
    </property>
    <property name="text">
     <string>Delete In All Layers</string>
+   </property>
+  </action>
+  <action name="actionKeyboardShortcuts">
+   <property name="text">
+    <string>Keyboard Shortcuts...</string>
    </property>
   </action>
  </widget>

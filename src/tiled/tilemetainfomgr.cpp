@@ -17,9 +17,6 @@
 
 #include "tilemetainfomgr.h"
 
-#include "BuildingEditor/simplefile.h"
-
-#include "mainwindow.h"
 #include "preferences.h"
 #include "tilesetmanager.h"
 #include "tilesetstxtfile.h"

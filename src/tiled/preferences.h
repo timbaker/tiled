@@ -82,6 +82,9 @@ public:
     void setAutomappingDrawing(bool enabled);
 
 #ifdef ZOMBOID
+    QString userPath() const;
+    QString userPath(const QString &fileName) const;
+
     QString configPath() const;
     QString configPath(const QString &fileName) const;
 

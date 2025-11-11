@@ -42,7 +42,9 @@ class MainWindow;
 }
 
 #ifdef ZOMBOID
+class ActionManager;
 class ContainerOverlayDialog;
+class KeyboardShortcutWindow;
 class SnowEditor;
 class TileOverlayDialog;
 
@@ -253,6 +255,9 @@ public slots:
     void brushSizeMinus();
     void brushSizePlus();
 
+    void initActionManager();
+    void keyboardShortcuts();
+
     void helpContents();
 #endif
 
@@ -362,6 +367,10 @@ private:
     ContainerOverlayDialog *mContainerOverlayDialog;
     TileOverlayDialog *mTileOverlayDialog = nullptr;
     SnowEditor *mSnowEditor = nullptr;
+    ActionManager *mActionManager = nullptr;
+    KeyboardShortcutWindow *mKeyboardShortcutWindow = nullptr;
+    QAction *mUndoAction = nullptr;
+    QAction *mRedoAction = nullptr;
 #endif
 };
 

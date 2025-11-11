@@ -23,6 +23,7 @@
 #include "abstracttool.h"
 #ifdef ZOMBOID
 #include "bmptool.h"
+#include "shortcut/actionmanager.h"
 #endif
 
 #include <QAction>
@@ -102,20 +103,18 @@ ToolManager::~ToolManager()
     delete mToolBar;
 }
 
-void ToolManager::registerTool(AbstractTool *tool)
+#ifdef ZOMBOID
+void ToolManager::registerTool(AbstractTool *tool, ActionManager *actionManager, const QString &context, const QString &category, const QString &fileID)
 {
     QAction *toolAction = new QAction(tool->icon(), tool->name(), this);
     toolAction->setShortcut(tool->shortcut());
     toolAction->setData(QVariant::fromValue<AbstractTool*>(tool));
     toolAction->setCheckable(true);
-#ifdef ZOMBOID
-    if (tool->shortcut().toString().isEmpty())
+    if (tool->shortcut().toString().isEmpty()) {
         toolAction->setToolTip(tool->name());
-    else
-#endif
-    toolAction->setToolTip(
-            QString(QLatin1String("%1 (%2)")).arg(tool->name(),
-                                                  tool->shortcut().toString()));
+    } else {
+        toolAction->setToolTip(QStringLiteral("%1 (%2)").arg(tool->name(), tool->shortcut().toString()));
+    }
     toolAction->setEnabled(tool->isEnabled());
     mActionGroup->addAction(toolAction);
     mToolBar->addAction(toolAction);
@@ -128,9 +127,10 @@ void ToolManager::registerTool(AbstractTool *tool)
         setSelectedTool(tool);
         toolAction->setChecked(true);
     }
+
+    actionManager->registerAction(toolAction, context, category, fileID);
 }
 
-#ifdef ZOMBOID
 void ToolManager::removeTool(AbstractTool *tool)
 {
     Q_UNUSED(tool)
@@ -165,6 +165,20 @@ void ToolManager::selectTool(AbstractTool *tool)
     setSelectedTool(0);
 }
 
+void ToolManager::shortcutEdited(QAction *action)
+{
+    if (!action->data().canConvert<AbstractTool*>()) {
+        return;
+    }
+    AbstractTool *tool = action->data().value<AbstractTool*>();
+    tool->setShortcut(action->shortcut());
+    if (tool->shortcut().toString().isEmpty()) {
+        action->setToolTip(tool->name());
+    } else {
+        action->setToolTip(QStringLiteral("%1 (%2)").arg(tool->name(), tool->shortcut().toString()));
+    }
+}
+
 void ToolManager::actionTriggered(QAction *action)
 {
     setSelectedTool(action->data().value<AbstractTool*>());
@@ -180,13 +194,11 @@ void ToolManager::languageChanged()
         // Update the text, shortcut and tooltip of the action
         action->setText(tool->name());
         action->setShortcut(tool->shortcut());
-#ifdef ZOMBOID
-        if (tool->shortcut().toString().isEmpty())
+        if (tool->shortcut().toString().isEmpty()) {
             action->setToolTip(tool->name());
-        else
-#endif
-        action->setToolTip(QString(QLatin1String("%1 (%2)")).arg(
-                tool->name(), tool->shortcut().toString()));
+        } else {
+            action->setToolTip(QStringLiteral("%1 (%2)").arg(tool->name(), tool->shortcut().toString()));
+        }
     }
 }
 

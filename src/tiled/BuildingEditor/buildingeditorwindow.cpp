@@ -442,7 +442,7 @@ BuildingEditorWindow::BuildingEditorWindow(QWidget *parent) :
     ui->actionSaveAs->setShortcuts(QKeySequence::SaveAs);
 
     connect(ui->actionClose, &QAction::triggered, this, &QWidget::close);
-    setWindowFlags(windowFlags() & ~Qt::WA_DeleteOnClose);
+    setAttribute(Qt::WA_DeleteOnClose, false);
 
     ui->actionShowGrid->setChecked(prefs->showGrid());
     connect(ui->actionShowGrid, &QAction::toggled,

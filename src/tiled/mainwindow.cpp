@@ -114,6 +114,10 @@
 #include "worlded/worldcell.h"
 #include "worlded/worldedmgr.h"
 
+#include "shortcut/actionmanager.h"
+#include "shortcut/shortcuteditorwidget.h"
+#include "shortcut/keyboardshortcutwindow.h"
+
 #include <QDebug>
 #include <QDesktopServices>
 #include <QProcess>
@@ -248,15 +252,15 @@ MainWindow::MainWindow(QWidget *parent, Qt::WindowFlags flags)
     mUi->actionSave->setIcon(saveIcon);
 
     QUndoGroup *undoGroup = mDocumentManager->undoGroup();
-    QAction *undoAction = undoGroup->createUndoAction(this, tr("Undo"));
-    QAction *redoAction = undoGroup->createRedoAction(this, tr("Redo"));
+    mUndoAction = undoGroup->createUndoAction(this, tr("Undo"));
+    mRedoAction = undoGroup->createRedoAction(this, tr("Redo"));
     mUi->mainToolBar->setToolButtonStyle(Qt::ToolButtonFollowStyle);
-    mUi->actionNew->setPriority(QAction::LowPriority);
-    redoAction->setPriority(QAction::LowPriority);
-    redoAction->setIcon(redoIcon);
-    undoAction->setIcon(undoIcon);
-    redoAction->setIconText(tr("Redo"));
-    undoAction->setIconText(tr("Undo"));
+    mUndoAction->setPriority(QAction::LowPriority);
+    mUndoAction->setIcon(undoIcon);
+    mUndoAction->setIconText(tr("Undo"));
+    mRedoAction->setPriority(QAction::LowPriority);
+    mRedoAction->setIcon(redoIcon);
+    mRedoAction->setIconText(tr("Redo"));
     connect(undoGroup, &QUndoGroup::cleanChanged, this, &MainWindow::updateWindowTitle);
 
     UndoDock *undoDock = new UndoDock(undoGroup, this);
@@ -306,8 +310,8 @@ MainWindow::MainWindow(QWidget *parent, Qt::WindowFlags flags)
     keys1 += QKeySequence(Qt::CTRL | Qt::Key_Delete);
     mUi->actionDeleteInAllLayers->setShortcuts(keys1);
 #endif
-    undoAction->setShortcuts(QKeySequence::Undo);
-    redoAction->setShortcuts(QKeySequence::Redo);
+    mUndoAction->setShortcuts(QKeySequence::Undo);
+    mRedoAction->setShortcuts(QKeySequence::Redo);
 
     mUi->actionShowCellBorder->setChecked(preferences->showCellBorder());
     mUi->actionShowGrid->setChecked(preferences->showGrid());
@@ -336,16 +340,16 @@ MainWindow::MainWindow(QWidget *parent, Qt::WindowFlags flags)
     keys += QKeySequence(tr("-"));
     mUi->actionZoomOut->setShortcuts(keys);
 
-    mUi->menuEdit->insertAction(mUi->actionCut, undoAction);
-    mUi->menuEdit->insertAction(mUi->actionCut, redoAction);
+    mUi->menuEdit->insertAction(mUi->actionCut, mUndoAction);
+    mUi->menuEdit->insertAction(mUi->actionCut, mRedoAction);
     mUi->menuEdit->insertSeparator(mUi->actionCut);
     mUi->menuEdit->insertAction(mUi->actionPreferences,
                                 mActionHandler->actionSelectAll());
     mUi->menuEdit->insertAction(mUi->actionPreferences,
                                 mActionHandler->actionSelectNone());
     mUi->menuEdit->insertSeparator(mUi->actionPreferences);
-    mUi->mainToolBar->addAction(undoAction);
-    mUi->mainToolBar->addAction(redoAction);
+    mUi->mainToolBar->addAction(mUndoAction);
+    mUi->mainToolBar->addAction(mRedoAction);
 
     mUi->mainToolBar->addSeparator();
 
@@ -410,6 +414,7 @@ MainWindow::MainWindow(QWidget *parent, Qt::WindowFlags flags)
 #endif
     connect(mUi->actionPreferences, &QAction::triggered,
             this, &MainWindow::openPreferences);
+    connect(mUi->actionKeyboardShortcuts, &QAction::triggered, this, &MainWindow::keyboardShortcuts);
 
     connect(mUi->actionShowGrid, &QAction::toggled,
             preferences, &Preferences::setShowGrid);
@@ -500,8 +505,8 @@ MainWindow::MainWindow(QWidget *parent, Qt::WindowFlags flags)
     setThemeIcon(mUi->actionCopy, "edit-copy");
     setThemeIcon(mUi->actionPaste, "edit-paste");
     setThemeIcon(mUi->actionDelete, "edit-delete");
-    setThemeIcon(redoAction, "edit-redo");
-    setThemeIcon(undoAction, "edit-undo");
+    setThemeIcon(mRedoAction, "edit-redo");
+    setThemeIcon(mUndoAction, "edit-undo");
     setThemeIcon(mUi->actionZoomIn, "zoom-in");
     setThemeIcon(mUi->actionZoomOut, "zoom-out");
     setThemeIcon(mUi->actionZoomNormal, "zoom-original");
@@ -539,17 +544,24 @@ MainWindow::MainWindow(QWidget *parent, Qt::WindowFlags flags)
     connect(mRandomButton, &QAbstractButton::toggled,
             mBucketFillTool, &BucketFillTool::setRandom);
 
+    initActionManager();
+    QString CONTEXT_TOOL = QStringLiteral("Tool");
+    QString CATEGORY_TOOL_TILE = QStringLiteral("Tile");
+    QString CATEGORY_TOOL_OBJECT = QStringLiteral("Object");
+    QString CATEGORY_TOOL_BMP = QStringLiteral("BMP");
+    QString CATEGORY_TOOL_OTHER = QStringLiteral("Other");
+
     ToolManager *toolManager = ToolManager::instance();
-    toolManager->registerTool(mStampBrush);
-    toolManager->registerTool(mBucketFillTool);
+    toolManager->registerTool(mStampBrush, mActionManager, CONTEXT_TOOL, CATEGORY_TOOL_TILE, QStringLiteral("Tool.Tile.Brush"));
+    toolManager->registerTool(mBucketFillTool, mActionManager, CONTEXT_TOOL, CATEGORY_TOOL_TILE, QStringLiteral("Tool.Tile.BucketFill"));
 #ifdef ZOMBOID
-    toolManager->registerTool(mEraserTool = new Eraser(this));
+    toolManager->registerTool(mEraserTool = new Eraser(this), mActionManager, CONTEXT_TOOL, CATEGORY_TOOL_TILE, QStringLiteral("Tool.Tile.Eraser"));
 #else
     toolManager->registerTool(new Eraser(this));
 #endif
-    toolManager->registerTool(new TileSelectionTool(this));
+    toolManager->registerTool(new TileSelectionTool(this), mActionManager, CONTEXT_TOOL, CATEGORY_TOOL_TILE, QStringLiteral("Tool.Tile.Selection"));
 #ifdef ZOMBOID
-    toolManager->registerTool(new PickTileTool(this));
+    toolManager->registerTool(new PickTileTool(this), mActionManager, CONTEXT_TOOL, CATEGORY_TOOL_TILE, QStringLiteral("Tool.Tile.Pick"));
 #if 0
     toolManager->registerTool(new EdgeTool(this));
     toolManager->registerTool(new CurbTool(this));
@@ -559,25 +571,25 @@ MainWindow::MainWindow(QWidget *parent, Qt::WindowFlags flags)
     initLuaTileTools();
 #endif
     toolManager->addSeparator();
-    toolManager->registerTool(new ObjectSelectionTool(this));
-    toolManager->registerTool(new EditPolygonTool(this));
-    toolManager->registerTool(areaObjectsTool);
-    toolManager->registerTool(tileObjectsTool);
-    toolManager->registerTool(polygonObjectsTool);
-    toolManager->registerTool(polylineObjectsTool);
+    toolManager->registerTool(new ObjectSelectionTool(this), mActionManager, CONTEXT_TOOL, CATEGORY_TOOL_OBJECT, QStringLiteral("Tool.Object.Select"));
+    toolManager->registerTool(new EditPolygonTool(this), mActionManager, CONTEXT_TOOL, CATEGORY_TOOL_OBJECT, QStringLiteral("Tool.Object.EditPolygon"));
+    toolManager->registerTool(areaObjectsTool, mActionManager, CONTEXT_TOOL, CATEGORY_TOOL_OBJECT, QStringLiteral("Tool.Object.CreateRect"));
+    toolManager->registerTool(tileObjectsTool, mActionManager, CONTEXT_TOOL, CATEGORY_TOOL_OBJECT, QStringLiteral("Tool.Object.CreateTile"));
+    toolManager->registerTool(polygonObjectsTool, mActionManager, CONTEXT_TOOL, CATEGORY_TOOL_OBJECT, QStringLiteral("Tool.Object.CreatePolygon"));
+    toolManager->registerTool(polylineObjectsTool, mActionManager, CONTEXT_TOOL, CATEGORY_TOOL_OBJECT, QStringLiteral("Tool.Object.CreatePolyline"));
 #ifdef ZOMBOID
-    toolManager->registerTool(new RoomDefTool(this));
+    toolManager->registerTool(new RoomDefTool(this), mActionManager, CONTEXT_TOOL, CATEGORY_TOOL_OTHER, QStringLiteral("Tool.Other.RoomDef"));
     toolManager->addSeparator();
-    toolManager->registerTool(BmpBrushTool::instance());
-    toolManager->registerTool(BmpRectTool::instance());
-    toolManager->registerTool(BmpBucketTool::instance());
-    toolManager->registerTool(BmpSelectionTool::instance());
-    toolManager->registerTool(BmpWandTool::instance());
-    toolManager->registerTool(BmpEraserTool::instance());
-    toolManager->registerTool(NoBlendTool::instance());
-    toolManager->registerTool(BmpToLayersTool::instance());
+    toolManager->registerTool(BmpBrushTool::instance(), mActionManager, CONTEXT_TOOL, CATEGORY_TOOL_BMP, QStringLiteral("Tool.BMP.Brush"));
+    toolManager->registerTool(BmpRectTool::instance(), mActionManager, CONTEXT_TOOL, CATEGORY_TOOL_BMP, QStringLiteral("Tool.BMP.Rect"));
+    toolManager->registerTool(BmpBucketTool::instance(), mActionManager, CONTEXT_TOOL, CATEGORY_TOOL_BMP, QStringLiteral("Tool.BMP.Bucket"));
+    toolManager->registerTool(BmpSelectionTool::instance(), mActionManager, CONTEXT_TOOL, CATEGORY_TOOL_BMP, QStringLiteral("Tool.BMP.Select"));
+    toolManager->registerTool(BmpWandTool::instance(), mActionManager, CONTEXT_TOOL, CATEGORY_TOOL_BMP, QStringLiteral("Tool.BMP.Wand"));
+    toolManager->registerTool(BmpEraserTool::instance(), mActionManager, CONTEXT_TOOL, CATEGORY_TOOL_BMP, QStringLiteral("Tool.BMP.Eraser"));
+    toolManager->registerTool(NoBlendTool::instance(), mActionManager, CONTEXT_TOOL, CATEGORY_TOOL_BMP, QStringLiteral("Tool.BMP.NoBlend"));
+    toolManager->registerTool(BmpToLayersTool::instance(), mActionManager, CONTEXT_TOOL, CATEGORY_TOOL_BMP, QStringLiteral("Tool.BMP.ToLayers"));
     toolManager->addSeparator();
-    toolManager->registerTool(WorldLotTool::instance());
+    toolManager->registerTool(WorldLotTool::instance(), mActionManager, CONTEXT_TOOL, CATEGORY_TOOL_OTHER, QStringLiteral("Tool.WorldEd.Lot"));
 
     QAction *brushSizeMinus = new QAction(this);
     brushSizeMinus->setShortcut(QKeySequence(QLatin1String("[")));
@@ -591,6 +603,11 @@ MainWindow::MainWindow(QWidget *parent, Qt::WindowFlags flags)
 
     connect(PickTileTool::instancePtr(), &PickTileTool::tilePicked,
             this, &MainWindow::tilePicked);
+
+    // Do this after all ToolManager::register() calls.
+    QString error;
+    mActionManager->load(error);
+    mActionManager->emitShortcutEditedForAllActions();
 #endif
 
     addToolBar(toolManager->toolBar());
@@ -760,6 +777,11 @@ void MainWindow::closeEvent(QCloseEvent *event)
             TileDefDialog::closeYerself() &&
             (!mContainerOverlayDialog || mContainerOverlayDialog->close()) &&
             (!mBuildingEditor || mBuildingEditor->closeYerself())) {
+
+        if (mKeyboardShortcutWindow != nullptr) {
+            mKeyboardShortcutWindow->close();
+            mKeyboardShortcutWindow = nullptr;
+        }
 
         /*
          * Calling QWidget::setVisible(true) removes QEvent::Quit from the event loop.
@@ -1964,6 +1986,97 @@ void MainWindow::brushSizePlus()
     int brushSize = BmpBrushTool::instance()->brushSize();
     if (brushSize < 300)
         BmpBrushTool::instance()->setBrushSize(brushSize + 1);
+}
+
+void MainWindow::initActionManager()
+{
+    const QString fileName = Preferences::instance()->userPath(QStringLiteral("shortcuts/TileZed.txt"));
+    mActionManager = new ActionManager(fileName, this);
+
+    const QString CONTEXT_MENU = QStringLiteral("Menu");
+    const QString CATEGORY_MENU_FILE = QStringLiteral("File");
+    const QString CATEGORY_MENU_EDIT = QStringLiteral("Edit");
+    const QString CATEGORY_MENU_VIEW = QStringLiteral("View");
+    const QString CATEGORY_MENU_LAYER = QStringLiteral("Layer");
+    const QString CATEGORY_MENU_TOOLS = QStringLiteral("Tools");
+
+    ActionManager *actionManager = mActionManager;
+    actionManager->registerAction(mUi->actionNew, CONTEXT_MENU, CATEGORY_MENU_FILE, QStringLiteral("Menu.File.New"));
+    actionManager->registerAction(mUi->actionOpen, CONTEXT_MENU, CATEGORY_MENU_FILE, QStringLiteral("Menu.File.Open"));
+    actionManager->registerAction(mUi->actionSave, CONTEXT_MENU, CATEGORY_MENU_FILE, QStringLiteral("Menu.File.Save"));
+    actionManager->registerAction(mUi->actionSaveAs, CONTEXT_MENU, CATEGORY_MENU_FILE, QStringLiteral("Menu.File.SaveAs"));
+    actionManager->registerAction(mUi->actionClose, CONTEXT_MENU, CATEGORY_MENU_FILE, QStringLiteral("Menu.File.Close"));
+    actionManager->registerAction(mUi->actionCloseAll, CONTEXT_MENU, CATEGORY_MENU_FILE, QStringLiteral("Menu.File.CloseAll"));
+    actionManager->registerAction(mUi->actionQuit, CONTEXT_MENU, CATEGORY_MENU_FILE, QStringLiteral("Menu.File.Quit"));
+
+    actionManager->registerAction(mUndoAction, CONTEXT_MENU, CATEGORY_MENU_EDIT, QStringLiteral("Menu.Edit.Undo"));
+    actionManager->registerAction(mRedoAction, CONTEXT_MENU, CATEGORY_MENU_EDIT, QStringLiteral("Menu.Edit.Redo"));
+    actionManager->registerAction(mUi->actionCut, CONTEXT_MENU, CATEGORY_MENU_EDIT, QStringLiteral("Menu.Edit.Cut"));
+    actionManager->registerAction(mUi->actionCopy, CONTEXT_MENU, CATEGORY_MENU_EDIT, QStringLiteral("Menu.Edit.Copy"));
+    actionManager->registerAction(mUi->actionPaste, CONTEXT_MENU, CATEGORY_MENU_EDIT, QStringLiteral("Menu.Edit.Paste"));
+    actionManager->registerAction(mUi->actionDelete, CONTEXT_MENU, CATEGORY_MENU_EDIT, QStringLiteral("Menu.Edit.Delete"));
+    actionManager->registerAction(mUi->actionDeleteInAllLayers, CONTEXT_MENU, CATEGORY_MENU_EDIT, QStringLiteral("Menu.Edit.DeleteInAllLayers"));
+    actionManager->registerAction(mUi->actionPreferences, CONTEXT_MENU, CATEGORY_MENU_EDIT, QStringLiteral("Menu.Edit.KeyboardShortcuts"));
+    actionManager->registerAction(mUi->actionKeyboardShortcuts, CONTEXT_MENU, CATEGORY_MENU_EDIT, QStringLiteral("Menu.Edit.KeyboardShortcuts"));
+
+    actionManager->registerAction(mUi->actionShowCellBorder, CONTEXT_MENU, CATEGORY_MENU_VIEW, QStringLiteral("Menu.View.ShowCellBorder"));
+    actionManager->registerAction(mUi->actionShowGrid, CONTEXT_MENU, CATEGORY_MENU_VIEW, QStringLiteral("Menu.View.ShowGrid"));
+    actionManager->registerAction(mUi->actionSnapToGrid, CONTEXT_MENU, CATEGORY_MENU_VIEW, QStringLiteral("Menu.View.SnapToGrid"));
+    actionManager->registerAction(mUi->actionHighlightCurrentLayer, CONTEXT_MENU, CATEGORY_MENU_VIEW, QStringLiteral("Menu.View.HighlightCurrentLevel"));
+    actionManager->registerAction(mUi->actionHighlightRoomUnderPointer, CONTEXT_MENU, CATEGORY_MENU_VIEW, QStringLiteral("Menu.View.HighlightRoomUnderPointer"));
+    actionManager->registerAction(mUi->actionShowInvisibleTiles, CONTEXT_MENU, CATEGORY_MENU_VIEW, QStringLiteral("Menu.View.ShowInvisibleTiles"));
+    actionManager->registerAction(mUi->actionShowLotFloorsOnly, CONTEXT_MENU, CATEGORY_MENU_VIEW, QStringLiteral("Menu.View.ShowLotFloorsOnly"));
+    actionManager->registerAction(mUi->actionShowMiniMap, CONTEXT_MENU, CATEGORY_MENU_VIEW, QStringLiteral("Menu.View.ShowMiniMap"));
+    actionManager->registerAction(mUi->actionShowTileLayersPanel, CONTEXT_MENU, CATEGORY_MENU_VIEW, QStringLiteral("Menu.View.ShowTileLayersPanel"));
+    actionManager->registerAction(mUi->actionShowTileSelection, CONTEXT_MENU, CATEGORY_MENU_VIEW, QStringLiteral("Menu.View.ShowTileSelection"));
+    actionManager->registerAction(mUi->actionZoomIn, CONTEXT_MENU, CATEGORY_MENU_VIEW, QStringLiteral("Menu.View.ZoonIn"));
+    actionManager->registerAction(mUi->actionZoomOut, CONTEXT_MENU, CATEGORY_MENU_VIEW, QStringLiteral("Menu.View.ZoomOut"));
+    actionManager->registerAction(mUi->actionZoomNormal, CONTEXT_MENU, CATEGORY_MENU_VIEW, QStringLiteral("Menu.View.ZoomNormal"));
+
+    actionManager->registerAction(mActionHandler->actionAddTileLayer(), CONTEXT_MENU, CATEGORY_MENU_LAYER, QStringLiteral("Menu.Layer.AddTileLayer"));
+    actionManager->registerAction(mActionHandler->actionAddObjectGroup(), CONTEXT_MENU, CATEGORY_MENU_LAYER, QStringLiteral("Menu.Layer.AddObjectGroup"));
+    actionManager->registerAction(mActionHandler->actionAddImageLayer(), CONTEXT_MENU, CATEGORY_MENU_LAYER, QStringLiteral("Menu.Layer.AddImageLayer"));
+    actionManager->registerAction(mActionHandler->actionDuplicateLayer(), CONTEXT_MENU, CATEGORY_MENU_LAYER, QStringLiteral("Menu.Layer.DuplicateLayer"));
+    actionManager->registerAction(mActionHandler->actionMergeLayerDown(), CONTEXT_MENU, CATEGORY_MENU_LAYER, QStringLiteral("Menu.Layer.MergeLayerDown"));
+    actionManager->registerAction(mActionHandler->actionRemoveLayer(), CONTEXT_MENU, CATEGORY_MENU_LAYER, QStringLiteral("Menu.Layer.RemoveLayer"));
+    actionManager->registerAction(mActionHandler->actionRenameLayer(), CONTEXT_MENU, CATEGORY_MENU_LAYER, QStringLiteral("Menu.Layer.RenameLayer"));
+    actionManager->registerAction(mActionHandler->actionSelectPreviousLayer(), CONTEXT_MENU, CATEGORY_MENU_LAYER, QStringLiteral("Menu.Layer.SelectPreviousLayer"));
+    actionManager->registerAction(mActionHandler->actionSelectNextLayer(), CONTEXT_MENU, CATEGORY_MENU_LAYER, QStringLiteral("Menu.Layer.SelectNextLayer"));
+    actionManager->registerAction(mActionHandler->actionMoveLayerUp(), CONTEXT_MENU, CATEGORY_MENU_LAYER, QStringLiteral("Menu.Layer.MoveLayerUp"));
+    actionManager->registerAction(mActionHandler->actionMoveLayerDown(), CONTEXT_MENU, CATEGORY_MENU_LAYER, QStringLiteral("Menu.Layer.MoveLayerDown"));
+    actionManager->registerAction(mActionHandler->actionToggleOtherLayers(), CONTEXT_MENU, CATEGORY_MENU_LAYER, QStringLiteral("Menu.Layer.ToggleOtherLayers"));
+    actionManager->registerAction(mActionHandler->actionLayerProperties(), CONTEXT_MENU, CATEGORY_MENU_LAYER, QStringLiteral("Menu.Layer.LayerProperties"));
+
+    actionManager->registerAction(mUi->actionBuildingEditor, CONTEXT_MENU, CATEGORY_MENU_TOOLS, QStringLiteral("Menu.Tools.BuildingEd"));
+    actionManager->registerAction(mUi->actionCheckBuildings, CONTEXT_MENU, CATEGORY_MENU_TOOLS, QStringLiteral("Menu.Tools.CheckBuildings"));
+    actionManager->registerAction(mUi->actionCheckMaps, CONTEXT_MENU, CATEGORY_MENU_TOOLS, QStringLiteral("Menu.Tools.CheckMaps"));
+    actionManager->registerAction(mUi->actionTilesetMetaInfo, CONTEXT_MENU, CATEGORY_MENU_TOOLS, QStringLiteral("Menu.Tools.Tilesets"));
+    actionManager->registerAction(mUi->actionTileProperties, CONTEXT_MENU, CATEGORY_MENU_TOOLS, QStringLiteral("Menu.Tools.TileProperties"));
+    actionManager->registerAction(mUi->actionCompareTileDef, CONTEXT_MENU, CATEGORY_MENU_TOOLS, QStringLiteral("Menu.Tools.CompareTileDef"));
+    actionManager->registerAction(mUi->actionCreatePack, CONTEXT_MENU, CATEGORY_MENU_TOOLS, QStringLiteral("Menu.Tools.CreatePack"));
+    actionManager->registerAction(mUi->actionPackViewer, CONTEXT_MENU, CATEGORY_MENU_TOOLS, QStringLiteral("Menu.Tools.PackViewer"));
+    actionManager->registerAction(mUi->actionComparePack, CONTEXT_MENU, CATEGORY_MENU_TOOLS, QStringLiteral("Menu.Tools.ComparePack"));
+    actionManager->registerAction(mUi->actionContainerOverlays, CONTEXT_MENU, CATEGORY_MENU_TOOLS, QStringLiteral("Menu.Tools.ContainerOverlays"));
+    actionManager->registerAction(mUi->actionTileOverlays, CONTEXT_MENU, CATEGORY_MENU_TOOLS, QStringLiteral("Menu.Tools.OtherOverlays"));
+    actionManager->registerAction(mUi->actionRearrangeTiles, CONTEXT_MENU, CATEGORY_MENU_TOOLS, QStringLiteral("Menu.Tools.RearrangeTiles"));
+    actionManager->registerAction(mUi->actionSnowEditor, CONTEXT_MENU, CATEGORY_MENU_TOOLS, QStringLiteral("Menu.Tools.SnowEditor"));
+    actionManager->registerAction(mUi->actionWorldEd, CONTEXT_MENU, CATEGORY_MENU_TOOLS, QStringLiteral("Menu.Tools.WorldEd"));
+    actionManager->registerAction(mUi->actionLuaScript, CONTEXT_MENU, CATEGORY_MENU_TOOLS, QStringLiteral("Menu.Tools.LuaConsole"));
+
+    connect(actionManager, &ActionManager::shortcutEdited, ToolManager::instance(), &ToolManager::shortcutEdited);
+}
+
+void MainWindow::keyboardShortcuts()
+{
+    QString error;
+    mActionManager->load(error);
+    mActionManager->emitShortcutEditedForAllActions();
+    if (mKeyboardShortcutWindow == nullptr) {
+        mKeyboardShortcutWindow = new KeyboardShortcutWindow(mActionManager, &mSettings, QStringLiteral("TileZed/KeyboardShortcutsWindow"), this);
+        mKeyboardShortcutWindow->setAttribute(Qt::WA_DeleteOnClose, false);
+    }
+    mKeyboardShortcutWindow->show();
+    mKeyboardShortcutWindow->raise();
 }
 
 BmpClipboard *MainWindow::bmpClipboard() const
@@ -3328,7 +3441,7 @@ void MainWindow::initLuaTileTools()
         mLuaTileTools += new Lua::LuaTileTool(toolInfo.mScript, toolInfo.mDialogTitle,
                                               toolInfo.mLabel, toolInfo.mIcon,
                                               QKeySequence(), this);
-        ToolManager::instance()->registerTool(mLuaTileTools.last());
+        ToolManager::instance()->registerTool(mLuaTileTools.last(), mActionManager, QStringLiteral("Tool"), QStringLiteral("Lua"), QStringLiteral("Tool.Lua.%1").arg(toolInfo.mLabel));
     }
 }
 #endif // ZOMBOID

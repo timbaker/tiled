@@ -23,6 +23,10 @@
 
 #include <QObject>
 
+#ifdef ZOMBOID
+class ActionManager;
+#endif
+
 class QAction;
 class QActionGroup;
 class QToolBar;
@@ -58,9 +62,11 @@ public:
      * Registers a new tool. It will be added to the tools tool bar. The tool
      * manager does not take ownership over the tool.
      */
+#ifndef ZOMBOID
     void registerTool(AbstractTool *tool);
-
+#endif
 #ifdef ZOMBOID
+    void registerTool(AbstractTool *tool, ActionManager *actionManager, const QString &context, const QString &category, const QString &fileID);
     void removeTool(AbstractTool *tool);
 
     bool isBmpToolSelected() const;
@@ -96,6 +102,9 @@ signals:
      * @see AbstractTool::setStatusInfo()
      */
     void statusInfoChanged(const QString &info);
+
+public slots:
+    void shortcutEdited(QAction *action);
 
 private slots:
     void actionTriggered(QAction *action);
