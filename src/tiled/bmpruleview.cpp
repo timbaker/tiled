@@ -88,13 +88,14 @@ void BmpRuleDelegate::paint(QPainter *painter,
 {
     const BmpRuleModel *m = static_cast<const BmpRuleModel*>(index.model());
 
-    QBrush brush(QColor(255, 255, 255));
+    QBrush brush(Qt::gray);
     painter->fillRect(option.rect, brush);
 
     if (index.row() > 0 && !(option.state & QStyle::State_Selected)) {
+        QPen oldPen = painter->pen();
         painter->setPen(Qt::darkGray);
         painter->drawLine(option.rect.topLeft(), option.rect.topRight());
-        painter->setPen(Qt::black);
+        painter->setPen(oldPen);
     }
 
     BmpRule *rule = m->ruleAt(index);

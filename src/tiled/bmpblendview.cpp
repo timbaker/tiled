@@ -92,13 +92,14 @@ void BmpBlendDelegate::paint(QPainter *painter,
 {
     const BmpBlendModel *m = static_cast<const BmpBlendModel*>(index.model());
 
-    QBrush brush(QColor(255, 255, 255));
+    QBrush brush(Qt::gray);
     painter->fillRect(option.rect, brush);
 
     if (index.row() > 0 && !(option.state & QStyle::State_Selected)) {
+        QPen oldPen = painter->pen();
         painter->setPen(Qt::darkGray);
         painter->drawLine(option.rect.topLeft(), option.rect.topRight());
-        painter->setPen(Qt::black);
+        painter->setPen(oldPen);
     }
 
     QVector<BmpBlend*> blends = m->blendsAt(index);
