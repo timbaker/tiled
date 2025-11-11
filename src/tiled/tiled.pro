@@ -32,6 +32,9 @@ greaterThan(QT_MAJOR_VERSION, 5) {
     QT += openglwidgets
 }
 
+# For 'breeze' style using SVG icons
+QT += svg
+
 DEFINES += QT_NO_CAST_FROM_ASCII \
     QT_NO_CAST_TO_ASCII
 DEFINES += ZOMBOID

@@ -177,6 +177,7 @@ copyFile $QT_BINARY_DIR $DEST Qt5Core.dll
 copyFile $QT_BINARY_DIR $DEST Qt5Gui.dll
 copyFile $QT_BINARY_DIR $DEST Qt5Network.dll
 copyFile $QT_BINARY_DIR $DEST Qt5OpenGL.dll
+copyFile $QT_BINARY_DIR $DEST Qt5Svg.dll
 copyFile $QT_BINARY_DIR $DEST Qt5Widgets.dll
 copyFile $QT_BINARY_DIR $DEST Qt5Xml.dll
 if {[file exists $QT_BINARY_DIR/icudt54.dll]} {
@@ -185,8 +186,11 @@ copyFile $QT_BINARY_DIR $DEST icuin54.dll
 copyFile $QT_BINARY_DIR $DEST icuuc54.dll
 }
 
+copyFile $QT_PLUGINS_DIR $DEST/plugins iconengines/qsvgicon.dll
+
 copyFile $QT_PLUGINS_DIR $DEST/plugins imageformats/qgif.dll
 copyFile $QT_PLUGINS_DIR $DEST/plugins imageformats/qjpeg.dll
+copyFile $QT_PLUGINS_DIR $DEST/plugins imageformats/qsvg.dll
 copyFile $QT_PLUGINS_DIR $DEST/plugins imageformats/qtiff.dll
 
 copyFile $QT_PLUGINS_DIR $DEST/plugins platforms/qwindows.dll
