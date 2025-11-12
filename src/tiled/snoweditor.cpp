@@ -440,10 +440,10 @@ void SnowEditor::tilesetChanged(Tileset *tileset)
 
     int row = TileMetaInfoMgr::instance()->indexOf(tileset);
     if (QListWidgetItem *item = ui->tilesetListSource->item(row)) {
-        item->setForeground(tileset->isMissing() ? Qt::red : ui->tilesetListSource->palette().color(QPalette::Text));
+        item->setForeground(tileset->isMissing() ? Qt::red : QBrush());
     }
     if (QListWidgetItem *item = ui->tilesetListTarget->item(row)) {
-        item->setForeground(tileset->isMissing() ? Qt::red : ui->tilesetListTarget->palette().color(QPalette::Text));
+        item->setForeground(tileset->isMissing() ? Qt::red : QBrush());
     }
 }
 

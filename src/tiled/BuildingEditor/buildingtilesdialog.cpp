@@ -1775,7 +1775,7 @@ void BuildingTilesDialog::tilesetChanged(Tileset *tileset)
 
     int row = TileMetaInfoMgr::instance()->indexOf(tileset);
     if (QListWidgetItem *item = ui->tilesetList->item(row))
-        item->setForeground(tileset->isMissing() ? Qt::red : ui->tilesetList->palette().color(QPalette::Text));
+        item->setForeground(tileset->isMissing() ? Qt::red : QBrush());
 }
 
 void BuildingTilesDialog::undoTextChanged(const QString &text)
