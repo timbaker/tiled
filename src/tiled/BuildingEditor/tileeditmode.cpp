@@ -70,6 +70,7 @@ TileEditModeToolBar::TileEditModeToolBar(QWidget *parent) :
     addAction(BuildingEditorWindow::instance()->actionIface()->actionDrawTiles);
     addAction(BuildingEditorWindow::instance()->actionIface()->actionSelectTiles);
     addAction(BuildingEditorWindow::instance()->actionIface()->actionPickTiles);
+    addAction(BuildingEditorWindow::instance()->actionIface()->actionFloorGrime);
     addSeparator();
     addWidget(mFloorLabel);
     addAction(BuildingEditorWindow::instance()->actionIface()->actionUpLevel);

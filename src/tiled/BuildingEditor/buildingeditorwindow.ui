@@ -821,6 +821,21 @@
     <string>Keyboard Shortcuts</string>
    </property>
   </action>
+  <action name="actionFloorGrime">
+   <property name="checkable">
+    <bool>true</bool>
+   </property>
+   <property name="icon">
+    <iconset resource="buildingeditor.qrc">
+     <normaloff>:/BuildingEditor/icons/icon_floor_grime.png</normaloff>:/BuildingEditor/icons/icon_floor_grime.png</iconset>
+   </property>
+   <property name="text">
+    <string>Floor Grime</string>
+   </property>
+   <property name="toolTip">
+    <string>Floor Grime</string>
+   </property>
+  </action>
  </widget>
  <resources>
   <include location="buildingeditor.qrc"/>

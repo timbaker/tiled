@@ -3452,7 +3452,7 @@ void MainWindow::mapDocumentChanged(MapDocument *mapDocument)
     if (mMapDocument)
         mMapDocument->disconnect(this);
 
-    if (mZoomable) {
+    if (mZoomable != nullptr) {
         mZoomable->connectToComboBox(nullptr);
         mZoomable = nullptr;
     }

@@ -17,13 +17,12 @@
 
 #include "buildingtiletools.h"
 
-#include "building.h"
+#include "BuildingEditor/buildingtiles.h"
 #include "buildingfloor.h"
 #include "buildingdocument.h"
-#include "buildingisoview.h"
+#include "buildingtemplates.h"
+#include "buildingorthoview.h"
 #include "buildingundoredo.h"
-
-#include "maprenderer.h"
 
 #include <QAction>
 #include <QApplication>
@@ -32,6 +31,8 @@
 #include <QGraphicsPolygonItem>
 #include <QStyleOptionGraphicsItem>
 #include <QUndoStack>
+
+#include <cmath>
 
 using namespace BuildingEditor;
 
@@ -113,7 +114,7 @@ void DrawTileToolCursor::setEditor(BuildingBaseScene *editor)
 
 /////
 
-DrawTileTool *DrawTileTool::mInstance = 0;
+DrawTileTool *DrawTileTool::mInstance = nullptr;
 
 DrawTileTool *DrawTileTool::instance()
 {
@@ -427,7 +428,7 @@ void DrawTileTool::updateStatusText()
 
 /////
 
-SelectTileTool *SelectTileTool::mInstance = 0;
+SelectTileTool *SelectTileTool::mInstance = nullptr;
 
 SelectTileTool *SelectTileTool::instance()
 {
@@ -597,7 +598,7 @@ void SelectTileTool::updateStatusText()
 
 /////
 
-PickTileTool *PickTileTool::mInstance = 0;
+PickTileTool *PickTileTool::mInstance = nullptr;
 
 PickTileTool *PickTileTool::instance()
 {
@@ -632,4 +633,285 @@ void PickTileTool::mouseMoveEvent(QGraphicsSceneMouseEvent *event)
 void PickTileTool::mouseReleaseEvent(QGraphicsSceneMouseEvent *event)
 {
     Q_UNUSED(event)
+}
+
+/////
+
+FloorGrimeTileTool *FloorGrimeTileTool::mInstance = nullptr;
+
+FloorGrimeTileTool *FloorGrimeTileTool::instance()
+{
+    if (!mInstance)
+        mInstance = new FloorGrimeTileTool();
+    return mInstance;
+}
+
+FloorGrimeTileTool::FloorGrimeTileTool() :
+    BaseTool(),
+    mMouseDown(false),
+    mMouseMoved(false),
+    mErasing(false),
+    mRotating(false),
+    mCursor(nullptr)
+{
+    updateStatusText();
+}
+
+void FloorGrimeTileTool::mousePressEvent(QGraphicsSceneMouseEvent *event)
+{
+    if (event->button() == Qt::RightButton) {
+        // Right-click to cancel drawing/erasing.
+        if (mMouseDown) {
+            mMouseDown = false;
+            mErasing = controlModifier();
+            updateCursor(event->scenePos());
+            updateStatusText();
+            return;
+        }
+        mStartScenePos = event->scenePos();
+        mStartTilePos = mEditor->sceneToTile(mStartScenePos, mEditor->currentLevel());
+        mMouseMoved = true;
+        mRotating = true;
+        updateStatusText();
+        return;
+    }
+
+    mStartScenePos = event->scenePos();
+    mStartTilePos = mEditor->sceneToTile(event->scenePos(), mEditor->currentLevel());
+    mMouseDown = true;
+    mMouseMoved = false;
+    mErasing = controlModifier();
+    mCursorTileBounds = QRect(mStartTilePos, QSize(1, 1)) & floor()->bounds(1, 1);
+    updateCursor(mStartScenePos);
+    updateStatusText();
+}
+
+void FloorGrimeTileTool::mouseMoveEvent(QGraphicsSceneMouseEvent *event)
+{
+    bool mouseMoved = mMouseMoved;
+    if (mMouseDown && !mMouseMoved) {
+        const int dragDistance = (mStartScenePos - event->scenePos()).manhattanLength();
+        if (dragDistance >= QApplication::startDragDistance())
+            mMouseMoved = true;
+    }
+    mMouseScenePos = event->scenePos();
+    updateCursor(event->scenePos(), mouseMoved != mMouseMoved);
+}
+
+void FloorGrimeTileTool::mouseReleaseEvent(QGraphicsSceneMouseEvent *event)
+{
+    Q_UNUSED(event)
+    if (mRotating) {
+        mRotating = false;
+        updateStatusText();
+    }
+    if (mMouseDown) {
+        QRect r = mCursorTileBounds & floor()->bounds(1, 1);
+        if (!r.isEmpty()) {
+            bool changed = false;
+            FloorTileGrid *tiles = floor()->grimeAt(layerName(), r);
+            QRegion rgn;
+            {
+                QString tileName = mErasing ? QString() : mTileName;
+                changed = tiles->replace(tileName);
+                rgn = QRegion(r);
+            }
+            if (changed)
+                undoStack()->push(new PaintFloorTiles(mEditor->document(), floor(),
+                                                      layerName(), rgn, r.topLeft(),
+                                                      tiles,
+                                                      mErasing ? "Erase Tiles"
+                                                               : "Draw Tiles"));
+        }
+        mMouseDown = false;
+        mErasing = controlModifier();
+        updateCursor(event->scenePos());
+        updateStatusText();
+    }
+}
+
+void FloorGrimeTileTool::currentModifiersChanged(Qt::KeyboardModifiers modifiers)
+{
+    if (!mMouseDown) {
+        if ((modifiers & Qt::ShiftModifier) && !(mModifiers & Qt::ShiftModifier)) {
+            cycleGrime();
+        }
+        mErasing = controlModifier();
+        updateCursor(mMouseScenePos);
+        updateStatusText();
+    }
+    mModifiers = modifiers;
+}
+
+void FloorGrimeTileTool::setTile(const QString &tileName)
+{
+    mTileName = tileName;
+}
+
+void FloorGrimeTileTool::activate()
+{
+    BaseTool::activate();
+    updateCursor(QPointF(-100,-100));
+    mEditor->addItem(mCursor);
+    updateStatusText();
+}
+
+void FloorGrimeTileTool::deactivate()
+{
+    BaseTool::deactivate();
+    if (mCursor) {
+        mEditor->removeItem(mCursor);
+        mCursor->setEditor(nullptr);
+        mEditor->clearToolTiles();
+    }
+    mMouseDown = false;
+}
+
+void FloorGrimeTileTool::updateCursor(const QPointF &scenePos, bool force)
+{
+    QPoint tilePos = mEditor->sceneToTile(scenePos, mEditor->currentLevel());
+    if (mRotating) {
+        tilePos = mStartTilePos;
+        force = true;
+    }
+    if (!force && (tilePos == mCursorTilePos))
+        return;
+    mCursorTilePos = tilePos;
+
+    if (!mCursor) {
+        mCursor = new DrawTileToolCursor(mEditor);
+        mCursor->setZValue(mEditor->ZVALUE_CURSOR);
+    }
+    mCursor->setEditor(mEditor);
+
+    if (mMouseDown) {
+        mCursorTileBounds = QRect(QPoint(qMin(mStartTilePos.x(), tilePos.x()),
+                                  qMin(mStartTilePos.y(), tilePos.y())),
+                                  QPoint(qMax(mStartTilePos.x(), tilePos.x()),
+                                  qMax(mStartTilePos.y(), tilePos.y())));
+        mCursorTileBounds &= floor()->bounds(1, 1); // before updateStatusText
+        updateStatusText();
+    } else {
+        mCursorTileBounds = QRect(tilePos, QSize(1, 1));
+        mCursorTileBounds &= floor()->bounds(1, 1);
+#if 1
+        BuildingTilesMgr *mgr = BuildingTilesMgr::instance();
+        BuildingTileCategory *cat = mgr->catGrimeFloor();
+        BuildingTileEntry *entry = cat->entry(mFloorGrimeEntry);
+        if (!entry->isNone()) {
+            if (mRotating) {
+                mFloorGrime = pickGrimeEnum(scenePos);
+            } else if (mFloorGrime == -1) {
+                mFloorGrime = BTC_GrimeFloor::West;
+            }
+            if (BuildingTile *tile = entry->tile(mFloorGrime)) {
+                mTileName = tile->name();
+            }
+        }
+#else
+        if (Room *room = floor()->GetRoomAt(tilePos)) {
+            if (BuildingTileEntry *entry = room->tile(Room::GrimeFloor)) {
+                if (!entry->isNone()) {
+                    if (mRotating) {
+                        mFloorGrime = pickGrimeEnum(scenePos);
+                    } else if (mFloorGrime == -1) {
+                        mFloorGrime = BTC_GrimeFloor::West;
+                    }
+                    if (BuildingTile *tile = entry->tile(mFloorGrime)) {
+                        mTileName = tile->name();
+                    }
+                }
+            }
+        }
+#endif
+    }
+
+    mCursor->setTileRegion(mCursorTileBounds);
+    if (mErasing) {
+        mCursor->setColor(QColor(0,0,0,64));
+    } else if (mMouseDown) {
+        mCursor->setColor(QColor(0,0,255,64));
+    } else {
+        QColor highlight = QApplication::palette().highlight().color();
+        highlight.setAlpha(64);
+        mCursor->setColor(highlight);
+    }
+
+    mCursor->setVisible(mMouseDown || mEditor->currentFloorContains(tilePos, 1, 1));
+
+    if (mCursorTileBounds.isEmpty()) {
+        mEditor->clearToolTiles();
+        return;
+    }
+
+    QRect r = mCursorTileBounds;
+    FloorTileGrid tiles(r.width(), r.height());
+    if (mErasing) {
+        for (int x = 0; x < r.width(); x++) {
+            for (int y = 0; y < r.height(); y++)
+                tiles.replace(x, y, mEditor->buildingTileAt(r.x() + x, r.y() + y));
+        }
+    } else {
+        tiles.replace(mTileName);
+    }
+    mEditor->setToolTiles(&tiles, mCursorTileBounds.topLeft(), layerName());
+}
+
+int FloorGrimeTileTool::pickGrimeEnum(const QPointF &scenePos)
+{
+    QPointF p1(mStartTilePos.x() + 0.5, mStartTilePos.y() + 0.5);
+    QPointF p2 = mEditor->sceneToTileF(scenePos, mEditor->currentLevel());
+    qreal angle = QLineF(p1, p2).angle(); // 0 deg == +x, 90 deg == +y
+    int e;
+    if (angle < 45.0 / 2) {
+        e = BTC_GrimeFloor::East;
+    } else if (angle < 90 - 45.0 / 2) {
+        e = BTC_GrimeFloor::NorthEast;
+    } else if (angle < 135 - 45.0 / 2) {
+        e = BTC_GrimeFloor::North;
+    } else if (angle < 180 - 45.0 / 2) {
+        e = BTC_GrimeFloor::NorthWest;
+    } else if (angle < 225 - 45.0 / 2) {
+        e = BTC_GrimeFloor::West;
+    } else if (angle < 270 - 45.0 / 2) {
+        e = BTC_GrimeFloor::SouthWest;
+    } else if (angle < 315 - 45.0 / 2) {
+        e = BTC_GrimeFloor::South;
+    } else if (angle < 360 - 45.0 / 2) {
+        e = BTC_GrimeFloor::SouthEast;
+    } else {
+        e = BTC_GrimeFloor::East;
+    }
+    return e;
+}
+
+void FloorGrimeTileTool::cycleGrime()
+{
+    BuildingTilesMgr *mgr = BuildingTilesMgr::instance();
+    BuildingTileCategory *cat = mgr->catGrimeFloor();
+    BuildingTile *tile = mgr->get(mTileName);
+    mFloorGrimeEntry = 0;
+    for (int i = 0; i < cat->entryCount(); i++) {
+        BuildingTileEntry *entry = cat->entry(i);
+        if (entry->usesTile(tile)) {
+            mFloorGrimeEntry = (i + 1) % cat->entryCount();
+            break;
+        }
+    }
+}
+
+void FloorGrimeTileTool::updateStatusText()
+{
+    if (mMouseDown) {
+        setStatusText(tr("Width,Height = %1,%2.  Release button to %3 tiles.  Right-click to cancel.")
+                      .arg(mCursorTileBounds.width())
+                      .arg(mCursorTileBounds.height())
+                      .arg(QLatin1String(mErasing ? "erase" : "draw")));
+    } else if (mRotating) {
+        setStatusText(tr("SHIFT=Cycle"));
+    } else if (controlModifier()) {
+        setStatusText(tr("Left-click to erase tiles."));
+    } else {
+        setStatusText(tr("Left-click to draw tiles.  CTRL=erase.  Right-click-drag to rotate.  SHIFT=Cycle"));
+    }
 }

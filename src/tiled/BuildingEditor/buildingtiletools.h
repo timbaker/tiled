@@ -42,7 +42,7 @@ class FloorTileGrid;
 class DrawTileToolCursor : public QGraphicsItem
 {
 public:
-    DrawTileToolCursor(BuildingBaseScene *editor, QGraphicsItem *parent = 0);
+    DrawTileToolCursor(BuildingBaseScene *editor, QGraphicsItem *parent = nullptr);
 
     QRectF boundingRect() const;
 
@@ -98,7 +98,7 @@ private:
 private:
     Q_DISABLE_COPY(DrawTileTool)
     static DrawTileTool *mInstance;
-    ~DrawTileTool() { mInstance = 0; }
+    ~DrawTileTool() { mInstance = nullptr; }
 
     bool mMouseDown;
     bool mMouseMoved;
@@ -141,7 +141,7 @@ private:
 private:
     Q_DISABLE_COPY(SelectTileTool)
     static SelectTileTool *mInstance;
-    ~SelectTileTool() { mInstance = 0; }
+    ~SelectTileTool() { mInstance = nullptr; }
 
     enum SelectionMode {
         Replace,
@@ -184,8 +184,59 @@ public slots:
 private:
     Q_DISABLE_COPY(PickTileTool)
     static PickTileTool *mInstance;
-    ~PickTileTool() { mInstance = 0; }
+    ~PickTileTool() { mInstance = nullptr; }
 
+};
+
+class FloorGrimeTileTool : public BaseTool
+{
+    Q_OBJECT
+public:
+    static FloorGrimeTileTool *instance();
+
+    FloorGrimeTileTool();
+
+    void mousePressEvent(QGraphicsSceneMouseEvent *event);
+    void mouseMoveEvent(QGraphicsSceneMouseEvent *event);
+    void mouseReleaseEvent(QGraphicsSceneMouseEvent *event);
+
+    void currentModifiersChanged(Qt::KeyboardModifiers modifiers);
+
+    void setTile(const QString &tileName);
+
+    QString currentTile() const
+    { return mTileName; }
+
+public slots:
+    void activate();
+    void deactivate();
+
+private:
+    void updateCursor(const QPointF &scenePos, bool force = true);
+    int pickGrimeEnum(const QPointF &scenePos);
+    void cycleGrime();
+    void updateStatusText();
+
+private:
+    Q_DISABLE_COPY(FloorGrimeTileTool)
+    static FloorGrimeTileTool *mInstance;
+    ~FloorGrimeTileTool() { mInstance = nullptr; }
+
+    bool mMouseDown;
+    bool mMouseMoved;
+    bool mErasing;
+    Qt::KeyboardModifiers mModifiers;
+    bool mRotating;
+    int mFloorGrimeEntry = 0;
+    int mFloorGrime = -1;
+    QPointF mMouseScenePos;
+    QPointF mStartScenePos;
+    QPoint mStartTilePos;
+    QPoint mCursorTilePos;
+    QRect mCursorTileBounds;
+    DrawTileToolCursor *mCursor;
+
+    QString mTileName;
 };
 
 } // namespace BuildingEditor

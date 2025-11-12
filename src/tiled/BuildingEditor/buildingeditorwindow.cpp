@@ -40,18 +40,13 @@
 #include "buildingtiletools.h"
 #include "buildingtmx.h"
 #include "buildingtools.h"
-#include "categorydock.h"
 #include "choosebuildingtiledialog.h"
 #include "furnituregroups.h"
-#include "furnitureview.h"
-#include "horizontallinedelegate.h"
 #include "listofstringsdialog.h"
-#include "mixedtilesetview.h"
 #include "newbuildingdialog.h"
 #include "objecteditmode.h"
 #include "resizedialog.h"
 #include "roomsdialog.h"
-#include "simplefile.h"
 #include "templatefrombuildingdialog.h"
 #include "tileeditmode.h"
 #include "tiledeffile.h"
@@ -64,7 +59,6 @@
 #include "shortcut/keyboardshortcutwindow.h"
 
 #include "preferences.h"
-#include "tilemetainfodialog.h"
 #include "tilemetainfomgr.h"
 #include "tilesetmanager.h"
 #include "utils.h"
@@ -368,6 +362,7 @@ BuildingEditorWindow::BuildingEditorWindow(QWidget *parent) :
     DrawTileTool::instance()->setAction(ui->actionDrawTiles);
     SelectTileTool::instance()->setAction(ui->actionSelectTiles);
     PickTileTool::instance()->setAction(ui->actionPickTiles);
+    FloorGrimeTileTool::instance()->setAction(ui->actionFloorGrime);
 
     connect(PickTileTool::instance(), &PickTileTool::tilePicked,
             this, &BuildingEditorWindow::tilePicked);
@@ -2346,6 +2341,7 @@ void BuildingEditorWindow::initActionManager()
     actionManager->registerAction(ui->actionDrawTiles, CONTEXT_TOOLS, CATEGORY_TOOL_TILE, QStringLiteral("Tools.Tile.Draw"));
     actionManager->registerAction(ui->actionSelectTiles, CONTEXT_TOOLS, CATEGORY_TOOL_TILE, QStringLiteral("Tools.Tile.Select"));
     actionManager->registerAction(ui->actionPickTiles, CONTEXT_TOOLS, CATEGORY_TOOL_TILE, QStringLiteral("Tools.Tile.Pick"));
+    actionManager->registerAction(ui->actionFloorGrime, CONTEXT_TOOLS, CATEGORY_TOOL_TILE, QStringLiteral("Tools.Tile.FloorGrime"));
 
     connect(actionManager, &ActionManager::shortcutEdited, ToolManager::instance(), &ToolManager::shortcutEdited);
 
@@ -2546,6 +2542,7 @@ void BuildingEditorWindow::updateActions()
     DrawTileTool::instance()->setEnabled(hasEditor && !objectMode && !currentLayer().isEmpty());
     SelectTileTool::instance()->setEnabled(hasEditor && !objectMode && !currentLayer().isEmpty());
     PickTileTool::instance()->setEnabled(hasEditor && !objectMode);
+    FloorGrimeTileTool::instance()->setEnabled(hasEditor && !objectMode && !currentLayer().isEmpty());
 
     ui->actionUpLevel->setEnabled(hasDoc &&
                                   !mCurrentDocument->currentFloorIsTop());

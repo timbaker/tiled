@@ -786,10 +786,10 @@ void TileLayersPanel::currentChanged()
             return;
         mCurrentLayerIndex = layerIndex;
         mDocument->setCurrentLayerIndex(layerIndex);
-
-        // Hack - Redraw all due to how the divider line is hidden depending on the selection.
-        mView->redisplay();
     }
+
+    // Hack - Redraw all due to how the divider line between rows is hidden depending on the selection.
+    mView->redisplay();
 }
 
 void TileLayersPanel::layerIndexChanged(int layerIndex)
