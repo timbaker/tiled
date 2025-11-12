@@ -44,6 +44,7 @@ public:
 
 protected:
     void tilePositionChanged(const QPoint &tilePos);
+    Tiled::Tile *pickTile(const QPointF &pos);
 
     typedef Tiled::Tile Tile;
 signals:

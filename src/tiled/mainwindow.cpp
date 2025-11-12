@@ -1723,8 +1723,9 @@ void MainWindow::tilePicked(Tile *tile)
     mTilesetDock->tilePicked(tile);
 
     QString tileName = BuildingTilesMgr::nameForTile(tile);
-    if (mTileDefDialog && TileDefDialog::instance()->isVisible())
+    if (mTileDefDialog && TileDefDialog::instance()->isVisible()) {
         TileDefDialog::instance()->displayTile(tileName);
+    }
 }
 
 void MainWindow::showBuildingEditor()
@@ -3252,8 +3253,9 @@ void MainWindow::setStampBrush(const TileLayer *tiles)
     // When selecting a new stamp, it makes sense to switch to a stamp tool
     ToolManager *m = ToolManager::instance();
     AbstractTool *selectedTool = m->selectedTool();
-    if (selectedTool != mStampBrush && selectedTool != mBucketFillTool)
+    if (selectedTool != mStampBrush && selectedTool != mBucketFillTool) {
         m->selectTool(mStampBrush);
+    }
 }
 
 void MainWindow::updateStatusInfoLabel(const QString &statusInfo)
@@ -3450,9 +3452,10 @@ void MainWindow::mapDocumentChanged(MapDocument *mapDocument)
     if (mMapDocument)
         mMapDocument->disconnect(this);
 
-    if (mZoomable)
-        mZoomable->connectToComboBox(0);
-    mZoomable = 0;
+    if (mZoomable) {
+        mZoomable->connectToComboBox(nullptr);
+        mZoomable = nullptr;
+    }
 
     mMapDocument = mapDocument;
 

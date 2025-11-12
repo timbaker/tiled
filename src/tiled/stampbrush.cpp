@@ -431,7 +431,7 @@ void StampBrush::mapDocumentChanged(MapDocument *oldDocument,
 
     // Reset the brush, since it probably became invalid
     brushItem()->setTileRegion(QRegion());
-    setStamp(0);
+    setStamp(nullptr);
 }
 
 TileLayer *StampBrush::getRandomTileLayer() const

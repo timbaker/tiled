@@ -1011,8 +1011,8 @@ void TilesetDock::setMapDocument(MapDocument *mapDocument)
     if (mMapDocument == mapDocument)
         return;
 
-    setCurrentTiles(0);
-    setCurrentTile(0);
+    setCurrentTiles(nullptr);
+    setCurrentTile(nullptr);
 
     if (mMapDocument) {
         if (mCurrentTileset)

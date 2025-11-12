@@ -36,8 +36,8 @@ using namespace Tiled;
 using namespace Tiled::Internal;
 
 BrushItem::BrushItem():
-    mMapDocument(0),
-    mTileLayer(0)
+    mMapDocument(nullptr),
+    mTileLayer(nullptr)
 {
     setFlag(QGraphicsItem::ItemUsesExtendedStyleOption);
 }
@@ -50,7 +50,7 @@ void BrushItem::setMapDocument(MapDocument *mapDocument)
     mMapDocument = mapDocument;
 
     // The tiles in the stamp may no longer be valid
-    setTileLayer(0);
+    setTileLayer(nullptr);
     updateBoundingRect();
 }
 
@@ -62,7 +62,7 @@ void BrushItem::setTileLayer(const TileLayer *tileLayer)
         mTileLayer = static_cast<TileLayer*>(tileLayer->clone());
         mRegion = mTileLayer->region();
     } else {
-        mTileLayer = 0;
+        mTileLayer = nullptr;
         mRegion = QRegion();
     }
     updateBoundingRect();
