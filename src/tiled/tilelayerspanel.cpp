@@ -83,12 +83,13 @@ void LayersPanelDelegate::paint(QPainter *painter,
 {
     const LayersPanelModel *m = static_cast<const LayersPanelModel*>(index.model());
 
-    QBrush brush = qvariant_cast<QBrush>(m->data(index, Qt::BackgroundRole));
+    QBrush brush = m->data(index, Qt::BackgroundRole).value<QBrush>();
     painter->fillRect(option.rect, brush);
 
     const QPen oldPen = painter->pen();
 
-    if (index.row() > 0 && !(option.state & QStyle::State_Selected)) {
+    bool prevRowSelected = index.row() > 0 && mView->selectionModel()->isRowSelected(index.row() - 1);
+    if (index.row() > 0 && !(option.state & QStyle::State_Selected) && !prevRowSelected) {
         painter->setPen(Qt::darkGray);
         painter->drawLine(option.rect.topLeft(), option.rect.topRight());
         painter->setPen(oldPen);
@@ -100,7 +101,7 @@ void LayersPanelDelegate::paint(QPainter *painter,
     if (!tile)
         return;
     if (tile == BuildingEditor::BuildingTilesMgr::instance()->noneTiledTile())
-        tile = 0;
+        tile = nullptr;
     if (tile && tile->image().isNull())
         tile = TilesetManager::instance()->missingTile();
 
@@ -139,6 +140,13 @@ void LayersPanelDelegate::paint(QPainter *painter,
         painter->setOpacity(opacity);
     }
 #endif
+    if (option.state & QStyle::State_Selected) {
+        const qreal opacity = painter->opacity();
+        painter->setOpacity(0.15);
+        painter->fillRect(option.rect, option.palette.highlight());
+        painter->setOpacity(opacity);
+    }
+
     // This requires the view's setMouseTracking(true)
     if (option.state & QStyle::State_MouseOver) {
         const qreal opacity = painter->opacity();
@@ -149,7 +157,7 @@ void LayersPanelDelegate::paint(QPainter *painter,
 
     // Rect around current layer
     if (option.state & QStyle::State_Selected) {
-        QPen pen;
+        QPen pen(option.palette.highlight().color());
         pen.setWidth(2);
         painter->setPen(pen);
         painter->drawRect(option.rect.adjusted(1,1,-1,-1));
@@ -377,6 +385,15 @@ void LayersPanelModel::scaleChanged(qreal scale)
         emit dataChanged(index(0, 0), index(maxRow, maxColumn));
 }
 
+void LayersPanelModel::redisplay()
+{
+    int maxRow = rowCount() - 1;
+    int maxColumn = columnCount() - 1;
+    if (maxRow >= 0 && maxColumn >= 0) {
+        emit dataChanged(index(0, 0), index(maxRow, maxColumn));
+    }
+}
+
 LayersPanelModel::Item *LayersPanelModel::toItem(const QModelIndex &index) const
 {
     if (index.isValid())
@@ -569,6 +586,11 @@ void LayersPanelView::prependLayer(const QString &layerName, Tile *tile, int lay
     mMaxHeaderWidth = qMax(mMaxHeaderWidth, width);
 
     model()->prependLayer(layerName, tile, layerIndex);
+}
+
+void LayersPanelView::redisplay()
+{
+    model()->redisplay();
 }
 
 void LayersPanelView::scaleChanged(qreal scale)
@@ -764,6 +786,9 @@ void TileLayersPanel::currentChanged()
             return;
         mCurrentLayerIndex = layerIndex;
         mDocument->setCurrentLayerIndex(layerIndex);
+
+        // Hack - Redraw all due to how the divider line is hidden depending on the selection.
+        mView->redisplay();
     }
 }
 

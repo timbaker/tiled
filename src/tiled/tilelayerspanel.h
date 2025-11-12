@@ -68,6 +68,8 @@ public:
 
     void scaleChanged(qreal scale);
 
+    void redisplay();
+
 private:
     class Item
     {
@@ -132,6 +134,8 @@ public:
 
     int maxHeaderWidth() const
     { return mMaxHeaderWidth; }
+
+    void redisplay();
 
 signals:
     void layerNameClicked(int layerIndex);
