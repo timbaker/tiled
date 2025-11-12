@@ -324,6 +324,15 @@ QPoint BuildingDocument::moveObject(BuildingObject *object, const QPoint &pos)
     return old;
 }
 
+FurnitureTile::FurnitureOrientation BuildingDocument::rotateFurniture(FurnitureObject *object, FurnitureTile::FurnitureOrientation orient)
+{
+    FurnitureTile::FurnitureOrientation old = object->furnitureTile()->orient();
+    FurnitureTiles *tiles = object->furnitureTile()->owner();
+    object->setFurnitureTile(tiles->tile(orient));
+    emit objectTileChanged(object);
+    return old;
+}
+
 BuildingTileEntry *BuildingDocument::changeObjectTile(BuildingObject *object,
                                                       BuildingTileEntry *tile,
                                                       int alternate)

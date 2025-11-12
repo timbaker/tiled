@@ -20,6 +20,7 @@
 
 #include "BuildingEditor/buildingundoredo.h"
 #include "BuildingEditor/buildingobjects.h"
+#include "BuildingEditor/furnituregroups.h"
 #include "properties.h"
 
 #include <QObject>
@@ -136,6 +137,7 @@ public:
     void insertObject(BuildingFloor *floor, int index, BuildingObject *object);
     BuildingObject *removeObject(BuildingFloor *floor, int index);
     QPoint moveObject(BuildingObject *object, const QPoint &pos);
+    FurnitureTile::FurnitureOrientation rotateFurniture(FurnitureObject *object, FurnitureTile::FurnitureOrientation orient);
     BuildingTileEntry *changeObjectTile(BuildingObject *object,
                                         BuildingTileEntry *tile, int alternate);
 

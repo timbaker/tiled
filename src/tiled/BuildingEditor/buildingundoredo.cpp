@@ -199,6 +199,23 @@ void MoveObject::swap()
 
 /////
 
+
+RotateFurniture::RotateFurniture(BuildingDocument *doc, FurnitureObject *object, FurnitureTile::FurnitureOrientation orient) :
+    QUndoCommand(QCoreApplication::translate("Undo Commands", "Rotate Furniture")),
+    mDocument(doc),
+    mObject(object),
+    mOrient(orient)
+{
+
+}
+
+void RotateFurniture::swap()
+{
+    mOrient = mDocument->rotateFurniture(mObject, mOrient);
+}
+
+/////
+
 ChangeObjectTile::ChangeObjectTile(BuildingDocument *doc, BuildingObject *object,
                                BuildingTileEntry *tile, bool mergeable, int alternate) :
     QUndoCommand(QCoreApplication::translate("Undo Commands", "Change Object Tile")),

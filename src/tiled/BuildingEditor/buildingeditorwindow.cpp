@@ -2529,7 +2529,7 @@ void BuildingEditorWindow::updateActions()
     WindowTool::instance()->setEnabled(hasEditor && objectMode && showObjects);
     StairsTool::instance()->setEnabled(hasEditor && objectMode && showObjects);
     FurnitureTool::instance()->setEnabled(hasEditor && objectMode && showObjects &&
-            FurnitureTool::instance()->currentTile() != 0);
+            FurnitureTool::instance()->currentTile() != nullptr);
     bool roofTilesOK = hasDoc && currentBuilding()->roofCapTile()->asRoofCap() &&
             currentBuilding()->roofSlopeTile()->asRoofSlope() /*&&
             currentBuilding()->roofTopTile()->asRoofTop()*/;

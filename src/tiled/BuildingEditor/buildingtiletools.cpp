@@ -442,7 +442,7 @@ SelectTileTool::SelectTileTool() :
     mSelectionMode(Replace),
     mMouseDown(false),
     mMouseMoved(false),
-    mCursor(0)
+    mCursor(nullptr)
 {
     updateStatusText();
 }
@@ -668,6 +668,7 @@ void FloorGrimeTileTool::mousePressEvent(QGraphicsSceneMouseEvent *event)
             updateStatusText();
             return;
         }
+        mEditor->setHighlightRoomLock(true);
         mStartScenePos = event->scenePos();
         mStartTilePos = mEditor->sceneToTile(mStartScenePos, mEditor->currentLevel());
         mMouseMoved = true;
@@ -703,6 +704,7 @@ void FloorGrimeTileTool::mouseReleaseEvent(QGraphicsSceneMouseEvent *event)
     Q_UNUSED(event)
     if (mRotating) {
         mRotating = false;
+        mEditor->setHighlightRoomLock(false);
         updateStatusText();
     }
     if (mMouseDown) {

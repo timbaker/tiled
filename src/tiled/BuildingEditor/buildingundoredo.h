@@ -19,6 +19,7 @@
 #define BUILDINGUNDOREDO_H
 
 #include "buildingobjects.h"
+#include "furnituregroups.h"
 #include "properties.h"
 #include "propertiesgrid.h"
 
@@ -193,6 +194,22 @@ private:
     BuildingDocument *mDocument;
     BuildingObject *mObject;
     QPoint mPos;
+};
+
+class RotateFurniture : public QUndoCommand
+{
+public:
+    RotateFurniture(BuildingDocument *doc, FurnitureObject *object, FurnitureTile::FurnitureOrientation orient);
+
+    void undo() { swap(); }
+    void redo() { swap(); }
+
+private:
+    void swap();
+
+    BuildingDocument *mDocument;
+    FurnitureObject *mObject;
+    FurnitureTile::FurnitureOrientation mOrient;
 };
 
 class ChangeObjectTile : public QUndoCommand
