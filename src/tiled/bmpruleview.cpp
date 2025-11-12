@@ -88,7 +88,7 @@ void BmpRuleDelegate::paint(QPainter *painter,
 {
     const BmpRuleModel *m = static_cast<const BmpRuleModel*>(index.model());
 
-    QBrush brush(Qt::gray);
+    QBrush brush(Qt::white);
     painter->fillRect(option.rect, brush);
 
     if (index.row() > 0 && !(option.state & QStyle::State_Selected)) {

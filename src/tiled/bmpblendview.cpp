@@ -92,7 +92,7 @@ void BmpBlendDelegate::paint(QPainter *painter,
 {
     const BmpBlendModel *m = static_cast<const BmpBlendModel*>(index.model());
 
-    QBrush brush(Qt::gray);
+    QBrush brush(Qt::white);
     painter->fillRect(option.rect, brush);
 
     if (index.row() > 0 && !(option.state & QStyle::State_Selected)) {
