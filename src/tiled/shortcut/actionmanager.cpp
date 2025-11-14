@@ -38,27 +38,12 @@
 static const char *kDefaultShortcutPropertyName = "defaultShortcuts";
 static const char *kIdPropertyName = "id";
 static const char *kAuthorName = "qt";
-static const char *kFileID = "fileID";
 
 ActionManager::ActionManager(const QString &fileName, QObject *parent)
     : QObject(parent)
     , mFileName(fileName)
 {
 
-}
-
-void ActionManager::setActionFileID(QAction *action, const QString &fileID)
-{
-    action->setProperty(kFileID, fileID);
-}
-
-QString ActionManager::actionFileID(const QAction *action)
-{
-    QVariant v = action->property(kFileID);
-    if (v.isValid()) {
-        return v.value<QString>();
-    }
-    return action->text();
 }
 
 QList<QAction *> ActionManager::registeredActions() const
@@ -79,7 +64,12 @@ void ActionManager::registerAction(QAction *action, const QString &context, cons
 
 void ActionManager::registerAction(QAction *action, const QString &context, const QString &category, const QString &fileID)
 {
-    ActionIdentifier ident{ QLatin1String(kAuthorName), context, category, fileID };
+    registerAction(action, context, category, actionFileID(action), actionLabel(action));
+}
+
+void ActionManager::registerAction(QAction *action, const QString &context, const QString &category, const QString &fileID, const QString &label)
+{
+    ActionIdentifier ident{ QLatin1String(kAuthorName), context, category, fileID, label };
     action->setProperty(kIdPropertyName, QVariant::fromValue(ident));
     registerAction(action);
 }
@@ -114,7 +104,12 @@ QString ActionManager::categoryForAction(QAction *action)
 
 QString ActionManager::fileIDForAction(QAction *action)
 {
-    return action->property(kIdPropertyName).value<ActionIdentifier>().name;
+    return action->property(kIdPropertyName).value<ActionIdentifier>().fileID;
+}
+
+QString ActionManager::labelForAction(QAction *action)
+{
+    return action->property(kIdPropertyName).value<ActionIdentifier>().label;
 }
 
 bool ActionManager::save(QString &error)
@@ -151,6 +146,16 @@ bool ActionManager::load(QString &error)
         }
     }
     return true;
+}
+
+QString ActionManager::actionFileID(const QAction *action)
+{
+    return action->text();
+}
+
+QString ActionManager::actionLabel(const QAction *action)
+{
+    return action->text().replace(QStringLiteral("&"), QString()).replace(QStringLiteral("..."), QString());
 }
 
 void ActionManager::emitShortcutEditedForAllActions()

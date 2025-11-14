@@ -279,8 +279,8 @@ void ShortcutEditorModel::setupModelData(ShortcutEditorModelItem *parent)
             ShortcutEditorModelItem *categoryLevelItem = new ShortcutEditorModelItem({categoryLevel, QVariant::fromValue(nullAction)}, contextLevelItem);
             contextLevelItem->appendChild(categoryLevelItem);
             for (QAction *action : actionsMap[contextLevel][categoryLevel]) {
-                QString name = action->text().replace(QStringLiteral("&"), QString());
-                if (name.isEmpty() || !action)
+                QString name = actionManager->labelForAction(action);
+                if (name.isEmpty())
                     continue;
 
                 ShortcutEditorModelItem *actionLevelItem = new ShortcutEditorModelItem({name, QVariant::fromValue(reinterpret_cast<void *>(action))}, categoryLevelItem);

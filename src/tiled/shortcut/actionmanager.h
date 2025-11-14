@@ -43,14 +43,12 @@ public:
     ActionManager(const QString &fileName, QObject *parent = nullptr);
     ~ActionManager() = default;
 
-    static void setActionFileID(QAction *action, const QString &fileID);
-    static QString actionFileID(const QAction *action);
-
     QList<QAction*> registeredActions() const;
 
     void registerAction(QAction *action);
     void registerAction(QAction *action, const QString &context, const QString &category);
     void registerAction(QAction *action, const QString &context, const QString &category, const QString &fileID);
+    void registerAction(QAction *action, const QString &context, const QString &category, const QString &fileID, const QString &label);
     QAction *registerAction(const QString &name, const QString &shortcut, const QString &context, const QString &category);
 
     QAction *findAction(const QString &text);
@@ -58,6 +56,7 @@ public:
     QString contextForAction(QAction *action);
     QString categoryForAction(QAction *action);
     QString fileIDForAction(QAction *action);
+    QString labelForAction(QAction *action);
 
     bool save(QString &error);
     bool load(QString &error);
@@ -65,6 +64,10 @@ public:
 
 signals:
     void shortcutEdited(QAction *action);
+
+protected:
+    QString actionFileID(const QAction *action);
+    QString actionLabel(const QAction *action);
 
 private:
     QString mFileName;
@@ -75,7 +78,8 @@ struct ActionIdentifier {
     QString author;
     QString context;
     QString category;
-    QString name;
+    QString fileID;
+    QString label;
 };
 
 Q_DECLARE_METATYPE(ActionIdentifier)
