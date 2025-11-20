@@ -249,10 +249,12 @@ void MiniMapRenderWorker::work()
 
     mShadowMap->mMapComposite->bmpBlender()->flush(mRenderer, paintRect.toAlignedRect(), QPoint());
 
+    OrderedCellsTemporaries vars;
+
     MapComposite::ZOrderList zorder = mShadowMap->mMapComposite->zOrder();
     foreach (MapComposite::ZOrderItem zo, zorder) {
         if (zo.group)
-            mRenderer->drawTileLayerGroup(&painter, zo.group, paintRect);
+            mRenderer->drawTileLayerGroup(&painter, zo.group, paintRect, reinterpret_cast<ZTileLayerGroupRenderData*>(&vars));
         else if (TileLayer *tl = zo.layer->asTileLayer()) {
             if (tl->name().contains(QLatin1String("NoRender")))
                 continue;

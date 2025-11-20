@@ -1114,9 +1114,11 @@ MapImageData MapImageRenderWorker::generateMapImage(MapComposite *mapComposite)
                            QPainter::Antialiasing);
     painter.setTransform(QTransform::fromScale(scale, scale).translate(-sceneRect.left(), -sceneRect.top()));
 
+    OrderedCellsTemporaries vars;
+
     foreach (MapComposite::ZOrderItem zo, mapComposite->zOrder()) {
         if (zo.group) {
-            renderer->drawTileLayerGroup(&painter, zo.group);
+            renderer->drawTileLayerGroup(&painter, zo.group, QRectF(), reinterpret_cast<ZTileLayerGroupRenderData*>(&vars));
         } else if (TileLayer *tl = zo.layer->asTileLayer()) {
             if (tl->name().contains(QLatin1String("NoRender")))
                 continue;

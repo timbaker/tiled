@@ -84,7 +84,8 @@ void CompositeLayerGroupItem::paint(QPainter *p, const QStyleOptionGraphicsItem 
     if (mLayerGroup->needsSynch() /*mBoundingRect != mLayerGroup->boundingRect(mRenderer)*/)
         return;
 
-    mRenderer->drawTileLayerGroup(p, mLayerGroup, option->exposedRect);
+    OrderedCellsTemporaries vars;
+    mRenderer->drawTileLayerGroup(p, mLayerGroup, option->exposedRect, reinterpret_cast<ZTileLayerGroupRenderData*>(&vars));
 #if 1 && !defined(QT_NO_DEBUG)
     QPen pen(Qt::white);
     pen.setCosmetic(true);

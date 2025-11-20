@@ -74,7 +74,8 @@ void CompositeLayerGroupItem::paint(QPainter *p, const QStyleOptionGraphicsItem 
     if (mLayerGroup->needsSynch() /*mBoundingRect != mLayerGroup->boundingRect(mRenderer)*/)
         return;
 
-    mRenderer->drawTileLayerGroup(p, mLayerGroup, option->exposedRect);
+    OrderedCellsTemporaries vars;
+    mRenderer->drawTileLayerGroup(p, mLayerGroup, option->exposedRect, reinterpret_cast<ZTileLayerGroupRenderData*>(&vars));
 #ifdef _DEBUG
     p->drawRect(mBoundingRect);
 #endif

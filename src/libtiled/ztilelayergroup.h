@@ -38,6 +38,7 @@ class Cell;
 class Map;
 class MapRenderer;
 class TileLayer;
+typedef void *ZTileLayerGroupRenderData;
 
 class TILEDSHARED_EXPORT ZTileLayerGroup
 {
@@ -58,7 +59,7 @@ public:
     virtual QRectF boundingRect(const MapRenderer *renderer) const;
 
     virtual bool orderedCellsAt(const QPoint &point, QVector<const Cell*>& cells,
-                                QVector<qreal> &opacities) const = 0;
+                                QVector<qreal> &opacities, ZTileLayerGroupRenderData *renderData = nullptr) const = 0;
     virtual void prepareDrawing(const MapRenderer *renderer, const QRect &rect) = 0;
 
     virtual bool useImageBlack(int x, int y) const;

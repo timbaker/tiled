@@ -222,7 +222,8 @@ static QString sAboveLot = QStringLiteral("AboveLot");
 
 bool CompositeLayerGroup::orderedCellsAt(const QPoint &pos,
                                          QVector<const Cell *> &cells,
-                                         QVector<qreal> &opacities) const
+                                         QVector<qreal> &opacities,
+                                         ZTileLayerGroupRenderData *renderData) const
 {
     QRegion suppressRgn;
     if (mOwner->levelRecursive() + level() == mOwner->root()->suppressLevel()) {
@@ -230,9 +231,13 @@ bool CompositeLayerGroup::orderedCellsAt(const QPoint &pos,
     }
     const QPoint rootPos = pos + mOwner->originRecursive();
 
-    QVector<OrderedCell> orderedCells;
-    QVector<OrderedCell> cellsToKeep;
-    QVector<OrderedCell> aboveLotCells;
+    OrderedCellsTemporaries &vars = *reinterpret_cast<OrderedCellsTemporaries*>(renderData);
+    QVector<OrderedCell> &orderedCells = vars.orderedCells;
+    QVector<OrderedCell> &cellsToKeep = vars.cellsToKeep;
+    QVector<OrderedCell> &aboveLotCells = vars.aboveLotCells;
+
+    cellsToKeep.clear();
+    aboveLotCells.clear();
 
     // Get tiles from cell maps at this location
     for (const SubMapLayers& subMapLayer : qAsConst(mPreparedSubMapLayers)) {

@@ -41,6 +41,7 @@ class MapObject;
 class TileLayer;
 #ifdef ZOMBOID
 class ZTileLayerGroup;
+typedef void *ZTileLayerGroupRenderData;
 #endif
 class ImageLayer;
 
@@ -120,7 +121,7 @@ public:
 
 #ifdef ZOMBOID
     virtual void drawTileLayerGroup(QPainter *painter, ZTileLayerGroup *layerGroup,
-                               const QRectF &exposed = QRectF()) const = 0;
+                               const QRectF &exposed = QRectF(), ZTileLayerGroupRenderData *renderData = nullptr) const = 0;
 #endif
 
     /**

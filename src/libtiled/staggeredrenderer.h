@@ -70,36 +70,37 @@ class TILEDSHARED_EXPORT StaggeredRenderer : public MapRenderer
 public:
     StaggeredRenderer(const Map *map) : MapRenderer(map) {}
 
-    QSize mapSize() const;
+    QSize mapSize() const override;
 
 #ifdef ZOMBOID
-    QRect boundingRect(const QRect &rect, int level = 0) const;
+    QRect boundingRect(const QRect &rect, int level = 0) const override;
 #else
     QRect boundingRect(const QRect &rect) const;
 #endif
 
-    QRectF boundingRect(const MapObject *object) const;
-    QPainterPath shape(const MapObject *object) const;
+    QRectF boundingRect(const MapObject *object) const override;
+    QPainterPath shape(const MapObject *object) const override;
 
 #ifdef ZOMBOID
     void drawGrid(QPainter *painter, const QRectF &rect,
                   QColor gridColor, int level = 0,
-                  const QRect &tileBounds = QRect()) const;
+                  const QRect &tileBounds = QRect()) const override;
 #else
     void drawGrid(QPainter *painter, const QRectF &rect,
                   QColor gridColor) const;
 #endif
 
     void drawTileLayer(QPainter *painter, const TileLayer *layer,
-                       const QRectF &exposed = QRectF()) const;
+                       const QRectF &exposed = QRectF()) const override;
 
 #ifdef ZOMBOID
    void drawTileLayerGroup(QPainter *painter, ZTileLayerGroup *layerGroup,
-                               const QRectF &exposed = QRectF()) const
+                               const QRectF &exposed = QRectF(), ZTileLayerGroupRenderData *renderData = nullptr) const override
    {
        Q_UNUSED(painter)
        Q_UNUSED(layerGroup)
        Q_UNUSED(exposed)
+       Q_UNUSED(renderData)
    }
 #endif
 
@@ -108,38 +109,38 @@ public:
                            const QColor &color,
 #ifdef ZOMBOID
                             const QRectF &exposed,
-                            int level = 0) const;
+                            int level = 0) const override;
 #else
-                           const QRectF &exposed) const;
+                           const QRectF &exposed) const override;
 #endif
 
     void drawMapObject(QPainter *painter,
                        const MapObject *object,
-                       const QColor &color) const;
+                       const QColor &color) const override;
 
 #ifdef ZOMBOID
     virtual void drawFancyRectangle(QPainter *painter,
                                 const QRectF &tileBounds,
                                 const QColor &color,
-                                int level = 0) const;
+                                int level = 0) const override;
 #endif
 
     void drawImageLayer(QPainter *painter,
                         const ImageLayer *layer,
-                        const QRectF &exposed = QRectF()) const;
+                        const QRectF &exposed = QRectF()) const override;
 
 #ifdef ZOMBOID
     using MapRenderer::pixelToTileCoords;
-    QPointF pixelToTileCoords(qreal x, qreal y, int level = 0) const;
+    QPointF pixelToTileCoords(qreal x, qreal y, int level = 0) const override;
 
     using MapRenderer::tileToPixelCoords;
-    QPointF tileToPixelCoords(qreal x, qreal y, int level = 0) const;
+    QPointF tileToPixelCoords(qreal x, qreal y, int level = 0) const override;
 #else
     using MapRenderer::pixelToTileCoords;
-    QPointF pixelToTileCoords(qreal x, qreal y) const;
+    QPointF pixelToTileCoords(qreal x, qreal y) const override;
 
     using MapRenderer::tileToPixelCoords;
-    QPointF tileToPixelCoords(qreal x, qreal y) const;
+    QPointF tileToPixelCoords(qreal x, qreal y) const override;
 #endif
 
     // Functions specific to this type of renderer

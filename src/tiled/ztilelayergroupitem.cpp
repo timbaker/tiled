@@ -20,11 +20,12 @@
 
 #include "ztilelayergroupitem.h"
 
+#include "mapcomposite.h"
 #include "tilelayer.h"
-#include "ztilelayergroup.h"
 #include "map.h"
 #include "mapdocument.h"
 #include "maprenderer.h"
+#include "ztilelayergroup.h"
 
 #include <QPainter>
 #include <QStyleOptionGraphicsItem>
@@ -78,7 +79,8 @@ void ZTileLayerGroupItem::paint(QPainter *painter,
 {
     if (mBoundingRect.isNull())
         return;
-    mRenderer->drawTileLayerGroup(painter, mLayerGroup, option->exposedRect);
+    OrderedCellsTemporaries vars;
+    mRenderer->drawTileLayerGroup(painter, mLayerGroup, option->exposedRect, reinterpret_cast<ZTileLayerGroupRenderData*>(&vars));
 #ifdef _DEBUG
 #if 0
     Layer *layer = mLayerGroup->mLayers.isEmpty() ? 0 : mLayerGroup->mLayers.first();

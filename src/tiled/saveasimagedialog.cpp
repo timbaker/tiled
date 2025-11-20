@@ -239,11 +239,12 @@ void SaveAsImageDialog::accept()
     painter.translate(-sceneRect.left(), -sceneRect.top());
 
     MapComposite::ZOrderList zorder = mapComposite->zOrder();
+    OrderedCellsTemporaries vars;
     foreach (MapComposite::ZOrderItem zo, zorder) {
         if (zo.group) {
             if (visibleLayersOnly && !zo.group->isVisible())
                 continue;
-            renderer->drawTileLayerGroup(&painter, zo.group);
+            renderer->drawTileLayerGroup(&painter, zo.group, QRectF(), reinterpret_cast<ZTileLayerGroupRenderData*>(&vars));
         } else if (TileLayer *tl = zo.layer->asTileLayer()) {
             if (visibleLayersOnly && !tl->isVisible())
                 continue;

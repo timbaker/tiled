@@ -375,7 +375,7 @@ void ZLevelRenderer::drawTileLayer(QPainter *painter,
 
 #ifdef ZOMBOID
 void ZLevelRenderer::drawTileLayerGroup(QPainter *painter, ZTileLayerGroup *layerGroup,
-                            const QRectF &exposed) const
+                            const QRectF &exposed, ZTileLayerGroupRenderData *renderData) const
 {
     const int tileWidth = DISPLAY_TILE_WIDTH;
     const int tileHeight = DISPLAY_TILE_HEIGHT;
@@ -444,7 +444,7 @@ void ZLevelRenderer::drawTileLayerGroup(QPainter *painter, ZTileLayerGroup *laye
 
         for (int x = startPos.x(); x < rect.right(); x += tileWidth) {
             cells.resize(0);
-            if (layerGroup->orderedCellsAt(columnItr, cells, opacities)) {
+            if (layerGroup->orderedCellsAt(columnItr, cells, opacities, renderData)) {
                 for (int i = 0; i < cells.size(); i++) {
                     // Multi-threading
                     if (mAbortDrawing && *mAbortDrawing) {

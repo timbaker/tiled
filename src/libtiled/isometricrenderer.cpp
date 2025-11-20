@@ -340,7 +340,7 @@ void IsometricRenderer::drawTileLayer(QPainter *painter,
 
 #ifdef ZOMBOID
 void IsometricRenderer::drawTileLayerGroup(QPainter *painter, ZTileLayerGroup *layerGroup,
-                            const QRectF &exposed) const
+                            const QRectF &exposed, ZTileLayerGroupRenderData *renderData) const
 {
     const int tileWidth = map()->tileWidth();
     const int tileHeight = map()->tileHeight();
@@ -412,7 +412,7 @@ void IsometricRenderer::drawTileLayerGroup(QPainter *painter, ZTileLayerGroup *l
 
         for (int x = startPos.x(); x < rect.right(); x += tileWidth) {
             cells.resize(0);
-            if (layerGroup->orderedCellsAt(columnItr, cells, opacities)) {
+            if (layerGroup->orderedCellsAt(columnItr, cells, opacities, renderData)) {
                 for (int i = 0; i < cells.size(); i++) {
                     // Multi-threading
                     if (mAbortDrawing && *mAbortDrawing) {
