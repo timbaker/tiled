@@ -34,7 +34,9 @@
 class MapInfo;
 
 namespace Tiled {
+class Cell;
 class Layer;
+class TileLayer;
 namespace Internal {
 class BmpBlender;
 }
@@ -47,7 +49,44 @@ class BuildingFloor;
 }
 #endif
 
+class CompositeLayerGroup;
 class MapComposite;
+
+struct OrderedCell
+{
+    OrderedCell()
+        : layerGroup(nullptr)
+        , layerIndex(-1)
+        , layer(nullptr)
+        , cell(nullptr)
+        , opacity(1.0)
+    {
+
+    }
+
+    OrderedCell(const CompositeLayerGroup *layerGroup, int layerIndex, const Tiled::TileLayer *layer, const Tiled::Cell *cell, qreal opacity)
+        : layerGroup(layerGroup)
+        , layerIndex(layerIndex)
+        , layer(layer)
+        , cell(cell)
+        , opacity(opacity)
+    {
+
+    }
+
+    const CompositeLayerGroup *layerGroup;
+    int layerIndex;
+    const Tiled::TileLayer *layer;
+    const Tiled::Cell *cell;
+    qreal opacity;
+};
+
+struct OrderedCellsTemporaries
+{
+    QVector<OrderedCell> orderedCells;
+    QVector<OrderedCell> cellsToKeep;
+    QVector<OrderedCell> aboveLotCells;
+};
 
 class CompositeLayerGroup : public Tiled::ZTileLayerGroup
 {
@@ -58,9 +97,14 @@ public:
     void removeTileLayer(Tiled::TileLayer *layer);
 
     void prepareDrawing(const Tiled::MapRenderer *renderer, const QRect &rect);
+private:
+    void prepareDrawing(const Tiled::MapRenderer *renderer, const QRect &rect, CompositeLayerGroup *rootGroup);
+public:
     bool orderedCellsAt(const QPoint &pos, QVector<const Tiled::Cell*>& cells,
                         QVector<qreal> &opacities) const;
-
+private:
+    void orderedCellsAt(const QPoint &pos, const QRegion &suppressRgn, const QPoint &rootPos, QVector<OrderedCell> &cells);
+public:
     QRect bounds() const;
     QMargins drawMargins() const;
 
@@ -69,7 +113,13 @@ public:
     bool useImageBlack(int x, int y) const;
 
     void prepareDrawing2();
-    bool orderedCellsAt2(const QPoint &pos, QVector<const Tiled::Cell*>& cells) const;
+private:
+    void prepareDrawing2(CompositeLayerGroup *rootGroup);
+public:
+    bool orderedCellsAt2(const QPoint &pos, OrderedCellsTemporaries &vars, QVector<const Tiled::Cell*>& cells) const;
+private:
+    void orderedCellsAt2(const QPoint &pos, QVector<OrderedCell>& cells) const;
+public:
 
     bool setLayerVisibility(const QString &layerName, bool visible);
     bool setLayerVisibility(Tiled::TileLayer *tl, bool visible);
@@ -168,7 +218,8 @@ private:
         QRect mBounds;
     };
 
-    QVector<SubMapLayers> mPreparedSubMapLayers;
+    QVector<SubMapLayers> mPreparedSubMapLayers; // cell
+    QVector<SubMapLayers> mPreparedSubMapLayers2; // building
     QVector<SubMapLayers> mVisibleSubMapLayers;
 
     QVector<Tiled::TileLayer*> mBmpBlendLayers;
@@ -341,6 +392,11 @@ public:
     bool isAdjacentMap()/* const*/
     { return mIsAdjacentMap;/*mParent ? mParent->mAdjacentMaps.contains(this) : false;*/ }
 
+    void setCellMap(bool b)
+    { mIsCellMap = b; }
+    bool isCellMap() const
+    { return mIsCellMap; }
+
     bool waitingForMapsToLoad() const;
 
     void setSuppressRegion(const QRegion &rgn, int level);
@@ -400,6 +456,7 @@ private:
     bool mSavedShowBMPTiles;
     bool mSavedShowMapTiles;
     bool mIsAdjacentMap;
+    bool mIsCellMap;
 
     Tiled::Internal::BmpBlender *mBmpBlender;
 

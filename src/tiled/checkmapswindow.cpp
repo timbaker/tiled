@@ -218,6 +218,7 @@ void CheckMapsWindow::check(MapDocument *doc)
     }
 
     QVector<const Cell*> cells;
+    OrderedCellsTemporaries vars;
     int numLevels = mc->layerGroupCount();
     for (int level = numLevels - 1; level >= 0; --level) {
         CompositeLayerGroup *lg = mc->tileLayersForLevel(level);
@@ -225,7 +226,7 @@ void CheckMapsWindow::check(MapDocument *doc)
         for (int y = 0; y < map->height(); y++) {
             for (int x = 0; x < map->width(); x++) {
                 cells.clear();
-                if (!lg->orderedCellsAt2(QPoint(x, y), cells))
+                if (!lg->orderedCellsAt2(QPoint(x, y), vars, cells))
                     continue;
                 foreach (const Cell *cell, cells) {
                     if (cell->isEmpty())

@@ -91,6 +91,7 @@ MapDocument::MapDocument(Map *map, const QString &fileName):
         mMap->addMapLevel(new MapLevel(mMap, z));
     }
     mMapComposite = new MapComposite(MapManager::instance()->newFromMap(map, fileName));
+    mMapComposite->setCellMap(true);
     connect(mMapComposite->bmpBlender(), &BmpBlender::regionAltered,
             this, &MapDocument::bmpBlenderRegionAltered);
     connect(this, &MapDocument::layerAdded,

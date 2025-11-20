@@ -74,6 +74,7 @@ bool NewMapBinaryFile::write(MapComposite *mapComposite, const QVector<Tiled::Pr
 
     Tile *missingTile = Tiled::Internal::TilesetManager::instance()->missingTile();
     QVector<const Tiled::Cell *> cells(40);
+    OrderedCellsTemporaries vars;
     for (CompositeLayerGroup *lg : mapComposite->layerGroups()) {
         lg->prepareDrawing2();
         int d = (mapInfo->orientation() == Map::Isometric) ? -3 : 0;
@@ -90,7 +91,7 @@ bool NewMapBinaryFile::write(MapComposite *mapComposite, const QVector<Tiled::Pr
                 if (ly >= mapHeight) continue;
                 LotFile::Square& square = mGridData[lx][ly][lg->level()];
                 cells.resize(0);
-                lg->orderedCellsAt2(QPoint(x, y), cells);
+                lg->orderedCellsAt2(QPoint(x, y), vars, cells);
                 for (const Tiled::Cell *cell : cells) {
                     if (cell->tile == missingTile) continue;
                     LotFile::Entry *e = new LotFile::Entry(cellToGid(cell));
