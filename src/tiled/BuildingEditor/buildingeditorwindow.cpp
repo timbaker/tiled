@@ -294,7 +294,7 @@ void EditorWindowPerDocumentStuff::autoSaveTimeout()
             do {
                 fileName = QString::fromLatin1("%1/untitled%2.tbx").arg(dir).arg(n);
                 ++n;
-            } while (QFileInfo(fileName + suffix).exists());
+            } while (QFileInfo::exists(fileName + suffix));
         }
         fileName += suffix;
         mAutoSaveFileName = fileName;
@@ -1391,7 +1391,7 @@ void BuildingEditorWindow::exportNewBinary()
     getTopStaircaseTiles(northStairTiles, westStairTiles);
 
     QString luaCode;
-    for (const QString& fileName : fileNames) {
+    for (const QString& fileName : qAsConst(fileNames)) {
         exportNewBinaryFile(&dialog, fileName, northStairTiles, westStairTiles, luaCode);
     }
 
@@ -1973,9 +1973,9 @@ void BuildingEditorWindow::getTopStaircaseTiles(QSet<QString> &northStairTiles, 
 {
     TileDefWatcher *tileDefWatcher = getTileDefWatcher();
     tileDefWatcher->check();
-    for (TileDefWatcherFile *watcherFile : tileDefWatcher->mFiles) {
+    for (TileDefWatcherFile *watcherFile : qAsConst(tileDefWatcher->mFiles)) {
         for (TileDefTileset* tdts : watcherFile->mTileDefFile->tilesets()) {
-            for (TileDefTile* tdt : tdts->mTiles) {
+            for (TileDefTile* tdt : qAsConst(tdts->mTiles)) {
                 if (tdt->mProperties.contains(QStringLiteral("stairsTN"))) {
                     northStairTiles += BuildingTilesMgr::nameForTile(tdt->tileset()->mName, tdt->id());
                 }

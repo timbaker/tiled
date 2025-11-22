@@ -95,6 +95,8 @@ public:
 
     }
 
+    MapInfo(Tiled::Map *map);
+
     bool isValid() const { return mWidth > 0 && mHeight > 0; }
 
     Tiled::Map::Orientation orientation() const { return mOrientation; }
@@ -120,6 +122,8 @@ public:
         mProperties = properties;
     }
     Tiled::Properties &properties() { return mProperties; }
+
+    bool isBasementAccess() const;
 
 private:
     Tiled::Map::Orientation mOrientation;

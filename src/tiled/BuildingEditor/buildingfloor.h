@@ -351,6 +351,7 @@ class Tileset;
 namespace Internal {
 class FileSystemWatcher;
 class TileDefFile;
+class TileDefTile;
 class TileDefTileset;
 
 class TileDefWatcherFile
@@ -373,7 +374,9 @@ public:
 
     void check();
     Tiled::Internal::TileDefTileset *tileset(const QString &tilesetName);
+    Tiled::Internal::TileDefTile *tile(const QString &tilesetName, int tileIndex);
     TileDefWatcherFile *fileByName(const QString &filePath);
+    TileDefWatcherFile *fileByName(const QString &filePath, const QList<TileDefWatcherFile*> &files);
 
 signals:
     void tilePropertiesChanged();

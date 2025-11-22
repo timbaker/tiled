@@ -24,9 +24,11 @@
 #include "zprogress.h"
 
 #include "map.h"
+#include "maplevel.h"
 #include "mapreader.h"
 #include "mapobject.h"
 #include "objectgroup.h"
+#include "propertiesgrid.h"
 #include "tile.h"
 #include "tilelayer.h"
 #include "tileset.h"
@@ -992,4 +994,34 @@ void MapReaderWorker::debugJobs(const char *msg)
         out += QString::fromLatin1("    %1 priority=%2\n").arg(QFileInfo(job.mapInfo->path()).fileName()).arg(job.priority);
     }
     noise() << "MRW #" << mID << ": " << msg << "\n" << out;
+}
+
+MapInfo::MapInfo(Tiled::Map *map)
+    : mOrientation(map->orientation())
+    , mWidth(map->width())
+    , mHeight(map->height())
+    , mTileWidth(map->tileWidth())
+    , mTileHeight(map->tileHeight())
+    , mMap(map)
+    , mPlaceholder(false)
+    , mBeingEdited(false)
+#ifdef WORLDED
+    , mMapRefCount(0)
+    , mReferenceEpoch(0)
+#endif
+    , mLoading(false)
+{
+}
+
+bool MapInfo::isBasementAccess() const
+{
+    if (map() == nullptr) {
+        return false;
+    }
+    for (MapLevel *mapLevel : map()->mapLevels()) {
+        if (!mapLevel->squarePropertiesGrid()->isEmpty()) {
+            return true;
+        }
+    }
+    return false;
 }

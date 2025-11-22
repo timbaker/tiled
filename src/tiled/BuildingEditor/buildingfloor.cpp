@@ -2431,14 +2431,14 @@ TileDefWatcher::TileDefWatcher() :
 
 void TileDefWatcher::check()
 {
-    for (TileDefWatcherFile *watcherFile : mFiles) {
+    for (TileDefWatcherFile *watcherFile : qAsConst(mFiles)) {
         watcherFile->check(*mWatcher);
     }
 }
 
 TileDefTileset *TileDefWatcher::tileset(const QString &tilesetName)
 {
-    for (TileDefWatcherFile *watcherFile : mFiles) {
+    for (TileDefWatcherFile *watcherFile : qAsConst(mFiles)) {
         if (TileDefTileset *tileset = watcherFile->mTileDefFile->tileset(tilesetName)) {
             return tileset;
         }
@@ -2446,9 +2446,22 @@ TileDefTileset *TileDefWatcher::tileset(const QString &tilesetName)
     return nullptr;
 }
 
+TileDefTile *TileDefWatcher::tile(const QString &tilesetName, int tileIndex)
+{
+    if (TileDefTileset *tileset1 = tileset(tilesetName)) {
+        return tileset1->tileAt(tileIndex);
+    }
+    return nullptr;
+}
+
 TileDefWatcherFile *TileDefWatcher::fileByName(const QString &filePath)
 {
-    for (TileDefWatcherFile *watcherFile : mFiles) {
+    return fileByName(filePath, mFiles);
+}
+
+TileDefWatcherFile *TileDefWatcher::fileByName(const QString &filePath, const QList<TileDefWatcherFile *> &files)
+{
+    for (TileDefWatcherFile *watcherFile : files) {
         if (watcherFile->mFilePath == filePath) {
             return watcherFile;
         }
@@ -2458,15 +2471,27 @@ TileDefWatcherFile *TileDefWatcher::fileByName(const QString &filePath)
 
 void TileDefWatcher::preferencesChanged(const QStringList &tilePropertiesFiles)
 {
+    // Files may be added, removed or reordered
+    QList<TileDefWatcherFile*> files = mFiles;
+    mFiles.clear();
     for (const QString &tilePropertiesFilePath : tilePropertiesFiles) {
         QFileInfo fileInfo(tilePropertiesFilePath);
         QString canonicalPath = fileInfo.canonicalFilePath();
-        TileDefWatcherFile *watcherFile = fileByName(canonicalPath);
+        TileDefWatcherFile *watcherFile = fileByName(canonicalPath, files);
         if (watcherFile != nullptr) {
+            if (!mFiles.contains(watcherFile)) {
+                mFiles += watcherFile;
+            }
             continue;
         }
         watcherFile = new TileDefWatcherFile(canonicalPath);
         mFiles += watcherFile;
+        files += watcherFile;
+    }
+    for (TileDefWatcherFile *file : qAsConst(files)) {
+        if (!mFiles.contains(file)) {
+            delete file;
+        }
     }
 }
 

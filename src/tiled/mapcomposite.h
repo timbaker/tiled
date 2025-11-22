@@ -226,6 +226,7 @@ private:
 
     QVector<SubMapLayers> mPreparedSubMapLayers; // cell
     QVector<SubMapLayers> mPreparedSubMapLayers2; // building
+    QVector<SubMapLayers> mPreparedSubMapLayers3; // basement access
     QVector<SubMapLayers> mVisibleSubMapLayers;
 
     QVector<Tiled::TileLayer*> mBmpBlendLayers;
