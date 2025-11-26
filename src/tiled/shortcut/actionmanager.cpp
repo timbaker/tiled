@@ -64,7 +64,7 @@ void ActionManager::registerAction(QAction *action, const QString &context, cons
 
 void ActionManager::registerAction(QAction *action, const QString &context, const QString &category, const QString &fileID)
 {
-    registerAction(action, context, category, actionFileID(action), actionLabel(action));
+    registerAction(action, context, category, fileID, actionLabel(action));
 }
 
 void ActionManager::registerAction(QAction *action, const QString &context, const QString &category, const QString &fileID, const QString &label)

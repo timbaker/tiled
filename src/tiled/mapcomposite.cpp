@@ -2269,6 +2269,7 @@ MapComposite *MapComposite::cropToMinimum(QPoint &offset)
     int minY = std::numeric_limits<int>::max();
     int maxX = std::numeric_limits<int>::min();
     int maxY = std::numeric_limits<int>::min();
+    synch();
     for (CompositeLayerGroup *lg : layerGroups()) {
         lg->prepareDrawing2();
         int d = (mapInfo->orientation() == Map::Isometric) ? -3 : 0;
