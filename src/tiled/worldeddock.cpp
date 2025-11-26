@@ -21,6 +21,7 @@
 #include "documentmanager.h"
 #include "mainwindow.h"
 #include "mapdocument.h"
+#include "preferences.h"
 #include "ZomboidScene.h"
 
 #include "worlded/worldcell.h"
@@ -36,8 +37,8 @@ using namespace Tiled::Internal;
 
 WorldCellLotModel::WorldCellLotModel(QObject *parent) :
     QAbstractItemModel(parent),
-    mRoot(0),
-    mCell(0)
+    mRoot(nullptr),
+    mCell(nullptr)
 {
     connect(WorldEd::WorldEdMgr::instance(), &WorldEd::WorldEdMgr::levelVisibilityChanged,
             this, &WorldCellLotModel::levelVisibilityChanged);
@@ -196,32 +197,33 @@ WorldCellLevel *WorldCellLotModel::toLevel(const QModelIndex &index) const
 {
     if (Item *item = toItem(index))
         return item->level;
-    return 0;
+    return nullptr;
 }
 
 WorldCellLot *WorldCellLotModel::toLot(const QModelIndex &index) const
 {
     if (Item *item = toItem(index))
         return item->lot;
-    return 0;
+    return nullptr;
 }
 
-void WorldCellLotModel::setWorldCell(WorldCell *cell)
+void WorldCellLotModel::setWorldCell(WorldCell *cell, const WorldCellLotList &overlappingLots)
 {
     beginResetModel();
 
     delete mRoot;
-    mRoot = 0;
+    mRoot = nullptr;
 
     mCell = cell;
 
     if (mCell) {
         mRoot = new Item;
-
+        WorldCellLotList lots = mCell->lots();
+        lots += overlappingLots;
         for (int i = 0; i < mCell->levelCount(); i++) {
             WorldCellLevel *cellLevel = cell->levelAt(i);
             Item *levelItem = new Item(mRoot, 0, cellLevel);
-            foreach (WorldCellLot *lot, mCell->lots()) {
+            for (WorldCellLot *lot : lots) {
                 if (lot->level() == cellLevel->z()) {
                     new Item(levelItem, 0, lot);
                 }
@@ -248,28 +250,32 @@ WorldCellLotModel::Item *WorldCellLotModel::toItem(const QModelIndex &index) con
 {
     if (index.isValid())
         return static_cast<Item*>(index.internalPointer());
-    return 0;
+    return nullptr;
 }
 
 WorldCellLotModel::Item *WorldCellLotModel::toItem(WorldCellLevel *level) const
 {
     if (!mRoot)
-        return 0;
-    foreach (Item *item, mRoot->children)
-        if (item->level == level)
+        return nullptr;
+    for (Item *item : qAsConst(mRoot->children)) {
+        if (item->level == level) {
             return item;
-    return 0;
+        }
+    }
+    return nullptr;
 }
 
 WorldCellLotModel::Item *WorldCellLotModel::toItem(WorldCellLot *lot) const
 {
     if (!mRoot)
-        return 0;
-    Item *parent = toItem(lot->cell()->levelForZ(lot->level()));
-    foreach (Item *item, parent->children)
-        if (item->lot == lot)
+        return nullptr;
+    Item *parent = toItem(mCell->levelForZ(lot->level()));
+    for (Item *item : qAsConst(parent->children)) {
+        if (item->lot == lot) {
             return item;
-    return 0;
+        }
+    }
+    return nullptr;
 }
 
 QModelIndex WorldCellLotModel::index(WorldCellLotModel::Item *item) const
@@ -339,13 +345,16 @@ void WorldEdDock::setMapDocument(MapDocument *mapDoc)
     mDocument = mapDoc;
 
     if (mDocument) {
-        if (WorldCell *cell = WorldEd::WorldEdMgr::instance()->cellForMap(mDocument->fileName()))
-            ui->view->model()->setWorldCell(cell);
-        else
-            ui->view->model()->setWorldCell(0);
+        if (WorldCell *cell = WorldEd::WorldEdMgr::instance()->cellForMap(mDocument->fileName())) {
+            const WorldCellLotList overlappingLots = WorldEd::WorldEdMgr::instance()->getOverlappingLots(cell, !Preferences::instance()->showAdjacentMaps());
+            ui->view->model()->setWorldCell(cell, overlappingLots);
+        } else {
+            ui->view->model()->setWorldCell(nullptr, WorldCellLotList());
+        }
         restoreExpandedLevels(mDocument);
-    } else
-        ui->view->model()->setWorldCell(0);
+    } else {
+        ui->view->model()->setWorldCell(nullptr, WorldCellLotList());
+    }
 }
 
 void WorldEdDock::selectionChanged()
@@ -362,8 +371,10 @@ void WorldEdDock::selectionChanged()
             mSynching = true;
             WorldEd::WorldEdMgr::instance()->setSelectedLots(QSet<WorldCellLot*>() << lot);
             mSynching = false;
+                WorldCell *cell = ui->view->model()->cell();
+                QRect lotBounds = lot->bounds().translated((lot->cell()->pos() - cell->pos()) * 300);
             DocumentManager::instance()->ensureRectVisible(
-                        mDocument->renderer()->boundingRect(lot->bounds(), lot->level()));
+                        mDocument->renderer()->boundingRect(lotBounds, lot->level()));
             mDocument->setCurrentLevel(lot->level());
         }
         if (WorldCellLevel *level = ui->view->model()->toLevel(index)) {
@@ -388,15 +399,15 @@ void WorldEdDock::visibilityChanged(WorldCellLevel *level)
 
 void WorldEdDock::visibilityChanged(WorldCellLot *lot)
 {
-    ((ZomboidScene*)DocumentManager::instance()->currentMapScene())->lotManager()
-            .worldCellLotChanged(lot);
+    ZomboidScene *scene = (ZomboidScene*)DocumentManager::instance()->currentMapScene();
+    scene->lotManager().worldCellLotChanged(lot);
 }
 
 void WorldEdDock::beforeWorldChanged()
 {
     if (mDocument) {
         saveExpandedLevels(mDocument);
-        ui->view->model()->setWorldCell(0);
+        ui->view->model()->setWorldCell(nullptr, WorldCellLotList());
     }
 }
 
@@ -404,7 +415,8 @@ void WorldEdDock::afterWorldChanged()
 {
     if (mDocument) {
         if (WorldCell *cell = WorldEd::WorldEdMgr::instance()->cellForMap(mDocument->fileName())) {
-            ui->view->model()->setWorldCell(cell);
+            const WorldCellLotList overlappingLots = WorldEd::WorldEdMgr::instance()->getOverlappingLots(cell, !Preferences::instance()->showAdjacentMaps());
+            ui->view->model()->setWorldCell(cell, overlappingLots);
             restoreExpandedLevels(mDocument);
         }
     }
@@ -441,14 +453,15 @@ void WorldEdDock::restoreExpandedLevels(MapDocument *mapDoc)
     if (mExpandedLevels.contains(mapDoc)) {
         if (WorldCell *cell = ui->view->model()->cell()) {
             foreach (int z, mExpandedLevels[mapDoc]) {
-                if (WorldCellLevel *level = cell->levelForZ(z))
+                if (WorldCellLevel *level = cell->levelForZ(z)) {
                     ui->view->setExpanded(ui->view->model()->index(level), true);
+                }
             }
         }
         mExpandedLevels[mapDoc].clear();
-    } else
+    } else {
         ui->view->expandAll();
-
+    }
     // Also restore the selection
 //    if (Layer *layer = mapDoc->currentLayer())
 //        mView->setCurrentIndex(mView->model()->index(layer));

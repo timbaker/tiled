@@ -22,6 +22,7 @@
 #include "mapscene.h"
 #include "preferences.h"
 #include "worldconstants.h"
+#include "ZomboidScene.h"
 
 #include "worlded/world.h"
 #include "worlded/worldcell.h"
@@ -178,7 +179,8 @@ WorldCellLot *WorldLotTool::topmostLotAt(const QPointF &scenePos)
                 WorldCell *cell = mCell->world()->cellAt(mCell->pos() + QPoint(x, y));
                 if (!cell) continue;
                 foreach (WorldCellLevel *level, cell->levels()) {
-                    if (!level->isVisible()) continue;
+                    if (!level->isVisible())
+                        continue;
                     if (Preferences::instance()->highlightCurrentLayer()) {
                         int currentLevel = mapDocument()->currentLevel();
 //                        if (currentLevel == INVALID_LEVEL) {
@@ -192,7 +194,8 @@ WorldCellLot *WorldLotTool::topmostLotAt(const QPointF &scenePos)
                     }
                     QPoint tilePos = mScene->mapDocument()->renderer()->pixelToTileCoordsInt(scenePos, level->z());
                     foreach (WorldCellLot *lot, level->lots()) {
-                        if (!lot->isVisible()) continue;
+                        if (!lot->isVisible())
+                            continue;
                         QPoint origin;
                         switch (x) {
                         case -1: origin.setX(-300); break;
@@ -202,10 +205,24 @@ WorldCellLot *WorldLotTool::topmostLotAt(const QPointF &scenePos)
                         case -1: origin.setY(-300); break;
                         case 1: origin.setY(300); break;
                         }
-                        if (lot->bounds().contains(tilePos - origin))
+                        if (lot->bounds().contains(tilePos - origin)) {
                             hover = lot; // keep going to find the top-most one
+                        }
                     }
                 }
+            }
+        }
+        for (WorldCellLot *lot : ((ZomboidScene*)mScene)->lotManager().overlappingLots()) {
+            if (!lot->isVisible())
+                continue;
+            if (WorldCellLevel *worldLevel = mCell->levelForZ(lot->level())) {
+                if (!worldLevel->isVisible()) {
+                    continue;
+                }
+            }
+            QPoint tilePos = mapDocument()->renderer()->pixelToTileCoordsInt(scenePos, lot->level());
+            if (lot->bounds().translated((lot->cell()->pos() - mCell->pos()) * 300).contains(tilePos)) {
+                hover = lot;
             }
         }
     }
@@ -284,8 +301,8 @@ void WorldLotTool::updateHoverItem(WorldCellLot *lot)
 
 void WorldLotTool::beforeWorldChanged()
 {
-    mCell = 0;
-    mHoverLot = 0;
+    mCell = nullptr;
+    mHoverLot = nullptr;
 }
 
 void WorldLotTool::afterWorldChanged()

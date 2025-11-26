@@ -126,7 +126,7 @@ World *WorldEdMgr::worldAt(int n)
 {
     if (n >= 0 && n < mWorlds.size())
         return mWorlds[n];
-    return 0;
+    return nullptr;
 }
 
 QString WorldEdMgr::worldFileName(int n)
@@ -134,6 +134,33 @@ QString WorldEdMgr::worldFileName(int n)
     if (n >= 0 && n < mWorlds.size())
         return mWorldFileNames[n];
     return QString();
+}
+
+WorldCellLotList WorldEdMgr::getOverlappingLots(WorldCell *cell, bool includeAdjacentCells)
+{
+    WorldCellLotList result;
+    const QRect cellRect(cell->pos() * 300, QSize(300, 300));
+    const QRect adjacentRect(cell->x() - 1, cell->y() - 1, 3+1, 3+1);
+    for (int i = 0; i < mWorlds.size(); i++) {
+        World *world = mWorlds[i];
+        for (int cy = 0; cy < world->height(); cy++) {
+            for (int cx = 0; cx < world->width(); cx++) {
+                if (!includeAdjacentCells && adjacentRect.contains(cx, cy))
+                    continue;
+                WorldCell *cell2 = world->cellAt(cx, cy);
+                if (cell2 == nullptr)
+                    continue;
+                if (cell2 == cell)
+                    continue;
+                for (WorldCellLot *lot : cell2->lots()) {
+                    if (lot->bounds().translated(cell2->pos() * 300).intersects(cellRect)) {
+                        result += lot;
+                    }
+                }
+            }
+        }
+    }
+    return result;
 }
 
 void WorldEdMgr::fileChanged(const QString &fileName)

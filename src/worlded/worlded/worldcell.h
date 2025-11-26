@@ -166,8 +166,8 @@ public:
     /**
       * This is the default type for objects created in this group.
       */
-    void setType(ObjectType *type) { mType = type; }
-    ObjectType *type() { return mType; }
+    void setType(::ObjectType *type) { mType = type; }
+    ::ObjectType *type() { return mType; }
 
     bool operator ==(const WorldObjectGroup &other) const;
     bool operator !=(const WorldObjectGroup &other) const
@@ -176,7 +176,7 @@ public:
 private:
     QString mName;
     QColor mColor;
-    ObjectType *mType;
+    ::ObjectType *mType;
 };
 
 /**
@@ -187,7 +187,7 @@ class WorldCellObject : public PropertyHolder
 {
 public:
     WorldCellObject(WorldCell *cell,
-                    const QString &name, ObjectType *type,
+                    const QString &name, ::ObjectType *type,
                     WorldObjectGroup *group,
                     qreal x, qreal y, int level,
                     qreal width, qreal height);
@@ -200,8 +200,8 @@ public:
     void setGroup(WorldObjectGroup *group) { mGroup = group; }
     WorldObjectGroup *group() const { return mGroup; }
 
-    void setType(ObjectType *type) { mType = type; }
-    ObjectType *type() const { return mType; }
+    void setType(::ObjectType *type) { mType = type; }
+    ::ObjectType *type() const { return mType; }
 
     void setPos(const QPointF &pos) { mX = pos.x(), mY = pos.y(); }
     QPointF pos() const { return QPointF(mX, mY); }
@@ -234,7 +234,7 @@ public:
 private:
     QString mName;
     WorldObjectGroup *mGroup;
-    ObjectType *mType;
+    ::ObjectType *mType;
     qreal mX, mY;
     int mZ;
     qreal mWidth, mHeight;

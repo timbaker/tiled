@@ -24,6 +24,7 @@
 #include "mapobject.h"
 #include "mapreader.h"
 #include "objectgroup.h"
+#include "preferences.h"
 #include "tilelayer.h"
 #include "tileset.h"
 #include "zprogress.h"
@@ -61,6 +62,7 @@ void ZLotManager::setMapDocument(MapDocument *mapDoc)
         }
 
         mMapDocument = mapDoc;
+        mOverlappingLots.clear();
 
         if (mMapDocument) {
             connect(mapDocument(), &MapDocument::layerAdded,
@@ -75,12 +77,23 @@ void ZLotManager::setMapDocument(MapDocument *mapDoc)
                 this, &ZLotManager::onObjectsRemoved);
 
             Map *map = mapDocument()->map();
-            foreach (ObjectGroup *og, map->objectGroups())
+            for (ObjectGroup *og : map->objectGroups()) {
                 onObjectsAdded(og->objects());
+            }
 
-#if 1
             if (WorldCell *cell = WorldEd::WorldEdMgr::instance()->cellForMap(mMapDocument->fileName())) {
-                foreach (WorldCellLot *lot, cell->lots()) {
+                for (WorldCellLot *lot : cell->lots()) {
+                    MapInfo *mapInfo = MapManager::instance()->loadMap(lot->mapName(), QString(),
+                                                                       true, MapManager::PriorityLow);
+                    if (mapInfo) {
+                        if (mapInfo->isLoading())
+                            mMapsLoading2 += MapLoading2(mapInfo, lot);
+                        else
+                            setMapInfo(lot, mapInfo);
+                    }
+                }
+                mOverlappingLots = WorldEd::WorldEdMgr::instance()->getOverlappingLots(cell, !Preferences::instance()->showAdjacentMaps());
+                for (WorldCellLot *lot : qAsConst(mOverlappingLots)) {
                     MapInfo *mapInfo = MapManager::instance()->loadMap(lot->mapName(), QString(),
                                                                        true, MapManager::PriorityLow);
                     if (mapInfo) {
@@ -96,7 +109,6 @@ void ZLotManager::setMapDocument(MapDocument *mapDoc)
                     this, &ZLotManager::beforeWorldChanged);
             connect(WorldEd::WorldEdMgr::instance(), &WorldEd::WorldEdMgr::afterWorldChanged,
                     this, &ZLotManager::afterWorldChanged);
-#endif
         }
     }
 }
@@ -113,8 +125,9 @@ void ZLotManager::worldCellLevelChanged(int level, bool visible)
 
 void ZLotManager::worldCellLotChanged(WorldCellLot *lot)
 {
-    if (mWorldCellLotToMC.contains(lot))
+    if (mWorldCellLotToMC.contains(lot)) {
         setMapComposite(lot, mWorldCellLotToMC[lot]);
+    }
 }
 
 void ZLotManager::handleMapObject(MapObject *mapObject)
@@ -272,14 +285,26 @@ int ZLotManager::findLoading(MapObject *mapObject)
     return -1;
 }
 
+QPoint ZLotManager::adjustedLotPosition(WorldCellLot *lot)
+{
+    if (mMapDocument == nullptr) {
+        return lot->pos();
+    }
+    WorldCell *cell = WorldEd::WorldEdMgr::instance()->cellForMap(mMapDocument->fileName());
+    if (cell == nullptr) {
+        return lot->pos();
+    }
+    return (lot->cell()->pos() - cell->pos()) * 300 + lot->pos();
+}
+
 void ZLotManager::setMapInfo(WorldCellLot *lot, MapInfo *mapInfo)
 {
-    MapInfo *currInfo = 0, *newInfo = mapInfo;
+    MapInfo *currInfo = nullptr, *newInfo = mapInfo;
 
     if (mWorldCellLotToMI.contains(lot))
         currInfo = mWorldCellLotToMI[lot];
 
-    MapComposite *newLot = 0;
+    MapComposite *newLot = nullptr;
 
     if (currInfo != newInfo) {
         if (currInfo) {
@@ -288,7 +313,7 @@ void ZLotManager::setMapInfo(WorldCellLot *lot, MapInfo *mapInfo)
         if (newInfo) {
             mWorldCellLotToMI[lot] = newInfo;
             newLot = mMapDocument->mapComposite()->addMap(newInfo,
-                                                          lot->pos(),
+                                                          adjustedLotPosition(lot),
                                                           lot->level());
         }
     } else {
@@ -301,7 +326,7 @@ void ZLotManager::setMapInfo(WorldCellLot *lot, MapInfo *mapInfo)
 
 void ZLotManager::setMapComposite(WorldCellLot *lot, MapComposite *mapComposite)
 {
-    MapComposite *currLot = 0, *newLot = mapComposite;
+    MapComposite *currLot = nullptr, *newLot = mapComposite;
 
     if (mWorldCellLotToMC.contains(lot))
         currLot = mWorldCellLotToMC[lot];
@@ -319,8 +344,8 @@ void ZLotManager::setMapComposite(WorldCellLot *lot, MapComposite *mapComposite)
             emit lotAdded(newLot, lot); // add to scene
         }
     } else if (currLot) {
-        if (currLot->origin() != lot->pos())
-            mMapDocument->mapComposite()->moveSubMap(currLot, lot->pos());
+        if (currLot->origin() != adjustedLotPosition(lot))
+            mMapDocument->mapComposite()->moveSubMap(currLot, adjustedLotPosition(lot));
         else if (currLot->isVisible() != lot->isVisible()) {
             currLot->setVisible(lot->isVisible());
         }
@@ -418,8 +443,9 @@ void ZLotManager::mapFailedToLoad(MapInfo *mapInfo)
 
 void ZLotManager::beforeWorldChanged()
 {
-    foreach (WorldCellLot *lot, mWorldCellLotToMI.keys())
-        setMapInfo(lot, 0);
+    for (WorldCellLot *lot : mWorldCellLotToMI.keys()) {
+        setMapInfo(lot, nullptr);
+    }
     mMapsLoading2.clear();
     Q_ASSERT(mWorldCellLotToMI.isEmpty());
     Q_ASSERT(mWorldCellLotToMC.isEmpty());
@@ -428,7 +454,18 @@ void ZLotManager::beforeWorldChanged()
 void ZLotManager::afterWorldChanged()
 {
     if (WorldCell *cell = WorldEd::WorldEdMgr::instance()->cellForMap(mMapDocument->fileName())) {
-        foreach (WorldCellLot *lot, cell->lots()) {
+        for (WorldCellLot *lot : cell->lots()) {
+            MapInfo *mapInfo = MapManager::instance()->loadMap(lot->mapName(), QString(),
+                                                               true, MapManager::PriorityLow);
+            if (mapInfo) {
+                if (mapInfo->isLoading())
+                    mMapsLoading2 += MapLoading2(mapInfo, lot);
+                else
+                    setMapInfo(lot, mapInfo);
+            }
+        }
+        mOverlappingLots = WorldEd::WorldEdMgr::instance()->getOverlappingLots(cell, !Preferences::instance()->showAdjacentMaps());
+        for (WorldCellLot *lot : qAsConst(mOverlappingLots)) {
             MapInfo *mapInfo = MapManager::instance()->loadMap(lot->mapName(), QString(),
                                                                true, MapManager::PriorityLow);
             if (mapInfo) {

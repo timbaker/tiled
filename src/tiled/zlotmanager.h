@@ -22,13 +22,14 @@
 
 #include "mapobject.h" // needed for meta-type for some reason
 
+#include "worlded/worldcell.h"
+
 #include <QObject>
 #include <QList>
 #include <QMap>
 
 class MapComposite;
 class MapInfo;
-class WorldCellLot;
 
 namespace Tiled {
 
@@ -58,6 +59,9 @@ public:
 
     void worldCellLevelChanged(int level, bool visible);
     void worldCellLotChanged(WorldCellLot*lot);
+
+    const WorldCellLotList overlappingLots() const
+    { return mOverlappingLots; }
 
 signals:
     void lotAdded(MapComposite *lot, Tiled::MapObject *mapObject);
@@ -91,6 +95,7 @@ private:
     Internal::MapDocument *mMapDocument;
     QMap<MapObject*,MapComposite*> mMapObjectToLot;
     QMap<MapObject*,MapInfo*> mMapObjectToInfo;
+    WorldCellLotList mOverlappingLots;
 
     struct MapLoading
     {
@@ -104,6 +109,7 @@ private:
 
     /////
 
+    QPoint adjustedLotPosition(WorldCellLot *lot);
     void setMapInfo(WorldCellLot *lot, MapInfo *mapInfo);
     void setMapComposite(WorldCellLot *lot, MapComposite *mapComposite);
 

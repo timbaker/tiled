@@ -18,6 +18,8 @@
 #ifndef WORLDEDMGR_H
 #define WORLDEDMGR_H
 
+#include "worldcell.h"
+
 #include <QObject>
 #include <QSet>
 #include <QStringList>
@@ -26,9 +28,6 @@
 #include "filesystemwatcher.h"
 
 class World;
-class WorldCell;
-class WorldCellLevel;
-class WorldCellLot;
 
 namespace WorldEd {
 
@@ -54,6 +53,8 @@ public:
     { return mWorlds.size(); }
     World *worldAt(int n);
     QString worldFileName(int n);
+
+    WorldCellLotList getOverlappingLots(WorldCell *cell, bool includeAdjacentCells);
 
 signals:
     void beforeWorldChanged(const QString &fileName);

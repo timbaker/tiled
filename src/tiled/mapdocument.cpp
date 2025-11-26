@@ -110,8 +110,10 @@ MapDocument::MapDocument(Map *map, const QString &fileName):
                 this, &MapDocument::mapLoaded);
         connect(MapManager::instance(), &MapManager::mapFailedToLoad,
                 this, &MapDocument::mapFailedToLoad);
+        connect(WorldEd::WorldEdMgr::instance(), &WorldEd::WorldEdMgr::beforeWorldChanged,
+                this, &MapDocument::beforeWorldChanged);
         connect(WorldEd::WorldEdMgr::instance(), &WorldEd::WorldEdMgr::afterWorldChanged,
-                this, &MapDocument::initAdjacentMaps);
+                this, &MapDocument::afterWorldChanged);
         initAdjacentMaps();
     }
 #endif
@@ -1044,7 +1046,7 @@ void MapDocument::bmpBlenderRegionAltered(const QRegion &region)
 void MapDocument::mapLoaded(MapInfo *info)
 {
     if (!mAdjacentMapsLoading.contains(info) &&
-            !mAdjacentSubMapsLoading.contains(info)) return;
+        !mAdjacentSubMapsLoading.contains(info)) return;
 
     if (mMapsLoaded.isEmpty())
         QMetaObject::invokeMethod(this, "handleMapsLoadedNow", Qt::QueuedConnection);
@@ -1063,7 +1065,7 @@ void MapDocument::handleMapsLoadedNow()
     // It could happen that the WorldEd project file was changed while
     // adjacent maps were being loaded, causes mWorldCell to be set to null.
     WorldCell *cell = mWorldCell;
-    if (!cell) {
+    if (cell == nullptr) {
         mMapsLoaded.clear();
         mAdjacentMapsLoading.clear();
         mAdjacentSubMapsLoading.clear();
@@ -1092,9 +1094,9 @@ void MapDocument::handleMapsLoadedNow()
 
         foreach (const LoadingSubMap &sm, mAdjacentSubMapsLoading.values(info)) {
             int x = sm.lot->cell()->x(), y = sm.lot->cell()->y();
-            if (MapComposite *adjacentMap = mMapComposite->adjacentMap(x - cell->x(),
-                                                                       y - cell->y()))
+            if (MapComposite *adjacentMap = mMapComposite->adjacentMap(x - cell->x(), y - cell->y())) {
                 adjacentMap->addMap(info, sm.lot->pos(), sm.lot->level());
+            }
             changed = true;
         }
         mAdjacentSubMapsLoading.remove(info);
@@ -1111,13 +1113,14 @@ void MapDocument::handleMapsLoadedNow()
 void MapDocument::beforeWorldChanged(const QString &fileName)
 {
     Q_UNUSED(fileName);
-    mWorldCell = 0;
+    mWorldCell = nullptr;
 }
 
 void MapDocument::afterWorldChanged(const QString &fileName)
 {
     Q_UNUSED(fileName);
     mWorldCell = WorldEd::WorldEdMgr::instance()->cellForMap(mFileName);
+    initAdjacentMaps();
 }
 
 #endif // ZOMBOID
@@ -1141,49 +1144,60 @@ void MapDocument::initAdjacentMaps()
         mWorldCell = cell;
         int cx = cell->x(), cy = cell->y();
         for (int y = -1; y <= 1; y++) {
-            if (cy + y < 0 || cy + y >= cell->world()->height()) continue;
+            if (cy + y < 0 || cy + y >= cell->world()->height())
+                continue;
             for (int x = -1; x <= 1; x++) {
-                if (cx + x < 0 || cx + x >= cell->world()->width()) continue;
-                if (x == 0 && y == 0) continue;
-                if (WorldCell *cell2 = cell->world()->cellAt(cx + x, cy + y)) {
-                    if (cell2->mapFilePath().isEmpty()) continue;
-                    QFileInfo info(cell2->mapFilePath());
-                    if (info.exists()) {
-                        MapInfo *mapInfo = MapManager::instance()->loadMap(
-                                    info.absoluteFilePath(), QString(), true,
-                                    MapManager::PriorityMedium);
-                        if (mapInfo) {
-                            if (mapInfo->isLoading())
-                                mAdjacentMapsLoading.insert(mapInfo, AdjacentMap(x, y, mapInfo));
-                            else
-                                mMapComposite->setAdjacentMap(x, y, mapInfo);
-
-                            MapComposite *adjacentMap = mMapComposite->adjacentMap(x, y);
-                            foreach (WorldCellLot *lot, cell2->lots()) {
-                                MapInfo *subMapInfo = MapManager::instance()->loadMap(
-                                            lot->mapName(), QString(), true, MapManager::PriorityLow);
-                                if (subMapInfo) {
-                                    if (subMapInfo->isLoading())
-                                        mAdjacentSubMapsLoading.insert(subMapInfo, LoadingSubMap(lot, subMapInfo));
-                                    else if (adjacentMap)
-                                        adjacentMap->addMap(subMapInfo, lot->pos(), lot->level());
-                                }
-                            }
-                            adjacentMaps[(x + 1) + (y + 1) * 3] = mapInfo;
-                        }
+                if (cx + x < 0 || cx + x >= cell->world()->width())
+                    continue;
+                if (x == 0 && y == 0)
+                    continue;
+                WorldCell *cell2 = cell->world()->cellAt(cx + x, cy + y);
+                if (cell2 == nullptr)
+                    continue;
+                if (cell2->mapFilePath().isEmpty())
+                    continue;
+                QFileInfo info(cell2->mapFilePath());
+                if (!info.exists())
+                    continue;
+                MapInfo *mapInfo = MapManager::instance()->loadMap(
+                            info.absoluteFilePath(), QString(), true,
+                            MapManager::PriorityMedium);
+                if (mapInfo == nullptr)
+                    continue;
+                if (mapInfo->isLoading()) {
+                    mAdjacentMapsLoading.insert(mapInfo, AdjacentMap(x, y, mapInfo));
+                } else {
+                    mMapComposite->setAdjacentMap(x, y, mapInfo);
+                }
+                MapComposite *adjacentMap = mMapComposite->adjacentMap(x, y);
+                for (WorldCellLot *lot : qAsConst(cell2->lots())) {
+                    if (lot->mapName().isEmpty())
+                        continue;
+                    MapInfo *subMapInfo = MapManager::instance()->loadMap(
+                                lot->mapName(), QString(), true, MapManager::PriorityLow);
+                    if (subMapInfo == nullptr)
+                        continue;
+                    if (subMapInfo->isLoading()) {
+                        mAdjacentSubMapsLoading.insert(subMapInfo, LoadingSubMap(lot, subMapInfo));
+                    } else if (adjacentMap) {
+                        adjacentMap->addMap(subMapInfo, lot->pos(), lot->level());
                     }
                 }
+                adjacentMaps[(x + 1) + (y + 1) * 3] = mapInfo;
             }
         }
     }
 
     for (int y = -1; y <= 1; y++) {
         for (int x = -1; x <= 1; x++) {
-            if (x == 0 && y == 0) continue;
-            if (MapComposite *mc = mMapComposite->adjacentMap(x, y)) {
-                int index = (x + 1) + (y + 1) * 3;
-                if (mc->mapInfo() != adjacentMaps[index])
-                    mMapComposite->setAdjacentMap(x, y, 0);
+            if (x == 0 && y == 0)
+                continue;
+            MapComposite *mc = mMapComposite->adjacentMap(x, y);
+            if (mc == nullptr)
+                continue;
+            int index = (x + 1) + (y + 1) * 3;
+            if (mc->mapInfo() != adjacentMaps[index]) {
+                mMapComposite->setAdjacentMap(x, y, nullptr);
             }
         }
     }

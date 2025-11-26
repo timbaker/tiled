@@ -18,6 +18,8 @@
 #ifndef WORLDEDDOCK_H
 #define WORLDEDDOCK_H
 
+#include "worlded/worldcell.h"
+
 #include <QAbstractItemModel>
 #include <QDockWidget>
 #include <QTreeView>
@@ -60,7 +62,7 @@ public:
     WorldCellLevel *toLevel(const QModelIndex &index) const;
     WorldCellLot *toLot(const QModelIndex &index) const;
 
-    void setWorldCell(WorldCell *cell);
+    void setWorldCell(WorldCell *cell, const WorldCellLotList &overlappingLots);
     WorldCell *cell() const
     { return mCell; }
 
