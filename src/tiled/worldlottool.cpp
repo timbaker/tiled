@@ -113,8 +113,9 @@ void WorldLotTool::mousePressed(QGraphicsSceneMouseEvent *event)
     if (event->button() == Qt::LeftButton) {
         updateHoverItem(topmostLotAt(event->scenePos()));
         QSet<WorldCellLot*> selection;
-        if (mHoverLot && (mHoverLot->cell() == mCell))
+        if (mHoverLot && (mHoverLot->cell() == mCell || ((ZomboidScene*)mScene)->lotManager().overlappingLots().contains(mHoverLot))) {
             selection << mHoverLot;
+        }
         WorldEd::WorldEdMgr::instance()->setSelectedLots(selection);
     }
 
@@ -128,7 +129,7 @@ void WorldLotTool::mousePressed(QGraphicsSceneMouseEvent *event)
             QIcon tiledIcon(QLatin1String(":images/tiled-icon-16.png"));
             QAction *openAction = menu.addAction(tiledIcon, tr("Open in TileZed"));
             QString fileName = mHoverLot->mapName();
-            openAction->setEnabled(QFileInfo(fileName).exists());
+            openAction->setEnabled(QFileInfo::exists(fileName));
 
             if (mHoverLot->cell() != mCell)
                 hideAction->setVisible(false);
@@ -146,7 +147,7 @@ void WorldLotTool::mousePressed(QGraphicsSceneMouseEvent *event)
             QIcon tiledIcon(QLatin1String(":images/tiled-icon-16.png"));
             QAction *openAction = menu.addAction(tiledIcon, tr("Open in TileZed"));
             QString fileName = cell->mapFilePath();
-            openAction->setEnabled(QFileInfo(fileName).exists());
+            openAction->setEnabled(QFileInfo::exists(fileName));
 
             mShowingContextMenu = true;
             QAction *selected = menu.exec(event->screenPos());
