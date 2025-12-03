@@ -87,6 +87,7 @@ protected slots:
     virtual void selectionChanged(const QItemSelection &selected, const QItemSelection &deselected);
 
 private slots:
+    void currentLevelChanged(int level);
     void currentLayerIndexChanged(int index);
     void editLayerName();
     void onActivated(const QModelIndex &index);

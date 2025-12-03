@@ -322,6 +322,8 @@ void ZLevelsView::setMapDocument(MapDocument *mapDoc)
         header()->setResizeMode(0, QHeaderView::Stretch);
 #endif
 
+        connect(mMapDocument, &MapDocument::currentLevelChanged,
+                this, &ZLevelsView::currentLevelChanged);
         connect(mMapDocument, &MapDocument::currentLayerIndexChanged,
                 this, &ZLevelsView::currentLayerIndexChanged);
         connect(mMapDocument, &MapDocument::editLayerNameRequested,
@@ -371,6 +373,16 @@ void ZLevelsView::selectionChanged(const QItemSelection &selected, const QItemSe
     }
 }
 
+void ZLevelsView::currentLevelChanged(int level)
+{
+    if (mSynching)
+        return;
+
+    mSynching = true;
+    setCurrentIndex(model()->index(level));
+    mSynching = false;
+}
+
 void ZLevelsView::currentLayerIndexChanged(int index)
 {
     if (mSynching)
@@ -390,7 +402,11 @@ void ZLevelsView::currentLayerIndexChanged(int index)
 
     // Selected no layer, or a layer not in a CompositeLayerGroup
     mSynching = true;
-    setCurrentIndex(QModelIndex());
+    if (mMapDocument != nullptr && mMapDocument->currentLevel() != INVALID_LEVEL) {
+        setCurrentIndex(model()->index(mMapDocument->currentLevel()));
+    } else {
+        setCurrentIndex(QModelIndex());
+    }
     mSynching = false;
 }
 

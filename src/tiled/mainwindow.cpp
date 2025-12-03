@@ -3085,10 +3085,8 @@ void MainWindow::aboutToShowLevelMenu()
     if (!mMapDocument) return;
     mCurrentLevelMenu->clear();
     QStringList items;
-    items.prepend(QString::number(0));
     MapComposite *mapComposite = mMapDocument->mapComposite();
     for (int z = mapComposite->minLevel(); z <= mapComposite->maxLevel(); z++) {
-        if (z == 0) continue;
         items.prepend(QString::number(z));
     }
     foreach (QString item, items) {
@@ -3179,6 +3177,7 @@ void MainWindow::triggeredLevelMenu(QAction *action)
         }
         ++index;
     }
+    mMapDocument->setCurrentLevel(level);
 }
 
 void MainWindow::triggeredLayerMenu(QAction *action)

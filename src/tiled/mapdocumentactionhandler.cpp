@@ -322,6 +322,7 @@ static void switchToLevel(MapDocument *mMapDocument, int level) {
             }
         }
     }
+    mMapDocument->setCurrentLevel(level);
     int index = 0;
     foreach (Layer *layer, mMapDocument->map()->layers()) {
         if (layer->level() == level) {
@@ -418,8 +419,13 @@ void MapDocumentActionHandler::updateActions()
 
     mActionDuplicateLayer->setEnabled(currentLayerIndex >= 0);
     mActionMergeLayerDown->setEnabled(canMergeDown);
+#ifdef ZOMBOID
+    mActionSelectPreviousLayer->setEnabled(hasLevelAbove);
+    mActionSelectNextLayer->setEnabled(hasLevelBelow);
+#else
     mActionSelectPreviousLayer->setEnabled(hasLayerAbove);
     mActionSelectNextLayer->setEnabled(hasLayerBelow);
+#endif
     mActionMoveLayerUp->setEnabled(canMoveLayerUp);
     mActionMoveLayerDown->setEnabled(canMoveLayerDown);
     mActionToggleOtherLayers->setEnabled(layerCount > 1);
