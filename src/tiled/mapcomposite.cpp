@@ -1517,9 +1517,16 @@ MapComposite::MapComposite(MapInfo *mapInfo, Map::Orientation orientRender,
         if (layerGroup->level() > mMaxLevel)
             mMaxLevel = layerGroup->level();
     }
-    foreach (MapComposite *subMap, mSubMaps)
-        if (subMap->mLevelOffset + subMap->mMaxLevel > mMaxLevel)
-            mMaxLevel = subMap->mLevelOffset + subMap->mMaxLevel;
+    foreach (MapComposite *subMap, mSubMaps) {
+        int minLevel = subMap->mLevelOffset + subMap->mMinLevel;
+        int maxLevel = subMap->mLevelOffset + subMap->mMaxLevel;
+        if (minLevel < mMinLevel) {
+            mMinLevel = minLevel;
+        }
+        if (maxLevel > mMaxLevel) {
+            mMaxLevel = maxLevel;
+        }
+    }
 
     if (mMinLevel == 10000)
         mMinLevel = 0;
@@ -1580,6 +1587,7 @@ MapComposite *MapComposite::addMap(MapInfo *mapInfo, const QPoint &pos,
 
     if (creating)
         return subMap;
+
 
     checkMinMaxLevels(levelOffset + subMap->minLevel(), levelOffset + subMap->maxLevel());
 
@@ -1866,24 +1874,24 @@ void MapComposite::checkMinMaxLevels(int minLevel, int maxLevel)
 {
     minLevel = qMin(minLevel, mMinLevel);
     maxLevel = qMax(maxLevel, mMaxLevel);
-    if ((mMinLevel == minLevel) && (maxLevel == mMaxLevel))
+    if ((mMinLevel == minLevel) && (maxLevel == mMaxLevel)) {
         return;
-
+    }
+    QVector<int> added;
     for (int level = minLevel; level <= maxLevel; level++) {
         if (!mLayerGroups.contains(level)) {
             mLayerGroups[level] = new CompositeLayerGroup(this, level);
-
-            if (mMinLevel > level)
-                mMinLevel = level;
-            if (level > mMaxLevel)
-                mMaxLevel = level;
-
-            mSortedLayerGroups.clear();
-            for (int i = mMinLevel; i <= mMaxLevel; ++i)
-                mSortedLayerGroups.append(mLayerGroups[i]);
-
-            emit layerGroupAdded(level);
+            added += level;
         }
+    }
+    mMinLevel = minLevel;
+    mMaxLevel = maxLevel;
+    mSortedLayerGroups.clear();
+    for (int i = mMinLevel; i <= mMaxLevel; ++i) {
+        mSortedLayerGroups.append(mLayerGroups[i]);
+    }
+    for (int level : qAsConst(added)) {
+        emit layerGroupAdded(level);
     }
 }
 
