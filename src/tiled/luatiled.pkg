@@ -75,6 +75,7 @@ class LuaLayer @ Layer
     LuaObjectGroup *asObjectGroup();
     
     const char *name();
+    const char *nameWithPrefix();
     const char *type();
 };
 

@@ -21,7 +21,7 @@ layerNames = {
 
 function indexOfLayer(layerName)
 	for i=1,map:layerCount() do
-		if map:layerAt(i-1):name() == layerName then
+		if map:layerAt(i-1):nameWithPrefix() == layerName then
 			return i-1
 		end
 	end

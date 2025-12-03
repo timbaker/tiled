@@ -33,7 +33,7 @@ for i=0,map:layerCount()-1 do
     tl = layer:asTileLayer()
     if tl then
 	if tl:level() <= maxLevel then
-	    cloneLayer = clone:newTileLayer(tl:name())
+	    cloneLayer = clone:newTileLayer(tl:nameWithPrefix())
 	    clone:addLayer(cloneLayer)
 
 	    offset = 0
@@ -59,10 +59,10 @@ for i=0,map:layerCount()-1 do
     end
     og = layer:asObjectGroup()
     if og then
-	    print(og:name())
-	if string.match(og:name(),'%d+_RoomDefs') then
+	    print(og:nameWithPrefix())
+	if string.match(og:nameWithPrefix(),'%d+_RoomDefs') then
 	    -- FIXME: don't clone the layer if there aren't any RoomDefs.
-	    cloneLayer = ObjectGroup:new(og:name(), 0, 0, mapWidth, mapHeight)
+	    cloneLayer = ObjectGroup:new(og:nameWithPrefix(), 0, 0, mapWidth, mapHeight)
 	    cloneLayer:setColor(og:color())
 	    clone:addLayer(cloneLayer)
 

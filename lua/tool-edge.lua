@@ -44,7 +44,7 @@ function mouseMoved(buttons, x, y, modifiers)
 	for k,v in pairs(self.erase) do
 	    self:setToolTile(k, v, map:noneTile())
 	end
-	local layer = EDGE.layer or self:currentLayer():name()
+	local layer = EDGE.layer or self:currentLayer():nameWithPrefix()
 	for i=1,#self.tiles do
 	    local t = self.tiles[i]
 	    self:setToolTile(layer, t[1], t[2], t[3])

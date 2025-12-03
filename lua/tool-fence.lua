@@ -42,7 +42,7 @@ function mouseMoved(buttons, x, y, modifiers)
 	else
 	    westEdge(self.x, self.y, y)
 	end
-	local layer = self:currentLayer():name()
+	local layer = self:currentLayer():nameWithPrefix()
 	for i=1,#self.tiles do
 	    local t = self.tiles[i]
 	    self:setToolTile(layer, t[1], t[2], t[3])
@@ -51,17 +51,17 @@ function mouseMoved(buttons, x, y, modifiers)
 	if modifiers.alt then
 	    local tile = gateTile(x, y, isWest(x, y))
 	    if tile then
-		self:setToolTile(self:currentLayer():name(), x, y, tile)
+		self:setToolTile(self:currentLayer():nameWithPrefix(), x, y, tile)
 	    end
 	elseif modifiers.control then
 	    local tile = postTile(x, y)
 	    if tile and self:currentLayer():tileAt(x, y) ~= tile then
-		self:setToolTile(self:currentLayer():name(), x, y, tile)
+		self:setToolTile(self:currentLayer():nameWithPrefix(), x, y, tile)
 	    end
 	else
 	    local tile = fenceTile(x, y, isWest(x, y))
 	    if tile and self:currentLayer():tileAt(x, y) ~= tile then
-		self:setToolTile(self:currentLayer():name(), x, y, tile)
+		self:setToolTile(self:currentLayer():nameWithPrefix(), x, y, tile)
 	    end
 	end
     end

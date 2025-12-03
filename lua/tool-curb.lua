@@ -118,7 +118,7 @@ function mouseMoved(buttons, x, y, modifiers)
 	for k,v in pairs(self.erase) do
 	    self:setToolTile(k, v, map:noneTile())
 	end
-	local layer = CURB.layer or self:currentLayer():name()
+	local layer = CURB.layer or self:currentLayer():nameWithPrefix()
 	for i=1,#self.tiles do
 	    local t = self.tiles[i]
 	    self:setToolTile(layer, t[1], t[2], t[3])
@@ -528,7 +528,7 @@ function raiseLowerTile(sx, sy, ex, ey, x, y)
 
     if not tile or tile == map:noneTile() then return end
 
-    local layer = CURB.layer or self:currentLayer():name()
+    local layer = CURB.layer or self:currentLayer():nameWithPrefix()
     if dx ~= 0 then
 	if not lower then x = x + 1 end
 	if not self.erase[layer] then self.erase[layer] = Region:new() end
