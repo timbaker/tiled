@@ -86,6 +86,7 @@ Tile *PickTileTool::pickTile(const QPointF &pos)
     bool highlightLevel = Preferences::instance()->highlightCurrentLayer();
     QVector<const Cell*> cells;
     QVector<qreal> opacities;
+    OrderedCellsTemporaries vars;
     foreach (CompositeLayerGroup *lg, mc->layerGroups()) {
         if (!lg->isVisible()) continue;
         if (highlightLevel && lg->level() > mapDocument()->currentLevel()) continue;
@@ -97,7 +98,7 @@ Tile *PickTileTool::pickTile(const QPointF &pos)
             for (int tx = tilePos.x() - 8; tx <= tilePos.x() + 8; tx++) {
                 QRectF tileBox = mapDocument()->renderer()->boundingRect(QRect(tx, ty, 1, 1), lg->level());
                 cells.resize(0);
-                if (!lg->orderedCellsAt(QPoint(tx, ty), cells, opacities))
+                if (!lg->orderedCellsAt(QPoint(tx, ty), cells, opacities, reinterpret_cast<ZTileLayerGroupRenderData*>(&vars)))
                     continue;
                 for (int i = 0; i < cells.size(); i++) {
                     Tile *test = cells[i]->tile;
