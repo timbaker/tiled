@@ -371,6 +371,8 @@ private:
     KeyboardShortcutWindow *mKeyboardShortcutWindow = nullptr;
     QAction *mUndoAction = nullptr;
     QAction *mRedoAction = nullptr;
+    QAction *mBMPBrushSizeMinus = nullptr;
+    QAction *mBMPBrushSizePlus = nullptr;
 #endif
 };
 

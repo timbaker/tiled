@@ -544,6 +544,16 @@ MainWindow::MainWindow(QWidget *parent, Qt::WindowFlags flags)
     connect(mRandomButton, &QAbstractButton::toggled,
             mBucketFillTool, &BucketFillTool::setRandom);
 
+    mBMPBrushSizeMinus = new QAction(QStringLiteral("Decrease BMP Brush Size"), this);
+    mBMPBrushSizeMinus->setShortcut(QKeySequence(QStringLiteral("[")));
+    connect(mBMPBrushSizeMinus, &QAction::triggered, this, &MainWindow::brushSizeMinus);
+    addAction(mBMPBrushSizeMinus);
+
+    mBMPBrushSizePlus = new QAction(QStringLiteral("Increase BMP Brush Size"), this);
+    mBMPBrushSizePlus->setShortcut(QKeySequence(QStringLiteral("]")));
+    connect(mBMPBrushSizePlus, &QAction::triggered, this, &MainWindow::brushSizePlus);
+    addAction(mBMPBrushSizePlus);
+
     initActionManager();
     QString CONTEXT_TOOL = QStringLiteral("Tool");
     QString CATEGORY_TOOL_TILE = QStringLiteral("Tile");
@@ -590,16 +600,6 @@ MainWindow::MainWindow(QWidget *parent, Qt::WindowFlags flags)
     toolManager->registerTool(BmpToLayersTool::instance(), mActionManager, CONTEXT_TOOL, CATEGORY_TOOL_BMP, QStringLiteral("Tool.BMP.ToLayers"));
     toolManager->addSeparator();
     toolManager->registerTool(WorldLotTool::instance(), mActionManager, CONTEXT_TOOL, CATEGORY_TOOL_OTHER, QStringLiteral("Tool.WorldEd.Lot"));
-
-    QAction *brushSizeMinus = new QAction(this);
-    brushSizeMinus->setShortcut(QKeySequence(QLatin1String("[")));
-    connect(brushSizeMinus, &QAction::triggered, this, &MainWindow::brushSizeMinus);
-    addAction(brushSizeMinus);
-
-    QAction *brushSizePlus = new QAction(this);
-    brushSizePlus->setShortcut(QKeySequence(QLatin1String("]")));
-    connect(brushSizePlus, &QAction::triggered, this, &MainWindow::brushSizePlus);
-    addAction(brushSizePlus);
 
     connect(PickTileTool::instancePtr(), &PickTileTool::tilePicked,
             this, &MainWindow::tilePicked);
@@ -2000,6 +2000,9 @@ void MainWindow::initActionManager()
     const QString CATEGORY_MENU_LAYER = QStringLiteral("Layer");
     const QString CATEGORY_MENU_TOOLS = QStringLiteral("Tools");
 
+    const QString CONTEXT_OTHER = QStringLiteral("Other");
+    const QString CATEGORY_OTHER_BMP = QStringLiteral("BMP Tools");
+
     ActionManager *actionManager = mActionManager;
     actionManager->registerAction(mUi->actionNew, CONTEXT_MENU, CATEGORY_MENU_FILE, QStringLiteral("Menu.File.New"));
     actionManager->registerAction(mUi->actionOpen, CONTEXT_MENU, CATEGORY_MENU_FILE, QStringLiteral("Menu.File.Open"));
@@ -2062,6 +2065,9 @@ void MainWindow::initActionManager()
     actionManager->registerAction(mUi->actionSnowEditor, CONTEXT_MENU, CATEGORY_MENU_TOOLS, QStringLiteral("Menu.Tools.SnowEditor"));
     actionManager->registerAction(mUi->actionWorldEd, CONTEXT_MENU, CATEGORY_MENU_TOOLS, QStringLiteral("Menu.Tools.WorldEd"));
     actionManager->registerAction(mUi->actionLuaScript, CONTEXT_MENU, CATEGORY_MENU_TOOLS, QStringLiteral("Menu.Tools.LuaConsole"));
+
+    actionManager->registerAction(mBMPBrushSizeMinus, CONTEXT_OTHER, CATEGORY_OTHER_BMP, QStringLiteral("Other.BMP.BrushSizeMinus"));
+    actionManager->registerAction(mBMPBrushSizePlus, CONTEXT_OTHER, CATEGORY_OTHER_BMP, QStringLiteral("Other.BMP.BrushSizePlus"));
 
     connect(actionManager, &ActionManager::shortcutEdited, ToolManager::instance(), &ToolManager::shortcutEdited);
 }
