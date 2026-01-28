@@ -19,6 +19,7 @@
 
 #include "building.h"
 #include "buildingfloor.h"
+#include "buildingfurniturefile.h"
 #include "buildingobjects.h"
 #include "buildingtemplates.h"
 #include "buildingtiles.h"
@@ -571,8 +572,7 @@ FurnitureTile *BuildingReaderPrivate::readFurnitureTile(FurnitureTiles *ftiles)
 
     const QXmlStreamAttributes atts = xml.attributes();
     QString orientString = atts.value(QLatin1String("orient")).toString();
-    FurnitureTile::FurnitureOrientation orient =
-            FurnitureGroups::orientFromString(orientString);
+    FurnitureTile::FurnitureOrientation orient = BuildingFurnitureFile::orientFromString(orientString);
     if (orient == FurnitureTile::FurnitureUnknown) {
         xml.raiseError(tr("invalid furniture tile orientation '%1'").arg(orientString));
         return 0;
@@ -907,8 +907,7 @@ BuildingObject *BuildingReaderPrivate::readObject(BuildingFloor *floor)
             return 0;
         }
         QString orientString = atts.value(QLatin1String("orient")).toString();
-        FurnitureTile::FurnitureOrientation orient =
-                FurnitureGroups::orientFromString(orientString);
+        FurnitureTile::FurnitureOrientation orient = BuildingFurnitureFile::orientFromString(orientString);
         if (orient == FurnitureTile::FurnitureUnknown) {
             xml.raiseError(tr("Unknown furniture orientation '%1'").arg(orientString));
             delete furniture;

@@ -109,6 +109,9 @@ private:
     BuildingTileCategory *categoryAt(int row);
     FurnitureGroup *furnitureGroupAt(int row);
 
+    void reloadFrom(const QString &fileName);
+    bool checkOpenDocuments();
+
     typedef Tiled::Tileset Tileset;
 
 private slots:
@@ -124,10 +127,9 @@ private slots:
     void setExpertMode(bool expert);
 
     void tileDropped(const QString &tilesetName, int tileId);
-    void entryTileDropped(BuildingTileEntry *entry, int e, const QString &tileName);
+    void entryTileDropped(BuildingEditor::BuildingTileEntry *entry, int e, const QString &tileName);
 
-    void furnitureTileDropped(FurnitureTile *ftile, int x, int y,
-                              const QString &tileName);
+    void furnitureTileDropped(BuildingEditor::FurnitureTile *ftile, int x, int y, const QString &tileName);
 
     void categoryNameEdited(QListWidgetItem *item);
 
@@ -147,7 +149,7 @@ private slots:
     void tilesetAboutToBeRemoved(Tiled::Tileset *tileset);
     void tilesetRemoved(Tiled::Tileset *tileset);
 
-    void tilesetChanged(Tileset *tileset);
+    void tilesetChanged(Tiled::Tileset *tileset);
 
     void undoTextChanged(const QString &text);
     void redoTextChanged(const QString &text);
@@ -165,8 +167,12 @@ private slots:
     void furnitureLayerChanged(int index);
     void furnitureGrimeChanged(bool allow);
 
-    void accept();
-    void reject();
+    void importFile();
+    void exportFile();
+    void reloadFile();
+
+    void accept() override;
+    void reject() override;
 
 private:
     static BuildingTilesDialog *mInstance;
@@ -185,6 +191,9 @@ private:
     QUndoStack *mUndoStack;
     QToolButton *mUndoButton;
     QToolButton *mRedoButton;
+    QToolButton *mImportFileButton;
+    QToolButton *mExportFileButton;
+    QToolButton *mReloadFileButton;
 
     QWidget *mEntryOffsetUI;
     QSpinBox *mEntryOffsetSpinX;

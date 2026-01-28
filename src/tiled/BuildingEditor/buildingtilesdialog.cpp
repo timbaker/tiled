@@ -18,6 +18,8 @@
 #include "buildingtilesdialog.h"
 #include "ui_buildingtilesdialog.h"
 
+#include "buildingdocumentmgr.h"
+#include "buildingfurniturefile.h"
 #include "buildingpreferences.h"
 #include "buildingtiles.h"
 #include "buildingtmx.h"
@@ -531,6 +533,34 @@ public:
     QString mName;
 };
 
+class SetFurnitureGroupsRevision : public QUndoCommand
+{
+public:
+    SetFurnitureGroupsRevision(BuildingTilesDialog *d, int revision, int sourceRevision) :
+        QUndoCommand(QCoreApplication::translate("UndoCommands", "Add Category")),
+        mDialog(d),
+        mRevision(revision),
+        mSourceRevision(sourceRevision)
+    {
+    }
+
+    void undo()
+    {
+        mRevision = FurnitureGroups::instance()->setRevision(mRevision);
+        mSourceRevision = FurnitureGroups::instance()->setSourceRevision(mSourceRevision);
+    }
+
+    void redo()
+    {
+        mRevision = FurnitureGroups::instance()->setRevision(mRevision);
+        mSourceRevision = FurnitureGroups::instance()->setSourceRevision(mSourceRevision);
+    }
+
+    BuildingTilesDialog *mDialog;
+    int mRevision;
+    int mSourceRevision;
+};
+
 } // namespace BuildingEditor
 
 /////
@@ -785,6 +815,25 @@ BuildingTilesDialog::BuildingTilesDialog(QWidget *parent) :
     ui->buttonsLayout->insertWidget(1, button);
     connect(mUndoGroup, &QUndoGroup::canRedoChanged, button, &QWidget::setEnabled);
     connect(button, &QAbstractButton::clicked, redoAction, &QAction::triggered);
+
+    ui->buttonsLayout->insertStretch(2, 0);
+
+    button = new QToolButton(this);
+    button->setText(tr("Import..."));
+    ui->buttonsLayout->insertWidget(3, button);
+    connect(button, &QAbstractButton::clicked, this, &BuildingTilesDialog::importFile);
+
+    button = new QToolButton(this);
+    button->setText(tr("Export..."));
+    ui->buttonsLayout->insertWidget(4, button);
+    connect(button, &QAbstractButton::clicked, this, &BuildingTilesDialog::exportFile);
+
+    button = new QToolButton(this);
+    button->setText(tr("Reload"));
+    ui->buttonsLayout->insertWidget(5, button);
+    connect(button, &QAbstractButton::clicked, this, &BuildingTilesDialog::reloadFile);
+
+    ui->buttonsLayout->insertStretch(6, 0);
 
     connect(ui->tilesetMgr, &QAbstractButton::clicked, this, &BuildingTilesDialog::manageTilesets);
 
@@ -1918,6 +1967,90 @@ void BuildingTilesDialog::furnitureGrimeChanged(bool allow)
         mUndoStack->push(new ChangeFurnitureGrime(this, ftile, allow));
     if (ftiles.count() > 1)
         mUndoStack->endMacro();
+}
+
+static const QString SETTINGS_KEY_TXT_FILE = QStringLiteral("BuildingTilesDialog/ExportFurnitureTxt");
+
+void BuildingTilesDialog::importFile()
+{
+    if (checkOpenDocuments()) {
+        return;
+    }
+    QSettings &settings = BuildingPreferences::instance()->settings();
+    QString suggestedFileName = BuildingPreferences::instance()->configPath(QStringLiteral("BuildingFurniture.txt"));
+    suggestedFileName = settings.value(SETTINGS_KEY_TXT_FILE, suggestedFileName).toString();
+    const QString fileName = QFileDialog::getOpenFileName(this, QString(), suggestedFileName, tr("BuildingEd Furniture Files (*.txt)"));
+    if (fileName.isEmpty()) {
+        return;
+    }
+    settings.setValue(SETTINGS_KEY_TXT_FILE, QFileInfo(fileName).absoluteFilePath());
+    reloadFrom(fileName);
+}
+
+void BuildingTilesDialog::exportFile()
+{
+    QSettings &settings = BuildingPreferences::instance()->settings();
+    QString suggestedFileName = BuildingPreferences::instance()->configPath(QStringLiteral("BuildingFurniture.txt"));
+    suggestedFileName = settings.value(SETTINGS_KEY_TXT_FILE, suggestedFileName).toString();
+    const QString fileName = QFileDialog::getSaveFileName(this, QString(), suggestedFileName, tr("BuildingEd Furniture Files (*.txt)"));
+    if (fileName.isEmpty()) {
+        return;
+    }
+    settings.setValue(SETTINGS_KEY_TXT_FILE, QFileInfo(fileName).absoluteFilePath());
+    BuildingFurnitureFile file;
+    int revision = FurnitureGroups::instance()->revision();
+    int sourceRevision = FurnitureGroups::instance()->sourceRevision();
+    if (file.write(fileName, revision, sourceRevision, FurnitureGroups::instance()->groups())) {
+        return;
+    }
+    QMessageBox::warning(this, tr("Export BuildingFurniture.txt Failed"), file.errorString());
+}
+
+void BuildingTilesDialog::reloadFile()
+{
+    if (checkOpenDocuments()) {
+        return;
+    }
+    QSettings &settings = BuildingPreferences::instance()->settings();
+    QString fileName = settings.value(SETTINGS_KEY_TXT_FILE, QString()).toString();
+    if (fileName.isEmpty()) {
+        return;
+    }
+    if (!QFileInfo::exists(fileName)) {
+        return;
+    }
+    reloadFrom(fileName);
+}
+
+void BuildingTilesDialog::reloadFrom(const QString &fileName)
+{
+    BuildingFurnitureFile file;
+    if (!file.read(fileName)) {
+        QMessageBox::warning(this, tr("Read BuildingFurniture.txt Failed"), file.errorString());
+        return;
+    }
+    const int revision = file.getRevision();
+    const int sourceRevision = file.getSourceRevision();
+    QList<FurnitureGroup*> newGroups = file.takeGroups();
+    const FurnitureGroups *fgs = FurnitureGroups::instance();
+    mUndoStack->beginMacro(tr("Import BuildingFurniture.txt"));
+    mUndoStack->push(new SetFurnitureGroupsRevision(this, revision, sourceRevision));
+    for (int i = fgs->groupCount() - 1; i >= 0; i--) {
+        mUndoStack->push(new RemoveCategory(this, i));
+    }
+    for (FurnitureGroup *group : newGroups) {
+        mUndoStack->push(new AddCategory(this, fgs->groupCount(), group));
+    }
+    mUndoStack->endMacro();
+}
+
+bool BuildingTilesDialog::checkOpenDocuments()
+{
+    if (BuildingDocumentMgr::instance()->documentCount() == 0) {
+        return false;
+    }
+    QMessageBox::information(this, tr("BuildingFurniture.txt"), tr("Close all open BulidingEd documents first."));
+    return true;
 }
 
 void BuildingTilesDialog::accept()

@@ -17,6 +17,7 @@
 
 #include "furnituregroups.h"
 
+#include "buildingfurniturefile.h"
 #include "buildingpreferences.h"
 #include "buildingtiles.h"
 #include "buildingfloor.h"
@@ -91,70 +92,6 @@ QString FurnitureGroups::txtPath()
     return BuildingPreferences::instance()->configPath(txtName());
 }
 
-FurnitureTiles *FurnitureGroups::furnitureTilesFromSFB(SimpleFileBlock &furnitureBlock, QString &error)
-{
-    bool corners = furnitureBlock.value("corners") == QLatin1String("true");
-
-    QString layerString = furnitureBlock.value("layer");
-    FurnitureTiles::FurnitureLayer layer = layerString.isEmpty() ?
-            FurnitureTiles::LayerFurniture : FurnitureTiles::layerFromString(layerString);
-    if (layer == FurnitureTiles::InvalidLayer) {
-        error = tr("Invalid furniture layer '%1'.").arg(layerString);
-        return 0;
-    }
-
-    FurnitureTiles *tiles = new FurnitureTiles(corners);
-    tiles->setLayer(layer);
-    foreach (SimpleFileBlock entryBlock, furnitureBlock.blocks) {
-        if (entryBlock.name == QLatin1String("entry")) {
-            FurnitureTile::FurnitureOrientation orient
-                    = orientFromString(entryBlock.value(QLatin1String("orient")));
-            QString grimeString = entryBlock.value(QLatin1String("grime"));
-            bool grime = true;
-            if (grimeString.length() && !booleanFromString(grimeString, grime)) {
-                error = mError;
-                delete tiles;
-                return 0;
-            }
-            FurnitureTile *tile = new FurnitureTile(tiles, orient);
-            tile->setAllowGrime(grime);
-            foreach (SimpleFileKeyValue kv, entryBlock.values) {
-                if (!kv.name.contains(QLatin1Char(',')))
-                    continue;
-                QStringList values = kv.name.split(QLatin1Char(','),
-                                                   Qt::SkipEmptyParts);
-                int x = values[0].toInt();
-                int y = values[1].toInt();
-                if (x < 0 || x >= 50 || y < 0 || y >= 50) {
-                    error = tr("Invalid tile coordinates (%1,%2).")
-                            .arg(x).arg(y);
-                    delete tiles;
-                    return 0;
-                }
-                QString tilesetName;
-                int tileIndex;
-                if (!BuildingTilesMgr::parseTileName(kv.value, tilesetName, tileIndex)) {
-                    error = tr("Can't parse tile name '%1'.").arg(kv.value);
-                    delete tiles;
-                    return 0;
-                }
-                tile->setTile(x, y, BuildingTilesMgr::instance()->get(kv.value));
-            }
-            tiles->setTile(tile);
-        } else {
-            error = tr("Unknown block name '%1'.")
-                    .arg(entryBlock.name);
-            delete tiles;
-            return 0;
-        }
-    }
-
-    return tiles;
-}
-
-#define VERSION0 0
-#define VERSION_LATEST VERSION0
-
 bool FurnitureGroups::readTxt()
 {
     QFileInfo info(txtPath());
@@ -172,96 +109,15 @@ bool FurnitureGroups::readTxt()
 #endif
 
     QString path = info.canonicalFilePath();
-    SimpleFile simple;
-    if (!simple.read(path)) {
-        mError = tr("Error reading %1.").arg(path);
+    BuildingFurnitureFile file;
+    if (!file.read(path)) {
+        mError = file.errorString();
         return false;
     }
 
-    if (simple.version() != VERSION_LATEST) {
-        mError = tr("Expected %1 version %2, got %3")
-                .arg(txtName()).arg(VERSION_LATEST).arg(simple.version());
-        return false;
-    }
-
-    mRevision = simple.value("revision").toInt();
-    mSourceRevision = simple.value("source_revision").toInt();
-
-    foreach (SimpleFileBlock block, simple.blocks) {
-        if (block.name == QLatin1String("group")) {
-            FurnitureGroup *group = new FurnitureGroup;
-            group->mLabel = block.value("label");
-            foreach (SimpleFileBlock furnitureBlock, block.blocks) {
-                if (furnitureBlock.name == QLatin1String("furniture")) {
-#if 1
-                    FurnitureTiles *tiles = furnitureTilesFromSFB(furnitureBlock, mError);
-                    if (!tiles)
-                        return false;
-#else
-                    bool corners = furnitureBlock.value("corners") == QLatin1String("true");
-
-                    QString layerString = furnitureBlock.value("layer");
-                    FurnitureTiles::FurnitureLayer layer = layerString.isEmpty() ?
-                            FurnitureTiles::LayerFurniture : FurnitureTiles::layerFromString(layerString);
-                    if (layer == FurnitureTiles::InvalidLayer) {
-                        mError = tr("Invalid furniture layer '%1'").arg(layerString);
-                        return false;
-                    }
-
-                    FurnitureTiles *tiles = new FurnitureTiles(corners);
-                    tiles->setLayer(layer);
-                    foreach (SimpleFileBlock entryBlock, furnitureBlock.blocks) {
-                        if (entryBlock.name == QLatin1String("entry")) {
-                            FurnitureTile::FurnitureOrientation orient
-                                    = orientFromString(entryBlock.value(QLatin1String("orient")));
-                            FurnitureTile *tile = new FurnitureTile(tiles, orient);
-                            foreach (SimpleFileKeyValue kv, entryBlock.values) {
-                                if (!kv.name.contains(QLatin1Char(',')))
-                                    continue;
-                                QStringList values = kv.name.split(QLatin1Char(','),
-                                                                   Qt::SkipEmptyParts);
-                                int x = values[0].toInt();
-                                int y = values[1].toInt();
-                                if (x < 0 || x >= 50 || y < 0 || y >= 50) {
-                                    mError = tr("Invalid tile coordinates (%1,%2)")
-                                            .arg(x).arg(y);
-                                    return false;
-                                }
-                                QString tilesetName;
-                                int tileIndex;
-                                if (!BuildingTilesMgr::parseTileName(kv.value, tilesetName, tileIndex)) {
-                                    mError = tr("Can't parse tile name '%1'").arg(kv.value);
-                                    return false;
-                                }
-                                tile->setTile(x, y, BuildingTilesMgr::instance()->get(kv.value));
-                            }
-                            tiles->setTile(tile);
-                        } else {
-                            mError = tr("Unknown block name '%1'.\n%2")
-                                    .arg(entryBlock.name)
-                                    .arg(path);
-                            return false;
-                        }
-                    }
-#endif
-                    group->mTiles += tiles;
-                    tiles->setGroup(group);
-                } else {
-                    mError = tr("Unknown block name '%1'.\n%2")
-                            .arg(block.name)
-                            .arg(path);
-                    return false;
-                }
-            }
-            mGroups += group;
-        } else {
-            mError = tr("Unknown block name '%1'.\n%2")
-                    .arg(block.name)
-                    .arg(path);
-            return false;
-        }
-    }
-
+    mRevision = file.getRevision();
+    mSourceRevision = file.getSourceRevision();
+    mGroups = file.takeGroups();
     return true;
 #if 0
     FurnitureTiles *tiles = new FurnitureTiles;
@@ -296,89 +152,31 @@ bool FurnitureGroups::readTxt()
 #endif
 }
 
-SimpleFileBlock FurnitureGroups::furnitureTilesToSFB(FurnitureTiles *ftiles)
-{
-    SimpleFileBlock furnitureBlock;
-    furnitureBlock.name = QLatin1String("furniture");
-    if (ftiles->hasCorners())
-        furnitureBlock.addValue("corners", QLatin1String("true"));
-    if (ftiles->layer() != FurnitureTiles::LayerFurniture)
-        furnitureBlock.addValue("layer", ftiles->layerToString());
-    foreach (FurnitureTile *ftile, ftiles->tiles()) {
-        if (ftile->isEmpty())
-            continue;
-        SimpleFileBlock entryBlock;
-        entryBlock.name = QLatin1String("entry");
-        entryBlock.values += SimpleFileKeyValue(QLatin1String("orient"),
-                                                ftile->orientToString());
-        if (!ftile->allowGrime())
-            entryBlock.addValue("grime", QLatin1String("false"));
-        for (int x = 0; x < ftile->width(); x++) {
-            for (int y = 0; y < ftile->height(); y++) {
-                if (BuildingTile *btile = ftile->tile(x, y)) {
-                    entryBlock.values += SimpleFileKeyValue(
-                                QString(QLatin1String("%1,%2")).arg(x).arg(y),
-                                btile->name());
-                }
-            }
-        }
-        furnitureBlock.blocks += entryBlock;
-    }
-    return furnitureBlock;
-}
-
 bool FurnitureGroups::writeTxt()
 {
 #ifdef WORLDED
     return false;
 #endif
-    SimpleFile simpleFile;
-    foreach (FurnitureGroup *group, groups()) {
-        SimpleFileBlock groupBlock;
-        groupBlock.name = QLatin1String("group");
-        groupBlock.values += SimpleFileKeyValue(QLatin1String("label"),
-                                                   group->mLabel);
-        foreach (FurnitureTiles *ftiles, group->mTiles) {
-#if 1
-            SimpleFileBlock furnitureBlock = furnitureTilesToSFB(ftiles);
-#else
-            SimpleFileBlock furnitureBlock;
-            furnitureBlock.name = QLatin1String("furniture");
-            if (ftiles->hasCorners())
-                furnitureBlock.addValue("corners", QLatin1String("true"));
-            if (ftiles->layer() != FurnitureTiles::LayerFurniture)
-                furnitureBlock.addValue("layer", ftiles->layerToString());
-            foreach (FurnitureTile *ftile, ftiles->tiles()) {
-                if (ftile->isEmpty())
-                    continue;
-                SimpleFileBlock entryBlock;
-                entryBlock.name = QLatin1String("entry");
-                entryBlock.values += SimpleFileKeyValue(QLatin1String("orient"),
-                                                        ftile->orientToString());
-                for (int x = 0; x < ftile->width(); x++) {
-                    for (int y = 0; y < ftile->height(); y++) {
-                        if (BuildingTile *btile = ftile->tile(x, y)) {
-                            entryBlock.values += SimpleFileKeyValue(
-                                        QString(QLatin1String("%1,%2")).arg(x).arg(y),
-                                        btile->name());
-                        }
-                    }
-                }
-                furnitureBlock.blocks += entryBlock;
-            }
-#endif
-            groupBlock.blocks += furnitureBlock;
-        }
-        simpleFile.blocks += groupBlock;
-    }
-    simpleFile.setVersion(VERSION_LATEST);
-    simpleFile.replaceValue("revision", QString::number(++mRevision));
-    simpleFile.replaceValue("source_revision", QString::number(mSourceRevision));
-    if (!simpleFile.write(txtPath())) {
-        mError = simpleFile.errorString();
+    BuildingFurnitureFile file;
+    if (!file.write(txtPath(), ++mRevision, mSourceRevision, groups())) {
+        mError = file.errorString();
         return false;
     }
     return true;
+}
+
+int FurnitureGroups::setRevision(int revision)
+{
+    int old = mRevision;
+    mRevision = revision;
+    return old;
+}
+
+int FurnitureGroups::setSourceRevision(int sourceRevision)
+{
+    int old = mSourceRevision;
+    mSourceRevision = sourceRevision;
+    return old;
 }
 
 int FurnitureGroups::indexOf(const QString &name) const
@@ -407,48 +205,21 @@ void FurnitureGroups::grimeChanged(FurnitureTile *ftile)
     emit furnitureTileChanged(ftile);
 }
 
-FurnitureTile::FurnitureOrientation FurnitureGroups::orientFromString(const QString &s)
-{
-    if (s == QLatin1String("W")) return FurnitureTile::FurnitureW;
-    if (s == QLatin1String("N")) return FurnitureTile::FurnitureN;
-    if (s == QLatin1String("E")) return FurnitureTile::FurnitureE;
-    if (s == QLatin1String("S")) return FurnitureTile::FurnitureS;
-    if (s == QLatin1String("SW")) return FurnitureTile::FurnitureSW;
-    if (s == QLatin1String("NW")) return FurnitureTile::FurnitureNW;
-    if (s == QLatin1String("NE")) return FurnitureTile::FurnitureNE;
-    if (s == QLatin1String("SE")) return FurnitureTile::FurnitureSE;
-    return FurnitureTile::FurnitureUnknown;
-}
-
-bool FurnitureGroups::booleanFromString(const QString &s, bool &result)
-{
-    if (s == QLatin1String("true")) {
-        result = true;
-        return true;
-    }
-    if (s == QLatin1String("false")) {
-        result = false;
-        return true;
-    }
-    mError = tr("Expected boolean but got '%1'").arg(s);
-    return false;
-}
-
 bool FurnitureGroups::upgradeTxt()
 {
     QString userPath = txtPath();
 
-    SimpleFile userFile;
+    BuildingFurnitureFile userFile;
     if (!userFile.read(userPath)) {
         mError = userFile.errorString();
         return false;
     }
 
-    int userVersion = userFile.version(); // may be zero for unversioned file
-    if (userVersion == VERSION_LATEST)
+    int userVersion = userFile.getVersion(); // may be zero for unversioned file
+    if (userVersion == BuildingFurnitureFile::getVersionLatest())
         return true;
 
-    if (userVersion > VERSION_LATEST) {
+    if (userVersion > BuildingFurnitureFile::getVersionLatest()) {
         mError = tr("%1 is from a newer version of TileZed").arg(txtName());
         return false;
     }
@@ -457,16 +228,16 @@ bool FurnitureGroups::upgradeTxt()
 
     QString sourcePath = Tiled::Internal::Preferences::instance()->appConfigPath(txtName());
 
-    SimpleFile sourceFile;
+    BuildingFurnitureFile sourceFile;
     if (!sourceFile.read(sourcePath)) {
         mError = sourceFile.errorString();
         return false;
     }
-    Q_ASSERT(sourceFile.version() == VERSION_LATEST);
+    Q_ASSERT(sourceFile.getVersion() == BuildingFurnitureFile::getVersionLatest());
 
     // UPGRADE HERE
 
-    userFile.setVersion(VERSION_LATEST);
+    // Write the user file out with the latest version and format.
     if (!userFile.write(userPath)) {
         mError = userFile.errorString();
         return false;
@@ -478,92 +249,90 @@ bool FurnitureGroups::mergeTxt()
 {
     QString userPath = txtPath();
 
-    SimpleFile userFile;
+    BuildingFurnitureFile userFile;
     if (!userFile.read(userPath)) {
         mError = userFile.errorString();
         return false;
     }
-    Q_ASSERT(userFile.version() == VERSION_LATEST);
+    Q_ASSERT(userFile.getVersion() == BuildingFurnitureFile::getVersionLatest());
 
     QString sourcePath = Tiled::Internal::Preferences::instance()->appConfigPath(txtName());
 
-    SimpleFile sourceFile;
+    BuildingFurnitureFile sourceFile;
     if (!sourceFile.read(sourcePath)) {
         mError = sourceFile.errorString();
         return false;
     }
-    Q_ASSERT(sourceFile.version() == VERSION_LATEST);
+    Q_ASSERT(sourceFile.getVersion() == BuildingFurnitureFile::getVersionLatest());
 
-    int userSourceRevision = userFile.value("source_revision").toInt();
-    int sourceRevision = sourceFile.value("revision").toInt();
-    if (sourceRevision == userSourceRevision)
+    int userSourceRevision = userFile.getSourceRevision();
+    int sourceRevision = sourceFile.getRevision();
+    if (sourceRevision == userSourceRevision) {
         return true;
+    }
 
     // MERGE HERE
 
-    QMap<QString,SimpleFileBlock> userGroupsByName;
+    QList<FurnitureGroup*> sourceGroups = sourceFile.takeGroups();
+    QList<FurnitureGroup*> userGroups = userFile.takeGroups();
+    QMap<QString,FurnitureGroup*> userGroupsByName;
     QMap<QString,int> userGroupIndexByName;
-    QMap<QString,QStringList> userFurnitureByGroupName;
     int index = 0;
-    foreach (SimpleFileBlock b, userFile.blocks) {
-        QString label = b.value("label");
-        userGroupsByName[label] = b;
+    for (FurnitureGroup *group : std::as_const(userGroups)) {
+        const QString label = group->mLabel;
+        userGroupsByName[label] = group;
         userGroupIndexByName[label] = index++;
-        foreach (SimpleFileBlock b2, b.blocks)
-            userFurnitureByGroupName[label] += b2.toString();
     }
 
-    QMap<QString,SimpleFileBlock> sourceGroupsByName;
-    QMap<QString,QStringList> sourceFurnitureByGroupName;
-    foreach (SimpleFileBlock b, sourceFile.blocks) {
-        QString label = b.value("label");
-        sourceGroupsByName[label] = b;
-        foreach (SimpleFileBlock b2, b.blocks)
-            sourceFurnitureByGroupName[label] += b2.toString();
-    }
-
-    foreach (QString label, sourceGroupsByName.keys()) {
-        if (userGroupsByName.contains(label)) {
+    QList<FurnitureGroup*> takenGroups;
+    for (FurnitureGroup *sourceGroup : std::as_const(sourceGroups)) {
+        if (userGroupsByName.contains(sourceGroup->mLabel)) {
             // A user-group with the same name as a source-group exists.
             // Copy unique source-furniture to the user-group.
-            int userGroupIndex = userGroupIndexByName[label];
+            FurnitureGroup *userGroup = userGroupsByName[sourceGroup->mLabel];
             int userFurnitureIndex = 0;
-            int sourceFurnitureIndex = 0;
-            foreach (QString f, sourceFurnitureByGroupName[label]) {
-                if (userFurnitureByGroupName[label].contains(f)) {
-                    userFurnitureIndex = userFurnitureByGroupName[label].indexOf(f) + 1;
+            QList<FurnitureTiles*> takenTiles;
+            for (FurnitureTiles *sourceTiles : std::as_const(sourceGroup->mTiles)) {
+                if (FurnitureTiles *userTiles = userGroup->findMatch(sourceTiles)) {
+                    userFurnitureIndex = userGroup->mTiles.indexOf(userTiles) + 1;
                 } else {
-                    userFurnitureByGroupName[label].insert(userFurnitureIndex, f);
-                    SimpleFileBlock furnitureBlock = sourceGroupsByName[label].blocks.at(sourceFurnitureIndex);
-                    userFile.blocks[userGroupIndex].blocks.insert(userFurnitureIndex, furnitureBlock);
-                    qDebug() << "FurnitureGroups.txt merge: inserted furniture in group" << label << "at" << userFurnitureIndex;
+                    sourceTiles->setGroup(userGroup);
+                    userGroup->mTiles.insert(userFurnitureIndex, sourceTiles);
+                    takenTiles += sourceTiles;
+                    qDebug() << "FurnitureGroups.txt merge: inserted furniture in group" << sourceGroup->mLabel << "at" << userFurnitureIndex;
                     ++userFurnitureIndex;
                 }
-                ++sourceFurnitureIndex;
+            }
+            for (FurnitureTiles *sourceTiles : std::as_const(takenTiles)) {
+                sourceGroup->mTiles.removeOne(sourceTiles);
             }
         } else {
             // The source-group doesn't exist in the user-file.
             // Copy the source-group to the user-file.
-            userGroupsByName[label] = sourceGroupsByName[label];
-            int index = userGroupsByName.keys().indexOf(label); // insert group alphabetically
-            userFile.blocks.insert(index, userGroupsByName[label]);
-            foreach (QString label, userGroupsByName.keys()) {
-                if (userGroupIndexByName[label] >= index)
+            userGroupsByName[sourceGroup->mLabel] = sourceGroup;
+            int index = userGroupsByName.keys().indexOf(sourceGroup->mLabel); // insert group alphabetically
+            userGroups.insert(index, sourceGroup);
+            for (const QString &label : userGroupsByName.keys()) {
+                if (userGroupIndexByName[label] >= index) {
                     userGroupIndexByName[label]++;
+                }
             }
-            userGroupIndexByName[label] = index;
-            qDebug() << "FurnitureGroups.txt merge: inserted group" << label << "at" << index;
+            userGroupIndexByName[sourceGroup->mLabel] = index;
+            takenGroups += sourceGroup;
+            qDebug() << "FurnitureGroups.txt merge: inserted group" << sourceGroup->mLabel << "at" << index;
         }
     }
-
-    userFile.replaceValue("revision", QString::number(sourceRevision + 1));
-    userFile.replaceValue("source_revision", QString::number(sourceRevision));
-
-    userFile.setVersion(VERSION_LATEST);
-    if (!userFile.write(userPath)) {
+    for (FurnitureGroup *group : std::as_const(takenGroups)) {
+        sourceGroups.removeOne(group);
+    }
+    if (!userFile.write(userPath, sourceRevision + 1, sourceRevision, userGroups)) {
         mError = userFile.errorString();
+        qDeleteAll(sourceGroups);
+        qDeleteAll(userGroups);
         return false;
     }
+    qDeleteAll(sourceGroups);
+    qDeleteAll(userGroups);
     return true;
 }
 

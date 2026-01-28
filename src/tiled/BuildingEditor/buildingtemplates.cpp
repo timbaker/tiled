@@ -18,6 +18,7 @@
 #include "buildingtemplates.h"
 
 #include "building.h"
+#include "buildingfurniturefile.h"
 #include "buildingtiles.h"
 #include "buildingpreferences.h"
 #include "furnituregroups.h"
@@ -377,7 +378,8 @@ BuildingTileEntry *TemplatesFile::readTileEntry(SimpleFileBlock &block, QString 
 FurnitureTiles *TemplatesFile::readFurnitureTiles(SimpleFileBlock &block, QString &error)
 {
     FurnitureGroups *fg = FurnitureGroups::instance();
-    if (FurnitureTiles *result = fg->furnitureTilesFromSFB(block, error)) {
+    BuildingFurnitureFile file;
+    if (FurnitureTiles *result = file.furnitureTilesFromSFB(block, error)) {
         FurnitureTiles *match = fg->findMatch(result);
         if (match) {
             delete result;
@@ -410,7 +412,8 @@ void TemplatesFile::writeTileEntry(SimpleFileBlock &parentBlock, BuildingTileEnt
 
 void TemplatesFile::writeFurnitureTiles(SimpleFileBlock &block, FurnitureTiles *ftiles)
 {
-    block.blocks += FurnitureGroups::instance()->furnitureTilesToSFB(ftiles);
+    BuildingFurnitureFile file;
+    block.blocks += file.furnitureTilesToSFB(ftiles);
 }
 
 QString TemplatesFile::nameForEntry(BuildingTileEntry *entry)

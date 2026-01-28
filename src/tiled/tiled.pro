@@ -66,6 +66,7 @@ SOURCES += aboutdialog.cpp \
     BuildingEditor/attributeeditmode.cpp \
     BuildingEditor/attributeeditmode_p.cpp \
     BuildingEditor/buildingattributesdock.cpp \
+    BuildingEditor/buildingfurniturefile.cpp \
     BuildingEditor/buildingkeyvaluesdialog.cpp \
     BuildingEditor/exportbasementsdialog.cpp \
     BuildingEditor/templatedocument.cpp \
@@ -297,6 +298,7 @@ HEADERS += aboutdialog.h \
     BuildingEditor/attributeeditmode.h \
     BuildingEditor/attributeeditmode_p.h \
     BuildingEditor/buildingattributesdock.h \
+    BuildingEditor/buildingfurniturefile.h \
     BuildingEditor/buildingkeyvaluesdialog.h \
     BuildingEditor/exportbasementsdialog.h \
     BuildingEditor/templatedocument.h \

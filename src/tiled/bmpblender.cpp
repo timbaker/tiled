@@ -271,7 +271,7 @@ void BmpBlender::testBlendEdgesEverywhere(bool enabled, QRegion& tileSelection)
 
     tileSelection = QRegion();
 
-    for (QString layerName : mTileLayers.keys()) {
+    for (const QString &layerName : mTileLayers.keys()) {
         TileLayer *layer1 = tileLayers[layerName];
         TileLayer *layer2 = mTileLayers[layerName];
         if (layer1 != nullptr && layer2 != nullptr) {
@@ -286,7 +286,7 @@ void BmpBlender::testBlendEdgesEverywhere(bool enabled, QRegion& tileSelection)
         }
     }
 
-    for (QString layerName : tileLayers.keys()) {
+    for (const QString &layerName : tileLayers.keys()) {
         TileLayer *layer2 = mTileLayers[layerName];
         if (layer2 == nullptr) {
             qDebug() << "EDGE-TILE-FIX: layer2" << layerName << "is null";

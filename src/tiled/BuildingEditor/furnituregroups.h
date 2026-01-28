@@ -221,6 +221,15 @@ public:
     bool readTxt();
     bool writeTxt();
 
+    int revision() const
+    { return mRevision; }
+
+    int sourceRevision() const
+    { return mSourceRevision; }
+
+    int setRevision(int revision);
+    int setSourceRevision(int sourceRevision);
+
     const QList<FurnitureGroup*> groups() const
     { return mGroups; }
 
@@ -246,15 +255,9 @@ public:
     void layerChanged(FurnitureTiles *ftiles);
     void grimeChanged(FurnitureTile *ftile);
 
-    static FurnitureTile::FurnitureOrientation orientFromString(const QString &s);
-    bool booleanFromString(const QString &s, bool &result);
-
-    FurnitureTiles *furnitureTilesFromSFB(SimpleFileBlock &furnitureBlock, QString &error);
-    SimpleFileBlock furnitureTilesToSFB(FurnitureTiles *ftiles);
-
 signals:
-    void furnitureLayerChanged(FurnitureTiles *ftiles);
-    void furnitureTileChanged(FurnitureTile *ftile);
+    void furnitureLayerChanged(BuildingEditor::FurnitureTiles *ftiles);
+    void furnitureTileChanged(BuildingEditor::FurnitureTile *ftile);
 
 private:
     bool upgradeTxt();
