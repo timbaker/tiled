@@ -55,9 +55,13 @@ bool BuildingFurnitureFile::read(const QString &fileName)
 
     mVersion = simple.version();
 
+    if (mVersion > VERSION_LATEST) {
+        mError = QStringLiteral("Version %1 is from a newer version of TileZed\n(while reading %2)").arg(mVersion).arg(nativePath);
+        return false;
+    }
+
     if (mVersion != VERSION_LATEST) {
-        mError = QStringLiteral("Expected version %1, got %2\n(while reading %3)")
-                     .arg(VERSION_LATEST).arg(mVersion).arg(nativePath);
+        mError = QStringLiteral("Expected version %1, got %2\n(while reading %3)").arg(VERSION_LATEST).arg(mVersion).arg(nativePath);
         return false;
     }
 

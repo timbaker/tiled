@@ -158,10 +158,11 @@ bool FurnitureGroups::writeTxt()
     return false;
 #endif
     BuildingFurnitureFile file;
-    if (!file.write(txtPath(), ++mRevision, mSourceRevision, groups())) {
+    if (!file.write(txtPath(), mRevision + 1, mSourceRevision, groups())) {
         mError = file.errorString();
         return false;
     }
+    ++mRevision;
     return true;
 }
 
@@ -216,24 +217,11 @@ bool FurnitureGroups::upgradeTxt()
     }
 
     int userVersion = userFile.getVersion(); // may be zero for unversioned file
-    if (userVersion == BuildingFurnitureFile::getVersionLatest())
+    if (userVersion == BuildingFurnitureFile::getVersionLatest()) {
         return true;
-
-    if (userVersion > BuildingFurnitureFile::getVersionLatest()) {
-        mError = tr("%1 is from a newer version of TileZed").arg(txtName());
-        return false;
     }
 
     // Not the latest version -> upgrade it.
-
-    QString sourcePath = Tiled::Internal::Preferences::instance()->appConfigPath(txtName());
-
-    BuildingFurnitureFile sourceFile;
-    if (!sourceFile.read(sourcePath)) {
-        mError = sourceFile.errorString();
-        return false;
-    }
-    Q_ASSERT(sourceFile.getVersion() == BuildingFurnitureFile::getVersionLatest());
 
     // UPGRADE HERE
 

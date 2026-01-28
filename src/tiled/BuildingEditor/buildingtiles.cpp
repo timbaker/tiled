@@ -18,6 +18,7 @@
 #include "buildingtiles.h"
 
 #include "buildingpreferences.h"
+#include "buildingtilesfile.h"
 #include "simplefile.h"
 
 #include "preferences.h"
@@ -61,23 +62,26 @@ BuildingTilesMgr::BuildingTilesMgr() :
     mNoneCategory(0),
     mNoneTileEntry(0)
 {
-    mCatCurtains = new BTC_Curtains(QLatin1String("Curtains"));
-    mCatDoors = new BTC_Doors(QLatin1String("Doors"));
-    mCatDoorFrames = new BTC_DoorFrames(QLatin1String("Door Frames"));
-    mCatFloors = new BTC_Floors(QLatin1String("Floors"));
-    mCatEWalls = new BTC_EWalls(QLatin1String("Exterior Walls"));
-    mCatIWalls = new BTC_IWalls(QLatin1String("Interior Walls"));
-    mCatEWallTrim = new BTC_EWallTrim(QLatin1String("Trim - Exterior Walls"));
-    mCatIWallTrim = new BTC_IWallTrim(QLatin1String("Trim - Interior Walls"));
-    mCatStairs = new BTC_Stairs(QLatin1String("Stairs"));
-    mCatShutters = new BTC_Shutters(QLatin1String("Shutters"));
-    mCatWindows = new BTC_Windows(QLatin1String("Windows"));
-    mCatGrimeFloor = new BTC_GrimeFloor(QLatin1String("Grime - Floors"));
-    mCatGrimeWall = new BTC_GrimeWall(QLatin1String("Grime - Walls"));
-    mCatRoofCaps = new BTC_RoofCaps(QLatin1String("Roof Caps"));
-    mCatRoofSlopes = new BTC_RoofSlopes(QLatin1String("Roof Slopes"));
-    mCatRoofTops = new BTC_RoofTops(QLatin1String("Roof Tops"));
-    mCatCeiling = new BTC_Ceiling(QLatin1String("Ceilings"));
+    QVector<BuildingTileCategory *> categories;
+    createCategories(categories);
+
+    mCatCurtains = static_cast<BTC_Curtains*>(categories[CategoryEnum::Curtains]);
+    mCatDoors = static_cast<BTC_Doors*>(categories[CategoryEnum::Doors]);
+    mCatDoorFrames = static_cast<BTC_DoorFrames*>(categories[CategoryEnum::DoorFrames]);
+    mCatFloors = static_cast<BTC_Floors*>(categories[CategoryEnum::Floors]);
+    mCatEWalls = static_cast<BTC_EWalls*>(categories[CategoryEnum::ExteriorWalls]);
+    mCatIWalls = static_cast<BTC_IWalls*>(categories[CategoryEnum::InteriorWalls]);
+    mCatEWallTrim = static_cast<BTC_EWallTrim*>(categories[CategoryEnum::ExteriorWallTrim]);
+    mCatIWallTrim = static_cast<BTC_IWallTrim*>(categories[CategoryEnum::InteriorWallTrim]);
+    mCatStairs = static_cast<BTC_Stairs*>(categories[CategoryEnum::Stairs]);
+    mCatShutters = static_cast<BTC_Shutters*>(categories[CategoryEnum::Shutters]);
+    mCatWindows = static_cast<BTC_Windows*>(categories[CategoryEnum::Windows]);
+    mCatGrimeFloor = static_cast<BTC_GrimeFloor*>(categories[CategoryEnum::GrimeFloor]);
+    mCatGrimeWall = static_cast<BTC_GrimeWall*>(categories[CategoryEnum::GrimeWall]);
+    mCatRoofCaps = static_cast<BTC_RoofCaps*>(categories[CategoryEnum::RoofCaps]);
+    mCatRoofSlopes = static_cast<BTC_RoofSlopes*>(categories[CategoryEnum::RoofSlopes]);
+    mCatRoofTops = static_cast<BTC_RoofTops*>(categories[CategoryEnum::RoofTops]);
+    mCatCeiling = static_cast<BTC_Ceiling*>(categories[CategoryEnum::Ceiling]);
 
     mCategories << mCatEWalls << mCatIWalls << mCatEWallTrim << mCatIWallTrim
                    << mCatFloors << mCatDoors << mCatDoorFrames << mCatWindows
@@ -86,8 +90,9 @@ BuildingTilesMgr::BuildingTilesMgr() :
                    << mCatRoofCaps << mCatRoofSlopes << mCatRoofTops
                    << mCatCeiling;
 
-    foreach (BuildingTileCategory *category, mCategories)
+    for (BuildingTileCategory *category : std::as_const(mCategories)) {
         mCategoryByName[category->name()] = category;
+    }
 
     mCatEWalls->setShadowImage(QImage(QLatin1String(":/BuildingEditor/icons/shadow_walls.png")));
     mCatIWalls->setShadowImage(mCatEWalls->shadowImage());
@@ -165,6 +170,29 @@ BuildingTile *BuildingTilesMgr::get(const QString &tileName, int offset)
     if (!mTileByName.contains(adjustedName))
         add(adjustedName);
     return mTileByName[adjustedName];
+}
+
+void BuildingTilesMgr::createCategories(QVector<BuildingTileCategory *> &categories)
+{
+    qDeleteAll(categories);
+    categories.resize(CategoryEnum::Count);
+    categories[CategoryEnum::Curtains] = new BTC_Curtains(QLatin1String("Curtains"));
+    categories[CategoryEnum::Doors] = new BTC_Doors(QLatin1String("Doors"));
+    categories[CategoryEnum::DoorFrames] = new BTC_DoorFrames(QLatin1String("Door Frames"));
+    categories[CategoryEnum::Floors] = new BTC_Floors(QLatin1String("Floors"));
+    categories[CategoryEnum::ExteriorWalls] = new BTC_EWalls(QLatin1String("Exterior Walls"));
+    categories[CategoryEnum::InteriorWalls] = new BTC_IWalls(QLatin1String("Interior Walls"));
+    categories[CategoryEnum::ExteriorWallTrim] = new BTC_EWallTrim(QLatin1String("Trim - Exterior Walls"));
+    categories[CategoryEnum::InteriorWallTrim] = new BTC_IWallTrim(QLatin1String("Trim - Interior Walls"));
+    categories[CategoryEnum::Stairs] = new BTC_Stairs(QLatin1String("Stairs"));
+    categories[CategoryEnum::Shutters] = new BTC_Shutters(QLatin1String("Shutters"));
+    categories[CategoryEnum::Windows] = new BTC_Windows(QLatin1String("Windows"));
+    categories[CategoryEnum::GrimeFloor] = new BTC_GrimeFloor(QLatin1String("Grime - Floors"));
+    categories[CategoryEnum::GrimeWall] = new BTC_GrimeWall(QLatin1String("Grime - Walls"));
+    categories[CategoryEnum::RoofCaps] = new BTC_RoofCaps(QLatin1String("Roof Caps"));
+    categories[CategoryEnum::RoofSlopes] = new BTC_RoofSlopes(QLatin1String("Roof Slopes"));
+    categories[CategoryEnum::RoofTops] = new BTC_RoofTops(QLatin1String("Roof Tops"));
+    categories[CategoryEnum::Ceiling] = new BTC_Ceiling(QLatin1String("Ceilings"));
 }
 
 QString BuildingTilesMgr::nameForTile(const QString &tilesetName, int index)
@@ -349,48 +377,26 @@ bool BuildingTilesMgr::readTxt()
         return false;
 #endif
     QString path = info.canonicalFilePath();
-    SimpleFile simple;
-    if (!simple.read(path)) {
-        mError = tr("Error reading %1.").arg(path);
+    BuildingTilesFile file;
+    if (!file.read(path)) {
+        mError = file.errorString();
         return false;
     }
 
-    if (simple.version() != VERSION_LATEST) {
+    if (file.getVersion() != VERSION_LATEST) {
         mError = tr("Expected %1 version %2, got %3")
-                .arg(txtName()).arg(VERSION_LATEST).arg(simple.version());
+                .arg(txtName()).arg(VERSION_LATEST).arg(file.getVersion());
         return false;
     }
 
-    mRevision = simple.value("revision").toInt();
-    mSourceRevision = simple.value("source_revision").toInt();
+    mRevision = file.getRevision();
+    mSourceRevision = file.getSourceRevision();
 
-    foreach (SimpleFileBlock block, simple.blocks) {
-        if (block.name == QLatin1String("category")) {
-            QString categoryName = block.value("name");
-            if (!mCategoryByName.contains(categoryName)) {
-                mError = tr("Unknown category '%1' in BuildingTiles.txt.").arg(categoryName);
-                return false;
-            }
-            BuildingTileCategory *category = this->category(categoryName);
-            foreach (SimpleFileBlock block2, block.blocks) {
-                if (block2.name == QLatin1String("entry")) {
-                    if (BuildingTileEntry *entry = readTileEntry(category, block2, mError)) {
-                        // read offset = a b c here too
-                        category->insertEntry(category->entryCount(), entry);
-                    } else
-                        return false;
-                } else {
-                    mError = tr("Unknown block name '%1'.\n%2")
-                            .arg(block2.name)
-                            .arg(path);
-                    return false;
-                }
-            }
-        } else {
-            mError = tr("Unknown block name '%1'.\n%2")
-                    .arg(block.name)
-                    .arg(path);
-            return false;
+    for (int i = 0; i < CategoryEnum::Count; i++) {
+        BuildingTileCategory *sourceCategory = file.categories().at(i);
+        BuildingTileCategory *category = mCategories.at(i);
+        for (BuildingTileEntry *sourceEntry : sourceCategory->entries()) {
+            category->insertEntry(category->entryCount(), sourceEntry->createCopy(category));
         }
     }
 #if 0
@@ -408,8 +414,9 @@ bool BuildingTilesMgr::readTxt()
         }
     }
 #endif
-    foreach (BuildingTileCategory *category, mCategories)
+    for (BuildingTileCategory *category : std::as_const(mCategories)) {
         category->setDefaultEntry(category->entry(0));
+    }
     mCatCurtains->setDefaultEntry(noneTileEntry());
 
     return true;
@@ -421,27 +428,26 @@ void BuildingTilesMgr::writeTxt(QWidget *parent)
     return;
 #endif
 
-    SimpleFile simpleFile;
-    foreach (BuildingTileCategory *category, categories()) {
-        SimpleFileBlock categoryBlock;
-        categoryBlock.name = QLatin1String("category");
-        categoryBlock.values += SimpleFileKeyValue(QLatin1String("label"),
-                                                   category->label());
-        categoryBlock.values += SimpleFileKeyValue(QLatin1String("name"),
-                                                   category->name());
-        foreach (BuildingTileEntry *entry, category->entries()) {
-            writeTileEntry(categoryBlock, entry);
-        }
+    BuildingTilesFile file;
+    if (!file.write(txtPath(), mRevision + 1, mSourceRevision, categories().toVector())) {
+        QMessageBox::warning(parent, tr("It's no good, Jim!"), file.errorString());
+        return;
+    }
+    ++mRevision;
+}
 
-        simpleFile.blocks += categoryBlock;
-    }
-    simpleFile.setVersion(VERSION_LATEST);
-    simpleFile.replaceValue("revision", QString::number(++mRevision));
-    simpleFile.replaceValue("source_revision", QString::number(mSourceRevision));
-    if (!simpleFile.write(txtPath())) {
-        QMessageBox::warning(parent, tr("It's no good, Jim!"),
-                             simpleFile.errorString());
-    }
+int BuildingTilesMgr::setRevision(int revision)
+{
+    int old = mRevision;
+    mRevision = revision;
+    return old;
+}
+
+int BuildingTilesMgr::setSourceRevision(int sourceRevision)
+{
+    int old = mSourceRevision;
+    mSourceRevision = sourceRevision;
+    return old;
 }
 
 BuildingTileEntry *BuildingTilesMgr::defaultCategoryTile(int e) const
@@ -465,69 +471,20 @@ bool BuildingTilesMgr::upgradeTxt()
 {
     QString userPath = txtPath();
 
-    SimpleFile userFile;
+    BuildingTilesFile userFile;
     if (!userFile.read(userPath)) {
         mError = userFile.errorString();
         return false;
     }
 
-    int userVersion = userFile.version(); // may be zero for unversioned file
-    if (userVersion == VERSION_LATEST)
+    int userVersion = userFile.getVersion(); // may be zero for unversioned file
+    if (userVersion == BuildingTilesFile::getVersionLatest()) {
         return true;
-
-    if (userVersion > VERSION_LATEST) {
-        mError = tr("%1 is from a newer version of TileZed").arg(txtName());
-        return false;
     }
 
     // Not the latest version -> upgrade it.
 
-    QString sourcePath = Tiled::Internal::Preferences::instance()->appConfigPath(txtName());
-
-    SimpleFile sourceFile;
-    if (!sourceFile.read(sourcePath)) {
-        mError = sourceFile.errorString();
-        return false;
-    }
-    Q_ASSERT(sourceFile.version() == VERSION_LATEST);
-
-    if (userVersion == VERSION0) {
-        userFile.blocks += findCategoryBlock(sourceFile, QLatin1String("curtains"));
-    }
-
-    if (userVersion < VERSION2) {
-        SimpleFileBlock newFile;
-        // Massive rewrite -> BuildingTileEntry stuff
-        foreach (SimpleFileBlock block, userFile.blocks) {
-            if (block.name == QLatin1String("category")) {
-                QString categoryName = block.value(QLatin1String("name"));
-                SimpleFileBlock newCatBlock;
-                newCatBlock.name = block.name;
-                newCatBlock.values += SimpleFileKeyValue(QLatin1String("name"),
-                                                         categoryName);
-                BuildingTileCategory *category = this->category(categoryName);
-                foreach (SimpleFileKeyValue kv, block.block("tiles").values) {
-                    QString tileName = kv.value;
-                    BuildingTileEntry *entry = category->createEntryFromSingleTile(tileName);
-                    SimpleFileBlock newEntryBlock;
-                    newEntryBlock.name = QLatin1String("entry");
-                    for (int i = 0; i < category->enumCount(); i++) {
-                        newEntryBlock.values += SimpleFileKeyValue(category->enumToString(i),
-                                                                   entry->tile(i)->name());
-                        if (!entry->offset(i).isNull())
-                            newEntryBlock.values += SimpleFileKeyValue(QLatin1String("offset"),
-                                                                       QLatin1String("FIXME"));
-                    }
-                    newCatBlock.blocks += newEntryBlock;
-                }
-                newFile.blocks += newCatBlock;
-            }
-        }
-        userFile.blocks = newFile.blocks;
-        userFile.values = newFile.values;
-    }
-
-    userFile.setVersion(VERSION_LATEST);
+    // Write the user file out with the latest version and format.
     if (!userFile.write(userPath)) {
         mError = userFile.errorString();
         return false;
@@ -538,30 +495,43 @@ bool BuildingTilesMgr::upgradeTxt()
 bool BuildingTilesMgr::mergeTxt()
 {
     QString userPath = txtPath();
-
-    SimpleFile userFile;
+    BuildingTilesFile userFile;
     if (!userFile.read(userPath)) {
         mError = userFile.errorString();
         return false;
     }
-    Q_ASSERT(userFile.version() == VERSION_LATEST);
+    Q_ASSERT(userFile.getVersion() == BuildingTilesFile::getVersionLatest());
 
     QString sourcePath = Tiled::Internal::Preferences::instance()->appConfigPath(txtName());
-
-    SimpleFile sourceFile;
+    BuildingTilesFile sourceFile;
     if (!sourceFile.read(sourcePath)) {
         mError = sourceFile.errorString();
         return false;
     }
-    Q_ASSERT(sourceFile.version() == VERSION_LATEST);
+    Q_ASSERT(sourceFile.getVersion() == BuildingTilesFile::getVersionLatest());
 
-    int userSourceRevision = userFile.value("source_revision").toInt();
-    int sourceRevision = sourceFile.value("revision").toInt();
-    if (sourceRevision == userSourceRevision)
+    int userSourceRevision = userFile.getSourceRevision();
+    int sourceRevision = sourceFile.getRevision();
+    if (sourceRevision == userSourceRevision) {
         return true;
+    }
 
     // MERGE HERE
 
+    for (int i = 0; i < CategoryEnum::Count; i++) {
+        BuildingTileCategory *sourceCategory = sourceFile.categories().at(i);
+        BuildingTileCategory *userCategory = userFile.categories().at(i);
+        // Copy unique source-entries to the user-category.
+        for (BuildingTileEntry *sourceEntry : sourceCategory->entries()) {
+            if (userCategory->findMatch(sourceEntry) != nullptr) {
+                continue;
+            }
+            BuildingTileEntry *userEntry = sourceEntry->createCopy(userCategory);
+            userCategory->insertEntry(userCategory->entryCount(), userEntry);
+        }
+    }
+
+#if 0
     QMap<QString,SimpleFileBlock> userCategoriesByName;
     QMap<QString,int> userCategoryIndexByName;
     QMap<QString,QStringList> userEntriesByCategoryName;
@@ -621,7 +591,8 @@ bool BuildingTilesMgr::mergeTxt()
     userFile.replaceValue("source_revision", QString::number(sourceRevision));
 
     userFile.setVersion(VERSION_LATEST);
-    if (!userFile.write(userPath)) {
+#endif
+    if (!userFile.write(userPath, sourceRevision + 1, sourceRevision, userFile.categories())) {
         mError = userFile.errorString();
         return false;
     }
@@ -748,6 +719,14 @@ BuildingTileEntry::BuildingTileEntry(BuildingTileCategory *category) :
         for (int i = 0; i < mTiles.size(); i++)
             mTiles[i] = BuildingTilesMgr::instance()->noneTile();
     }
+}
+
+BuildingTileEntry *BuildingTileEntry::createCopy(BuildingTileCategory *category) const
+{
+    BuildingTileEntry *copy = new BuildingTileEntry(category);
+    copy->mTiles = mTiles;
+    copy->mOffsets = mOffsets;
+    return copy;
 }
 
 BuildingTile *BuildingTileEntry::displayTile() const

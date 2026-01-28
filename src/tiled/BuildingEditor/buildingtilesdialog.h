@@ -109,7 +109,11 @@ private:
     BuildingTileCategory *categoryAt(int row);
     FurnitureGroup *furnitureGroupAt(int row);
 
-    void reloadFrom(const QString &fileName);
+    void exportFurnitureTxt(const QString &directory);
+    void exportTilesTxt(const QString &directory);
+    void reloadFrom(const QString &directory);
+    bool reloadBuildingFurnitureTxt(const QString &directory);
+    bool reloadBuildingTilesTxt(const QString &directory);
     bool checkOpenDocuments();
 
     typedef Tiled::Tileset Tileset;

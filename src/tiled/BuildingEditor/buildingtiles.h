@@ -73,6 +73,8 @@ public:
     BuildingTileEntry(BuildingTileCategory *category);
     virtual ~BuildingTileEntry() {}
 
+    BuildingTileEntry *createCopy(BuildingTileCategory *category) const;
+
     BuildingTileCategory *category() const
     { return mCategory; }
 
@@ -716,6 +718,8 @@ public:
 
     BuildingTile *get(const QString &tileName, int offset = 0);
 
+    static void createCategories(QVector<BuildingTileCategory *> &categories);
+
     const QList<BuildingTileCategory*> &categories() const
     { return mCategories; }
 
@@ -775,6 +779,15 @@ public:
 
     bool readTxt();
     void writeTxt(QWidget *parent = 0);
+
+    int setRevision(int revision);
+    int setSourceRevision(int sourceRevision);
+
+    int revision() const
+    { return mRevision; }
+
+    int sourceRevision() const
+    { return mSourceRevision; }
 
     BuildingTileCategory *catEWalls() const { return mCatEWalls; }
     BuildingTileCategory *catIWalls() const { return mCatIWalls; }

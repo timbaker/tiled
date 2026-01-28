@@ -315,7 +315,7 @@ void SimpleFileBlock::replaceValue(const QString &key, const QString &value,
     values.insert(index, SimpleFileKeyValue(key, value));
 }
 
-SimpleFileBlock SimpleFileBlock::block(const QString &name)
+SimpleFileBlock SimpleFileBlock::block(const QString &name) const
 {
     int i = findBlock(name);
     if (i >= 0)

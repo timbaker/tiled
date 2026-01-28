@@ -22,6 +22,7 @@
 #include "buildingfurniturefile.h"
 #include "buildingpreferences.h"
 #include "buildingtiles.h"
+#include "buildingtilesfile.h"
 #include "buildingtmx.h"
 #include "furnituregroups.h"
 #include "furnitureview.h"
@@ -142,6 +143,34 @@ public:
     BuildingTilesDialog *mDialog;
     BuildingTileCategory *mCategory;
     QString mName;
+};
+
+class SetBuildingTilesRevision : public QUndoCommand
+{
+public:
+    SetBuildingTilesRevision(BuildingTilesDialog *d, int revision, int sourceRevision) :
+        QUndoCommand(QCoreApplication::translate("UndoCommands", "Set BuildingTiles Revision")),
+        mDialog(d),
+        mRevision(revision),
+        mSourceRevision(sourceRevision)
+    {
+    }
+
+    void undo()
+    {
+        mRevision = BuildingTilesMgr::instance()->setRevision(mRevision);
+        mSourceRevision = BuildingTilesMgr::instance()->setSourceRevision(mSourceRevision);
+    }
+
+    void redo()
+    {
+        mRevision = BuildingTilesMgr::instance()->setRevision(mRevision);
+        mSourceRevision = BuildingTilesMgr::instance()->setSourceRevision(mSourceRevision);
+    }
+
+    BuildingTilesDialog *mDialog;
+    int mRevision;
+    int mSourceRevision;
 };
 
 class AddCategory : public QUndoCommand
@@ -537,7 +566,7 @@ class SetFurnitureGroupsRevision : public QUndoCommand
 {
 public:
     SetFurnitureGroupsRevision(BuildingTilesDialog *d, int revision, int sourceRevision) :
-        QUndoCommand(QCoreApplication::translate("UndoCommands", "Add Category")),
+        QUndoCommand(QCoreApplication::translate("UndoCommands", "Set FurnitureGroups Revision")),
         mDialog(d),
         mRevision(revision),
         mSourceRevision(sourceRevision)
@@ -820,16 +849,19 @@ BuildingTilesDialog::BuildingTilesDialog(QWidget *parent) :
 
     button = new QToolButton(this);
     button->setText(tr("Import..."));
+    button->setToolTip(tr("Read BuildingTiles.txt and BuildingFurniture.txt.\nThis will replace your current tile and furniture assignments."));
     ui->buttonsLayout->insertWidget(3, button);
     connect(button, &QAbstractButton::clicked, this, &BuildingTilesDialog::importFile);
 
     button = new QToolButton(this);
     button->setText(tr("Export..."));
+    button->setToolTip(tr("Write a copy of BuildingTiles.txt and BuildingFurniture.txt.\nCan be used to share these files with others."));
     ui->buttonsLayout->insertWidget(4, button);
     connect(button, &QAbstractButton::clicked, this, &BuildingTilesDialog::exportFile);
 
     button = new QToolButton(this);
     button->setText(tr("Reload"));
+    button->setToolTip(tr("Read BuildingTiles.txt and BuildingFurniture.txt.\nThis will replace your current tile and furniture assignments."));
     ui->buttonsLayout->insertWidget(5, button);
     connect(button, &QAbstractButton::clicked, this, &BuildingTilesDialog::reloadFile);
 
@@ -1969,7 +2001,7 @@ void BuildingTilesDialog::furnitureGrimeChanged(bool allow)
         mUndoStack->endMacro();
 }
 
-static const QString SETTINGS_KEY_TXT_FILE = QStringLiteral("BuildingTilesDialog/ExportFurnitureTxt");
+static const QString SETTINGS_KEY_DIRECTORY = QStringLiteral("BuildingTilesDialog/ExportDirectory");
 
 void BuildingTilesDialog::importFile()
 {
@@ -1977,33 +2009,30 @@ void BuildingTilesDialog::importFile()
         return;
     }
     QSettings &settings = BuildingPreferences::instance()->settings();
-    QString suggestedFileName = BuildingPreferences::instance()->configPath(QStringLiteral("BuildingFurniture.txt"));
-    suggestedFileName = settings.value(SETTINGS_KEY_TXT_FILE, suggestedFileName).toString();
-    const QString fileName = QFileDialog::getOpenFileName(this, QString(), suggestedFileName, tr("BuildingEd Furniture Files (*.txt)"));
-    if (fileName.isEmpty()) {
+    QString suggestedDirectory = BuildingPreferences::instance()->configPath();
+    suggestedDirectory = settings.value(SETTINGS_KEY_DIRECTORY, suggestedDirectory).toString();
+    QString caption = tr("Import Tiles and Furniture");
+    const QString directory = QFileDialog::getExistingDirectory(this, caption, suggestedDirectory);
+    if (directory.isEmpty()) {
         return;
     }
-    settings.setValue(SETTINGS_KEY_TXT_FILE, QFileInfo(fileName).absoluteFilePath());
-    reloadFrom(fileName);
+    settings.setValue(SETTINGS_KEY_DIRECTORY, QFileInfo(directory).absoluteFilePath());
+    reloadFrom(directory);
 }
 
 void BuildingTilesDialog::exportFile()
 {
     QSettings &settings = BuildingPreferences::instance()->settings();
-    QString suggestedFileName = BuildingPreferences::instance()->configPath(QStringLiteral("BuildingFurniture.txt"));
-    suggestedFileName = settings.value(SETTINGS_KEY_TXT_FILE, suggestedFileName).toString();
-    const QString fileName = QFileDialog::getSaveFileName(this, QString(), suggestedFileName, tr("BuildingEd Furniture Files (*.txt)"));
-    if (fileName.isEmpty()) {
+    QString suggestedDirectory = BuildingPreferences::instance()->configPath();
+    suggestedDirectory = settings.value(SETTINGS_KEY_DIRECTORY, suggestedDirectory).toString();
+    QString caption = tr("Import Tiles and Furniture");
+    const QString directory = QFileDialog::getExistingDirectory(this, caption, suggestedDirectory);
+    if (directory.isEmpty()) {
         return;
     }
-    settings.setValue(SETTINGS_KEY_TXT_FILE, QFileInfo(fileName).absoluteFilePath());
-    BuildingFurnitureFile file;
-    int revision = FurnitureGroups::instance()->revision();
-    int sourceRevision = FurnitureGroups::instance()->sourceRevision();
-    if (file.write(fileName, revision, sourceRevision, FurnitureGroups::instance()->groups())) {
-        return;
-    }
-    QMessageBox::warning(this, tr("Export BuildingFurniture.txt Failed"), file.errorString());
+    settings.setValue(SETTINGS_KEY_DIRECTORY, QFileInfo(directory).absoluteFilePath());
+    exportFurnitureTxt(directory);
+    exportTilesTxt(directory);
 }
 
 void BuildingTilesDialog::reloadFile()
@@ -2012,28 +2041,59 @@ void BuildingTilesDialog::reloadFile()
         return;
     }
     QSettings &settings = BuildingPreferences::instance()->settings();
-    QString fileName = settings.value(SETTINGS_KEY_TXT_FILE, QString()).toString();
-    if (fileName.isEmpty()) {
+    QString directory = settings.value(SETTINGS_KEY_DIRECTORY, QString()).toString();
+    if (directory.isEmpty()) {
         return;
     }
-    if (!QFileInfo::exists(fileName)) {
+    if (!QFileInfo::exists(directory) && QFileInfo(directory).isDir()) {
         return;
     }
-    reloadFrom(fileName);
+    reloadFrom(directory);
 }
 
-void BuildingTilesDialog::reloadFrom(const QString &fileName)
+void BuildingTilesDialog::exportFurnitureTxt(const QString &directory)
 {
     BuildingFurnitureFile file;
-    if (!file.read(fileName)) {
-        QMessageBox::warning(this, tr("Read BuildingFurniture.txt Failed"), file.errorString());
+    int revision = FurnitureGroups::instance()->revision();
+    int sourceRevision = FurnitureGroups::instance()->sourceRevision();
+    if (file.write(directory, revision, sourceRevision, FurnitureGroups::instance()->groups())) {
         return;
+    }
+    QMessageBox::warning(this, tr("Export BuildingFurniture.txt Failed"), file.errorString());
+}
+
+void BuildingTilesDialog::exportTilesTxt(const QString &directory)
+{
+    BuildingTilesFile file;
+    int revision = BuildingTilesMgr::instance()->revision();
+    int sourceRevision = BuildingTilesMgr::instance()->sourceRevision();
+    if (file.write(directory, revision, sourceRevision, BuildingTilesMgr::instance()->categories().toVector())) {
+        return;
+    }
+    QMessageBox::warning(this, tr("Export BuildingFurniture.txt Failed"), file.errorString());
+}
+
+void BuildingTilesDialog::reloadFrom(const QString &directory)
+{
+    mUndoStack->beginMacro(tr("Import Tiles and Furniture"));
+    reloadBuildingFurnitureTxt(directory);
+    reloadBuildingTilesTxt(directory);
+    mUndoStack->endMacro();
+}
+
+bool BuildingTilesDialog::reloadBuildingFurnitureTxt(const QString &directory)
+{
+    BuildingFurnitureFile file;
+    const QString txtName = FurnitureGroups::instance()->txtName();
+    if (!file.read(directory + QDir::separator() + txtName)) {
+        QMessageBox::warning(this, tr("Reading %1 Failed\n%2"), txtName, file.errorString());
+        return false;
     }
     const int revision = file.getRevision();
     const int sourceRevision = file.getSourceRevision();
-    QList<FurnitureGroup*> newGroups = file.takeGroups();
+    const QList<FurnitureGroup*> newGroups = file.takeGroups();
     const FurnitureGroups *fgs = FurnitureGroups::instance();
-    mUndoStack->beginMacro(tr("Import BuildingFurniture.txt"));
+    mUndoStack->beginMacro(tr("Import %1").arg(txtName));
     mUndoStack->push(new SetFurnitureGroupsRevision(this, revision, sourceRevision));
     for (int i = fgs->groupCount() - 1; i >= 0; i--) {
         mUndoStack->push(new RemoveCategory(this, i));
@@ -2042,6 +2102,35 @@ void BuildingTilesDialog::reloadFrom(const QString &fileName)
         mUndoStack->push(new AddCategory(this, fgs->groupCount(), group));
     }
     mUndoStack->endMacro();
+    return true;
+}
+
+bool BuildingTilesDialog::reloadBuildingTilesTxt(const QString &directory)
+{
+    BuildingTilesFile file;
+    BuildingTilesMgr *btm = BuildingTilesMgr::instance();
+    const QString txtName = btm->txtName();
+    if (!file.read(directory + QDir::separator() + txtName)) {
+        QMessageBox::warning(this, tr("Reading %1 Failed\n%2"), txtName, file.errorString());
+        return false;
+    }
+    const int revision = file.getRevision();
+    const int sourceRevision = file.getSourceRevision();
+    mUndoStack->beginMacro(tr("Import %1").arg(txtName));
+    mUndoStack->push(new SetBuildingTilesRevision(this, revision, sourceRevision));
+    for (int i = 0; i < btm->categoryCount(); i++) {
+        BuildingTileCategory *category = btm->category(i);
+        for (int j = category->entryCount() - 1; j >= 0; j--) {
+            mUndoStack->push(new RemoveTileFromCategory(this, category, j));
+        }
+        BuildingTileCategory *sourceCategory = file.categories().at(i);
+        for (int j = 0; j < sourceCategory->entryCount(); j++) {
+            BuildingTileEntry *entry = sourceCategory->entry(j)->createCopy(category);
+            mUndoStack->push(new AddTileToCategory(this, category, j, entry));
+        }
+    }
+    mUndoStack->endMacro();
+    return true;
 }
 
 bool BuildingTilesDialog::checkOpenDocuments()

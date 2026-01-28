@@ -112,10 +112,10 @@ public:
 
     void replaceValue(const QString &key, const QString &value, bool atEnd = true);
 
-    SimpleFileBlock block(const char *name)
+    SimpleFileBlock block(const char *name) const
     { return block(QLatin1String(name)); }
 
-    SimpleFileBlock block(const QString &name);
+    SimpleFileBlock block(const QString &name) const;
 
     QString toString(int depth = -1) const;
     void write(QTextStream &ts, int indent) const;
