@@ -327,6 +327,18 @@
     <string>Switch between expert mode</string>
    </property>
   </action>
+  <action name="actionRemoveDuplicates">
+   <property name="icon">
+    <iconset resource="../tiled.qrc">
+     <normaloff>:/images/16x16/edit-delete.png</normaloff>:/images/16x16/edit-delete.png</iconset>
+   </property>
+   <property name="text">
+    <string>Remove Duplicates</string>
+   </property>
+   <property name="toolTip">
+    <string>Remove Duplicate Entries</string>
+   </property>
+  </action>
  </widget>
  <customwidgets>
   <customwidget>

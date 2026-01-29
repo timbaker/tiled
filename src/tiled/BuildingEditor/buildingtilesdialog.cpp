@@ -796,6 +796,7 @@ BuildingTilesDialog::BuildingTilesDialog(QWidget *parent) :
     toolBar->addSeparator();
     toolBar->addAction(ui->actionAddTiles);
     toolBar->addAction(ui->actionRemoveTiles);
+    toolBar->addAction(ui->actionRemoveDuplicates);
     toolBar->addAction(ui->actionExpertMode);
     connect(ui->actionToggleCorners, &QAction::triggered, this, qOverload<>(&BuildingTilesDialog::toggleCorners));
     connect(ui->actionClearTiles, &QAction::triggered, this, &BuildingTilesDialog::clearTiles);
@@ -803,6 +804,7 @@ BuildingTilesDialog::BuildingTilesDialog(QWidget *parent) :
     connect(ui->actionMoveTileDown, &QAction::triggered, this, &BuildingTilesDialog::moveTileDown);
     connect(ui->actionAddTiles, &QAction::triggered, this, &BuildingTilesDialog::addTiles);
     connect(ui->actionRemoveTiles, &QAction::triggered, this, &BuildingTilesDialog::removeTiles);
+    connect(ui->actionRemoveDuplicates, &QAction::triggered, this, &BuildingTilesDialog::removeDuplicates);
     connect(ui->actionExpertMode, &QAction::toggled, this, &BuildingTilesDialog::setExpertMode);
     ui->categoryToolbarLayout->addWidget(toolBar, 1);
 
@@ -1330,7 +1332,7 @@ void BuildingTilesDialog::synchUI()
             remove = mCurrentEntry != 0;
             clear = mCurrentEntry != 0;
         } else {
-            add = ui->tilesetTilesView->selectionModel()->selectedIndexes().count();;
+            add = !ui->tilesetTilesView->selectionModel()->selectedIndexes().isEmpty();
             remove = mCurrentEntry != 0;
         }
     }
@@ -1345,6 +1347,7 @@ void BuildingTilesDialog::synchUI()
 
     ui->actionToggleCorners->setEnabled(mFurnitureGroup && remove);
     ui->actionClearTiles->setEnabled(clear);
+    ui->actionRemoveDuplicates->setEnabled(mFurnitureGroup != nullptr || mCategory != nullptr);
     ui->actionExpertMode->setEnabled(mFurnitureGroup == 0);
 
     mEntryOffsetUI->setVisible(mExpertMode && !mFurnitureGroup);
@@ -1629,6 +1632,48 @@ void BuildingTilesDialog::clearTiles()
         if (entries.count() > 1)
             mUndoStack->endMacro();
         return;
+    }
+}
+
+void BuildingTilesDialog::removeDuplicates()
+{
+    bool started = false;
+    if (mCategory != nullptr) {
+        QList<BuildingTileEntry*> entries = mCategory->entries();
+        for (int i = 0; i < entries.size(); i++) {
+            BuildingTileEntry *entry1 = entries.at(i);
+            for (int j = i + 1; j < entries.size(); j++) {
+                BuildingTileEntry *entry2 = entries.at(j);
+                if (entry1->equals(entry2)) {
+                    if (!started) {
+                        mUndoStack->beginMacro(tr("Remove Duplicates"));
+                        started = true;
+                    }
+                    mUndoStack->push(new RemoveTileFromCategory(this, mCategory, mCategory->indexOf(entry2)));
+                    entries.removeAt(j--);
+                }
+            }
+        }
+    }
+    if (mFurnitureGroup != nullptr) {
+        QList<FurnitureTiles*> tiles = mFurnitureGroup->mTiles;
+        for (int i = 0; i < tiles.size(); i++) {
+            FurnitureTiles *tiles1 = tiles.at(i);
+            for (int j = i + 1; j < tiles.size(); j++) {
+                FurnitureTiles *tiles2 = tiles.at(j);
+                if (tiles1->equals(tiles2)) {
+                    if (!started) {
+                        mUndoStack->beginMacro(tr("Remove Duplicates"));
+                        started = true;
+                    }
+                    mUndoStack->push(new RemoveFurnitureTiles(this, mFurnitureGroup, mFurnitureGroup->mTiles.indexOf(tiles2)));
+                    tiles.removeAt(j--);
+                }
+            }
+        }
+    }
+    if (started) {
+        mUndoStack->endMacro();
     }
 }
 

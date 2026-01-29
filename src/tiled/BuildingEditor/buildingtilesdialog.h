@@ -127,6 +127,7 @@ private slots:
     void addTiles();
     void removeTiles();
     void clearTiles();
+    void removeDuplicates();
 
     void setExpertMode(bool expert);
 
