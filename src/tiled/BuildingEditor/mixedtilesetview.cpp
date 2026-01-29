@@ -83,17 +83,16 @@ void TileDelegate::paint(QPainter *painter,
     QString tilesetName = m->headerAt(index);
     if (!tilesetName.isEmpty()) {
         if (index.row() > 0) {
+            QPen oldPen = painter->pen();
             painter->setPen(Qt::darkGray);
             painter->drawLine(option.rect.topLeft(), option.rect.topRight());
-            painter->setPen(Qt::black);
+            painter->setPen(oldPen);
         }
         // One slice of the tileset name is drawn in each column.
-        if (index.column() == 0)
-            painter->drawText(option.rect.adjusted(2, 2, 0, 0), Qt::AlignLeft,
-                              tilesetName);
-        else {
-            QRect r = option.rect.adjusted(-index.column() * option.rect.width(),
-                                           0, 0, 0);
+        if (index.column() == 0) {
+            painter->drawText(option.rect.adjusted(2, 2, 0, 0), Qt::AlignLeft, tilesetName);
+        } else {
+            QRect r = option.rect.adjusted(-index.column() * option.rect.width(), 0, 0, 0);
             painter->save();
             painter->setClipRect(option.rect);
             painter->drawText(r.adjusted(2, 2, 0, 0), Qt::AlignLeft, tilesetName);
