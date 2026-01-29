@@ -109,8 +109,8 @@ private:
     BuildingTileCategory *categoryAt(int row);
     FurnitureGroup *furnitureGroupAt(int row);
 
-    void exportFurnitureTxt(const QString &directory);
-    void exportTilesTxt(const QString &directory);
+    bool exportFurnitureTxt(const QString &directory);
+    bool exportTilesTxt(const QString &directory);
     void reloadFrom(const QString &directory);
     bool reloadBuildingFurnitureTxt(const QString &directory);
     bool reloadBuildingTilesTxt(const QString &directory);

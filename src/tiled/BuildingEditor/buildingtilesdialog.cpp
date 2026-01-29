@@ -2057,11 +2057,19 @@ void BuildingTilesDialog::importFile()
     QString suggestedDirectory = BuildingPreferences::instance()->configPath();
     suggestedDirectory = settings.value(SETTINGS_KEY_DIRECTORY, suggestedDirectory).toString();
     QString caption = tr("Import Tiles and Furniture");
-    const QString directory = QFileDialog::getExistingDirectory(this, caption, suggestedDirectory);
+    QString directory = QFileDialog::getExistingDirectory(this, caption, suggestedDirectory);
     if (directory.isEmpty()) {
         return;
     }
     settings.setValue(SETTINGS_KEY_DIRECTORY, QFileInfo(directory).absoluteFilePath());
+    directory = QDir::toNativeSeparators(directory);
+    QString file1 = directory + QDir::separator() + FurnitureGroups::instance()->txtName();
+    QString file2 = directory + QDir::separator() + BuildingTilesMgr::instance()->txtName();
+    QMessageBox::StandardButton result = QMessageBox::question(this, tr("Import Tiles and Furniture"),
+                                                               tr("This will replace the current tile and furniture assigments with the following files:\n\n%1\n%2\n\nChoose Yes to continue or No to cancel.").arg(file1).arg(file2));
+    if (result == QMessageBox::StandardButton::No) {
+        return;
+    }
     reloadFrom(directory);
 }
 
@@ -2070,14 +2078,22 @@ void BuildingTilesDialog::exportFile()
     QSettings &settings = BuildingPreferences::instance()->settings();
     QString suggestedDirectory = BuildingPreferences::instance()->configPath();
     suggestedDirectory = settings.value(SETTINGS_KEY_DIRECTORY, suggestedDirectory).toString();
-    QString caption = tr("Import Tiles and Furniture");
-    const QString directory = QFileDialog::getExistingDirectory(this, caption, suggestedDirectory);
+    QString caption = tr("Export Tiles and Furniture");
+    QString directory = QFileDialog::getExistingDirectory(this, caption, suggestedDirectory);
     if (directory.isEmpty()) {
         return;
     }
     settings.setValue(SETTINGS_KEY_DIRECTORY, QFileInfo(directory).absoluteFilePath());
-    exportFurnitureTxt(directory);
-    exportTilesTxt(directory);
+    directory = QDir::toNativeSeparators(directory);
+    if (!exportFurnitureTxt(directory)) {
+        return;
+    }
+    if (!exportTilesTxt(directory)) {
+        return;
+    }
+    QString file1 = directory + QDir::separator() + FurnitureGroups::instance()->txtName();
+    QString file2 = directory + QDir::separator() + BuildingTilesMgr::instance()->txtName();
+    QMessageBox::information(this, tr("Export Tiles and Furniture"), tr("Saved.\n%1\n%2").arg(file1).arg(file2));
 }
 
 void BuildingTilesDialog::reloadFile()
@@ -2088,34 +2104,48 @@ void BuildingTilesDialog::reloadFile()
     QSettings &settings = BuildingPreferences::instance()->settings();
     QString directory = settings.value(SETTINGS_KEY_DIRECTORY, QString()).toString();
     if (directory.isEmpty()) {
+        importFile();
         return;
     }
-    if (!QFileInfo::exists(directory) && QFileInfo(directory).isDir()) {
+    if (!QFileInfo::exists(directory) || !QFileInfo(directory).isDir()) {
+        importFile();
+        return;
+    }
+    directory = QDir::toNativeSeparators(directory);
+    QString file1 = directory + QDir::separator() + FurnitureGroups::instance()->txtName();
+    QString file2 = directory + QDir::separator() + BuildingTilesMgr::instance()->txtName();
+    QMessageBox::StandardButton result = QMessageBox::question(this, tr("Reload Tiles and Furniture"),
+                                                               tr("This will replace the current tile and furniture assigments with the following files:\n\n%1\n%2\n\nChoose Yes to continue or No to cancel.").arg(file1).arg(file2));
+    if (result == QMessageBox::StandardButton::No) {
         return;
     }
     reloadFrom(directory);
 }
 
-void BuildingTilesDialog::exportFurnitureTxt(const QString &directory)
+bool BuildingTilesDialog::exportFurnitureTxt(const QString &directory)
 {
     BuildingFurnitureFile file;
+    const QString txtName = FurnitureGroups::instance()->txtName();
     int revision = FurnitureGroups::instance()->revision();
     int sourceRevision = FurnitureGroups::instance()->sourceRevision();
-    if (file.write(directory, revision, sourceRevision, FurnitureGroups::instance()->groups())) {
-        return;
+    if (file.write(directory + QDir::separator() + txtName, revision, sourceRevision, FurnitureGroups::instance()->groups())) {
+        return true;
     }
-    QMessageBox::warning(this, tr("Export BuildingFurniture.txt Failed"), file.errorString());
+    QMessageBox::warning(this, tr("Export %1 Failed").arg(txtName), file.errorString());
+    return false;
 }
 
-void BuildingTilesDialog::exportTilesTxt(const QString &directory)
+bool BuildingTilesDialog::exportTilesTxt(const QString &directory)
 {
     BuildingTilesFile file;
+    const QString txtName = BuildingTilesMgr::instance()->txtName();
     int revision = BuildingTilesMgr::instance()->revision();
     int sourceRevision = BuildingTilesMgr::instance()->sourceRevision();
-    if (file.write(directory, revision, sourceRevision, BuildingTilesMgr::instance()->categories().toVector())) {
-        return;
+    if (file.write(directory + QDir::separator() + txtName, revision, sourceRevision, BuildingTilesMgr::instance()->categories().toVector())) {
+        return true;
     }
-    QMessageBox::warning(this, tr("Export BuildingFurniture.txt Failed"), file.errorString());
+    QMessageBox::warning(this, tr("Export %1 Failed").arg(txtName), file.errorString());
+    return false;
 }
 
 void BuildingTilesDialog::reloadFrom(const QString &directory)
