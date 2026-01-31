@@ -36,7 +36,12 @@ using namespace BuildingEditor;
 // VERSION2
 // massive rewrite!
 #define VERSION2 2
-#define VERSION_LATEST VERSION2
+
+// VERSION3
+// added window-frame shapes
+#define VERSION3 3
+
+#define VERSION_LATEST VERSION3
 
 BuildingTilesFile::BuildingTilesFile()
 {
@@ -84,11 +89,6 @@ bool BuildingTilesFile::read(const QString &fileName)
 
     if (mVersion > VERSION_LATEST) {
         mError = QStringLiteral("Version %1 is from a newer version of TileZed\n(while reading %2)").arg(mVersion).arg(nativePath);
-        return false;
-    }
-
-    if (mVersion != VERSION_LATEST) {
-        mError = QStringLiteral("Expected version %1, got %2\n(while reading %3)").arg(VERSION_LATEST).arg(mVersion).arg(nativePath);
         return false;
     }
 

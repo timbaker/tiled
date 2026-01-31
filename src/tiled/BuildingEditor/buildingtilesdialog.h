@@ -18,6 +18,8 @@
 #ifndef BUILDINGTILESDIALOG_H
 #define BUILDINGTILESDIALOG_H
 
+#include "tilecategoryview.h"
+
 #include <QDialog>
 #include <QModelIndex>
 
@@ -133,6 +135,7 @@ private slots:
 
     void tileDropped(const QString &tilesetName, int tileId);
     void entryTileDropped(BuildingEditor::BuildingTileEntry *entry, int e, const QString &tileName);
+    void entryTilesDropped(BuildingEditor::BuildingTileEntry *entry, const QVector<BuildingEditor::TileCategoryModel::GridDnD> &gridDnDs);
 
     void furnitureTileDropped(BuildingEditor::FurnitureTile *ftile, int x, int y, const QString &tileName);
 

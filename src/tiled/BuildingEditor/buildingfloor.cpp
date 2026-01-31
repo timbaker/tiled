@@ -675,12 +675,12 @@ void BuildingFloor::LayoutToSquares()
                 } else {
                     // Different non-none tiles.
                     s.mEntries[Square::SectionWall] = wallN;
-                    s.mWallOrientation = Square::WallOrientN; // must be set before getWallOffset
-                    s.mEntryEnum[Square::SectionWall] = s.getWallOffset();
+                    s.mWallOrientation = Square::WallOrientN;
+                    s.mEntryEnum[Square::SectionWall] = s.getWallOffset(s.mWallOrientation);
 
                     s.mEntries[Square::SectionWall2] = wallW;
-                    s.mWallOrientation = Square::WallOrientW; // must be set before getWallOffset
-                    s.mEntryEnum[Square::SectionWall2] = s.getWallOffset();
+                    s.mWallOrientation = Square::WallOrientW;
+                    s.mEntryEnum[Square::SectionWall2] = s.getWallOffset(s.mWallOrientation);
 
                     s.mWallOrientation = Square::WallOrientNW;
                 }
@@ -2100,8 +2100,8 @@ void BuildingFloor::Square::ReplaceWall(BuildingTileEntry *tile,
                                         WallOrientation orient)
 {
     mEntries[SectionWall] = tile;
-    mWallOrientation = orient; // Must set this before getWallOffset() is called
-    mEntryEnum[SectionWall] = getWallOffset();
+    mWallOrientation = orient;
+    mEntryEnum[SectionWall] = getWallOffset(mWallOrientation);
 }
 
 void BuildingFloor::Square::ReplaceDoor(BuildingTileEntry *tile, int offset)
@@ -2126,14 +2126,14 @@ void BuildingFloor::Square::ReplaceDoor(BuildingTileEntry *tile, int offset)
         if (!entry1->isNone() && !entry2->isNone()) {
             // 2 different walls
             if (offset == BTC_Doors::West) {
-                if (mEntryEnum[SectionWall] == BTC_Walls::West || mEntryEnum[SectionWall] == BTC_Walls::WestWindow)
+                if (entry1->isWest(mEntryEnum[SectionWall]))
                     mEntryEnum[SectionWall] = BTC_Walls::WestDoor;
-                else if (mEntryEnum[SectionWall2] == BTC_Walls::West || mEntryEnum[SectionWall2] == BTC_Walls::WestWindow)
+                else if (entry2->isWest(mEntryEnum[SectionWall2]))
                     mEntryEnum[SectionWall2] = BTC_Walls::WestDoor;
             } else if (offset == BTC_Doors::North) {
-                if (mEntryEnum[SectionWall] == BTC_Walls::North || mEntryEnum[SectionWall] == BTC_Walls::NorthWindow)
+                if (entry1->isNorth(mEntryEnum[SectionWall]))
                     mEntryEnum[SectionWall] = BTC_Walls::NorthDoor;
-                else if (mEntryEnum[SectionWall2] == BTC_Walls::North || mEntryEnum[SectionWall2] == BTC_Walls::NorthWindow)
+                else if (entry2->isNorth(mEntryEnum[SectionWall2]))
                     mEntryEnum[SectionWall2] = BTC_Walls::NorthDoor;
             }
         } else {
@@ -2152,7 +2152,7 @@ void BuildingFloor::Square::ReplaceDoor(BuildingTileEntry *tile, int offset)
     }
 
     if (mWallOrientation != WallOrientInvalid)
-        mEntryEnum[SectionWall] = getWallOffset();
+        mEntryEnum[SectionWall] = getWallOffset(mWallOrientation);
 }
 
 void BuildingFloor::Square::ReplaceFrame(BuildingTileEntry *tile, int offset)
@@ -2184,15 +2184,15 @@ void BuildingFloor::Square::ReplaceWindow(BuildingTileEntry *tile, int offset)
         if (!entry1->isNone() && !entry2->isNone()) {
             // 2 different walls
             if (offset == BTC_Windows::West) {
-                if (mEntryEnum[SectionWall] == BTC_Walls::West || mEntryEnum[SectionWall] == BTC_Walls::WestDoor)
-                    mEntryEnum[SectionWall] = BTC_Walls::WestWindow;
-                else if (mEntryEnum[SectionWall2] == BTC_Walls::West || mEntryEnum[SectionWall2] == BTC_Walls::WestDoor)
-                    mEntryEnum[SectionWall2] = BTC_Walls::WestWindow;
+                if (entry1->isWest(mEntryEnum[SectionWall]))
+                    mEntryEnum[SectionWall] = BuildingTilesMgr::instance()->catWindows()->wallEnum(tile, offset); // BTC_Walls::WestWindow;
+                else if (entry2->isWest(mEntryEnum[SectionWall2]))
+                    mEntryEnum[SectionWall2] = BuildingTilesMgr::instance()->catWindows()->wallEnum(tile, offset); // BTC_Walls::WestWindow;
             } else if (offset == BTC_Windows::North) {
-                if (mEntryEnum[SectionWall] == BTC_Walls::North || mEntryEnum[SectionWall] == BTC_Walls::NorthDoor)
-                    mEntryEnum[SectionWall] = BTC_Walls::NorthWindow;
-                else if (mEntryEnum[SectionWall2] == BTC_Walls::North || mEntryEnum[SectionWall2] == BTC_Walls::NorthDoor)
-                    mEntryEnum[SectionWall2] = BTC_Walls::NorthWindow;
+                if (entry1->isNorth(mEntryEnum[SectionWall]))
+                    mEntryEnum[SectionWall] = BuildingTilesMgr::instance()->catWindows()->wallEnum(tile, offset); // BTC_Walls::NorthWindow;
+                else if (entry2->isNorth(mEntryEnum[SectionWall2]))
+                    mEntryEnum[SectionWall2] = BuildingTilesMgr::instance()->catWindows()->wallEnum(tile, offset); // BTC_Walls::NorthWindow;
             }
         } else {
             // Single NW tile -> split into 2.
@@ -2200,17 +2200,17 @@ void BuildingFloor::Square::ReplaceWindow(BuildingTileEntry *tile, int offset)
             mEntries[SectionWall2] = entry1;
             if (offset == BTC_Windows::West) {
                 mEntryEnum[SectionWall] = BTC_Walls::North;
-                mEntryEnum[SectionWall2] = BTC_Walls::WestWindow;
+                mEntryEnum[SectionWall2] = BuildingTilesMgr::instance()->catWindows()->wallEnum(tile, offset); // BTC_Walls::WestWindow;
             } else {
                 mEntryEnum[SectionWall] = BTC_Walls::West;
-                mEntryEnum[SectionWall2] = BTC_Walls::NorthWindow;
+                mEntryEnum[SectionWall2] = BuildingTilesMgr::instance()->catWindows()->wallEnum(tile, offset); // BTC_Walls::NorthWindow;
             }
         }
         return;
     }
 
     if (mWallOrientation != WallOrientInvalid)
-        mEntryEnum[SectionWall] = getWallOffset();
+        mEntryEnum[SectionWall] = getWallOffset(mWallOrientation);
 }
 
 void BuildingFloor::Square::ReplaceCurtains(Window *window, bool exterior)
@@ -2335,6 +2335,17 @@ void BuildingFloor::Square::ReplaceFloorGrime(BuildingTileEntry *grimeTile)
                 break;
             grimeEnumW = BTC_GrimeFloor::NorthWest;
             break;
+        default:
+            // NorthWindow1 to NorthWindow16
+            if (wallTile1->isNorth(mEntryEnum[SectionWall])) {
+                grimeEnumN = BTC_GrimeFloor::North;
+            }
+            // WestWindow1 to WestWindow16
+            if (wallTile1->isWest(mEntryEnum[SectionWall])) {
+                grimeEnumW = BTC_GrimeFloor::West;
+                break;
+            }
+            break;
         }
     }
     if (wallTile2) {
@@ -2347,6 +2358,16 @@ void BuildingFloor::Square::ReplaceFloorGrime(BuildingTileEntry *grimeTile)
         case BTC_Walls::NorthDoor: break;
         case BTC_Walls::NorthWest: Q_ASSERT(false); break;
         case BTC_Walls::SouthEast: Q_ASSERT(false); break;
+        default:
+            // NorthWindow1 to NorthWindow16
+            if (wallTile2->isNorth(mEntryEnum[SectionWall2])) {
+                grimeEnumN = BTC_GrimeFloor::North;
+            }
+            // WestWindow1 to WestWindow16
+            if (wallTile2->isWest(mEntryEnum[SectionWall2])) {
+                grimeEnumW = BTC_GrimeFloor::West;
+            }
+            break;
         }
     }
 
@@ -3096,22 +3117,20 @@ void BuildingFloor::Square::ReplaceWallTrim()
     }
 }
 
-int BuildingFloor::Square::getWallOffset()
+int BuildingFloor::Square::getWallOffset(WallOrientation orient)
 {
-    BuildingTileEntry *tile = mEntries[SectionWall];
-    if (!tile)
+    BuildingTileEntry *entry = mEntries[SectionWall];
+    if (entry == nullptr)
         return -1;
 
     int offset = BTC_Walls::West;
 
-    switch (mWallOrientation) {
+    switch (orient) {
     case WallOrientN:
-        if (mEntries[SectionDoor] != 0 &&
-                mEntryEnum[SectionDoor] == BTC_Doors::North)
-            offset = BTC_Walls::NorthDoor;
-        else if (mEntries[SectionWindow] != 0 &&
-                 mEntryEnum[SectionWindow] == BTC_Windows::North)
-            offset = BTC_Walls::NorthWindow;
+        if ((entry = mEntries[SectionDoor]) != nullptr && entry->asDoor() && entry->isNorth(mEntryEnum[SectionDoor]))
+            offset = entry->wallEnum(mEntryEnum[SectionDoor]);
+        else if ((entry = mEntries[SectionWindow]) != nullptr && entry->asWindow() && entry->isNorth(mEntryEnum[SectionWindow]))
+            offset = entry->wallEnum(mEntryEnum[SectionWindow]);
         else
             offset = BTC_Walls::North;
         break;
@@ -3119,12 +3138,10 @@ int BuildingFloor::Square::getWallOffset()
         offset = BTC_Walls::NorthWest;
         break;
     case WallOrientW:
-        if (mEntries[SectionDoor] != 0 &&
-                mEntryEnum[SectionDoor] == BTC_Doors::West)
-            offset = BTC_Walls::WestDoor;
-        else if (mEntries[SectionWindow] != 0 &&
-                 mEntryEnum[SectionWindow] == BTC_Windows::West)
-            offset = BTC_Walls::WestWindow;
+        if ((entry = mEntries[SectionDoor]) != nullptr && entry->asDoor() && entry->isWest(mEntryEnum[SectionDoor]))
+            offset = entry->wallEnum(mEntryEnum[SectionDoor]);
+        else if ((entry = mEntries[SectionWindow]) != nullptr && entry->asWindow() && entry->isWest(mEntryEnum[SectionWindow]))
+            offset = entry->wallEnum(mEntryEnum[SectionWindow]);
         break;
     case WallOrientSE:
         offset = BTC_Walls::SouthEast;

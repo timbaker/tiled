@@ -106,8 +106,16 @@ void BuildingEntryDelegate::paint(QPainter *painter,
         QPointF p1 = tileToPixelCoords(0, 0) + tileMargins + r.topLeft();
         QRect target((p1 - QPointF(tileWidth/2, imageHeight - tileHeight)).toPoint(),
                 QSize(tileWidth, imageHeight));
+        int col = index.column();
         int row = index.row() % m->shadowImageRows();
-        QRect source(index.column() * 64, row * 128, 64, 128);
+        if (entry->asWindow() != nullptr) {
+            QPoint shadowHack;
+            if (static_cast<BTC_Windows*>(entry->category()->asWindows())->shadowHack(entry, e, shadowHack)) {
+                col += shadowHack.x();
+                row += shadowHack.y();
+            }
+        }
+        QRect source(col * 64, row * 128, 64, 128);
         painter->drawImage(target, entry->category()->shadowImage(), source);
     }
 
@@ -493,15 +501,15 @@ QModelIndex TileCategoryModel::index(BuildingTileEntry *entry, int e) const
     return createIndex(row, column);
 }
 
-QString TileCategoryModel::mMimeType(QLatin1String("application/x-tilezed-tile"));
+QString TileCategoryModel::mMimeType(QStringLiteral("application/x-tilezed-tile"));
+QString TileCategoryModel::mGridMimeType(QStringLiteral("application/x-tilezed-tile-grid"));
 
 QStringList TileCategoryModel::mimeTypes() const
 {
     return QStringList() << mMimeType;
 }
 
-bool TileCategoryModel::dropMimeData(const QMimeData *data, Qt::DropAction action,
-                                  int row, int column, const QModelIndex &parent)
+bool TileCategoryModel::dropMimeData(const QMimeData *data, Qt::DropAction action, int row, int column, const QModelIndex &parent)
  {
     Q_UNUSED(row)
     Q_UNUSED(column)
@@ -517,6 +525,38 @@ bool TileCategoryModel::dropMimeData(const QMimeData *data, Qt::DropAction actio
      if (!entry)
          return false;
      int e = enumAt(index);
+
+     if (data->hasFormat(mGridMimeType)) {
+         QByteArray encodedData = data->data(mGridMimeType);
+         QDataStream stream(&encodedData, QIODevice::ReadOnly);
+         QVector<GridDnD> gridDnDs;
+         while (!stream.atEnd()) {
+             quint16 dx, dy;
+             stream >> dx;
+             stream >> dy;
+             QString tilesetName;
+             stream >> tilesetName;
+             int tileId;
+             stream >> tileId;
+             // See enumAt() for this calculation
+             int itemIndex = (index.column() + dx) + (index.row() + dy) * columnCount();
+             int entryIndex = itemIndex / itemsPerEntry();
+             int shadowIndex = itemIndex % itemsPerEntry();
+             if ((entryIndex >= mCategory->entryCount()) || (shadowIndex >= mCategory->shadowCount()) || (mCategory->shadowToEnum(shadowIndex) == -1)) {
+                 continue;
+             }
+             e = mCategory->shadowToEnum(shadowIndex);
+             QString tileName = BuildingTilesMgr::nameForTile(tilesetName, tileId);
+             gridDnDs += { e, tileName };
+        }
+        if (gridDnDs.size() > 1) {
+            emit tilesDropped(entry, gridDnDs);
+        } else if (!gridDnDs.isEmpty()) {
+            const GridDnD &gridDnD = gridDnDs.constFirst();
+            emit tileDropped(entry, gridDnD.e, gridDnD.tileName);
+        }
+        return true;
+     }
 
      QByteArray encodedData = data->data(mMimeType);
      QDataStream stream(&encodedData, QIODevice::ReadOnly);
@@ -591,12 +631,12 @@ int TileCategoryModel::shadowImageColumns() const
 {
     if (!mCategory)
         return 0;
-    return mCategory->shadowImage().width() / 64;
+    return mCategory->shadowColumns();
 }
 
 int TileCategoryModel::shadowImageRows() const
 {
     if (!mCategory)
         return 0;
-    return mCategory->shadowImage().height() / 128;
+    return mCategory->shadowRows();
 }

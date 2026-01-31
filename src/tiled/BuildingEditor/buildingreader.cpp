@@ -53,7 +53,11 @@ using namespace BuildingEditor;
 // Added Ceiling tile category to rooms
 #define VERSION4 4
 
-#define VERSION_LATEST VERSION4
+// version="5"
+// Added window-frame shapes
+#define VERSION5 5
+
+#define VERSION_LATEST VERSION5
 
 namespace BuildingEditor {
 
@@ -1445,7 +1449,13 @@ BuildingTileEntry *BuildingReaderPrivate::fixEntry(BuildingTileEntry *entry)
                 entry->setTile(i, BuildingTilesMgr::instance()->get(btile->name()));
             }
         }
-        if (BuildingTileEntry *match = category->findMatch(entry)) {
+        int compareTileCount = entry->tileCount();
+        if (mVersion < VERSION5 && (category->asExteriorWalls() || category->asInteriorWalls())) {
+            // Version 5 added 16 new wall shapes for windows.
+            // Look for a match of the first 8 tiles only.
+            compareTileCount = 8;
+        }
+        if (BuildingTileEntry *match = category->findMatch(entry, compareTileCount)) {
             fixedEntries[entry] = match;
             fixedEntries[match] = match;
             deadEntries.insert(entry);

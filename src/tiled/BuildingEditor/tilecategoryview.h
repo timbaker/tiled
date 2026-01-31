@@ -75,12 +75,20 @@ public:
     int shadowImageColumns() const;
     int shadowImageRows() const;
 
+    struct GridDnD
+    {
+        int e;
+        QString tileName;
+    };
+
 signals:
     void tileDropped(BuildingTileEntry *entry, int e, const QString &tileName);
+    void tilesDropped(BuildingTileEntry *entry, const QVector<GridDnD> &gridDnd);
 
 private:
     BuildingTileCategory *mCategory;
     static QString mMimeType;
+    static QString mGridMimeType;
 };
 
 class TileCategoryView : public QTableView

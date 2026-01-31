@@ -350,7 +350,7 @@ void CategoryDock::categorySelectionChanged()
             }
             QMap<QString,BuildingTileEntry*> entryMap;
             int i = 0;
-            foreach (BuildingTileEntry *entry, mCategory->entries()) {
+            for (BuildingTileEntry *entry : mCategory->entries()) {
                 QString key = entry->displayTile()->name() + QString::number(i++);
                 entryMap[key] = entry;
             }

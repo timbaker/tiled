@@ -130,7 +130,7 @@ void CheckBuildingsWindow::check()
     dir.setNameFilters(filters);
     dir.setFilter(QDir::Files | QDir::Readable | QDir::Writable);
 
-    for (QString fileName : dir.entryList()) {
+    for (const QString &fileName : dir.entryList()) {
         progress.update(tr("Checking %1").arg(fileName));
         QString filePath = dir.filePath(fileName);
         check(filePath);
@@ -141,7 +141,7 @@ void CheckBuildingsWindow::check()
 
 void CheckBuildingsWindow::fixSelected()
 {
-    auto selected = ui->treeWidget->selectedItems();
+    const auto selected = ui->treeWidget->selectedItems();
     if (selected.isEmpty())
         return;
     QList<FixSelected> fixList;

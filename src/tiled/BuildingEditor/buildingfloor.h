@@ -202,7 +202,7 @@ public:
         void ReplaceWallGrime(BuildingTileEntry *grimeTile, const QString &userTileWalls, const QString &userTileWalls2);
         void ReplaceWallTrim();
 
-        int getWallOffset();
+        int getWallOffset(WallOrientation orient);
     };
 
     QVector<QVector<Square> > squares;

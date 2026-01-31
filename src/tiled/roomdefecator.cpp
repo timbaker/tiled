@@ -87,11 +87,17 @@ void RoomDefecator::initTiles()
             mWestWallTiles += btiles->tileFor(entry->tile(BTC_Walls::WestDoor));
             mWestWallTiles += btiles->tileFor(entry->tile(BTC_Walls::WestWindow));
             mWestWallTiles += btiles->tileFor(entry->tile(BTC_Walls::NorthWest));
+            for (int i = 0; i < 16; i++) {
+                mWestWallTiles += btiles->tileFor(entry->tile(BTC_Walls::WestWindow1 + i * 2));
+            }
 
             mNorthWallTiles += btiles->tileFor(entry->tile(BTC_Walls::North));
             mNorthWallTiles += btiles->tileFor(entry->tile(BTC_Walls::NorthDoor));
             mNorthWallTiles += btiles->tileFor(entry->tile(BTC_Walls::NorthWindow));
             mNorthWallTiles += btiles->tileFor(entry->tile(BTC_Walls::NorthWest));
+            for (int i = 0; i < 16; i++) {
+                mNorthWallTiles += btiles->tileFor(entry->tile(BTC_Walls::NorthWindow1 + i * 2));
+            }
 
             // These are for the benefit of MainWindow::RoomDefUnknownWalls
             mSouthEastWallTiles += btiles->tileFor(entry->tile(BTC_Walls::SouthEast));

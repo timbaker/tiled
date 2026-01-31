@@ -18,10 +18,12 @@
 #include "buildingtiles.h"
 
 #include "buildingpreferences.h"
+#include "buildingfloor.h"
 #include "buildingtilesfile.h"
 #include "simplefile.h"
 
 #include "preferences.h"
+#include "tiledeffile.h"
 #include "tilemetainfomgr.h"
 #include "tilesetmanager.h"
 
@@ -151,7 +153,7 @@ BuildingTilesMgr::~BuildingTilesMgr()
 BuildingTile *BuildingTilesMgr::add(const QString &tileName)
 {
     QString tilesetName;
-    int tileIndex;
+    int tileIndex = 0;
     parseTileName(tileName, tilesetName, tileIndex);
     BuildingTile *btile = new BuildingTile(tilesetName, tileIndex);
     Q_ASSERT(!mTileByName.contains(btile->name()));
@@ -244,7 +246,7 @@ bool BuildingTilesMgr::legalTileName(const QString &tileName)
 QString BuildingTilesMgr::adjustTileNameIndex(const QString &tileName, int offset)
 {
     QString tilesetName;
-    int index;
+    int index = 0;
     parseTileName(tileName, tilesetName, index);
 
     // Currently, the only place this gets called with offset > 0 is by the
@@ -293,62 +295,6 @@ QString BuildingTilesMgr::txtPath()
 #endif
 }
 
-static void writeTileEntry(SimpleFileBlock &parentBlock, BuildingTileEntry *entry)
-{
-    BuildingTileCategory *category = entry->category();
-    SimpleFileBlock block;
-    block.name = QLatin1String("entry");
-//    block.addValue("category", category->name());
-    for (int i = 0; i < category->enumCount(); i++) {
-        block.addValue(category->enumToString(i), entry->tile(i)->name());
-    }
-    for (int i = 0; i < category->enumCount(); i++) {
-        QPoint p = entry->offset(i);
-        if (p.isNull())
-            continue;
-        block.addValue("offset", QString(QLatin1String("%1 %2 %3"))
-                       .arg(category->enumToString(i)).arg(p.x()).arg(p.y()));
-    }
-    parentBlock.blocks += block;
-}
-
-static BuildingTileEntry *readTileEntry(BuildingTileCategory *category,
-                                        SimpleFileBlock &block,
-                                        QString &error)
-{
-    BuildingTileEntry *entry = new BuildingTileEntry(category);
-
-    foreach (SimpleFileKeyValue kv, block.values) {
-        if (kv.name == QLatin1String("offset")) {
-            QStringList split = kv.value.split(QLatin1Char(' '), Qt::SkipEmptyParts);
-            if (split.size() != 3) {
-                error = BuildingTilesMgr::instance()->tr("Expected 'offset = name x y', got '%1'").arg(kv.value);
-                delete entry;
-                return 0;
-            }
-            int e = category->enumFromString(split[0]);
-            if (e == BuildingTileCategory::Invalid) {
-                error = BuildingTilesMgr::instance()->tr("Unknown %1 enum name '%2'")
-                        .arg(category->name()).arg(split[0]);
-                delete entry;
-                return 0;
-            }
-            entry->mOffsets[e] = QPoint(split[1].toInt(), split[2].toInt());
-            continue;
-        }
-        int e = category->enumFromString(kv.name);
-        if (e == BuildingTileCategory::Invalid) {
-            error = BuildingTilesMgr::instance()->tr("Unknown %1 enum name '%2'")
-                    .arg(category->name()).arg(kv.name);
-            delete entry;
-            return 0;
-        }
-        entry->mTiles[e] = BuildingTilesMgr::instance()->get(kv.value);
-    }
-
-    return entry;
-}
-
 // VERSION0: original format without 'version' keyvalue
 #define VERSION0 0
 
@@ -383,9 +329,9 @@ bool BuildingTilesMgr::readTxt()
         return false;
     }
 
-    if (file.getVersion() != VERSION_LATEST) {
+    if (file.getVersion() != BuildingTilesFile::getVersionLatest()) {
         mError = tr("Expected %1 version %2, got %3")
-                .arg(txtName()).arg(VERSION_LATEST).arg(file.getVersion());
+                .arg(txtName()).arg(BuildingTilesFile::getVersionLatest()).arg(file.getVersion());
         return false;
     }
 
@@ -455,18 +401,6 @@ BuildingTileEntry *BuildingTilesMgr::defaultCategoryTile(int e) const
     return mCategories[e]->defaultEntry();
 }
 
-static SimpleFileBlock findCategoryBlock(const SimpleFileBlock &parent,
-                                         const QString &categoryName)
-{
-    foreach (SimpleFileBlock block, parent.blocks) {
-        if (block.name == QLatin1String("category")) {
-            if (block.value("name") == categoryName)
-                return block;
-        }
-    }
-    return SimpleFileBlock();
-}
-
 bool BuildingTilesMgr::upgradeTxt()
 {
     QString userPath = txtPath();
@@ -523,7 +457,7 @@ bool BuildingTilesMgr::mergeTxt()
         BuildingTileCategory *userCategory = userFile.categories().at(i);
         // Copy unique source-entries to the user-category.
         for (BuildingTileEntry *sourceEntry : sourceCategory->entries()) {
-            if (userCategory->findMatch(sourceEntry) != nullptr) {
+            if (userCategory->findMatchIgnoreCategory(sourceEntry) != nullptr) {
                 continue;
             }
             BuildingTileEntry *userEntry = sourceEntry->createCopy(userCategory);
@@ -775,6 +709,41 @@ bool BuildingTileEntry::equals(BuildingTileEntry *other) const
             (mOffsets == other->mOffsets);
 }
 
+bool BuildingTileEntry::equals(BuildingTileEntry *other, int tileCount) const
+{
+    if (mCategory != other->mCategory) {
+        return false;
+    }
+    for (int i = 0; i < tileCount; i++) {
+        if (mTiles[i] != other->mTiles[i]) {
+            return false;
+        }
+    }
+    return true;
+}
+
+bool BuildingTileEntry::equalsIgnoreCategory(BuildingTileEntry *other) const
+{
+    return (mCategory->name() == other->mCategory->name()) &&
+           (mTiles == other->mTiles) &&
+           (mOffsets == other->mOffsets);
+}
+
+bool BuildingTileEntry::isNorth(int e) const
+{
+    return mCategory->isNorth(e);
+}
+
+bool BuildingTileEntry::isWest(int e) const
+{
+    return mCategory->isWest(e);
+}
+
+int BuildingTileEntry::wallEnum(int e) const
+{
+    return mCategory->wallEnum(this, e);
+}
+
 BuildingTileEntry *BuildingTileEntry::asCategory(int n)
 {
     return (mCategory->name() == BuildingTilesMgr::instance()->category(n)->name())
@@ -946,6 +915,30 @@ int BTC_Doors::shadowToEnum(int shadowIndex)
     return map[shadowIndex];
 }
 
+bool BTC_Doors::isNorth(int e) const
+{
+    return e == TileEnum::North || e == TileEnum::NorthOpen;
+}
+
+bool BTC_Doors::isWest(int e) const
+{
+    return e == TileEnum::West || e == TileEnum::WestOpen;
+}
+
+int BTC_Doors::wallEnum(const BuildingTileEntry *entry, int e) const
+{
+    switch (e) {
+    case TileEnum::North:
+    case TileEnum::NorthOpen:
+        return BTC_Walls::TileEnum::NorthDoor;
+    case TileEnum::West:
+    case TileEnum::WestOpen:
+        return BTC_Walls::TileEnum::WestDoor;
+    default:
+        return BuildingTileCategory::wallEnum(entry, e);
+    }
+}
+
 /////
 
 BTC_DoorFrames::BTC_DoorFrames(const QString &label) :
@@ -1035,14 +1028,19 @@ int BTC_Stairs::shadowToEnum(int shadowIndex)
 BTC_Walls::BTC_Walls(const QString &name, const QString &label) :
     BuildingTileCategory(name, label, West)
 {
-    mEnumNames += QLatin1String("West");
-    mEnumNames += QLatin1String("North");
-    mEnumNames += QLatin1String("NorthWest");
-    mEnumNames += QLatin1String("SouthEast");
-    mEnumNames += QLatin1String("WestWindow");
-    mEnumNames += QLatin1String("NorthWindow");
-    mEnumNames += QLatin1String("WestDoor");
-    mEnumNames += QLatin1String("NorthDoor");
+    mEnumNames += QStringLiteral("West");
+    mEnumNames += QStringLiteral("North");
+    mEnumNames += QStringLiteral("NorthWest");
+    mEnumNames += QStringLiteral("SouthEast");
+    mEnumNames += QStringLiteral("WestWindow");
+    mEnumNames += QStringLiteral("NorthWindow");
+    mEnumNames += QStringLiteral("WestDoor");
+    mEnumNames += QStringLiteral("NorthDoor");
+    for (int i = 1; i <= 16; i++) {
+        mEnumNames += QStringLiteral("WestWindow%1").arg(i);
+        mEnumNames += QStringLiteral("NorthWindow%1").arg(i);
+    }
+
     Q_ASSERT(mEnumNames.size() == EnumCount);
 }
 
@@ -1062,10 +1060,63 @@ BuildingTileEntry *BTC_Walls::createEntryFromSingleTile(const QString &tileName)
 
 int BTC_Walls::shadowToEnum(int shadowIndex)
 {
-    const int map[EnumCount] = {
+    int map[EnumCount] = {
         West, North, NorthWest, SouthEast, WestWindow, NorthWindow, WestDoor, NorthDoor
     };
+    for (int i = 0; i < 16; i++) {
+        map[WestWindow1 + i * 2] = WestWindow1 + i * 2;
+        map[NorthWindow1 + i * 2] = NorthWindow1 + i * 2;
+    }
     return map[shadowIndex];
+}
+
+bool BTC_Walls::isNorth(int e) const
+{
+    if (e == TileEnum::North || e == TileEnum::NorthDoor || e == TileEnum::NorthWindow) {
+        return true;
+    }
+    for (int i = 0; i < 16; i++) {
+        if (e == TileEnum::NorthWindow1 + i * 2) {
+            return true;
+        }
+    }
+    return false;
+}
+
+bool BTC_Walls::isWest(int e) const
+{
+    if (e == TileEnum::West || e == TileEnum::WestDoor || e == TileEnum::WestWindow) {
+        return true;
+    }
+    for (int i = 0; i < 16; i++) {
+        if (e == TileEnum::WestWindow1 + i * 2) {
+            return true;
+        }
+    }
+    return false;
+}
+
+static QMap<QString,BTC_Walls::TileEnum> WindowShapeW;
+static QMap<QString,BTC_Walls::TileEnum> WindowShapeN;
+
+BTC_Walls::TileEnum BTC_Walls::windowShapeToEnumW(const QString &windowShape)
+{
+    if (WindowShapeW.isEmpty()) {
+        for (int i = 0; i < 16; i++) {
+            WindowShapeW.insert(QStringLiteral("%1").arg(i + 1), static_cast<TileEnum>(TileEnum::WestWindow1 + i * 2));
+        }
+    }
+    return WindowShapeW.value(windowShape, TileEnum::WestWindow);
+}
+
+BTC_Walls::TileEnum BTC_Walls::windowShapeToEnumN(const QString &windowShape)
+{
+    if (WindowShapeN.isEmpty()) {
+        for (int i = 0; i < 16; i++) {
+            WindowShapeN.insert(QStringLiteral("%1").arg(i + 1), static_cast<TileEnum>(TileEnum::NorthWindow1 + i * 2));
+        }
+    }
+    return WindowShapeN.value(windowShape, TileEnum::NorthWindow);
 }
 
 /////
@@ -1086,12 +1137,103 @@ BuildingTileEntry *BTC_Windows::createEntryFromSingleTile(const QString &tileNam
     return entry;
 }
 
+int BTC_Windows::shadowColumns() const
+{
+    return 2;
+}
+
+int BTC_Windows::shadowRows() const
+{
+    return 1;
+}
+
 int BTC_Windows::shadowToEnum(int shadowIndex)
 {
-    const int map[EnumCount] = {
+    int map[EnumCount] = {
         West, North
     };
     return map[shadowIndex];
+}
+
+bool BTC_Windows::isNorth(int e) const
+{
+    return e == TileEnum::North;
+}
+
+bool BTC_Windows::isWest(int e) const
+{
+    return e == TileEnum::West;
+}
+
+int BTC_Windows::wallEnum(const BuildingTileEntry *entry, int e) const
+{
+    BuildingTile *tile = entry->tile(e);
+    if (tile == nullptr) {
+        return defaultWallEnum(entry, e);
+    }
+    TileDefWatcher *tileDefWatcher = getTileDefWatcher();
+    TileDefTileset *tdTileset = tileDefWatcher->tileset(tile->mTilesetName);
+    if (tdTileset == nullptr) {
+        return defaultWallEnum(entry, e);
+    }
+    TileDefTile *tdTile = tdTileset->tileAt(tile->mIndex);
+    if (tdTile == nullptr || !tdTile->mProperties.contains(QStringLiteral("WindowShape"))) {
+        return defaultWallEnum(entry, e);
+    }
+    const QString WindowShape = tdTile->mProperties.value(QStringLiteral("WindowShape"));
+    switch (e) {
+    case TileEnum::West:
+        return BTC_Walls::windowShapeToEnumW(WindowShape);
+    case TileEnum::North:
+        return BTC_Walls::windowShapeToEnumN(WindowShape);
+    default:
+        return defaultWallEnum(entry, e);
+    }
+}
+
+bool BTC_Windows::shadowHack(const BuildingTileEntry *entry, int e, QPoint &p) const
+{
+    BuildingTile *tile = entry->tile(e);
+    if (tile == nullptr) {
+        return false;
+    }
+    TileDefWatcher *tileDefWatcher = getTileDefWatcher();
+    TileDefTileset *tdTileset = tileDefWatcher->tileset(tile->mTilesetName);
+    if (tdTileset == nullptr) {
+        return false;
+    }
+    TileDefTile *tdTile = tdTileset->tileAt(tile->mIndex);
+    if (tdTile == nullptr || !tdTile->mProperties.contains(QStringLiteral("WindowShape"))) {
+        return false;
+    }
+    bool ok = false;
+    int WindowShape = tdTile->mProperties.value(QStringLiteral("WindowShape")).toInt(&ok);
+    if (!ok || WindowShape < 1 || WindowShape > 16) {
+        return false;
+    }
+    WindowShape -= 1;
+    switch (e) {
+    case TileEnum::West:
+        p = QPoint((WindowShape % 4) * shadowColumns(), 1 + (WindowShape / 4)); // first row doesn't include shapes 1-16
+        return true;
+    case TileEnum::North:
+        p = QPoint((WindowShape % 4) * shadowColumns(), 1 + (WindowShape / 4)); // first row doesn't include shapes 1-16
+        return true;
+    default:
+        return false;
+    }
+}
+
+int BTC_Windows::defaultWallEnum(const BuildingTileEntry *entry, int e) const
+{
+    switch (e) {
+    case TileEnum::West:
+        return BTC_Walls::TileEnum::WestWindow;
+    case TileEnum::North:
+        return BTC_Walls::TileEnum::NorthWindow;
+    default:
+        return BuildingTileCategory::wallEnum(entry, e);
+    }
 }
 
 /////
@@ -1487,6 +1629,16 @@ int BuildingTileCategory::enumFromString(const QString &s) const
     return Invalid;
 }
 
+int BuildingTileCategory::shadowColumns() const
+{
+    return shadowImage().width() / 64;
+}
+
+int BuildingTileCategory::shadowRows() const
+{
+    return shadowImage().height() / 128;
+}
+
 int BuildingTileCategory::enumToShadow(int e)
 {
     QVector<int> map(100);
@@ -1503,10 +1655,31 @@ int BuildingTileCategory::enumToShadow(int e)
 BuildingTileEntry *BuildingTileCategory::findMatch(BuildingTileEntry *entry) const
 {
     foreach (BuildingTileEntry *candidate, mEntries) {
-        if (candidate->equals(entry))
+        if (candidate->equals(entry)) {
             return candidate;
+        }
     }
-    return 0;
+    return nullptr;
+}
+
+BuildingTileEntry *BuildingTileCategory::findMatch(BuildingTileEntry *entry, int tileCount) const
+{
+    foreach (BuildingTileEntry *candidate, mEntries) {
+        if (candidate->equals(entry, tileCount)) {
+            return candidate;
+        }
+    }
+    return nullptr;
+}
+
+BuildingTileEntry *BuildingTileCategory::findMatchIgnoreCategory(BuildingTileEntry *entry) const
+{
+    foreach (BuildingTileEntry *candidate, mEntries) {
+        if (candidate->equalsIgnoreCategory(entry)) {
+            return candidate;
+        }
+    }
+    return nullptr;
 }
 
 bool BuildingTileCategory::usesTile(Tile *tile) const

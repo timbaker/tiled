@@ -18,6 +18,7 @@
 #ifndef BUILDINGTILEENTRYVIEW_H
 #define BUILDINGTILEENTRYVIEW_H
 
+#include "buildingtiles.h"
 #include "mixedtilesetview.h"
 
 namespace BuildingEditor {

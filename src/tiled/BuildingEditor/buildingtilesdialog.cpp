@@ -650,6 +650,8 @@ BuildingTilesDialog::BuildingTilesDialog(QWidget *parent) :
     ui->categoryView->setSelectionMode(QAbstractItemView::ExtendedSelection);
     connect(ui->categoryView->model(), &TileCategoryModel::tileDropped,
             this, &BuildingTilesDialog::entryTileDropped);
+    connect(ui->categoryView->model(), &TileCategoryModel::tilesDropped,
+            this, &BuildingTilesDialog::entryTilesDropped);
     connect(ui->categoryView->selectionModel(),
             &QItemSelectionModel::currentChanged,
             this, &BuildingTilesDialog::entrySelectionChanged);
@@ -715,11 +717,13 @@ BuildingTilesDialog::BuildingTilesDialog(QWidget *parent) :
     ui->categoryListToolbarLayout->addWidget(toolBar);
     /////
 
+    int insertWidgetAt = 1;
+
     // Create UI for adjusting BuildingTileEntry offset
     QHBoxLayout *hbox = new QHBoxLayout;
     hbox->setContentsMargins(0, 0, 0, 0);
 
-    QLabel *label = new QLabel(tr("Tile Offset"));
+    QLabel *label = new QLabel(tr("Tile Offset:"));
     hbox->addWidget(label);
 
     label = new QLabel(tr("x:"));
@@ -738,7 +742,7 @@ BuildingTilesDialog::BuildingTilesDialog(QWidget *parent) :
 
     QWidget *layoutWidget = new QWidget();
     layoutWidget->setLayout(hbox);
-    ui->categoryLayout->insertWidget(1, layoutWidget);
+    ui->categoryLayout->insertWidget(insertWidgetAt++, layoutWidget);
     mEntryOffsetUI = layoutWidget;
 #if QT_VERSION < QT_VERSION_CHECK(6, 0, 0)
     connect(mEntryOffsetSpinX, qOverload<int>(&QSpinBox::valueChanged),
@@ -772,7 +776,7 @@ BuildingTilesDialog::BuildingTilesDialog(QWidget *parent) :
 
     QWidget *layoutWidget = new QWidget();
     layoutWidget->setLayout(hbox);
-    ui->categoryLayout->insertWidget(2, layoutWidget);
+    ui->categoryLayout->insertWidget(insertWidgetAt++, layoutWidget);
     mFurnitureLayerUI = layoutWidget;
     mFurnitureLayerComboBox = cb;
 #if QT_VERSION < QT_VERSION_CHECK(6, 0, 0)
@@ -1733,6 +1737,15 @@ void BuildingTilesDialog::tileDropped(const QString &tilesetName, int tileId)
 void BuildingTilesDialog::entryTileDropped(BuildingTileEntry *entry, int e, const QString &tileName)
 {
     mUndoStack->push(new ChangeEntryTile(this, entry, e, tileName));
+}
+
+void BuildingTilesDialog::entryTilesDropped(BuildingTileEntry *entry, const QVector<TileCategoryModel::GridDnD> &gridDnDs)
+{
+    mUndoStack->beginMacro(tr("Change Entry Tiles"));
+    for (const TileCategoryModel::GridDnD& gridDnD : gridDnDs) {
+        mUndoStack->push(new ChangeEntryTile(this, entry, gridDnD.e, gridDnD.tileName));
+    }
+    mUndoStack->endMacro();
 }
 
 void BuildingTilesDialog::furnitureTileDropped(FurnitureTile *ftile, int x, int y,

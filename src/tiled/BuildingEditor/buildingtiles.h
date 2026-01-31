@@ -101,6 +101,13 @@ public:
     virtual BuildingTileEntry *asNone() { return 0; }
 
     bool equals(BuildingTileEntry *other) const;
+    bool equals(BuildingTileEntry *other, int tileCount) const;
+    bool equalsIgnoreCategory(BuildingTileEntry *other) const;
+
+    bool isNorth(int e) const;
+    bool isWest(int e) const;
+
+    int wallEnum(int e) const;
 
     BuildingTileEntry *asCategory(int n);
     BuildingTileEntry *asExteriorWall();
@@ -122,6 +129,12 @@ public:
     BuildingTileCategory *mCategory;
     QVector<BuildingTile*> mTiles;
     QVector<QPoint> mOffsets;
+};
+
+struct BuildingTileEntrySpec
+{
+    BuildingTileEntry *entry;
+    int e; // BuildingTileCategory::TileEnum
 };
 
 class NoneBuildingTileEntry : public BuildingTileEntry
@@ -192,7 +205,9 @@ public:
     QImage shadowImage() const
     { return mShadowImage; }
 
-    virtual int shadowCount() const { return enumCount(); }
+    virtual int shadowColumns() const;
+    virtual int shadowRows() const;
+    virtual int shadowCount() const { return shadowColumns() * shadowRows(); }
     virtual int shadowToEnum(int shadowIndex) { return shadowIndex; }
     virtual int enumToShadow(int e);
 
@@ -205,12 +220,21 @@ public:
     virtual BuildingTileEntry *createEntryFromSingleTile(const QString &tileName);
 
     BuildingTileEntry *findMatch(BuildingTileEntry *entry) const;
+    BuildingTileEntry *findMatch(BuildingTileEntry *entry, int tileCount) const;
+    BuildingTileEntry *findMatchIgnoreCategory(BuildingTileEntry *entry) const;
     bool usesTile(Tiled::Tile *tile) const;
 
     virtual bool canAssignNone() const
     { return false; }
 
     virtual bool isNone() const { return false; }
+
+    virtual bool isNorth(int e) const { Q_UNUSED(e) return false; }
+    virtual bool isWest(int e) const { Q_UNUSED(e) return false; }
+
+    // Return BTC_Walls::TileEnum for this subclass's TileEnum.
+    // This is used to determine which wall tile to use for a given window shape.
+    virtual int wallEnum(const BuildingTileEntry *entry, int e) const { Q_UNUSED(entry) Q_UNUSED(e) return TileEnum::Invalid; }
 
     virtual BuildingTileCategory *asNone() { return 0; }
     virtual BuildingTileCategory *asExteriorWalls() { return 0; }
@@ -320,14 +344,18 @@ public:
 
     BTC_Doors(const QString &label);
 
-    BuildingTileEntry *createEntryFromSingleTile(const QString &tileName);
+    BuildingTileEntry *createEntryFromSingleTile(const QString &tileName) override;
 
-    bool canAssignNone() const
+    bool canAssignNone() const override
     { return true; }
 
-    BuildingTileCategory *asDoors() { return this; }
+    BuildingTileCategory *asDoors() override { return this; }
 
-    int shadowToEnum(int shadowIndex);
+    int shadowToEnum(int shadowIndex) override;
+
+    bool isNorth(int e) const override;
+    bool isWest(int e) const override;
+    int wallEnum(const BuildingTileEntry *entry, int e) const override;
 };
 
 class BTC_DoorFrames : public BuildingTileCategory
@@ -409,14 +437,58 @@ public:
         NorthWindow,
         WestDoor,
         NorthDoor,
+
+        // NOTE: Code assumes this order.
+        WestWindow1,
+        NorthWindow1,
+        WestWindow2,
+        NorthWindow2,
+        WestWindow3,
+        NorthWindow3,
+        WestWindow4,
+        NorthWindow4,
+
+        WestWindow5,
+        NorthWindow5,
+        WestWindow6,
+        NorthWindow6,
+        WestWindow7,
+        NorthWindow7,
+        WestWindow8,
+        NorthWindow8,
+
+        WestWindow9,
+        NorthWindow9,
+        WestWindow10,
+        NorthWindow10,
+        WestWindow11,
+        NorthWindow11,
+        WestWindow12,
+        NorthWindow12,
+
+        WestWindow13,
+        NorthWindow13,
+        WestWindow14,
+        NorthWindow14,
+        WestWindow15,
+        NorthWindow15,
+        WestWindow16,
+        NorthWindow16,
+
         EnumCount
     };
 
     BTC_Walls(const QString &name, const QString &label);
 
-    BuildingTileEntry *createEntryFromSingleTile(const QString &tileName);
+    BuildingTileEntry *createEntryFromSingleTile(const QString &tileName) override;
 
-    int shadowToEnum(int shadowIndex);
+    int shadowToEnum(int shadowIndex) override;
+
+    bool isNorth(int e) const override;
+    bool isWest(int e) const override;
+
+    static TileEnum windowShapeToEnumW(const QString &windowShape);
+    static TileEnum windowShapeToEnumN(const QString &windowShape);
 };
 
 class BTC_EWalls : public BTC_Walls
@@ -484,14 +556,25 @@ public:
 
     BTC_Windows(const QString &label);
 
-    BuildingTileEntry *createEntryFromSingleTile(const QString &tileName);
+    BuildingTileEntry *createEntryFromSingleTile(const QString &tileName) override;
 
-    bool canAssignNone() const
+    bool canAssignNone() const override
     { return true; }
 
-    BuildingTileCategory *asWindows() { return this; }
+    BuildingTileCategory *asWindows() override { return this; }
 
-    int shadowToEnum(int shadowIndex);
+    int shadowColumns() const override;
+    int shadowRows() const override;
+    int shadowToEnum(int shadowIndex) override;
+
+    bool isNorth(int e) const override;
+    bool isWest(int e) const override;
+    int wallEnum(const BuildingTileEntry *entry, int e) const override;
+
+    bool shadowHack(const BuildingTileEntry *entry, int e, QPoint &p) const;
+
+private:
+    int defaultWallEnum(const BuildingTileEntry *entry, int e) const;
 };
 
 class BTC_Ceiling : public BuildingTileCategory
@@ -835,7 +918,7 @@ signals:
     void tilesetAboutToBeRemoved(Tiled::Tileset *tileset);
     void tilesetRemoved(Tiled::Tileset *tileset);
 
-    void entryTileChanged(BuildingTileEntry *entry);
+    void entryTileChanged(BuildingEditor::BuildingTileEntry *entry);
 
 private:
     static BuildingTilesMgr *mInstance;

@@ -1,5 +1,10 @@
-version = 2
-revision = 5
+version = 3
+revision = 6
+TileEntry
+{
+    category = ceiling
+    Ceiling = ceilings_01_000
+}
 TileEntry
 {
     category = curtains
@@ -10,9 +15,37 @@ TileEntry
 }
 TileEntry
 {
+    category = curtains
+    West = location_military_tent_01_060
+    East = location_military_tent_01_061
+    North = location_military_tent_01_062
+    South = location_military_tent_01_063
+}
+TileEntry
+{
+    category = curtains
+    West = location_military_tent_01_124
+    East = location_military_tent_01_125
+    North = location_military_tent_01_126
+    South = location_military_tent_01_127
+}
+TileEntry
+{
     category = door_frames
     West = fixtures_doors_frames_01_000
     North = fixtures_doors_frames_01_001
+}
+TileEntry
+{
+    category = door_frames
+    West = fixtures_doors_frames_01_004
+    North = fixtures_doors_frames_01_005
+}
+TileEntry
+{
+    category = door_frames
+    West = fixtures_doors_frames_01_008
+    North = fixtures_doors_frames_01_009
 }
 TileEntry
 {
@@ -25,10 +58,58 @@ TileEntry
 TileEntry
 {
     category = doors
+    West = fixtures_doors_01_008
+    North = fixtures_doors_01_009
+    WestOpen = fixtures_doors_01_010
+    NorthOpen = fixtures_doors_01_011
+}
+TileEntry
+{
+    category = doors
     West = fixtures_doors_01_016
     North = fixtures_doors_01_017
     WestOpen = fixtures_doors_01_018
     NorthOpen = fixtures_doors_01_019
+}
+TileEntry
+{
+    category = doors
+    West = fixtures_doors_01_048
+    North = fixtures_doors_01_049
+    WestOpen = fixtures_doors_01_050
+    NorthOpen = fixtures_doors_01_051
+}
+TileEntry
+{
+    category = doors
+    West = fixtures_doors_01_052
+    North = fixtures_doors_01_053
+    WestOpen = fixtures_doors_01_054
+    NorthOpen = fixtures_doors_01_055
+}
+TileEntry
+{
+    category = doors
+    West = fixtures_doors_01_056
+    North = fixtures_doors_01_057
+    WestOpen = fixtures_doors_01_058
+    NorthOpen = fixtures_doors_01_059
+}
+TileEntry
+{
+    category = doors
+    West = location_restaurant_pileocrepe_01_048
+    North = location_restaurant_pileocrepe_01_049
+    WestOpen = location_restaurant_pileocrepe_01_050
+    NorthOpen = location_restaurant_pileocrepe_01_051
+}
+TileEntry
+{
+    category = doors
+    West = location_restaurant_pizzawhirled_01_056
+    North = location_restaurant_pizzawhirled_01_057
+    WestOpen = location_restaurant_pizzawhirled_01_058
+    NorthOpen = location_restaurant_pizzawhirled_01_059
 }
 TileEntry
 {
@@ -41,22 +122,510 @@ TileEntry
 TileEntry
 {
     category = doors
-    West = location_restaurant_spiffos_01_052
-    North = location_restaurant_spiffos_01_053
-    WestOpen = location_restaurant_spiffos_01_054
-    NorthOpen = location_restaurant_spiffos_01_055
+    West = location_shop_fossoil_01_060
+    North = location_shop_fossoil_01_061
+    WestOpen = location_shop_fossoil_01_062
+    NorthOpen = location_shop_fossoil_01_063
+}
+TileEntry
+{
+    category = doors
+    West = location_shop_gas2go_01_060
+    North = location_shop_gas2go_01_061
+    WestOpen = location_shop_gas2go_01_062
+    NorthOpen = location_shop_gas2go_01_063
+}
+TileEntry
+{
+    category = doors
+    West = walls_logs_040
+    North = walls_logs_041
+    WestOpen = walls_logs_042
+    NorthOpen = walls_logs_043
+}
+TileEntry
+{
+    category = exterior_wall_trim
+    West = industry_trucks_01_024
+    North = industry_trucks_01_025
+    NorthWest = industry_trucks_01_027
+    SouthEast = industry_trucks_01_026
+    WestWindow = industry_trucks_01_024
+    NorthWindow = industry_trucks_01_025
+    WestDoor = 
+    NorthDoor = 
+    WestWindow1 = 
+    NorthWindow1 = 
+    WestWindow2 = 
+    NorthWindow2 = 
+    WestWindow3 = 
+    NorthWindow3 = 
+    WestWindow4 = 
+    NorthWindow4 = 
+    WestWindow5 = 
+    NorthWindow5 = 
+    WestWindow6 = 
+    NorthWindow6 = 
+    WestWindow7 = 
+    NorthWindow7 = 
+    WestWindow8 = 
+    NorthWindow8 = 
+    WestWindow9 = 
+    NorthWindow9 = 
+    WestWindow10 = 
+    NorthWindow10 = 
+    WestWindow11 = 
+    NorthWindow11 = 
+    WestWindow12 = 
+    NorthWindow12 = 
+    WestWindow13 = 
+    NorthWindow13 = 
+    WestWindow14 = 
+    NorthWindow14 = 
+    WestWindow15 = 
+    NorthWindow15 = 
+    WestWindow16 = 
+    NorthWindow16 = 
+}
+TileEntry
+{
+    category = exterior_wall_trim
+    West = location_restaurant_pizzawhirled_01_012
+    North = location_restaurant_pizzawhirled_01_013
+    NorthWest = location_restaurant_pizzawhirled_01_014
+    SouthEast = location_restaurant_pizzawhirled_01_015
+    WestWindow = location_restaurant_pizzawhirled_01_012
+    NorthWindow = location_restaurant_pizzawhirled_01_013
+    WestDoor = location_restaurant_pizzawhirled_01_012
+    NorthDoor = location_restaurant_pizzawhirled_01_013
+    WestWindow1 = 
+    NorthWindow1 = 
+    WestWindow2 = 
+    NorthWindow2 = 
+    WestWindow3 = 
+    NorthWindow3 = 
+    WestWindow4 = 
+    NorthWindow4 = 
+    WestWindow5 = 
+    NorthWindow5 = 
+    WestWindow6 = 
+    NorthWindow6 = 
+    WestWindow7 = 
+    NorthWindow7 = 
+    WestWindow8 = 
+    NorthWindow8 = 
+    WestWindow9 = 
+    NorthWindow9 = 
+    WestWindow10 = 
+    NorthWindow10 = 
+    WestWindow11 = 
+    NorthWindow11 = 
+    WestWindow12 = 
+    NorthWindow12 = 
+    WestWindow13 = 
+    NorthWindow13 = 
+    WestWindow14 = 
+    NorthWindow14 = 
+    WestWindow15 = 
+    NorthWindow15 = 
+    WestWindow16 = 
+    NorthWindow16 = 
+}
+TileEntry
+{
+    category = exterior_wall_trim
+    West = location_shop_zippee_01_048
+    North = location_shop_zippee_01_049
+    NorthWest = location_shop_zippee_01_051
+    SouthEast = location_shop_zippee_01_050
+    WestWindow = location_shop_zippee_01_048
+    NorthWindow = location_shop_zippee_01_049
+    WestDoor = location_shop_zippee_01_048
+    NorthDoor = location_shop_zippee_01_049
+    WestWindow1 = 
+    NorthWindow1 = 
+    WestWindow2 = 
+    NorthWindow2 = 
+    WestWindow3 = 
+    NorthWindow3 = 
+    WestWindow4 = 
+    NorthWindow4 = 
+    WestWindow5 = 
+    NorthWindow5 = 
+    WestWindow6 = 
+    NorthWindow6 = 
+    WestWindow7 = 
+    NorthWindow7 = 
+    WestWindow8 = 
+    NorthWindow8 = 
+    WestWindow9 = 
+    NorthWindow9 = 
+    WestWindow10 = 
+    NorthWindow10 = 
+    WestWindow11 = 
+    NorthWindow11 = 
+    WestWindow12 = 
+    NorthWindow12 = 
+    WestWindow13 = 
+    NorthWindow13 = 
+    WestWindow14 = 
+    NorthWindow14 = 
+    WestWindow15 = 
+    NorthWindow15 = 
+    WestWindow16 = 
+    NorthWindow16 = 
+}
+TileEntry
+{
+    category = exterior_wall_trim
+    West = location_trailer_01_004
+    North = location_trailer_01_005
+    NorthWest = location_trailer_01_007
+    SouthEast = location_trailer_01_006
+    WestWindow = location_trailer_01_004
+    NorthWindow = location_trailer_01_005
+    WestDoor = location_trailer_01_004
+    NorthDoor = location_trailer_01_005
+    WestWindow1 = 
+    NorthWindow1 = 
+    WestWindow2 = 
+    NorthWindow2 = 
+    WestWindow3 = 
+    NorthWindow3 = 
+    WestWindow4 = 
+    NorthWindow4 = 
+    WestWindow5 = 
+    NorthWindow5 = 
+    WestWindow6 = 
+    NorthWindow6 = 
+    WestWindow7 = 
+    NorthWindow7 = 
+    WestWindow8 = 
+    NorthWindow8 = 
+    WestWindow9 = 
+    NorthWindow9 = 
+    WestWindow10 = 
+    NorthWindow10 = 
+    WestWindow11 = 
+    NorthWindow11 = 
+    WestWindow12 = 
+    NorthWindow12 = 
+    WestWindow13 = 
+    NorthWindow13 = 
+    WestWindow14 = 
+    NorthWindow14 = 
+    WestWindow15 = 
+    NorthWindow15 = 
+    WestWindow16 = 
+    NorthWindow16 = 
 }
 TileEntry
 {
     category = exterior_walls
-    West = location_restaurant_seahorse_01_005
-    North = location_restaurant_seahorse_01_004
-    NorthWest = location_restaurant_seahorse_01_006
-    SouthEast = location_restaurant_seahorse_01_007
+    West = industry_01_000
+    North = industry_01_001
+    NorthWest = industry_01_002
+    SouthEast = industry_01_003
+    WestWindow = industry_01_008
+    NorthWindow = industry_01_009
+    WestDoor = industry_01_010
+    NorthDoor = industry_01_011
+    WestWindow1 = walls_exterior_house_12_064
+    NorthWindow1 = walls_exterior_house_12_065
+    WestWindow2 = walls_exterior_house_12_066
+    NorthWindow2 = walls_exterior_house_12_067
+    WestWindow3 = walls_exterior_house_12_068
+    NorthWindow3 = walls_exterior_house_12_069
+    WestWindow4 = walls_exterior_house_12_070
+    NorthWindow4 = walls_exterior_house_12_071
+    WestWindow5 = walls_exterior_house_12_072
+    NorthWindow5 = walls_exterior_house_12_073
+    WestWindow6 = walls_exterior_house_12_074
+    NorthWindow6 = walls_exterior_house_12_075
+    WestWindow7 = walls_exterior_house_12_076
+    NorthWindow7 = walls_exterior_house_12_077
+    WestWindow8 = walls_exterior_house_12_078
+    NorthWindow8 = walls_exterior_house_12_079
+    WestWindow9 = walls_exterior_house_12_080
+    NorthWindow9 = walls_exterior_house_12_081
+    WestWindow10 = walls_exterior_house_12_082
+    NorthWindow10 = walls_exterior_house_12_083
+    WestWindow11 = walls_exterior_house_12_084
+    NorthWindow11 = walls_exterior_house_12_085
+    WestWindow12 = walls_exterior_house_12_086
+    NorthWindow12 = walls_exterior_house_12_087
+    WestWindow13 = walls_exterior_house_12_088
+    NorthWindow13 = walls_exterior_house_12_089
+    WestWindow14 = walls_exterior_house_12_090
+    NorthWindow14 = walls_exterior_house_12_091
+    WestWindow15 = walls_exterior_house_12_092
+    NorthWindow15 = walls_exterior_house_12_093
+    WestWindow16 = walls_exterior_house_12_094
+    NorthWindow16 = walls_exterior_house_12_095
+}
+TileEntry
+{
+    category = exterior_walls
+    West = industry_trucks_01_000
+    North = industry_trucks_01_001
+    NorthWest = industry_trucks_01_002
+    SouthEast = industry_trucks_01_003
+    WestWindow = industry_trucks_01_008
+    NorthWindow = industry_trucks_01_009
+    WestDoor = industry_trucks_01_010
+    NorthDoor = industry_trucks_01_011
+    WestWindow1 = 
+    NorthWindow1 = 
+    WestWindow2 = 
+    NorthWindow2 = 
+    WestWindow3 = 
+    NorthWindow3 = 
+    WestWindow4 = 
+    NorthWindow4 = 
+    WestWindow5 = 
+    NorthWindow5 = 
+    WestWindow6 = 
+    NorthWindow6 = 
+    WestWindow7 = 
+    NorthWindow7 = 
+    WestWindow8 = 
+    NorthWindow8 = 
+    WestWindow9 = 
+    NorthWindow9 = 
+    WestWindow10 = 
+    NorthWindow10 = 
+    WestWindow11 = 
+    NorthWindow11 = 
+    WestWindow12 = 
+    NorthWindow12 = 
+    WestWindow13 = 
+    NorthWindow13 = 
+    WestWindow14 = 
+    NorthWindow14 = 
+    WestWindow15 = 
+    NorthWindow15 = 
+    WestWindow16 = 
+    NorthWindow16 = 
+}
+TileEntry
+{
+    category = exterior_walls
+    West = location_barn_01_000
+    North = location_barn_01_001
+    NorthWest = location_barn_01_002
+    SouthEast = location_barn_01_003
+    WestWindow = location_barn_01_008
+    NorthWindow = location_barn_01_009
+    WestDoor = location_barn_01_010
+    NorthDoor = location_barn_01_011
+    WestWindow1 = 
+    NorthWindow1 = 
+    WestWindow2 = 
+    NorthWindow2 = 
+    WestWindow3 = 
+    NorthWindow3 = 
+    WestWindow4 = 
+    NorthWindow4 = 
+    WestWindow5 = 
+    NorthWindow5 = 
+    WestWindow6 = 
+    NorthWindow6 = 
+    WestWindow7 = 
+    NorthWindow7 = 
+    WestWindow8 = 
+    NorthWindow8 = 
+    WestWindow9 = 
+    NorthWindow9 = 
+    WestWindow10 = 
+    NorthWindow10 = 
+    WestWindow11 = 
+    NorthWindow11 = 
+    WestWindow12 = 
+    NorthWindow12 = 
+    WestWindow13 = 
+    NorthWindow13 = 
+    WestWindow14 = 
+    NorthWindow14 = 
+    WestWindow15 = 
+    NorthWindow15 = 
+    WestWindow16 = 
+    NorthWindow16 = 
+}
+TileEntry
+{
+    category = exterior_walls
+    West = location_community_church_small_01_000
+    North = location_community_church_small_01_001
+    NorthWest = location_community_church_small_01_002
+    SouthEast = location_community_church_small_01_003
+    WestWindow = location_community_church_small_01_008
+    NorthWindow = location_community_church_small_01_009
+    WestDoor = location_community_church_small_01_010
+    NorthDoor = location_community_church_small_01_011
+    WestWindow1 = walls_exterior_house_11_032
+    NorthWindow1 = walls_exterior_house_11_033
+    WestWindow2 = walls_exterior_house_11_034
+    NorthWindow2 = walls_exterior_house_11_035
+    WestWindow3 = walls_exterior_house_11_036
+    NorthWindow3 = walls_exterior_house_11_037
+    WestWindow4 = walls_exterior_house_11_038
+    NorthWindow4 = walls_exterior_house_11_039
+    WestWindow5 = walls_exterior_house_11_040
+    NorthWindow5 = walls_exterior_house_11_041
+    WestWindow6 = walls_exterior_house_11_042
+    NorthWindow6 = walls_exterior_house_11_043
+    WestWindow7 = walls_exterior_house_11_044
+    NorthWindow7 = walls_exterior_house_11_045
+    WestWindow8 = walls_exterior_house_11_046
+    NorthWindow8 = walls_exterior_house_11_047
+    WestWindow9 = walls_exterior_house_11_048
+    NorthWindow9 = walls_exterior_house_11_049
+    WestWindow10 = walls_exterior_house_11_050
+    NorthWindow10 = walls_exterior_house_11_051
+    WestWindow11 = walls_exterior_house_11_052
+    NorthWindow11 = walls_exterior_house_11_053
+    WestWindow12 = walls_exterior_house_11_054
+    NorthWindow12 = walls_exterior_house_11_055
+    WestWindow13 = walls_exterior_house_11_056
+    NorthWindow13 = walls_exterior_house_11_057
+    WestWindow14 = walls_exterior_house_11_058
+    NorthWindow14 = walls_exterior_house_11_059
+    WestWindow15 = walls_exterior_house_11_060
+    NorthWindow15 = walls_exterior_house_11_061
+    WestWindow16 = walls_exterior_house_11_062
+    NorthWindow16 = walls_exterior_house_11_063
+}
+TileEntry
+{
+    category = exterior_walls
+    West = location_military_tent_01_000
+    North = location_military_tent_01_001
+    NorthWest = location_military_tent_01_002
+    SouthEast = location_military_tent_01_003
+    WestWindow = location_military_tent_01_008
+    NorthWindow = location_military_tent_01_009
+    WestDoor = location_military_tent_01_010
+    NorthDoor = location_military_tent_01_011
+    WestWindow1 = 
+    NorthWindow1 = 
+    WestWindow2 = 
+    NorthWindow2 = 
+    WestWindow3 = 
+    NorthWindow3 = 
+    WestWindow4 = 
+    NorthWindow4 = 
+    WestWindow5 = 
+    NorthWindow5 = 
+    WestWindow6 = 
+    NorthWindow6 = 
+    WestWindow7 = 
+    NorthWindow7 = 
+    WestWindow8 = 
+    NorthWindow8 = 
+    WestWindow9 = 
+    NorthWindow9 = 
+    WestWindow10 = 
+    NorthWindow10 = 
+    WestWindow11 = 
+    NorthWindow11 = 
+    WestWindow12 = 
+    NorthWindow12 = 
+    WestWindow13 = 
+    NorthWindow13 = 
+    WestWindow14 = 
+    NorthWindow14 = 
+    WestWindow15 = 
+    NorthWindow15 = 
+    WestWindow16 = 
+    NorthWindow16 = 
+}
+TileEntry
+{
+    category = exterior_walls
+    West = location_military_tent_01_064
+    North = location_military_tent_01_065
+    NorthWest = location_military_tent_01_066
+    SouthEast = location_military_tent_01_067
+    WestWindow = location_military_tent_01_072
+    NorthWindow = location_military_tent_01_073
+    WestDoor = location_military_tent_01_074
+    NorthDoor = location_military_tent_01_075
+    WestWindow1 = 
+    NorthWindow1 = 
+    WestWindow2 = 
+    NorthWindow2 = 
+    WestWindow3 = 
+    NorthWindow3 = 
+    WestWindow4 = 
+    NorthWindow4 = 
+    WestWindow5 = 
+    NorthWindow5 = 
+    WestWindow6 = 
+    NorthWindow6 = 
+    WestWindow7 = 
+    NorthWindow7 = 
+    WestWindow8 = 
+    NorthWindow8 = 
+    WestWindow9 = 
+    NorthWindow9 = 
+    WestWindow10 = 
+    NorthWindow10 = 
+    WestWindow11 = 
+    NorthWindow11 = 
+    WestWindow12 = 
+    NorthWindow12 = 
+    WestWindow13 = 
+    NorthWindow13 = 
+    WestWindow14 = 
+    NorthWindow14 = 
+    WestWindow15 = 
+    NorthWindow15 = 
+    WestWindow16 = 
+    NorthWindow16 = 
+}
+TileEntry
+{
+    category = exterior_walls
+    West = location_restaurant_diner_01_000
+    North = location_restaurant_diner_01_001
+    NorthWest = location_restaurant_diner_01_002
+    SouthEast = location_restaurant_diner_01_003
     WestWindow = 
     NorthWindow = 
-    WestDoor = location_restaurant_seahorse_01_014
-    NorthDoor = location_restaurant_seahorse_01_015
+    WestDoor = location_restaurant_diner_01_004
+    NorthDoor = location_restaurant_diner_01_005
+    WestWindow1 = 
+    NorthWindow1 = 
+    WestWindow2 = 
+    NorthWindow2 = 
+    WestWindow3 = 
+    NorthWindow3 = 
+    WestWindow4 = 
+    NorthWindow4 = 
+    WestWindow5 = 
+    NorthWindow5 = 
+    WestWindow6 = 
+    NorthWindow6 = 
+    WestWindow7 = 
+    NorthWindow7 = 
+    WestWindow8 = 
+    NorthWindow8 = 
+    WestWindow9 = 
+    NorthWindow9 = 
+    WestWindow10 = 
+    NorthWindow10 = 
+    WestWindow11 = 
+    NorthWindow11 = 
+    WestWindow12 = 
+    NorthWindow12 = 
+    WestWindow13 = 
+    NorthWindow13 = 
+    WestWindow14 = 
+    NorthWindow14 = 
+    WestWindow15 = 
+    NorthWindow15 = 
+    WestWindow16 = 
+    NorthWindow16 = 
 }
 TileEntry
 {
@@ -69,18 +638,302 @@ TileEntry
     NorthWindow = 
     WestDoor = location_restaurant_spiffos_01_002
     NorthDoor = location_restaurant_spiffos_01_003
+    WestWindow1 = 
+    NorthWindow1 = 
+    WestWindow2 = 
+    NorthWindow2 = 
+    WestWindow3 = 
+    NorthWindow3 = 
+    WestWindow4 = 
+    NorthWindow4 = 
+    WestWindow5 = 
+    NorthWindow5 = 
+    WestWindow6 = 
+    NorthWindow6 = 
+    WestWindow7 = 
+    NorthWindow7 = 
+    WestWindow8 = 
+    NorthWindow8 = 
+    WestWindow9 = 
+    NorthWindow9 = 
+    WestWindow10 = 
+    NorthWindow10 = 
+    WestWindow11 = 
+    NorthWindow11 = 
+    WestWindow12 = 
+    NorthWindow12 = 
+    WestWindow13 = 
+    NorthWindow13 = 
+    WestWindow14 = 
+    NorthWindow14 = 
+    WestWindow15 = 
+    NorthWindow15 = 
+    WestWindow16 = 
+    NorthWindow16 = 
 }
 TileEntry
 {
     category = exterior_walls
-    West = location_trailer_01_024
-    North = location_trailer_01_025
-    NorthWest = location_trailer_01_026
-    SouthEast = location_trailer_01_027
-    WestWindow = location_trailer_01_032
-    NorthWindow = location_trailer_01_033
-    WestDoor = location_trailer_01_034
-    NorthDoor = location_trailer_01_035
+    West = location_sewer_01_000
+    North = location_sewer_01_001
+    NorthWest = location_sewer_01_002
+    SouthEast = location_sewer_01_003
+    WestWindow = 
+    NorthWindow = 
+    WestDoor = 
+    NorthDoor = 
+    WestWindow1 = 
+    NorthWindow1 = 
+    WestWindow2 = 
+    NorthWindow2 = 
+    WestWindow3 = 
+    NorthWindow3 = 
+    WestWindow4 = 
+    NorthWindow4 = 
+    WestWindow5 = 
+    NorthWindow5 = 
+    WestWindow6 = 
+    NorthWindow6 = 
+    WestWindow7 = 
+    NorthWindow7 = 
+    WestWindow8 = 
+    NorthWindow8 = 
+    WestWindow9 = 
+    NorthWindow9 = 
+    WestWindow10 = 
+    NorthWindow10 = 
+    WestWindow11 = 
+    NorthWindow11 = 
+    WestWindow12 = 
+    NorthWindow12 = 
+    WestWindow13 = 
+    NorthWindow13 = 
+    WestWindow14 = 
+    NorthWindow14 = 
+    WestWindow15 = 
+    NorthWindow15 = 
+    WestWindow16 = 
+    NorthWindow16 = 
+}
+TileEntry
+{
+    category = exterior_walls
+    West = location_shop_fossoil_01_006
+    North = location_shop_fossoil_01_005
+    NorthWest = location_shop_fossoil_01_004
+    SouthEast = location_shop_fossoil_01_007
+    WestWindow = 
+    NorthWindow = 
+    WestDoor = location_shop_fossoil_01_008
+    NorthDoor = location_shop_fossoil_01_009
+    WestWindow1 = 
+    NorthWindow1 = 
+    WestWindow2 = 
+    NorthWindow2 = 
+    WestWindow3 = 
+    NorthWindow3 = 
+    WestWindow4 = 
+    NorthWindow4 = 
+    WestWindow5 = 
+    NorthWindow5 = 
+    WestWindow6 = 
+    NorthWindow6 = 
+    WestWindow7 = 
+    NorthWindow7 = 
+    WestWindow8 = 
+    NorthWindow8 = 
+    WestWindow9 = 
+    NorthWindow9 = 
+    WestWindow10 = 
+    NorthWindow10 = 
+    WestWindow11 = 
+    NorthWindow11 = 
+    WestWindow12 = 
+    NorthWindow12 = 
+    WestWindow13 = 
+    NorthWindow13 = 
+    WestWindow14 = 
+    NorthWindow14 = 
+    WestWindow15 = 
+    NorthWindow15 = 
+    WestWindow16 = 
+    NorthWindow16 = 
+}
+TileEntry
+{
+    category = exterior_walls
+    West = location_shop_gas2go_01_000
+    North = location_shop_gas2go_01_001
+    NorthWest = location_shop_gas2go_01_002
+    SouthEast = location_shop_gas2go_01_003
+    WestWindow = 
+    NorthWindow = 
+    WestDoor = location_shop_gas2go_01_010
+    NorthDoor = location_shop_gas2go_01_011
+    WestWindow1 = 
+    NorthWindow1 = 
+    WestWindow2 = 
+    NorthWindow2 = 
+    WestWindow3 = 
+    NorthWindow3 = 
+    WestWindow4 = 
+    NorthWindow4 = 
+    WestWindow5 = 
+    NorthWindow5 = 
+    WestWindow6 = 
+    NorthWindow6 = 
+    WestWindow7 = 
+    NorthWindow7 = 
+    WestWindow8 = 
+    NorthWindow8 = 
+    WestWindow9 = 
+    NorthWindow9 = 
+    WestWindow10 = 
+    NorthWindow10 = 
+    WestWindow11 = 
+    NorthWindow11 = 
+    WestWindow12 = 
+    NorthWindow12 = 
+    WestWindow13 = 
+    NorthWindow13 = 
+    WestWindow14 = 
+    NorthWindow14 = 
+    WestWindow15 = 
+    NorthWindow15 = 
+    WestWindow16 = 
+    NorthWindow16 = 
+}
+TileEntry
+{
+    category = exterior_walls
+    West = location_trailer_01_000
+    North = location_trailer_01_001
+    NorthWest = location_trailer_01_002
+    SouthEast = location_trailer_01_003
+    WestWindow = location_trailer_01_008
+    NorthWindow = location_trailer_01_009
+    WestDoor = location_trailer_01_010
+    NorthDoor = location_trailer_01_011
+    WestWindow1 = walls_exterior_house_12_032
+    NorthWindow1 = walls_exterior_house_12_033
+    WestWindow2 = walls_exterior_house_12_034
+    NorthWindow2 = walls_exterior_house_12_035
+    WestWindow3 = walls_exterior_house_12_036
+    NorthWindow3 = walls_exterior_house_12_037
+    WestWindow4 = walls_exterior_house_12_038
+    NorthWindow4 = walls_exterior_house_12_039
+    WestWindow5 = walls_exterior_house_12_040
+    NorthWindow5 = walls_exterior_house_12_041
+    WestWindow6 = walls_exterior_house_12_042
+    NorthWindow6 = walls_exterior_house_12_043
+    WestWindow7 = walls_exterior_house_12_044
+    NorthWindow7 = walls_exterior_house_12_045
+    WestWindow8 = walls_exterior_house_12_046
+    NorthWindow8 = walls_exterior_house_12_047
+    WestWindow9 = walls_exterior_house_12_048
+    NorthWindow9 = walls_exterior_house_12_049
+    WestWindow10 = walls_exterior_house_12_050
+    NorthWindow10 = walls_exterior_house_12_051
+    WestWindow11 = walls_exterior_house_12_052
+    NorthWindow11 = walls_exterior_house_12_053
+    WestWindow12 = walls_exterior_house_12_054
+    NorthWindow12 = walls_exterior_house_12_055
+    WestWindow13 = walls_exterior_house_12_056
+    NorthWindow13 = walls_exterior_house_12_057
+    WestWindow14 = walls_exterior_house_12_058
+    NorthWindow14 = walls_exterior_house_12_059
+    WestWindow15 = walls_exterior_house_12_060
+    NorthWindow15 = walls_exterior_house_12_061
+    WestWindow16 = walls_exterior_house_12_062
+    NorthWindow16 = walls_exterior_house_12_063
+}
+TileEntry
+{
+    category = exterior_walls
+    West = walls_burnt_01_000
+    North = walls_burnt_01_001
+    NorthWest = walls_burnt_01_002
+    SouthEast = walls_burnt_01_003
+    WestWindow = walls_burnt_01_008
+    NorthWindow = walls_burnt_01_009
+    WestDoor = walls_burnt_01_010
+    NorthDoor = walls_burnt_01_011
+    WestWindow1 = 
+    NorthWindow1 = 
+    WestWindow2 = 
+    NorthWindow2 = 
+    WestWindow3 = 
+    NorthWindow3 = 
+    WestWindow4 = 
+    NorthWindow4 = 
+    WestWindow5 = 
+    NorthWindow5 = 
+    WestWindow6 = 
+    NorthWindow6 = 
+    WestWindow7 = 
+    NorthWindow7 = 
+    WestWindow8 = 
+    NorthWindow8 = 
+    WestWindow9 = 
+    NorthWindow9 = 
+    WestWindow10 = 
+    NorthWindow10 = 
+    WestWindow11 = 
+    NorthWindow11 = 
+    WestWindow12 = 
+    NorthWindow12 = 
+    WestWindow13 = 
+    NorthWindow13 = 
+    WestWindow14 = 
+    NorthWindow14 = 
+    WestWindow15 = 
+    NorthWindow15 = 
+    WestWindow16 = 
+    NorthWindow16 = 
+}
+TileEntry
+{
+    category = exterior_walls
+    West = walls_commercial_01_048
+    North = walls_commercial_01_049
+    NorthWest = walls_commercial_01_050
+    SouthEast = walls_commercial_01_051
+    WestWindow = walls_commercial_01_056
+    NorthWindow = walls_commercial_01_057
+    WestDoor = walls_commercial_01_058
+    NorthDoor = walls_commercial_01_059
+    WestWindow1 = walls_exterior_house_10_000
+    NorthWindow1 = walls_exterior_house_10_001
+    WestWindow2 = walls_exterior_house_10_002
+    NorthWindow2 = walls_exterior_house_10_003
+    WestWindow3 = walls_exterior_house_10_004
+    NorthWindow3 = walls_exterior_house_10_005
+    WestWindow4 = walls_exterior_house_10_006
+    NorthWindow4 = walls_exterior_house_10_007
+    WestWindow5 = walls_exterior_house_10_008
+    NorthWindow5 = walls_exterior_house_10_009
+    WestWindow6 = walls_exterior_house_10_010
+    NorthWindow6 = walls_exterior_house_10_011
+    WestWindow7 = walls_exterior_house_10_012
+    NorthWindow7 = walls_exterior_house_10_013
+    WestWindow8 = walls_exterior_house_10_014
+    NorthWindow8 = walls_exterior_house_10_015
+    WestWindow9 = walls_exterior_house_10_016
+    NorthWindow9 = walls_exterior_house_10_017
+    WestWindow10 = walls_exterior_house_10_018
+    NorthWindow10 = walls_exterior_house_10_019
+    WestWindow11 = walls_exterior_house_10_020
+    NorthWindow11 = walls_exterior_house_10_021
+    WestWindow12 = walls_exterior_house_10_022
+    NorthWindow12 = walls_exterior_house_10_023
+    WestWindow13 = walls_exterior_house_10_024
+    NorthWindow13 = walls_exterior_house_10_025
+    WestWindow14 = walls_exterior_house_10_026
+    NorthWindow14 = walls_exterior_house_10_027
+    WestWindow15 = walls_exterior_house_10_028
+    NorthWindow15 = walls_exterior_house_10_029
+    WestWindow16 = walls_exterior_house_10_030
+    NorthWindow16 = walls_exterior_house_10_031
 }
 TileEntry
 {
@@ -93,6 +946,38 @@ TileEntry
     NorthWindow = walls_exterior_house_01_025
     WestDoor = walls_exterior_house_01_026
     NorthDoor = walls_exterior_house_01_027
+    WestWindow1 = walls_exterior_house_05_064
+    NorthWindow1 = walls_exterior_house_05_065
+    WestWindow2 = walls_exterior_house_05_066
+    NorthWindow2 = walls_exterior_house_05_067
+    WestWindow3 = walls_exterior_house_05_068
+    NorthWindow3 = walls_exterior_house_05_069
+    WestWindow4 = walls_exterior_house_05_070
+    NorthWindow4 = walls_exterior_house_05_071
+    WestWindow5 = walls_exterior_house_05_072
+    NorthWindow5 = walls_exterior_house_05_073
+    WestWindow6 = walls_exterior_house_05_074
+    NorthWindow6 = walls_exterior_house_05_075
+    WestWindow7 = walls_exterior_house_05_076
+    NorthWindow7 = walls_exterior_house_05_077
+    WestWindow8 = walls_exterior_house_05_078
+    NorthWindow8 = walls_exterior_house_05_079
+    WestWindow9 = walls_exterior_house_05_080
+    NorthWindow9 = walls_exterior_house_05_081
+    WestWindow10 = walls_exterior_house_05_082
+    NorthWindow10 = walls_exterior_house_05_083
+    WestWindow11 = walls_exterior_house_05_084
+    NorthWindow11 = walls_exterior_house_05_085
+    WestWindow12 = walls_exterior_house_05_086
+    NorthWindow12 = walls_exterior_house_05_087
+    WestWindow13 = walls_exterior_house_05_088
+    NorthWindow13 = walls_exterior_house_05_089
+    WestWindow14 = walls_exterior_house_05_090
+    NorthWindow14 = walls_exterior_house_05_091
+    WestWindow15 = walls_exterior_house_05_092
+    NorthWindow15 = walls_exterior_house_05_093
+    WestWindow16 = walls_exterior_house_05_094
+    NorthWindow16 = walls_exterior_house_05_095
 }
 TileEntry
 {
@@ -105,6 +990,214 @@ TileEntry
     NorthWindow = walls_exterior_house_01_041
     WestDoor = walls_exterior_house_01_042
     NorthDoor = walls_exterior_house_01_043
+    WestWindow1 = walls_exterior_house_06_000
+    NorthWindow1 = walls_exterior_house_06_001
+    WestWindow2 = walls_exterior_house_06_002
+    NorthWindow2 = walls_exterior_house_06_003
+    WestWindow3 = walls_exterior_house_06_004
+    NorthWindow3 = walls_exterior_house_06_005
+    WestWindow4 = walls_exterior_house_06_006
+    NorthWindow4 = walls_exterior_house_06_007
+    WestWindow5 = walls_exterior_house_06_008
+    NorthWindow5 = walls_exterior_house_06_009
+    WestWindow6 = walls_exterior_house_06_010
+    NorthWindow6 = walls_exterior_house_06_011
+    WestWindow7 = walls_exterior_house_06_012
+    NorthWindow7 = walls_exterior_house_06_013
+    WestWindow8 = walls_exterior_house_06_014
+    NorthWindow8 = walls_exterior_house_06_015
+    WestWindow9 = walls_exterior_house_06_016
+    NorthWindow9 = walls_exterior_house_06_017
+    WestWindow10 = walls_exterior_house_06_018
+    NorthWindow10 = walls_exterior_house_06_019
+    WestWindow11 = walls_exterior_house_06_020
+    NorthWindow11 = walls_exterior_house_06_021
+    WestWindow12 = walls_exterior_house_06_022
+    NorthWindow12 = walls_exterior_house_06_023
+    WestWindow13 = walls_exterior_house_06_024
+    NorthWindow13 = walls_exterior_house_06_025
+    WestWindow14 = walls_exterior_house_06_026
+    NorthWindow14 = walls_exterior_house_06_027
+    WestWindow15 = walls_exterior_house_06_028
+    NorthWindow15 = walls_exterior_house_06_029
+    WestWindow16 = walls_exterior_house_06_030
+    NorthWindow16 = walls_exterior_house_06_031
+}
+TileEntry
+{
+    category = exterior_walls
+    West = walls_exterior_house_01_052
+    North = walls_exterior_house_01_053
+    NorthWest = walls_exterior_house_01_054
+    SouthEast = walls_exterior_house_01_055
+    WestWindow = walls_exterior_house_01_060
+    NorthWindow = walls_exterior_house_01_061
+    WestDoor = walls_exterior_house_01_062
+    NorthDoor = walls_exterior_house_01_063
+    WestWindow1 = walls_exterior_house_06_064
+    NorthWindow1 = walls_exterior_house_06_065
+    WestWindow2 = walls_exterior_house_06_066
+    NorthWindow2 = walls_exterior_house_06_067
+    WestWindow3 = walls_exterior_house_06_068
+    NorthWindow3 = walls_exterior_house_06_069
+    WestWindow4 = walls_exterior_house_06_070
+    NorthWindow4 = walls_exterior_house_06_071
+    WestWindow5 = walls_exterior_house_06_072
+    NorthWindow5 = walls_exterior_house_06_073
+    WestWindow6 = walls_exterior_house_06_074
+    NorthWindow6 = walls_exterior_house_06_075
+    WestWindow7 = walls_exterior_house_06_076
+    NorthWindow7 = walls_exterior_house_06_077
+    WestWindow8 = walls_exterior_house_06_078
+    NorthWindow8 = walls_exterior_house_06_079
+    WestWindow9 = walls_exterior_house_06_080
+    NorthWindow9 = walls_exterior_house_06_081
+    WestWindow10 = walls_exterior_house_06_082
+    NorthWindow10 = walls_exterior_house_06_083
+    WestWindow11 = walls_exterior_house_06_084
+    NorthWindow11 = walls_exterior_house_06_085
+    WestWindow12 = walls_exterior_house_06_086
+    NorthWindow12 = walls_exterior_house_06_087
+    WestWindow13 = walls_exterior_house_06_088
+    NorthWindow13 = walls_exterior_house_06_089
+    WestWindow14 = walls_exterior_house_06_090
+    NorthWindow14 = walls_exterior_house_06_091
+    WestWindow15 = walls_exterior_house_06_092
+    NorthWindow15 = walls_exterior_house_06_093
+    WestWindow16 = walls_exterior_house_06_094
+    NorthWindow16 = walls_exterior_house_06_095
+}
+TileEntry
+{
+    category = exterior_walls
+    West = walls_exterior_house_02_004
+    North = walls_exterior_house_02_005
+    NorthWest = walls_exterior_house_02_006
+    SouthEast = walls_exterior_house_02_007
+    WestWindow = walls_exterior_house_02_012
+    NorthWindow = walls_exterior_house_02_013
+    WestDoor = walls_exterior_house_02_014
+    NorthDoor = walls_exterior_house_02_015
+    WestWindow1 = walls_exterior_house_07_000
+    NorthWindow1 = walls_exterior_house_07_001
+    WestWindow2 = walls_exterior_house_07_002
+    NorthWindow2 = walls_exterior_house_07_003
+    WestWindow3 = walls_exterior_house_07_004
+    NorthWindow3 = walls_exterior_house_07_005
+    WestWindow4 = walls_exterior_house_07_006
+    NorthWindow4 = walls_exterior_house_07_007
+    WestWindow5 = walls_exterior_house_07_008
+    NorthWindow5 = walls_exterior_house_07_009
+    WestWindow6 = walls_exterior_house_07_010
+    NorthWindow6 = walls_exterior_house_07_011
+    WestWindow7 = walls_exterior_house_07_012
+    NorthWindow7 = walls_exterior_house_07_013
+    WestWindow8 = walls_exterior_house_07_014
+    NorthWindow8 = walls_exterior_house_07_015
+    WestWindow9 = walls_exterior_house_07_016
+    NorthWindow9 = walls_exterior_house_07_017
+    WestWindow10 = walls_exterior_house_07_018
+    NorthWindow10 = walls_exterior_house_07_019
+    WestWindow11 = walls_exterior_house_07_020
+    NorthWindow11 = walls_exterior_house_07_021
+    WestWindow12 = walls_exterior_house_07_022
+    NorthWindow12 = walls_exterior_house_07_023
+    WestWindow13 = walls_exterior_house_07_024
+    NorthWindow13 = walls_exterior_house_07_025
+    WestWindow14 = walls_exterior_house_07_026
+    NorthWindow14 = walls_exterior_house_07_027
+    WestWindow15 = walls_exterior_house_07_028
+    NorthWindow15 = walls_exterior_house_07_029
+    WestWindow16 = walls_exterior_house_07_030
+    NorthWindow16 = walls_exterior_house_07_031
+}
+TileEntry
+{
+    category = exterior_walls
+    West = walls_exterior_house_02_016
+    North = walls_exterior_house_02_017
+    NorthWest = walls_exterior_house_02_018
+    SouthEast = walls_exterior_house_02_019
+    WestWindow = walls_exterior_house_02_024
+    NorthWindow = walls_exterior_house_02_025
+    WestDoor = walls_exterior_house_02_026
+    NorthDoor = walls_exterior_house_02_027
+    WestWindow1 = walls_exterior_house_07_032
+    NorthWindow1 = walls_exterior_house_07_033
+    WestWindow2 = walls_exterior_house_07_034
+    NorthWindow2 = walls_exterior_house_07_035
+    WestWindow3 = walls_exterior_house_07_036
+    NorthWindow3 = walls_exterior_house_07_037
+    WestWindow4 = walls_exterior_house_07_038
+    NorthWindow4 = walls_exterior_house_07_039
+    WestWindow5 = walls_exterior_house_07_040
+    NorthWindow5 = walls_exterior_house_07_041
+    WestWindow6 = walls_exterior_house_07_042
+    NorthWindow6 = walls_exterior_house_07_043
+    WestWindow7 = walls_exterior_house_07_044
+    NorthWindow7 = walls_exterior_house_07_045
+    WestWindow8 = walls_exterior_house_07_046
+    NorthWindow8 = walls_exterior_house_07_047
+    WestWindow9 = walls_exterior_house_07_048
+    NorthWindow9 = walls_exterior_house_07_049
+    WestWindow10 = walls_exterior_house_07_050
+    NorthWindow10 = walls_exterior_house_07_051
+    WestWindow11 = walls_exterior_house_07_052
+    NorthWindow11 = walls_exterior_house_07_053
+    WestWindow12 = walls_exterior_house_07_054
+    NorthWindow12 = walls_exterior_house_07_055
+    WestWindow13 = walls_exterior_house_07_056
+    NorthWindow13 = walls_exterior_house_07_057
+    WestWindow14 = walls_exterior_house_07_058
+    NorthWindow14 = walls_exterior_house_07_059
+    WestWindow15 = walls_exterior_house_07_060
+    NorthWindow15 = walls_exterior_house_07_061
+    WestWindow16 = walls_exterior_house_07_062
+    NorthWindow16 = walls_exterior_house_07_063
+}
+TileEntry
+{
+    category = exterior_walls
+    West = walls_exterior_house_02_064
+    North = walls_exterior_house_02_065
+    NorthWest = walls_exterior_house_02_066
+    SouthEast = walls_exterior_house_02_067
+    WestWindow = walls_exterior_house_02_072
+    NorthWindow = walls_exterior_house_02_073
+    WestDoor = walls_exterior_house_02_074
+    NorthDoor = walls_exterior_house_02_075
+    WestWindow1 = walls_exterior_house_08_096
+    NorthWindow1 = walls_exterior_house_08_097
+    WestWindow2 = walls_exterior_house_08_098
+    NorthWindow2 = walls_exterior_house_08_099
+    WestWindow3 = walls_exterior_house_08_100
+    NorthWindow3 = walls_exterior_house_08_101
+    WestWindow4 = walls_exterior_house_08_102
+    NorthWindow4 = walls_exterior_house_08_103
+    WestWindow5 = walls_exterior_house_08_104
+    NorthWindow5 = walls_exterior_house_08_105
+    WestWindow6 = walls_exterior_house_08_106
+    NorthWindow6 = walls_exterior_house_08_107
+    WestWindow7 = walls_exterior_house_08_108
+    NorthWindow7 = walls_exterior_house_08_109
+    WestWindow8 = walls_exterior_house_08_110
+    NorthWindow8 = walls_exterior_house_08_111
+    WestWindow9 = walls_exterior_house_08_112
+    NorthWindow9 = walls_exterior_house_08_113
+    WestWindow10 = walls_exterior_house_08_114
+    NorthWindow10 = walls_exterior_house_08_115
+    WestWindow11 = walls_exterior_house_08_116
+    NorthWindow11 = walls_exterior_house_08_117
+    WestWindow12 = walls_exterior_house_08_118
+    NorthWindow12 = walls_exterior_house_08_119
+    WestWindow13 = walls_exterior_house_08_120
+    NorthWindow13 = walls_exterior_house_08_121
+    WestWindow14 = walls_exterior_house_08_122
+    NorthWindow14 = walls_exterior_house_08_123
+    WestWindow15 = walls_exterior_house_08_124
+    NorthWindow15 = walls_exterior_house_08_125
+    WestWindow16 = walls_exterior_house_08_126
+    NorthWindow16 = walls_exterior_house_08_127
 }
 TileEntry
 {
@@ -117,6 +1210,195 @@ TileEntry
     NorthWindow = walls_exterior_wooden_01_033
     WestDoor = walls_exterior_wooden_01_034
     NorthDoor = walls_exterior_wooden_01_035
+    WestWindow1 = walls_exterior_house_13_032
+    NorthWindow1 = walls_exterior_house_13_033
+    WestWindow2 = walls_exterior_house_13_034
+    NorthWindow2 = walls_exterior_house_13_035
+    WestWindow3 = walls_exterior_house_13_036
+    NorthWindow3 = walls_exterior_house_13_037
+    WestWindow4 = walls_exterior_house_13_038
+    NorthWindow4 = walls_exterior_house_13_039
+    WestWindow5 = walls_exterior_house_13_040
+    NorthWindow5 = walls_exterior_house_13_041
+    WestWindow6 = walls_exterior_house_13_042
+    NorthWindow6 = walls_exterior_house_13_043
+    WestWindow7 = walls_exterior_house_13_044
+    NorthWindow7 = walls_exterior_house_13_045
+    WestWindow8 = walls_exterior_house_13_046
+    NorthWindow8 = walls_exterior_house_13_047
+    WestWindow9 = walls_exterior_house_13_048
+    NorthWindow9 = walls_exterior_house_13_049
+    WestWindow10 = walls_exterior_house_13_050
+    NorthWindow10 = walls_exterior_house_13_051
+    WestWindow11 = walls_exterior_house_13_052
+    NorthWindow11 = walls_exterior_house_13_053
+    WestWindow12 = walls_exterior_house_13_054
+    NorthWindow12 = walls_exterior_house_13_055
+    WestWindow13 = walls_exterior_house_13_056
+    NorthWindow13 = walls_exterior_house_13_057
+    WestWindow14 = walls_exterior_house_13_058
+    NorthWindow14 = walls_exterior_house_13_059
+    WestWindow15 = walls_exterior_house_13_060
+    NorthWindow15 = walls_exterior_house_13_061
+    WestWindow16 = walls_exterior_house_13_062
+    NorthWindow16 = walls_exterior_house_13_063
+}
+TileEntry
+{
+    category = exterior_walls
+    West = walls_interior_house_02_032
+    North = walls_interior_house_02_033
+    NorthWest = walls_interior_house_02_034
+    SouthEast = walls_interior_house_02_035
+    WestWindow = walls_interior_house_02_040
+    NorthWindow = walls_interior_house_02_041
+    WestDoor = walls_interior_house_02_042
+    NorthDoor = walls_interior_house_02_043
+    WestWindow1 = 
+    NorthWindow1 = 
+    WestWindow2 = 
+    NorthWindow2 = 
+    WestWindow3 = 
+    NorthWindow3 = 
+    WestWindow4 = 
+    NorthWindow4 = 
+    WestWindow5 = 
+    NorthWindow5 = 
+    WestWindow6 = 
+    NorthWindow6 = 
+    WestWindow7 = 
+    NorthWindow7 = 
+    WestWindow8 = 
+    NorthWindow8 = 
+    WestWindow9 = 
+    NorthWindow9 = 
+    WestWindow10 = 
+    NorthWindow10 = 
+    WestWindow11 = 
+    NorthWindow11 = 
+    WestWindow12 = 
+    NorthWindow12 = 
+    WestWindow13 = 
+    NorthWindow13 = 
+    WestWindow14 = 
+    NorthWindow14 = 
+    WestWindow15 = 
+    NorthWindow15 = 
+    WestWindow16 = 
+    NorthWindow16 = 
+}
+TileEntry
+{
+    category = exterior_walls
+    West = walls_interior_house_03_032
+    North = walls_interior_house_03_033
+    NorthWest = walls_interior_house_03_034
+    SouthEast = walls_interior_house_03_035
+    WestWindow = walls_interior_house_03_040
+    NorthWindow = walls_interior_house_03_041
+    WestDoor = walls_interior_house_03_042
+    NorthDoor = walls_interior_house_03_043
+    WestWindow1 = 
+    NorthWindow1 = 
+    WestWindow2 = 
+    NorthWindow2 = 
+    WestWindow3 = 
+    NorthWindow3 = 
+    WestWindow4 = 
+    NorthWindow4 = 
+    WestWindow5 = 
+    NorthWindow5 = 
+    WestWindow6 = 
+    NorthWindow6 = 
+    WestWindow7 = 
+    NorthWindow7 = 
+    WestWindow8 = 
+    NorthWindow8 = 
+    WestWindow9 = 
+    NorthWindow9 = 
+    WestWindow10 = 
+    NorthWindow10 = 
+    WestWindow11 = 
+    NorthWindow11 = 
+    WestWindow12 = 
+    NorthWindow12 = 
+    WestWindow13 = 
+    NorthWindow13 = 
+    WestWindow14 = 
+    NorthWindow14 = 
+    WestWindow15 = 
+    NorthWindow15 = 
+    WestWindow16 = 
+    NorthWindow16 = 
+}
+TileEntry
+{
+    category = exterior_walls
+    West = walls_logs_000
+    North = walls_logs_001
+    NorthWest = walls_logs_002
+    SouthEast = walls_logs_003
+    WestWindow = walls_logs_008
+    NorthWindow = walls_logs_009
+    WestDoor = walls_logs_010
+    NorthDoor = walls_logs_011
+    WestWindow1 = 
+    NorthWindow1 = 
+    WestWindow2 = 
+    NorthWindow2 = 
+    WestWindow3 = 
+    NorthWindow3 = 
+    WestWindow4 = 
+    NorthWindow4 = 
+    WestWindow5 = 
+    NorthWindow5 = 
+    WestWindow6 = 
+    NorthWindow6 = 
+    WestWindow7 = 
+    NorthWindow7 = 
+    WestWindow8 = 
+    NorthWindow8 = 
+    WestWindow9 = 
+    NorthWindow9 = 
+    WestWindow10 = 
+    NorthWindow10 = 
+    WestWindow11 = 
+    NorthWindow11 = 
+    WestWindow12 = 
+    NorthWindow12 = 
+    WestWindow13 = 
+    NorthWindow13 = 
+    WestWindow14 = 
+    NorthWindow14 = 
+    WestWindow15 = 
+    NorthWindow15 = 
+    WestWindow16 = 
+    NorthWindow16 = 
+}
+TileEntry
+{
+    category = floors
+    Floor = carpentry_02_056
+}
+TileEntry
+{
+    category = floors
+    Floor = floors_burnt_01_000
+}
+TileEntry
+{
+    category = floors
+    Floor = floors_exterior_natural_01_008
+}
+TileEntry
+{
+    category = floors
+    Floor = floors_exterior_street_01_000
+}
+TileEntry
+{
+    category = floors
+    Floor = floors_exterior_street_01_017
 }
 TileEntry
 {
@@ -131,22 +1413,37 @@ TileEntry
 TileEntry
 {
     category = floors
+    Floor = floors_interior_carpet_01_005
+}
+TileEntry
+{
+    category = floors
     Floor = floors_interior_carpet_01_008
 }
 TileEntry
 {
     category = floors
-    Floor = floors_interior_carpet_01_010
+    Floor = floors_interior_carpet_01_009
 }
 TileEntry
 {
     category = floors
-    Floor = floors_interior_tilesandwood_01_002
+    Floor = floors_interior_carpet_01_013
 }
 TileEntry
 {
     category = floors
-    Floor = floors_interior_tilesandwood_01_006
+    Floor = floors_interior_carpet_01_032
+}
+TileEntry
+{
+    category = floors
+    Floor = floors_interior_tilesandwood_01_000
+}
+TileEntry
+{
+    category = floors
+    Floor = floors_interior_tilesandwood_01_009
 }
 TileEntry
 {
@@ -161,12 +1458,37 @@ TileEntry
 TileEntry
 {
     category = floors
-    Floor = floors_interior_tilesandwood_01_017
+    Floor = floors_interior_tilesandwood_01_019
 }
 TileEntry
 {
     category = floors
-    Floor = floors_interior_tilesandwood_01_042
+    Floor = floors_interior_tilesandwood_01_020
+}
+TileEntry
+{
+    category = floors
+    Floor = floors_interior_tilesandwood_01_022
+}
+TileEntry
+{
+    category = floors
+    Floor = floors_interior_tilesandwood_01_023
+}
+TileEntry
+{
+    category = floors
+    Floor = floors_interior_tilesandwood_01_029
+}
+TileEntry
+{
+    category = floors
+    Floor = floors_interior_tilesandwood_01_031
+}
+TileEntry
+{
+    category = floors
+    Floor = floors_interior_tilesandwood_01_041
 }
 TileEntry
 {
@@ -176,7 +1498,32 @@ TileEntry
 TileEntry
 {
     category = floors
+    Floor = floors_interior_tilesandwood_01_044
+}
+TileEntry
+{
+    category = floors
+    Floor = location_restaurant_diner_01_040
+}
+TileEntry
+{
+    category = floors
+    Floor = location_restaurant_pileocrepe_01_014
+}
+TileEntry
+{
+    category = floors
+    Floor = location_restaurant_pizzawhirled_01_016
+}
+TileEntry
+{
+    category = floors
     Floor = location_restaurant_spiffos_01_038
+}
+TileEntry
+{
+    category = floors
+    Floor = location_shop_generic_01_004
 }
 TileEntry
 {
@@ -189,6 +1536,18 @@ TileEntry
     NorthWest = overlay_grime_floor_01_002
     NorthEast = overlay_grime_floor_01_003
     SouthEast = overlay_grime_floor_01_010
+}
+TileEntry
+{
+    category = grime_floor
+    West = overlay_grime_floor_01_028
+    North = overlay_grime_floor_01_029
+    East = overlay_grime_floor_01_037
+    South = overlay_grime_floor_01_036
+    SouthWest = overlay_grime_floor_01_039
+    NorthWest = overlay_grime_floor_01_030
+    NorthEast = overlay_grime_floor_01_031
+    SouthEast = overlay_grime_floor_01_038
 }
 TileEntry
 {
@@ -212,51 +1571,923 @@ TileEntry
 }
 TileEntry
 {
-    category = interior_walls
-    West = location_hospitality_sunstarmotel_01_000
-    North = location_hospitality_sunstarmotel_01_001
-    NorthWest = location_hospitality_sunstarmotel_01_002
-    SouthEast = location_hospitality_sunstarmotel_01_003
-    WestWindow = location_hospitality_sunstarmotel_01_008
-    NorthWindow = location_hospitality_sunstarmotel_01_009
-    WestDoor = location_hospitality_sunstarmotel_01_010
-    NorthDoor = location_hospitality_sunstarmotel_01_011
+    category = grime_wall
+    West = overlay_grime_wall_01_000
+    North = overlay_grime_wall_01_001
+    NorthWest = overlay_grime_wall_01_002
+    SouthEast = overlay_grime_wall_01_003
+    WestWindow = overlay_grime_wall_01_008
+    NorthWindow = overlay_grime_wall_01_009
+    WestDoor = overlay_grime_wall_01_010
+    NorthDoor = overlay_grime_wall_01_011
+    WestTrim = overlay_grime_wall_01_032
+    NorthTrim = overlay_grime_wall_01_033
+    NorthWestTrim = overlay_grime_wall_01_034
+    SouthEastTrim = overlay_grime_wall_01_035
+    WestDoubleLeft = overlay_grime_wall_01_036
+    WestDoubleRight = overlay_grime_wall_01_037
+    NorthDoubleLeft = overlay_grime_wall_01_038
+    NorthDoubleRight = overlay_grime_wall_01_039
+}
+TileEntry
+{
+    category = grime_wall
+    West = overlay_grime_wall_01_016
+    North = overlay_grime_wall_01_017
+    NorthWest = overlay_grime_wall_01_018
+    SouthEast = overlay_grime_wall_01_019
+    WestWindow = overlay_grime_wall_01_024
+    NorthWindow = overlay_grime_wall_01_025
+    WestDoor = overlay_grime_wall_01_026
+    NorthDoor = overlay_grime_wall_01_027
+    WestTrim = overlay_grime_wall_01_040
+    NorthTrim = overlay_grime_wall_01_041
+    NorthWestTrim = overlay_grime_wall_01_042
+    SouthEastTrim = overlay_grime_wall_01_043
+    WestDoubleLeft = overlay_grime_wall_01_044
+    WestDoubleRight = overlay_grime_wall_01_045
+    NorthDoubleLeft = overlay_grime_wall_01_046
+    NorthDoubleRight = overlay_grime_wall_01_047
+}
+TileEntry
+{
+    category = interior_wall_trim
+    West = location_entertainment_theatre_01_020
+    North = location_entertainment_theatre_01_021
+    NorthWest = location_entertainment_theatre_01_022
+    SouthEast = location_entertainment_theatre_01_023
+    WestWindow = location_entertainment_theatre_01_020
+    NorthWindow = location_entertainment_theatre_01_021
+    WestDoor = location_entertainment_theatre_01_030
+    NorthDoor = location_entertainment_theatre_01_031
+    WestWindow1 = 
+    NorthWindow1 = 
+    WestWindow2 = 
+    NorthWindow2 = 
+    WestWindow3 = 
+    NorthWindow3 = 
+    WestWindow4 = 
+    NorthWindow4 = 
+    WestWindow5 = 
+    NorthWindow5 = 
+    WestWindow6 = 
+    NorthWindow6 = 
+    WestWindow7 = 
+    NorthWindow7 = 
+    WestWindow8 = 
+    NorthWindow8 = 
+    WestWindow9 = 
+    NorthWindow9 = 
+    WestWindow10 = 
+    NorthWindow10 = 
+    WestWindow11 = 
+    NorthWindow11 = 
+    WestWindow12 = 
+    NorthWindow12 = 
+    WestWindow13 = 
+    NorthWindow13 = 
+    WestWindow14 = 
+    NorthWindow14 = 
+    WestWindow15 = 
+    NorthWindow15 = 
+    WestWindow16 = 
+    NorthWindow16 = 
+}
+TileEntry
+{
+    category = interior_wall_trim
+    West = location_restaurant_pizzawhirled_01_012
+    North = location_restaurant_pizzawhirled_01_013
+    NorthWest = location_restaurant_pizzawhirled_01_014
+    SouthEast = location_restaurant_pizzawhirled_01_015
+    WestWindow = location_restaurant_pizzawhirled_01_012
+    NorthWindow = location_restaurant_pizzawhirled_01_013
+    WestDoor = location_restaurant_pizzawhirled_01_012
+    NorthDoor = location_restaurant_pizzawhirled_01_013
+    WestWindow1 = 
+    NorthWindow1 = 
+    WestWindow2 = 
+    NorthWindow2 = 
+    WestWindow3 = 
+    NorthWindow3 = 
+    WestWindow4 = 
+    NorthWindow4 = 
+    WestWindow5 = 
+    NorthWindow5 = 
+    WestWindow6 = 
+    NorthWindow6 = 
+    WestWindow7 = 
+    NorthWindow7 = 
+    WestWindow8 = 
+    NorthWindow8 = 
+    WestWindow9 = 
+    NorthWindow9 = 
+    WestWindow10 = 
+    NorthWindow10 = 
+    WestWindow11 = 
+    NorthWindow11 = 
+    WestWindow12 = 
+    NorthWindow12 = 
+    WestWindow13 = 
+    NorthWindow13 = 
+    WestWindow14 = 
+    NorthWindow14 = 
+    WestWindow15 = 
+    NorthWindow15 = 
+    WestWindow16 = 
+    NorthWindow16 = 
+}
+TileEntry
+{
+    category = interior_wall_trim
+    West = location_shop_bargNclothes_01_028
+    North = location_shop_bargNclothes_01_029
+    NorthWest = location_shop_bargNclothes_01_031
+    SouthEast = location_shop_bargNclothes_01_030
+    WestWindow = location_shop_bargNclothes_01_028
+    NorthWindow = location_shop_bargNclothes_01_029
+    WestDoor = location_shop_bargNclothes_01_028
+    NorthDoor = location_shop_bargNclothes_01_029
+    WestWindow1 = 
+    NorthWindow1 = 
+    WestWindow2 = 
+    NorthWindow2 = 
+    WestWindow3 = 
+    NorthWindow3 = 
+    WestWindow4 = 
+    NorthWindow4 = 
+    WestWindow5 = 
+    NorthWindow5 = 
+    WestWindow6 = 
+    NorthWindow6 = 
+    WestWindow7 = 
+    NorthWindow7 = 
+    WestWindow8 = 
+    NorthWindow8 = 
+    WestWindow9 = 
+    NorthWindow9 = 
+    WestWindow10 = 
+    NorthWindow10 = 
+    WestWindow11 = 
+    NorthWindow11 = 
+    WestWindow12 = 
+    NorthWindow12 = 
+    WestWindow13 = 
+    NorthWindow13 = 
+    WestWindow14 = 
+    NorthWindow14 = 
+    WestWindow15 = 
+    NorthWindow15 = 
+    WestWindow16 = 
+    NorthWindow16 = 
+}
+TileEntry
+{
+    category = interior_wall_trim
+    West = location_shop_mall_01_004
+    North = location_shop_mall_01_005
+    NorthWest = location_shop_mall_01_006
+    SouthEast = location_shop_mall_01_007
+    WestWindow = location_shop_mall_01_012
+    NorthWindow = location_shop_mall_01_013
+    WestDoor = location_shop_mall_01_014
+    NorthDoor = location_shop_mall_01_015
+    WestWindow1 = 
+    NorthWindow1 = 
+    WestWindow2 = 
+    NorthWindow2 = 
+    WestWindow3 = 
+    NorthWindow3 = 
+    WestWindow4 = 
+    NorthWindow4 = 
+    WestWindow5 = 
+    NorthWindow5 = 
+    WestWindow6 = 
+    NorthWindow6 = 
+    WestWindow7 = 
+    NorthWindow7 = 
+    WestWindow8 = 
+    NorthWindow8 = 
+    WestWindow9 = 
+    NorthWindow9 = 
+    WestWindow10 = 
+    NorthWindow10 = 
+    WestWindow11 = 
+    NorthWindow11 = 
+    WestWindow12 = 
+    NorthWindow12 = 
+    WestWindow13 = 
+    NorthWindow13 = 
+    WestWindow14 = 
+    NorthWindow14 = 
+    WestWindow15 = 
+    NorthWindow15 = 
+    WestWindow16 = 
+    NorthWindow16 = 
+}
+TileEntry
+{
+    category = interior_wall_trim
+    West = location_shop_zippee_01_028
+    North = location_shop_zippee_01_029
+    NorthWest = location_shop_zippee_01_030
+    SouthEast = location_shop_zippee_01_031
+    WestWindow = location_shop_zippee_01_036
+    NorthWindow = location_shop_zippee_01_037
+    WestDoor = location_shop_zippee_01_038
+    NorthDoor = location_shop_zippee_01_039
+    WestWindow1 = 
+    NorthWindow1 = 
+    WestWindow2 = 
+    NorthWindow2 = 
+    WestWindow3 = 
+    NorthWindow3 = 
+    WestWindow4 = 
+    NorthWindow4 = 
+    WestWindow5 = 
+    NorthWindow5 = 
+    WestWindow6 = 
+    NorthWindow6 = 
+    WestWindow7 = 
+    NorthWindow7 = 
+    WestWindow8 = 
+    NorthWindow8 = 
+    WestWindow9 = 
+    NorthWindow9 = 
+    WestWindow10 = 
+    NorthWindow10 = 
+    WestWindow11 = 
+    NorthWindow11 = 
+    WestWindow12 = 
+    NorthWindow12 = 
+    WestWindow13 = 
+    NorthWindow13 = 
+    WestWindow14 = 
+    NorthWindow14 = 
+    WestWindow15 = 
+    NorthWindow15 = 
+    WestWindow16 = 
+    NorthWindow16 = 
+}
+TileEntry
+{
+    category = interior_wall_trim
+    West = walls_detailing_01_088
+    North = walls_detailing_01_089
+    NorthWest = walls_detailing_01_091
+    SouthEast = walls_detailing_01_090
+    WestWindow = walls_detailing_01_088
+    NorthWindow = walls_detailing_01_089
+    WestDoor = 
+    NorthDoor = 
+    WestWindow1 = 
+    NorthWindow1 = 
+    WestWindow2 = 
+    NorthWindow2 = 
+    WestWindow3 = 
+    NorthWindow3 = 
+    WestWindow4 = 
+    NorthWindow4 = 
+    WestWindow5 = 
+    NorthWindow5 = 
+    WestWindow6 = 
+    NorthWindow6 = 
+    WestWindow7 = 
+    NorthWindow7 = 
+    WestWindow8 = 
+    NorthWindow8 = 
+    WestWindow9 = 
+    NorthWindow9 = 
+    WestWindow10 = 
+    NorthWindow10 = 
+    WestWindow11 = 
+    NorthWindow11 = 
+    WestWindow12 = 
+    NorthWindow12 = 
+    WestWindow13 = 
+    NorthWindow13 = 
+    WestWindow14 = 
+    NorthWindow14 = 
+    WestWindow15 = 
+    NorthWindow15 = 
+    WestWindow16 = 
+    NorthWindow16 = 
+}
+TileEntry
+{
+    category = interior_wall_trim
+    West = walls_interior_detailing_01_004
+    North = walls_interior_detailing_01_005
+    NorthWest = walls_interior_detailing_01_006
+    SouthEast = walls_interior_detailing_01_007
+    WestWindow = walls_interior_detailing_01_012
+    NorthWindow = walls_interior_detailing_01_013
+    WestDoor = walls_interior_detailing_01_014
+    NorthDoor = walls_interior_detailing_01_015
+    WestWindow1 = 
+    NorthWindow1 = 
+    WestWindow2 = 
+    NorthWindow2 = 
+    WestWindow3 = 
+    NorthWindow3 = 
+    WestWindow4 = 
+    NorthWindow4 = 
+    WestWindow5 = 
+    NorthWindow5 = 
+    WestWindow6 = 
+    NorthWindow6 = 
+    WestWindow7 = 
+    NorthWindow7 = 
+    WestWindow8 = 
+    NorthWindow8 = 
+    WestWindow9 = 
+    NorthWindow9 = 
+    WestWindow10 = 
+    NorthWindow10 = 
+    WestWindow11 = 
+    NorthWindow11 = 
+    WestWindow12 = 
+    NorthWindow12 = 
+    WestWindow13 = 
+    NorthWindow13 = 
+    WestWindow14 = 
+    NorthWindow14 = 
+    WestWindow15 = 
+    NorthWindow15 = 
+    WestWindow16 = 
+    NorthWindow16 = 
+}
+TileEntry
+{
+    category = interior_wall_trim
+    West = walls_interior_detailing_01_032
+    North = walls_interior_detailing_01_033
+    NorthWest = walls_interior_detailing_01_034
+    SouthEast = walls_interior_detailing_01_035
+    WestWindow = walls_interior_detailing_01_040
+    NorthWindow = walls_interior_detailing_01_041
+    WestDoor = walls_interior_detailing_01_042
+    NorthDoor = walls_interior_detailing_01_043
+    WestWindow1 = 
+    NorthWindow1 = 
+    WestWindow2 = 
+    NorthWindow2 = 
+    WestWindow3 = 
+    NorthWindow3 = 
+    WestWindow4 = 
+    NorthWindow4 = 
+    WestWindow5 = 
+    NorthWindow5 = 
+    WestWindow6 = 
+    NorthWindow6 = 
+    WestWindow7 = 
+    NorthWindow7 = 
+    WestWindow8 = 
+    NorthWindow8 = 
+    WestWindow9 = 
+    NorthWindow9 = 
+    WestWindow10 = 
+    NorthWindow10 = 
+    WestWindow11 = 
+    NorthWindow11 = 
+    WestWindow12 = 
+    NorthWindow12 = 
+    WestWindow13 = 
+    NorthWindow13 = 
+    WestWindow14 = 
+    NorthWindow14 = 
+    WestWindow15 = 
+    NorthWindow15 = 
+    WestWindow16 = 
+    NorthWindow16 = 
+}
+TileEntry
+{
+    category = interior_wall_trim
+    West = walls_interior_detailing_01_036
+    North = walls_interior_detailing_01_037
+    NorthWest = walls_interior_detailing_01_038
+    SouthEast = walls_interior_detailing_01_039
+    WestWindow = walls_interior_detailing_01_044
+    NorthWindow = walls_interior_detailing_01_045
+    WestDoor = walls_interior_detailing_01_046
+    NorthDoor = walls_interior_detailing_01_047
+    WestWindow1 = 
+    NorthWindow1 = 
+    WestWindow2 = 
+    NorthWindow2 = 
+    WestWindow3 = 
+    NorthWindow3 = 
+    WestWindow4 = 
+    NorthWindow4 = 
+    WestWindow5 = 
+    NorthWindow5 = 
+    WestWindow6 = 
+    NorthWindow6 = 
+    WestWindow7 = 
+    NorthWindow7 = 
+    WestWindow8 = 
+    NorthWindow8 = 
+    WestWindow9 = 
+    NorthWindow9 = 
+    WestWindow10 = 
+    NorthWindow10 = 
+    WestWindow11 = 
+    NorthWindow11 = 
+    WestWindow12 = 
+    NorthWindow12 = 
+    WestWindow13 = 
+    NorthWindow13 = 
+    WestWindow14 = 
+    NorthWindow14 = 
+    WestWindow15 = 
+    NorthWindow15 = 
+    WestWindow16 = 
+    NorthWindow16 = 
 }
 TileEntry
 {
     category = interior_walls
-    West = location_hospitality_sunstarmotel_01_004
-    North = location_hospitality_sunstarmotel_01_005
-    NorthWest = location_hospitality_sunstarmotel_01_006
-    SouthEast = location_hospitality_sunstarmotel_01_007
-    WestWindow = location_hospitality_sunstarmotel_01_012
-    NorthWindow = location_hospitality_sunstarmotel_01_013
-    WestDoor = location_hospitality_sunstarmotel_01_014
-    NorthDoor = location_hospitality_sunstarmotel_01_015
+    West = carpentry_02_100
+    North = carpentry_02_101
+    NorthWest = carpentry_02_102
+    SouthEast = carpentry_02_103
+    WestWindow = walls_exterior_wooden_01_032
+    NorthWindow = walls_exterior_wooden_01_033
+    WestDoor = walls_exterior_wooden_01_034
+    NorthDoor = walls_exterior_wooden_01_035
+    WestWindow1 = 
+    NorthWindow1 = 
+    WestWindow2 = 
+    NorthWindow2 = 
+    WestWindow3 = 
+    NorthWindow3 = 
+    WestWindow4 = 
+    NorthWindow4 = 
+    WestWindow5 = 
+    NorthWindow5 = 
+    WestWindow6 = 
+    NorthWindow6 = 
+    WestWindow7 = 
+    NorthWindow7 = 
+    WestWindow8 = 
+    NorthWindow8 = 
+    WestWindow9 = 
+    NorthWindow9 = 
+    WestWindow10 = 
+    NorthWindow10 = 
+    WestWindow11 = 
+    NorthWindow11 = 
+    WestWindow12 = 
+    NorthWindow12 = 
+    WestWindow13 = 
+    NorthWindow13 = 
+    WestWindow14 = 
+    NorthWindow14 = 
+    WestWindow15 = 
+    NorthWindow15 = 
+    WestWindow16 = 
+    NorthWindow16 = 
 }
 TileEntry
 {
     category = interior_walls
-    West = location_restaurant_seahorse_01_001
-    North = location_restaurant_seahorse_01_000
+    West = industry_01_000
+    North = industry_01_001
+    NorthWest = industry_01_002
+    SouthEast = industry_01_003
+    WestWindow = industry_01_008
+    NorthWindow = industry_01_009
+    WestDoor = industry_01_010
+    NorthDoor = industry_01_011
+    WestWindow1 = 
+    NorthWindow1 = 
+    WestWindow2 = 
+    NorthWindow2 = 
+    WestWindow3 = 
+    NorthWindow3 = 
+    WestWindow4 = 
+    NorthWindow4 = 
+    WestWindow5 = 
+    NorthWindow5 = 
+    WestWindow6 = 
+    NorthWindow6 = 
+    WestWindow7 = 
+    NorthWindow7 = 
+    WestWindow8 = 
+    NorthWindow8 = 
+    WestWindow9 = 
+    NorthWindow9 = 
+    WestWindow10 = 
+    NorthWindow10 = 
+    WestWindow11 = 
+    NorthWindow11 = 
+    WestWindow12 = 
+    NorthWindow12 = 
+    WestWindow13 = 
+    NorthWindow13 = 
+    WestWindow14 = 
+    NorthWindow14 = 
+    WestWindow15 = 
+    NorthWindow15 = 
+    WestWindow16 = 
+    NorthWindow16 = 
+}
+TileEntry
+{
+    category = interior_walls
+    West = industry_trucks_01_004
+    North = industry_trucks_01_005
+    NorthWest = industry_trucks_01_006
+    SouthEast = industry_trucks_01_007
+    WestWindow = industry_trucks_01_012
+    NorthWindow = industry_trucks_01_013
+    WestDoor = industry_trucks_01_014
+    NorthDoor = industry_trucks_01_015
+    WestWindow1 = 
+    NorthWindow1 = 
+    WestWindow2 = 
+    NorthWindow2 = 
+    WestWindow3 = 
+    NorthWindow3 = 
+    WestWindow4 = 
+    NorthWindow4 = 
+    WestWindow5 = 
+    NorthWindow5 = 
+    WestWindow6 = 
+    NorthWindow6 = 
+    WestWindow7 = 
+    NorthWindow7 = 
+    WestWindow8 = 
+    NorthWindow8 = 
+    WestWindow9 = 
+    NorthWindow9 = 
+    WestWindow10 = 
+    NorthWindow10 = 
+    WestWindow11 = 
+    NorthWindow11 = 
+    WestWindow12 = 
+    NorthWindow12 = 
+    WestWindow13 = 
+    NorthWindow13 = 
+    WestWindow14 = 
+    NorthWindow14 = 
+    WestWindow15 = 
+    NorthWindow15 = 
+    WestWindow16 = 
+    NorthWindow16 = 
+}
+TileEntry
+{
+    category = interior_walls
+    West = location_community_church_small_01_004
+    North = location_community_church_small_01_005
+    NorthWest = location_community_church_small_01_006
+    SouthEast = location_community_church_small_01_007
+    WestWindow = location_community_church_small_01_012
+    NorthWindow = location_community_church_small_01_013
+    WestDoor = location_community_church_small_01_014
+    NorthDoor = location_community_church_small_01_015
+    WestWindow1 = 
+    NorthWindow1 = 
+    WestWindow2 = 
+    NorthWindow2 = 
+    WestWindow3 = 
+    NorthWindow3 = 
+    WestWindow4 = 
+    NorthWindow4 = 
+    WestWindow5 = 
+    NorthWindow5 = 
+    WestWindow6 = 
+    NorthWindow6 = 
+    WestWindow7 = 
+    NorthWindow7 = 
+    WestWindow8 = 
+    NorthWindow8 = 
+    WestWindow9 = 
+    NorthWindow9 = 
+    WestWindow10 = 
+    NorthWindow10 = 
+    WestWindow11 = 
+    NorthWindow11 = 
+    WestWindow12 = 
+    NorthWindow12 = 
+    WestWindow13 = 
+    NorthWindow13 = 
+    WestWindow14 = 
+    NorthWindow14 = 
+    WestWindow15 = 
+    NorthWindow15 = 
+    WestWindow16 = 
+    NorthWindow16 = 
+}
+TileEntry
+{
+    category = interior_walls
+    West = location_community_school_01_000
+    North = location_community_school_01_001
+    NorthWest = location_community_school_01_002
+    SouthEast = location_community_school_01_003
+    WestWindow = location_community_school_01_008
+    NorthWindow = location_community_school_01_009
+    WestDoor = location_community_school_01_010
+    NorthDoor = location_community_school_01_011
+    WestWindow1 = 
+    NorthWindow1 = 
+    WestWindow2 = 
+    NorthWindow2 = 
+    WestWindow3 = 
+    NorthWindow3 = 
+    WestWindow4 = 
+    NorthWindow4 = 
+    WestWindow5 = 
+    NorthWindow5 = 
+    WestWindow6 = 
+    NorthWindow6 = 
+    WestWindow7 = 
+    NorthWindow7 = 
+    WestWindow8 = 
+    NorthWindow8 = 
+    WestWindow9 = 
+    NorthWindow9 = 
+    WestWindow10 = 
+    NorthWindow10 = 
+    WestWindow11 = 
+    NorthWindow11 = 
+    WestWindow12 = 
+    NorthWindow12 = 
+    WestWindow13 = 
+    NorthWindow13 = 
+    WestWindow14 = 
+    NorthWindow14 = 
+    WestWindow15 = 
+    NorthWindow15 = 
+    WestWindow16 = 
+    NorthWindow16 = 
+}
+TileEntry
+{
+    category = interior_walls
+    West = location_military_tent_01_000
+    North = location_military_tent_01_001
+    NorthWest = location_military_tent_01_002
+    SouthEast = location_military_tent_01_003
+    WestWindow = location_military_tent_01_008
+    NorthWindow = location_military_tent_01_009
+    WestDoor = location_military_tent_01_010
+    NorthDoor = location_military_tent_01_011
+    WestWindow1 = 
+    NorthWindow1 = 
+    WestWindow2 = 
+    NorthWindow2 = 
+    WestWindow3 = 
+    NorthWindow3 = 
+    WestWindow4 = 
+    NorthWindow4 = 
+    WestWindow5 = 
+    NorthWindow5 = 
+    WestWindow6 = 
+    NorthWindow6 = 
+    WestWindow7 = 
+    NorthWindow7 = 
+    WestWindow8 = 
+    NorthWindow8 = 
+    WestWindow9 = 
+    NorthWindow9 = 
+    WestWindow10 = 
+    NorthWindow10 = 
+    WestWindow11 = 
+    NorthWindow11 = 
+    WestWindow12 = 
+    NorthWindow12 = 
+    WestWindow13 = 
+    NorthWindow13 = 
+    WestWindow14 = 
+    NorthWindow14 = 
+    WestWindow15 = 
+    NorthWindow15 = 
+    WestWindow16 = 
+    NorthWindow16 = 
+}
+TileEntry
+{
+    category = interior_walls
+    West = location_military_tent_01_064
+    North = location_military_tent_01_065
+    NorthWest = location_military_tent_01_066
+    SouthEast = location_military_tent_01_067
+    WestWindow = location_military_tent_01_072
+    NorthWindow = location_military_tent_01_073
+    WestDoor = location_military_tent_01_074
+    NorthDoor = location_military_tent_01_075
+    WestWindow1 = 
+    NorthWindow1 = 
+    WestWindow2 = 
+    NorthWindow2 = 
+    WestWindow3 = 
+    NorthWindow3 = 
+    WestWindow4 = 
+    NorthWindow4 = 
+    WestWindow5 = 
+    NorthWindow5 = 
+    WestWindow6 = 
+    NorthWindow6 = 
+    WestWindow7 = 
+    NorthWindow7 = 
+    WestWindow8 = 
+    NorthWindow8 = 
+    WestWindow9 = 
+    NorthWindow9 = 
+    WestWindow10 = 
+    NorthWindow10 = 
+    WestWindow11 = 
+    NorthWindow11 = 
+    WestWindow12 = 
+    NorthWindow12 = 
+    WestWindow13 = 
+    NorthWindow13 = 
+    WestWindow14 = 
+    NorthWindow14 = 
+    WestWindow15 = 
+    NorthWindow15 = 
+    WestWindow16 = 
+    NorthWindow16 = 
+}
+TileEntry
+{
+    category = interior_walls
+    West = location_restaurant_diner_01_000
+    North = location_restaurant_diner_01_001
+    NorthWest = location_restaurant_diner_01_002
+    SouthEast = location_restaurant_diner_01_003
+    WestWindow = 
+    NorthWindow = 
+    WestDoor = location_restaurant_diner_01_004
+    NorthDoor = location_restaurant_diner_01_005
+    WestWindow1 = 
+    NorthWindow1 = 
+    WestWindow2 = 
+    NorthWindow2 = 
+    WestWindow3 = 
+    NorthWindow3 = 
+    WestWindow4 = 
+    NorthWindow4 = 
+    WestWindow5 = 
+    NorthWindow5 = 
+    WestWindow6 = 
+    NorthWindow6 = 
+    WestWindow7 = 
+    NorthWindow7 = 
+    WestWindow8 = 
+    NorthWindow8 = 
+    WestWindow9 = 
+    NorthWindow9 = 
+    WestWindow10 = 
+    NorthWindow10 = 
+    WestWindow11 = 
+    NorthWindow11 = 
+    WestWindow12 = 
+    NorthWindow12 = 
+    WestWindow13 = 
+    NorthWindow13 = 
+    WestWindow14 = 
+    NorthWindow14 = 
+    WestWindow15 = 
+    NorthWindow15 = 
+    WestWindow16 = 
+    NorthWindow16 = 
+}
+TileEntry
+{
+    category = interior_walls
+    West = location_restaurant_pizzawhirled_01_000
+    North = location_restaurant_pizzawhirled_01_001
+    NorthWest = location_restaurant_pizzawhirled_01_002
+    SouthEast = location_restaurant_pizzawhirled_01_003
+    WestWindow = location_restaurant_pizzawhirled_01_008
+    NorthWindow = location_restaurant_pizzawhirled_01_009
+    WestDoor = location_restaurant_pizzawhirled_01_010
+    NorthDoor = location_restaurant_pizzawhirled_01_011
+    WestWindow1 = 
+    NorthWindow1 = 
+    WestWindow2 = 
+    NorthWindow2 = 
+    WestWindow3 = 
+    NorthWindow3 = 
+    WestWindow4 = 
+    NorthWindow4 = 
+    WestWindow5 = 
+    NorthWindow5 = 
+    WestWindow6 = 
+    NorthWindow6 = 
+    WestWindow7 = 
+    NorthWindow7 = 
+    WestWindow8 = 
+    NorthWindow8 = 
+    WestWindow9 = 
+    NorthWindow9 = 
+    WestWindow10 = 
+    NorthWindow10 = 
+    WestWindow11 = 
+    NorthWindow11 = 
+    WestWindow12 = 
+    NorthWindow12 = 
+    WestWindow13 = 
+    NorthWindow13 = 
+    WestWindow14 = 
+    NorthWindow14 = 
+    WestWindow15 = 
+    NorthWindow15 = 
+    WestWindow16 = 
+    NorthWindow16 = 
+}
+TileEntry
+{
+    category = interior_walls
+    West = location_restaurant_seahorse_01_000
+    North = location_restaurant_seahorse_01_001
     NorthWest = location_restaurant_seahorse_01_002
     SouthEast = location_restaurant_seahorse_01_003
-    WestWindow = 
-    NorthWindow = 
-    WestDoor = location_restaurant_seahorse_01_022
-    NorthDoor = location_restaurant_seahorse_01_023
+    WestWindow = location_restaurant_seahorse_01_008
+    NorthWindow = location_restaurant_seahorse_01_009
+    WestDoor = location_restaurant_seahorse_01_010
+    NorthDoor = location_restaurant_seahorse_01_011
+    WestWindow1 = 
+    NorthWindow1 = 
+    WestWindow2 = 
+    NorthWindow2 = 
+    WestWindow3 = 
+    NorthWindow3 = 
+    WestWindow4 = 
+    NorthWindow4 = 
+    WestWindow5 = 
+    NorthWindow5 = 
+    WestWindow6 = 
+    NorthWindow6 = 
+    WestWindow7 = 
+    NorthWindow7 = 
+    WestWindow8 = 
+    NorthWindow8 = 
+    WestWindow9 = 
+    NorthWindow9 = 
+    WestWindow10 = 
+    NorthWindow10 = 
+    WestWindow11 = 
+    NorthWindow11 = 
+    WestWindow12 = 
+    NorthWindow12 = 
+    WestWindow13 = 
+    NorthWindow13 = 
+    WestWindow14 = 
+    NorthWindow14 = 
+    WestWindow15 = 
+    NorthWindow15 = 
+    WestWindow16 = 
+    NorthWindow16 = 
 }
 TileEntry
 {
     category = interior_walls
-    West = location_restaurant_seahorse_01_005
-    North = location_restaurant_seahorse_01_004
+    West = location_restaurant_seahorse_01_004
+    North = location_restaurant_seahorse_01_005
     NorthWest = location_restaurant_seahorse_01_006
     SouthEast = location_restaurant_seahorse_01_007
-    WestWindow = 
-    NorthWindow = 
+    WestWindow = location_restaurant_seahorse_01_012
+    NorthWindow = location_restaurant_seahorse_01_013
     WestDoor = location_restaurant_seahorse_01_014
     NorthDoor = location_restaurant_seahorse_01_015
+    WestWindow1 = 
+    NorthWindow1 = 
+    WestWindow2 = 
+    NorthWindow2 = 
+    WestWindow3 = 
+    NorthWindow3 = 
+    WestWindow4 = 
+    NorthWindow4 = 
+    WestWindow5 = 
+    NorthWindow5 = 
+    WestWindow6 = 
+    NorthWindow6 = 
+    WestWindow7 = 
+    NorthWindow7 = 
+    WestWindow8 = 
+    NorthWindow8 = 
+    WestWindow9 = 
+    NorthWindow9 = 
+    WestWindow10 = 
+    NorthWindow10 = 
+    WestWindow11 = 
+    NorthWindow11 = 
+    WestWindow12 = 
+    NorthWindow12 = 
+    WestWindow13 = 
+    NorthWindow13 = 
+    WestWindow14 = 
+    NorthWindow14 = 
+    WestWindow15 = 
+    NorthWindow15 = 
+    WestWindow16 = 
+    NorthWindow16 = 
 }
 TileEntry
 {
@@ -269,6 +2500,38 @@ TileEntry
     NorthWindow = 
     WestDoor = location_restaurant_spiffos_01_010
     NorthDoor = location_restaurant_spiffos_01_011
+    WestWindow1 = 
+    NorthWindow1 = 
+    WestWindow2 = 
+    NorthWindow2 = 
+    WestWindow3 = 
+    NorthWindow3 = 
+    WestWindow4 = 
+    NorthWindow4 = 
+    WestWindow5 = 
+    NorthWindow5 = 
+    WestWindow6 = 
+    NorthWindow6 = 
+    WestWindow7 = 
+    NorthWindow7 = 
+    WestWindow8 = 
+    NorthWindow8 = 
+    WestWindow9 = 
+    NorthWindow9 = 
+    WestWindow10 = 
+    NorthWindow10 = 
+    WestWindow11 = 
+    NorthWindow11 = 
+    WestWindow12 = 
+    NorthWindow12 = 
+    WestWindow13 = 
+    NorthWindow13 = 
+    WestWindow14 = 
+    NorthWindow14 = 
+    WestWindow15 = 
+    NorthWindow15 = 
+    WestWindow16 = 
+    NorthWindow16 = 
 }
 TileEntry
 {
@@ -281,6 +2544,170 @@ TileEntry
     NorthWindow = location_restaurant_spiffos_01_045
     WestDoor = location_restaurant_spiffos_01_046
     NorthDoor = location_restaurant_spiffos_01_047
+    WestWindow1 = 
+    NorthWindow1 = 
+    WestWindow2 = 
+    NorthWindow2 = 
+    WestWindow3 = 
+    NorthWindow3 = 
+    WestWindow4 = 
+    NorthWindow4 = 
+    WestWindow5 = 
+    NorthWindow5 = 
+    WestWindow6 = 
+    NorthWindow6 = 
+    WestWindow7 = 
+    NorthWindow7 = 
+    WestWindow8 = 
+    NorthWindow8 = 
+    WestWindow9 = 
+    NorthWindow9 = 
+    WestWindow10 = 
+    NorthWindow10 = 
+    WestWindow11 = 
+    NorthWindow11 = 
+    WestWindow12 = 
+    NorthWindow12 = 
+    WestWindow13 = 
+    NorthWindow13 = 
+    WestWindow14 = 
+    NorthWindow14 = 
+    WestWindow15 = 
+    NorthWindow15 = 
+    WestWindow16 = 
+    NorthWindow16 = 
+}
+TileEntry
+{
+    category = interior_walls
+    West = location_sewer_01_000
+    North = location_sewer_01_001
+    NorthWest = location_sewer_01_002
+    SouthEast = location_sewer_01_003
+    WestWindow = 
+    NorthWindow = 
+    WestDoor = 
+    NorthDoor = 
+    WestWindow1 = 
+    NorthWindow1 = 
+    WestWindow2 = 
+    NorthWindow2 = 
+    WestWindow3 = 
+    NorthWindow3 = 
+    WestWindow4 = 
+    NorthWindow4 = 
+    WestWindow5 = 
+    NorthWindow5 = 
+    WestWindow6 = 
+    NorthWindow6 = 
+    WestWindow7 = 
+    NorthWindow7 = 
+    WestWindow8 = 
+    NorthWindow8 = 
+    WestWindow9 = 
+    NorthWindow9 = 
+    WestWindow10 = 
+    NorthWindow10 = 
+    WestWindow11 = 
+    NorthWindow11 = 
+    WestWindow12 = 
+    NorthWindow12 = 
+    WestWindow13 = 
+    NorthWindow13 = 
+    WestWindow14 = 
+    NorthWindow14 = 
+    WestWindow15 = 
+    NorthWindow15 = 
+    WestWindow16 = 
+    NorthWindow16 = 
+}
+TileEntry
+{
+    category = interior_walls
+    West = location_shop_fossoil_01_006
+    North = location_shop_fossoil_01_005
+    NorthWest = location_shop_fossoil_01_004
+    SouthEast = location_shop_fossoil_01_007
+    WestWindow = 
+    NorthWindow = 
+    WestDoor = location_shop_fossoil_01_008
+    NorthDoor = location_shop_fossoil_01_009
+    WestWindow1 = 
+    NorthWindow1 = 
+    WestWindow2 = 
+    NorthWindow2 = 
+    WestWindow3 = 
+    NorthWindow3 = 
+    WestWindow4 = 
+    NorthWindow4 = 
+    WestWindow5 = 
+    NorthWindow5 = 
+    WestWindow6 = 
+    NorthWindow6 = 
+    WestWindow7 = 
+    NorthWindow7 = 
+    WestWindow8 = 
+    NorthWindow8 = 
+    WestWindow9 = 
+    NorthWindow9 = 
+    WestWindow10 = 
+    NorthWindow10 = 
+    WestWindow11 = 
+    NorthWindow11 = 
+    WestWindow12 = 
+    NorthWindow12 = 
+    WestWindow13 = 
+    NorthWindow13 = 
+    WestWindow14 = 
+    NorthWindow14 = 
+    WestWindow15 = 
+    NorthWindow15 = 
+    WestWindow16 = 
+    NorthWindow16 = 
+}
+TileEntry
+{
+    category = interior_walls
+    West = location_shop_gas2go_01_000
+    North = location_shop_gas2go_01_001
+    NorthWest = location_shop_gas2go_01_002
+    SouthEast = location_shop_gas2go_01_003
+    WestWindow = 
+    NorthWindow = 
+    WestDoor = location_shop_gas2go_01_010
+    NorthDoor = location_shop_gas2go_01_011
+    WestWindow1 = 
+    NorthWindow1 = 
+    WestWindow2 = 
+    NorthWindow2 = 
+    WestWindow3 = 
+    NorthWindow3 = 
+    WestWindow4 = 
+    NorthWindow4 = 
+    WestWindow5 = 
+    NorthWindow5 = 
+    WestWindow6 = 
+    NorthWindow6 = 
+    WestWindow7 = 
+    NorthWindow7 = 
+    WestWindow8 = 
+    NorthWindow8 = 
+    WestWindow9 = 
+    NorthWindow9 = 
+    WestWindow10 = 
+    NorthWindow10 = 
+    WestWindow11 = 
+    NorthWindow11 = 
+    WestWindow12 = 
+    NorthWindow12 = 
+    WestWindow13 = 
+    NorthWindow13 = 
+    WestWindow14 = 
+    NorthWindow14 = 
+    WestWindow15 = 
+    NorthWindow15 = 
+    WestWindow16 = 
+    NorthWindow16 = 
 }
 TileEntry
 {
@@ -293,6 +2720,126 @@ TileEntry
     NorthWindow = location_trailer_01_033
     WestDoor = location_trailer_01_034
     NorthDoor = location_trailer_01_035
+    WestWindow1 = 
+    NorthWindow1 = 
+    WestWindow2 = 
+    NorthWindow2 = 
+    WestWindow3 = 
+    NorthWindow3 = 
+    WestWindow4 = 
+    NorthWindow4 = 
+    WestWindow5 = 
+    NorthWindow5 = 
+    WestWindow6 = 
+    NorthWindow6 = 
+    WestWindow7 = 
+    NorthWindow7 = 
+    WestWindow8 = 
+    NorthWindow8 = 
+    WestWindow9 = 
+    NorthWindow9 = 
+    WestWindow10 = 
+    NorthWindow10 = 
+    WestWindow11 = 
+    NorthWindow11 = 
+    WestWindow12 = 
+    NorthWindow12 = 
+    WestWindow13 = 
+    NorthWindow13 = 
+    WestWindow14 = 
+    NorthWindow14 = 
+    WestWindow15 = 
+    NorthWindow15 = 
+    WestWindow16 = 
+    NorthWindow16 = 
+}
+TileEntry
+{
+    category = interior_walls
+    West = walls_burnt_01_000
+    North = walls_burnt_01_001
+    NorthWest = walls_burnt_01_002
+    SouthEast = walls_burnt_01_003
+    WestWindow = walls_burnt_01_008
+    NorthWindow = walls_burnt_01_009
+    WestDoor = walls_burnt_01_010
+    NorthDoor = walls_burnt_01_011
+    WestWindow1 = 
+    NorthWindow1 = 
+    WestWindow2 = 
+    NorthWindow2 = 
+    WestWindow3 = 
+    NorthWindow3 = 
+    WestWindow4 = 
+    NorthWindow4 = 
+    WestWindow5 = 
+    NorthWindow5 = 
+    WestWindow6 = 
+    NorthWindow6 = 
+    WestWindow7 = 
+    NorthWindow7 = 
+    WestWindow8 = 
+    NorthWindow8 = 
+    WestWindow9 = 
+    NorthWindow9 = 
+    WestWindow10 = 
+    NorthWindow10 = 
+    WestWindow11 = 
+    NorthWindow11 = 
+    WestWindow12 = 
+    NorthWindow12 = 
+    WestWindow13 = 
+    NorthWindow13 = 
+    WestWindow14 = 
+    NorthWindow14 = 
+    WestWindow15 = 
+    NorthWindow15 = 
+    WestWindow16 = 
+    NorthWindow16 = 
+}
+TileEntry
+{
+    category = interior_walls
+    West = walls_commercial_01_048
+    North = walls_commercial_01_049
+    NorthWest = walls_commercial_01_050
+    SouthEast = walls_commercial_01_051
+    WestWindow = walls_commercial_01_056
+    NorthWindow = walls_commercial_01_057
+    WestDoor = walls_commercial_01_058
+    NorthDoor = walls_commercial_01_059
+    WestWindow1 = 
+    NorthWindow1 = 
+    WestWindow2 = 
+    NorthWindow2 = 
+    WestWindow3 = 
+    NorthWindow3 = 
+    WestWindow4 = 
+    NorthWindow4 = 
+    WestWindow5 = 
+    NorthWindow5 = 
+    WestWindow6 = 
+    NorthWindow6 = 
+    WestWindow7 = 
+    NorthWindow7 = 
+    WestWindow8 = 
+    NorthWindow8 = 
+    WestWindow9 = 
+    NorthWindow9 = 
+    WestWindow10 = 
+    NorthWindow10 = 
+    WestWindow11 = 
+    NorthWindow11 = 
+    WestWindow12 = 
+    NorthWindow12 = 
+    WestWindow13 = 
+    NorthWindow13 = 
+    WestWindow14 = 
+    NorthWindow14 = 
+    WestWindow15 = 
+    NorthWindow15 = 
+    WestWindow16 = 
+    NorthWindow16 = 
 }
 TileEntry
 {
@@ -305,6 +2852,170 @@ TileEntry
     NorthWindow = walls_exterior_wooden_01_033
     WestDoor = walls_exterior_wooden_01_034
     NorthDoor = walls_exterior_wooden_01_035
+    WestWindow1 = 
+    NorthWindow1 = 
+    WestWindow2 = 
+    NorthWindow2 = 
+    WestWindow3 = 
+    NorthWindow3 = 
+    WestWindow4 = 
+    NorthWindow4 = 
+    WestWindow5 = 
+    NorthWindow5 = 
+    WestWindow6 = 
+    NorthWindow6 = 
+    WestWindow7 = 
+    NorthWindow7 = 
+    WestWindow8 = 
+    NorthWindow8 = 
+    WestWindow9 = 
+    NorthWindow9 = 
+    WestWindow10 = 
+    NorthWindow10 = 
+    WestWindow11 = 
+    NorthWindow11 = 
+    WestWindow12 = 
+    NorthWindow12 = 
+    WestWindow13 = 
+    NorthWindow13 = 
+    WestWindow14 = 
+    NorthWindow14 = 
+    WestWindow15 = 
+    NorthWindow15 = 
+    WestWindow16 = 
+    NorthWindow16 = 
+}
+TileEntry
+{
+    category = interior_walls
+    West = walls_exterior_wooden_01_028
+    North = walls_exterior_wooden_01_029
+    NorthWest = walls_exterior_wooden_01_030
+    SouthEast = walls_exterior_wooden_01_031
+    WestWindow = walls_exterior_wooden_01_036
+    NorthWindow = walls_exterior_wooden_01_037
+    WestDoor = walls_exterior_wooden_01_038
+    NorthDoor = walls_exterior_wooden_01_039
+    WestWindow1 = 
+    NorthWindow1 = 
+    WestWindow2 = 
+    NorthWindow2 = 
+    WestWindow3 = 
+    NorthWindow3 = 
+    WestWindow4 = 
+    NorthWindow4 = 
+    WestWindow5 = 
+    NorthWindow5 = 
+    WestWindow6 = 
+    NorthWindow6 = 
+    WestWindow7 = 
+    NorthWindow7 = 
+    WestWindow8 = 
+    NorthWindow8 = 
+    WestWindow9 = 
+    NorthWindow9 = 
+    WestWindow10 = 
+    NorthWindow10 = 
+    WestWindow11 = 
+    NorthWindow11 = 
+    WestWindow12 = 
+    NorthWindow12 = 
+    WestWindow13 = 
+    NorthWindow13 = 
+    WestWindow14 = 
+    NorthWindow14 = 
+    WestWindow15 = 
+    NorthWindow15 = 
+    WestWindow16 = 
+    NorthWindow16 = 
+}
+TileEntry
+{
+    category = interior_walls
+    West = walls_exterior_wooden_02_000
+    North = walls_exterior_wooden_02_001
+    NorthWest = walls_exterior_wooden_02_002
+    SouthEast = walls_exterior_wooden_02_003
+    WestWindow = walls_exterior_wooden_02_008
+    NorthWindow = walls_exterior_wooden_02_009
+    WestDoor = walls_exterior_wooden_02_010
+    NorthDoor = walls_exterior_wooden_02_011
+    WestWindow1 = 
+    NorthWindow1 = 
+    WestWindow2 = 
+    NorthWindow2 = 
+    WestWindow3 = 
+    NorthWindow3 = 
+    WestWindow4 = 
+    NorthWindow4 = 
+    WestWindow5 = 
+    NorthWindow5 = 
+    WestWindow6 = 
+    NorthWindow6 = 
+    WestWindow7 = 
+    NorthWindow7 = 
+    WestWindow8 = 
+    NorthWindow8 = 
+    WestWindow9 = 
+    NorthWindow9 = 
+    WestWindow10 = 
+    NorthWindow10 = 
+    WestWindow11 = 
+    NorthWindow11 = 
+    WestWindow12 = 
+    NorthWindow12 = 
+    WestWindow13 = 
+    NorthWindow13 = 
+    WestWindow14 = 
+    NorthWindow14 = 
+    WestWindow15 = 
+    NorthWindow15 = 
+    WestWindow16 = 
+    NorthWindow16 = 
+}
+TileEntry
+{
+    category = interior_walls
+    West = walls_garage_01_036
+    North = walls_garage_01_037
+    NorthWest = walls_garage_01_038
+    SouthEast = walls_garage_01_039
+    WestWindow = walls_garage_01_044
+    NorthWindow = walls_garage_01_045
+    WestDoor = walls_garage_01_046
+    NorthDoor = walls_garage_01_047
+    WestWindow1 = 
+    NorthWindow1 = 
+    WestWindow2 = 
+    NorthWindow2 = 
+    WestWindow3 = 
+    NorthWindow3 = 
+    WestWindow4 = 
+    NorthWindow4 = 
+    WestWindow5 = 
+    NorthWindow5 = 
+    WestWindow6 = 
+    NorthWindow6 = 
+    WestWindow7 = 
+    NorthWindow7 = 
+    WestWindow8 = 
+    NorthWindow8 = 
+    WestWindow9 = 
+    NorthWindow9 = 
+    WestWindow10 = 
+    NorthWindow10 = 
+    WestWindow11 = 
+    NorthWindow11 = 
+    WestWindow12 = 
+    NorthWindow12 = 
+    WestWindow13 = 
+    NorthWindow13 = 
+    WestWindow14 = 
+    NorthWindow14 = 
+    WestWindow15 = 
+    NorthWindow15 = 
+    WestWindow16 = 
+    NorthWindow16 = 
 }
 TileEntry
 {
@@ -317,30 +3028,126 @@ TileEntry
     NorthWindow = walls_interior_bathroom_01_009
     WestDoor = walls_interior_bathroom_01_010
     NorthDoor = walls_interior_bathroom_01_011
+    WestWindow1 = 
+    NorthWindow1 = 
+    WestWindow2 = 
+    NorthWindow2 = 
+    WestWindow3 = 
+    NorthWindow3 = 
+    WestWindow4 = 
+    NorthWindow4 = 
+    WestWindow5 = 
+    NorthWindow5 = 
+    WestWindow6 = 
+    NorthWindow6 = 
+    WestWindow7 = 
+    NorthWindow7 = 
+    WestWindow8 = 
+    NorthWindow8 = 
+    WestWindow9 = 
+    NorthWindow9 = 
+    WestWindow10 = 
+    NorthWindow10 = 
+    WestWindow11 = 
+    NorthWindow11 = 
+    WestWindow12 = 
+    NorthWindow12 = 
+    WestWindow13 = 
+    NorthWindow13 = 
+    WestWindow14 = 
+    NorthWindow14 = 
+    WestWindow15 = 
+    NorthWindow15 = 
+    WestWindow16 = 
+    NorthWindow16 = 
 }
 TileEntry
 {
     category = interior_walls
-    West = walls_interior_house_01_020
-    North = walls_interior_house_01_021
-    NorthWest = walls_interior_house_01_022
-    SouthEast = walls_interior_house_01_023
-    WestWindow = walls_interior_house_01_028
-    NorthWindow = walls_interior_house_01_029
-    WestDoor = walls_interior_house_01_030
-    NorthDoor = walls_interior_house_01_031
+    West = walls_interior_house_01_016
+    North = walls_interior_house_01_017
+    NorthWest = walls_interior_house_01_018
+    SouthEast = walls_interior_house_01_019
+    WestWindow = walls_interior_house_01_024
+    NorthWindow = walls_interior_house_01_025
+    WestDoor = walls_interior_house_01_026
+    NorthDoor = walls_interior_house_01_027
+    WestWindow1 = 
+    NorthWindow1 = 
+    WestWindow2 = 
+    NorthWindow2 = 
+    WestWindow3 = 
+    NorthWindow3 = 
+    WestWindow4 = 
+    NorthWindow4 = 
+    WestWindow5 = 
+    NorthWindow5 = 
+    WestWindow6 = 
+    NorthWindow6 = 
+    WestWindow7 = 
+    NorthWindow7 = 
+    WestWindow8 = 
+    NorthWindow8 = 
+    WestWindow9 = 
+    NorthWindow9 = 
+    WestWindow10 = 
+    NorthWindow10 = 
+    WestWindow11 = 
+    NorthWindow11 = 
+    WestWindow12 = 
+    NorthWindow12 = 
+    WestWindow13 = 
+    NorthWindow13 = 
+    WestWindow14 = 
+    NorthWindow14 = 
+    WestWindow15 = 
+    NorthWindow15 = 
+    WestWindow16 = 
+    NorthWindow16 = 
 }
 TileEntry
 {
     category = interior_walls
-    West = walls_interior_house_01_032
-    North = walls_interior_house_01_033
-    NorthWest = walls_interior_house_01_034
-    SouthEast = walls_interior_house_01_035
-    WestWindow = walls_interior_house_01_040
-    NorthWindow = walls_interior_house_01_041
-    WestDoor = walls_interior_house_01_042
-    NorthDoor = walls_interior_house_01_043
+    West = walls_interior_house_01_052
+    North = walls_interior_house_01_053
+    NorthWest = walls_interior_house_01_054
+    SouthEast = walls_interior_house_01_055
+    WestWindow = walls_interior_house_01_060
+    NorthWindow = walls_interior_house_01_061
+    WestDoor = walls_interior_house_01_062
+    NorthDoor = walls_interior_house_01_063
+    WestWindow1 = 
+    NorthWindow1 = 
+    WestWindow2 = 
+    NorthWindow2 = 
+    WestWindow3 = 
+    NorthWindow3 = 
+    WestWindow4 = 
+    NorthWindow4 = 
+    WestWindow5 = 
+    NorthWindow5 = 
+    WestWindow6 = 
+    NorthWindow6 = 
+    WestWindow7 = 
+    NorthWindow7 = 
+    WestWindow8 = 
+    NorthWindow8 = 
+    WestWindow9 = 
+    NorthWindow9 = 
+    WestWindow10 = 
+    NorthWindow10 = 
+    WestWindow11 = 
+    NorthWindow11 = 
+    WestWindow12 = 
+    NorthWindow12 = 
+    WestWindow13 = 
+    NorthWindow13 = 
+    WestWindow14 = 
+    NorthWindow14 = 
+    WestWindow15 = 
+    NorthWindow15 = 
+    WestWindow16 = 
+    NorthWindow16 = 
 }
 TileEntry
 {
@@ -353,30 +3160,38 @@ TileEntry
     NorthWindow = walls_interior_house_02_009
     WestDoor = walls_interior_house_02_010
     NorthDoor = walls_interior_house_02_011
-}
-TileEntry
-{
-    category = interior_walls
-    West = walls_interior_house_02_004
-    North = walls_interior_house_02_005
-    NorthWest = walls_interior_house_02_006
-    SouthEast = walls_interior_house_02_007
-    WestWindow = walls_interior_house_02_012
-    NorthWindow = walls_interior_house_02_013
-    WestDoor = walls_interior_house_02_014
-    NorthDoor = walls_interior_house_02_015
-}
-TileEntry
-{
-    category = interior_walls
-    West = walls_interior_house_02_016
-    North = walls_interior_house_02_017
-    NorthWest = walls_interior_house_02_018
-    SouthEast = walls_interior_house_02_019
-    WestWindow = walls_interior_house_02_024
-    NorthWindow = walls_interior_house_02_025
-    WestDoor = walls_interior_house_02_026
-    NorthDoor = walls_interior_house_02_027
+    WestWindow1 = 
+    NorthWindow1 = 
+    WestWindow2 = 
+    NorthWindow2 = 
+    WestWindow3 = 
+    NorthWindow3 = 
+    WestWindow4 = 
+    NorthWindow4 = 
+    WestWindow5 = 
+    NorthWindow5 = 
+    WestWindow6 = 
+    NorthWindow6 = 
+    WestWindow7 = 
+    NorthWindow7 = 
+    WestWindow8 = 
+    NorthWindow8 = 
+    WestWindow9 = 
+    NorthWindow9 = 
+    WestWindow10 = 
+    NorthWindow10 = 
+    WestWindow11 = 
+    NorthWindow11 = 
+    WestWindow12 = 
+    NorthWindow12 = 
+    WestWindow13 = 
+    NorthWindow13 = 
+    WestWindow14 = 
+    NorthWindow14 = 
+    WestWindow15 = 
+    NorthWindow15 = 
+    WestWindow16 = 
+    NorthWindow16 = 
 }
 TileEntry
 {
@@ -389,18 +3204,338 @@ TileEntry
     NorthWindow = walls_interior_house_02_041
     WestDoor = walls_interior_house_02_042
     NorthDoor = walls_interior_house_02_043
+    WestWindow1 = 
+    NorthWindow1 = 
+    WestWindow2 = 
+    NorthWindow2 = 
+    WestWindow3 = 
+    NorthWindow3 = 
+    WestWindow4 = 
+    NorthWindow4 = 
+    WestWindow5 = 
+    NorthWindow5 = 
+    WestWindow6 = 
+    NorthWindow6 = 
+    WestWindow7 = 
+    NorthWindow7 = 
+    WestWindow8 = 
+    NorthWindow8 = 
+    WestWindow9 = 
+    NorthWindow9 = 
+    WestWindow10 = 
+    NorthWindow10 = 
+    WestWindow11 = 
+    NorthWindow11 = 
+    WestWindow12 = 
+    NorthWindow12 = 
+    WestWindow13 = 
+    NorthWindow13 = 
+    WestWindow14 = 
+    NorthWindow14 = 
+    WestWindow15 = 
+    NorthWindow15 = 
+    WestWindow16 = 
+    NorthWindow16 = 
 }
 TileEntry
 {
     category = interior_walls
-    West = walls_interior_house_02_052
-    North = walls_interior_house_02_053
-    NorthWest = walls_interior_house_02_054
-    SouthEast = walls_interior_house_02_055
-    WestWindow = walls_interior_house_02_060
-    NorthWindow = walls_interior_house_02_061
-    WestDoor = walls_interior_house_02_062
-    NorthDoor = walls_interior_house_02_063
+    West = walls_interior_house_02_048
+    North = walls_interior_house_02_049
+    NorthWest = walls_interior_house_02_050
+    SouthEast = walls_interior_house_02_051
+    WestWindow = walls_interior_house_02_056
+    NorthWindow = walls_interior_house_02_057
+    WestDoor = walls_interior_house_02_058
+    NorthDoor = walls_interior_house_02_059
+    WestWindow1 = 
+    NorthWindow1 = 
+    WestWindow2 = 
+    NorthWindow2 = 
+    WestWindow3 = 
+    NorthWindow3 = 
+    WestWindow4 = 
+    NorthWindow4 = 
+    WestWindow5 = 
+    NorthWindow5 = 
+    WestWindow6 = 
+    NorthWindow6 = 
+    WestWindow7 = 
+    NorthWindow7 = 
+    WestWindow8 = 
+    NorthWindow8 = 
+    WestWindow9 = 
+    NorthWindow9 = 
+    WestWindow10 = 
+    NorthWindow10 = 
+    WestWindow11 = 
+    NorthWindow11 = 
+    WestWindow12 = 
+    NorthWindow12 = 
+    WestWindow13 = 
+    NorthWindow13 = 
+    WestWindow14 = 
+    NorthWindow14 = 
+    WestWindow15 = 
+    NorthWindow15 = 
+    WestWindow16 = 
+    NorthWindow16 = 
+}
+TileEntry
+{
+    category = interior_walls
+    West = walls_interior_house_03_000
+    North = walls_interior_house_03_001
+    NorthWest = walls_interior_house_03_002
+    SouthEast = walls_interior_house_03_003
+    WestWindow = walls_interior_house_03_008
+    NorthWindow = walls_interior_house_03_009
+    WestDoor = walls_interior_house_03_010
+    NorthDoor = walls_interior_house_03_011
+    WestWindow1 = 
+    NorthWindow1 = 
+    WestWindow2 = 
+    NorthWindow2 = 
+    WestWindow3 = 
+    NorthWindow3 = 
+    WestWindow4 = 
+    NorthWindow4 = 
+    WestWindow5 = 
+    NorthWindow5 = 
+    WestWindow6 = 
+    NorthWindow6 = 
+    WestWindow7 = 
+    NorthWindow7 = 
+    WestWindow8 = 
+    NorthWindow8 = 
+    WestWindow9 = 
+    NorthWindow9 = 
+    WestWindow10 = 
+    NorthWindow10 = 
+    WestWindow11 = 
+    NorthWindow11 = 
+    WestWindow12 = 
+    NorthWindow12 = 
+    WestWindow13 = 
+    NorthWindow13 = 
+    WestWindow14 = 
+    NorthWindow14 = 
+    WestWindow15 = 
+    NorthWindow15 = 
+    WestWindow16 = 
+    NorthWindow16 = 
+}
+TileEntry
+{
+    category = interior_walls
+    West = walls_interior_house_03_020
+    North = walls_interior_house_03_021
+    NorthWest = walls_interior_house_03_022
+    SouthEast = walls_interior_house_03_023
+    WestWindow = walls_interior_house_03_028
+    NorthWindow = walls_interior_house_03_029
+    WestDoor = walls_interior_house_03_030
+    NorthDoor = walls_interior_house_03_031
+    WestWindow1 = 
+    NorthWindow1 = 
+    WestWindow2 = 
+    NorthWindow2 = 
+    WestWindow3 = 
+    NorthWindow3 = 
+    WestWindow4 = 
+    NorthWindow4 = 
+    WestWindow5 = 
+    NorthWindow5 = 
+    WestWindow6 = 
+    NorthWindow6 = 
+    WestWindow7 = 
+    NorthWindow7 = 
+    WestWindow8 = 
+    NorthWindow8 = 
+    WestWindow9 = 
+    NorthWindow9 = 
+    WestWindow10 = 
+    NorthWindow10 = 
+    WestWindow11 = 
+    NorthWindow11 = 
+    WestWindow12 = 
+    NorthWindow12 = 
+    WestWindow13 = 
+    NorthWindow13 = 
+    WestWindow14 = 
+    NorthWindow14 = 
+    WestWindow15 = 
+    NorthWindow15 = 
+    WestWindow16 = 
+    NorthWindow16 = 
+}
+TileEntry
+{
+    category = interior_walls
+    West = walls_interior_house_03_032
+    North = walls_interior_house_03_033
+    NorthWest = walls_interior_house_03_034
+    SouthEast = walls_interior_house_03_035
+    WestWindow = walls_interior_house_03_040
+    NorthWindow = walls_interior_house_03_041
+    WestDoor = walls_interior_house_03_042
+    NorthDoor = walls_interior_house_03_043
+    WestWindow1 = 
+    NorthWindow1 = 
+    WestWindow2 = 
+    NorthWindow2 = 
+    WestWindow3 = 
+    NorthWindow3 = 
+    WestWindow4 = 
+    NorthWindow4 = 
+    WestWindow5 = 
+    NorthWindow5 = 
+    WestWindow6 = 
+    NorthWindow6 = 
+    WestWindow7 = 
+    NorthWindow7 = 
+    WestWindow8 = 
+    NorthWindow8 = 
+    WestWindow9 = 
+    NorthWindow9 = 
+    WestWindow10 = 
+    NorthWindow10 = 
+    WestWindow11 = 
+    NorthWindow11 = 
+    WestWindow12 = 
+    NorthWindow12 = 
+    WestWindow13 = 
+    NorthWindow13 = 
+    WestWindow14 = 
+    NorthWindow14 = 
+    WestWindow15 = 
+    NorthWindow15 = 
+    WestWindow16 = 
+    NorthWindow16 = 
+}
+TileEntry
+{
+    category = interior_walls
+    West = walls_interior_house_03_036
+    North = walls_interior_house_03_037
+    NorthWest = walls_interior_house_03_038
+    SouthEast = walls_interior_house_03_039
+    WestWindow = walls_interior_house_03_044
+    NorthWindow = walls_interior_house_03_045
+    WestDoor = walls_interior_house_03_046
+    NorthDoor = walls_interior_house_03_047
+    WestWindow1 = 
+    NorthWindow1 = 
+    WestWindow2 = 
+    NorthWindow2 = 
+    WestWindow3 = 
+    NorthWindow3 = 
+    WestWindow4 = 
+    NorthWindow4 = 
+    WestWindow5 = 
+    NorthWindow5 = 
+    WestWindow6 = 
+    NorthWindow6 = 
+    WestWindow7 = 
+    NorthWindow7 = 
+    WestWindow8 = 
+    NorthWindow8 = 
+    WestWindow9 = 
+    NorthWindow9 = 
+    WestWindow10 = 
+    NorthWindow10 = 
+    WestWindow11 = 
+    NorthWindow11 = 
+    WestWindow12 = 
+    NorthWindow12 = 
+    WestWindow13 = 
+    NorthWindow13 = 
+    WestWindow14 = 
+    NorthWindow14 = 
+    WestWindow15 = 
+    NorthWindow15 = 
+    WestWindow16 = 
+    NorthWindow16 = 
+}
+TileEntry
+{
+    category = interior_walls
+    West = walls_logs_000
+    North = walls_logs_001
+    NorthWest = walls_logs_002
+    SouthEast = walls_logs_003
+    WestWindow = walls_logs_008
+    NorthWindow = walls_logs_009
+    WestDoor = walls_logs_010
+    NorthDoor = walls_logs_011
+    WestWindow1 = 
+    NorthWindow1 = 
+    WestWindow2 = 
+    NorthWindow2 = 
+    WestWindow3 = 
+    NorthWindow3 = 
+    WestWindow4 = 
+    NorthWindow4 = 
+    WestWindow5 = 
+    NorthWindow5 = 
+    WestWindow6 = 
+    NorthWindow6 = 
+    WestWindow7 = 
+    NorthWindow7 = 
+    WestWindow8 = 
+    NorthWindow8 = 
+    WestWindow9 = 
+    NorthWindow9 = 
+    WestWindow10 = 
+    NorthWindow10 = 
+    WestWindow11 = 
+    NorthWindow11 = 
+    WestWindow12 = 
+    NorthWindow12 = 
+    WestWindow13 = 
+    NorthWindow13 = 
+    WestWindow14 = 
+    NorthWindow14 = 
+    WestWindow15 = 
+    NorthWindow15 = 
+    WestWindow16 = 
+    NorthWindow16 = 
+}
+TileEntry
+{
+    category = roof_caps
+    CapRiseE1 = 
+    CapRiseE2 = 
+    CapRiseE3 = 
+    CapFallE1 = 
+    CapFallE2 = 
+    CapFallE3 = 
+    CapRiseS1 = 
+    CapRiseS2 = 
+    CapRiseS3 = 
+    CapFallS1 = 
+    CapFallS2 = 
+    CapFallS3 = 
+    PeakPt5S = 
+    PeakPt5E = 
+    PeakOnePt5S = 
+    PeakOnePt5E = 
+    PeakTwoPt5S = 
+    PeakTwoPt5E = 
+    CapGapS1 = 
+    CapGapS2 = 
+    CapGapS3 = 
+    CapGapE1 = 
+    CapGapE2 = 
+    CapGapE3 = 
+    CapShallowRiseS1 = 
+    CapShallowRiseS2 = 
+    CapShallowFallS1 = 
+    CapShallowFallS2 = 
+    CapShallowRiseE1 = 
+    CapShallowRiseE2 = 
+    CapShallowFallE1 = 
+    CapShallowFallE2 = 
 }
 TileEntry
 {
@@ -440,6 +3575,474 @@ TileEntry
 }
 TileEntry
 {
+    category = roof_caps
+    CapRiseE1 = walls_burnt_roofs_01_000
+    CapRiseE2 = walls_burnt_roofs_01_001
+    CapRiseE3 = walls_burnt_roofs_01_002
+    CapFallE1 = walls_burnt_roofs_01_008
+    CapFallE2 = walls_burnt_roofs_01_009
+    CapFallE3 = walls_burnt_roofs_01_010
+    CapRiseS1 = walls_burnt_roofs_01_013
+    CapRiseS2 = walls_burnt_roofs_01_012
+    CapRiseS3 = walls_burnt_roofs_01_011
+    CapFallS1 = walls_burnt_roofs_01_005
+    CapFallS2 = walls_burnt_roofs_01_004
+    CapFallS3 = walls_burnt_roofs_01_003
+    PeakPt5S = walls_burnt_roofs_01_007
+    PeakPt5E = walls_burnt_roofs_01_015
+    PeakOnePt5S = walls_burnt_roofs_01_006
+    PeakOnePt5E = walls_burnt_roofs_01_014
+    PeakTwoPt5S = walls_burnt_roofs_01_017
+    PeakTwoPt5E = walls_burnt_roofs_01_016
+    CapGapS1 = 
+    CapGapS2 = 
+    CapGapS3 = walls_burnt_01_001
+    CapGapE1 = 
+    CapGapE2 = 
+    CapGapE3 = walls_burnt_01_000
+    CapShallowRiseS1 = walls_burnt_roofs_01_054
+    CapShallowRiseS2 = walls_burnt_roofs_01_055
+    CapShallowFallS1 = walls_burnt_roofs_01_051
+    CapShallowFallS2 = walls_burnt_roofs_01_050
+    CapShallowRiseE1 = walls_burnt_roofs_01_048
+    CapShallowRiseE2 = walls_burnt_roofs_01_049
+    CapShallowFallE1 = walls_burnt_roofs_01_053
+    CapShallowFallE2 = walls_burnt_roofs_01_052
+}
+TileEntry
+{
+    category = roof_caps
+    CapRiseE1 = walls_exterior_roofs_01_096
+    CapRiseE2 = walls_exterior_roofs_01_097
+    CapRiseE3 = walls_exterior_roofs_01_098
+    CapFallE1 = walls_exterior_roofs_01_104
+    CapFallE2 = walls_exterior_roofs_01_105
+    CapFallE3 = walls_exterior_roofs_01_106
+    CapRiseS1 = walls_exterior_roofs_01_109
+    CapRiseS2 = walls_exterior_roofs_01_108
+    CapRiseS3 = walls_exterior_roofs_01_107
+    CapFallS1 = walls_exterior_roofs_01_101
+    CapFallS2 = walls_exterior_roofs_01_100
+    CapFallS3 = walls_exterior_roofs_01_099
+    PeakPt5S = walls_exterior_roofs_01_103
+    PeakPt5E = walls_exterior_roofs_01_111
+    PeakOnePt5S = walls_exterior_roofs_01_102
+    PeakOnePt5E = walls_exterior_roofs_01_110
+    PeakTwoPt5S = walls_exterior_roofs_01_113
+    PeakTwoPt5E = walls_exterior_roofs_01_112
+    CapGapS1 = 
+    CapGapS2 = 
+    CapGapS3 = walls_exterior_house_02_005
+    CapGapE1 = 
+    CapGapE2 = 
+    CapGapE3 = walls_exterior_house_02_004
+    CapShallowRiseS1 = walls_exterior_roofs_01_126
+    CapShallowRiseS2 = walls_exterior_roofs_01_127
+    CapShallowFallS1 = walls_exterior_roofs_01_123
+    CapShallowFallS2 = walls_exterior_roofs_01_122
+    CapShallowRiseE1 = walls_exterior_roofs_01_120
+    CapShallowRiseE2 = walls_exterior_roofs_01_121
+    CapShallowFallE1 = walls_exterior_roofs_01_125
+    CapShallowFallE2 = walls_exterior_roofs_01_124
+}
+TileEntry
+{
+    category = roof_caps
+    CapRiseE1 = walls_exterior_roofs_02_024
+    CapRiseE2 = walls_exterior_roofs_02_025
+    CapRiseE3 = walls_exterior_roofs_02_026
+    CapFallE1 = walls_exterior_roofs_02_032
+    CapFallE2 = walls_exterior_roofs_02_033
+    CapFallE3 = walls_exterior_roofs_02_034
+    CapRiseS1 = walls_exterior_roofs_02_037
+    CapRiseS2 = walls_exterior_roofs_02_036
+    CapRiseS3 = walls_exterior_roofs_02_035
+    CapFallS1 = walls_exterior_roofs_02_029
+    CapFallS2 = walls_exterior_roofs_02_028
+    CapFallS3 = walls_exterior_roofs_02_027
+    PeakPt5S = walls_exterior_roofs_02_031
+    PeakPt5E = walls_exterior_roofs_02_039
+    PeakOnePt5S = walls_exterior_roofs_02_030
+    PeakOnePt5E = walls_exterior_roofs_02_038
+    PeakTwoPt5S = walls_exterior_roofs_02_041
+    PeakTwoPt5E = walls_exterior_roofs_02_040
+    CapGapS1 = 
+    CapGapS2 = 
+    CapGapS3 = walls_exterior_wooden_01_025
+    CapGapE1 = 
+    CapGapE2 = 
+    CapGapE3 = walls_exterior_wooden_01_024
+    CapShallowRiseS1 = walls_exterior_roofs_02_070
+    CapShallowRiseS2 = walls_exterior_roofs_02_071
+    CapShallowFallS1 = walls_exterior_roofs_02_067
+    CapShallowFallS2 = walls_exterior_roofs_02_066
+    CapShallowRiseE1 = walls_exterior_roofs_02_064
+    CapShallowRiseE2 = walls_exterior_roofs_02_065
+    CapShallowFallE1 = walls_exterior_roofs_02_069
+    CapShallowFallE2 = walls_exterior_roofs_02_068
+}
+TileEntry
+{
+    category = roof_caps
+    CapRiseE1 = walls_exterior_roofs_02_072
+    CapRiseE2 = walls_exterior_roofs_02_073
+    CapRiseE3 = walls_exterior_roofs_02_074
+    CapFallE1 = walls_exterior_roofs_02_080
+    CapFallE2 = walls_exterior_roofs_02_081
+    CapFallE3 = walls_exterior_roofs_02_082
+    CapRiseS1 = walls_exterior_roofs_02_085
+    CapRiseS2 = walls_exterior_roofs_02_084
+    CapRiseS3 = walls_exterior_roofs_02_083
+    CapFallS1 = walls_exterior_roofs_02_077
+    CapFallS2 = walls_exterior_roofs_02_076
+    CapFallS3 = walls_exterior_roofs_02_075
+    PeakPt5S = walls_exterior_roofs_02_079
+    PeakPt5E = walls_exterior_roofs_02_087
+    PeakOnePt5S = walls_exterior_roofs_02_078
+    PeakOnePt5E = walls_exterior_roofs_02_086
+    PeakTwoPt5S = walls_exterior_roofs_02_089
+    PeakTwoPt5E = walls_exterior_roofs_02_088
+    CapGapS1 = 
+    CapGapS2 = 
+    CapGapS3 = location_trailer_01_001
+    CapGapE1 = 
+    CapGapE2 = 
+    CapGapE3 = location_trailer_01_000
+    CapShallowRiseS1 = walls_exterior_roofs_02_102
+    CapShallowRiseS2 = walls_exterior_roofs_02_103
+    CapShallowFallS1 = walls_exterior_roofs_02_099
+    CapShallowFallS2 = walls_exterior_roofs_02_098
+    CapShallowRiseE1 = walls_exterior_roofs_02_096
+    CapShallowRiseE2 = walls_exterior_roofs_02_097
+    CapShallowFallE1 = walls_exterior_roofs_02_101
+    CapShallowFallE2 = walls_exterior_roofs_02_100
+}
+TileEntry
+{
+    category = roof_caps
+    CapRiseE1 = walls_exterior_roofs_03_024
+    CapRiseE2 = walls_exterior_roofs_03_025
+    CapRiseE3 = walls_exterior_roofs_03_026
+    CapFallE1 = walls_exterior_roofs_03_032
+    CapFallE2 = walls_exterior_roofs_03_033
+    CapFallE3 = walls_exterior_roofs_03_034
+    CapRiseS1 = walls_exterior_roofs_03_037
+    CapRiseS2 = walls_exterior_roofs_03_036
+    CapRiseS3 = walls_exterior_roofs_03_035
+    CapFallS1 = walls_exterior_roofs_03_029
+    CapFallS2 = walls_exterior_roofs_03_028
+    CapFallS3 = walls_exterior_roofs_03_027
+    PeakPt5S = walls_exterior_roofs_03_031
+    PeakPt5E = walls_exterior_roofs_03_039
+    PeakOnePt5S = walls_exterior_roofs_03_030
+    PeakOnePt5E = walls_exterior_roofs_03_038
+    PeakTwoPt5S = walls_exterior_roofs_03_041
+    PeakTwoPt5E = walls_exterior_roofs_03_040
+    CapGapS1 = 
+    CapGapS2 = 
+    CapGapS3 = walls_exterior_house_01_033
+    CapGapE1 = 
+    CapGapE2 = 
+    CapGapE3 = walls_exterior_house_01_032
+    CapShallowRiseS1 = walls_exterior_roofs_03_070
+    CapShallowRiseS2 = walls_exterior_roofs_03_071
+    CapShallowFallS1 = walls_exterior_roofs_03_067
+    CapShallowFallS2 = walls_exterior_roofs_03_066
+    CapShallowRiseE1 = walls_exterior_roofs_03_064
+    CapShallowRiseE2 = walls_exterior_roofs_03_065
+    CapShallowFallE1 = walls_exterior_roofs_03_069
+    CapShallowFallE2 = walls_exterior_roofs_03_068
+}
+TileEntry
+{
+    category = roof_caps
+    CapRiseE1 = walls_exterior_roofs_04_000
+    CapRiseE2 = walls_exterior_roofs_04_001
+    CapRiseE3 = walls_exterior_roofs_04_002
+    CapFallE1 = walls_exterior_roofs_04_008
+    CapFallE2 = walls_exterior_roofs_04_009
+    CapFallE3 = walls_exterior_roofs_04_010
+    CapRiseS1 = walls_exterior_roofs_04_013
+    CapRiseS2 = walls_exterior_roofs_04_012
+    CapRiseS3 = walls_exterior_roofs_04_011
+    CapFallS1 = walls_exterior_roofs_04_005
+    CapFallS2 = walls_exterior_roofs_04_004
+    CapFallS3 = walls_exterior_roofs_04_003
+    PeakPt5S = walls_exterior_roofs_04_007
+    PeakPt5E = walls_exterior_roofs_04_015
+    PeakOnePt5S = walls_exterior_roofs_04_006
+    PeakOnePt5E = walls_exterior_roofs_04_014
+    PeakTwoPt5S = walls_exterior_roofs_04_017
+    PeakTwoPt5E = walls_exterior_roofs_04_016
+    CapGapS1 = 
+    CapGapS2 = 
+    CapGapS3 = walls_exterior_house_01_017
+    CapGapE1 = 
+    CapGapE2 = 
+    CapGapE3 = walls_exterior_house_01_016
+    CapShallowRiseS1 = walls_exterior_roofs_04_054
+    CapShallowRiseS2 = walls_exterior_roofs_04_055
+    CapShallowFallS1 = walls_exterior_roofs_04_051
+    CapShallowFallS2 = walls_exterior_roofs_04_050
+    CapShallowRiseE1 = walls_exterior_roofs_04_048
+    CapShallowRiseE2 = walls_exterior_roofs_04_049
+    CapShallowFallE1 = walls_exterior_roofs_04_053
+    CapShallowFallE2 = walls_exterior_roofs_04_052
+}
+TileEntry
+{
+    category = roof_caps
+    CapRiseE1 = walls_exterior_roofs_04_024
+    CapRiseE2 = walls_exterior_roofs_04_025
+    CapRiseE3 = walls_exterior_roofs_04_026
+    CapFallE1 = walls_exterior_roofs_04_032
+    CapFallE2 = walls_exterior_roofs_04_033
+    CapFallE3 = walls_exterior_roofs_04_034
+    CapRiseS1 = walls_exterior_roofs_04_037
+    CapRiseS2 = walls_exterior_roofs_04_036
+    CapRiseS3 = walls_exterior_roofs_04_035
+    CapFallS1 = walls_exterior_roofs_04_029
+    CapFallS2 = walls_exterior_roofs_04_028
+    CapFallS3 = walls_exterior_roofs_04_027
+    PeakPt5S = walls_exterior_roofs_04_031
+    PeakPt5E = walls_exterior_roofs_04_039
+    PeakOnePt5S = walls_exterior_roofs_04_030
+    PeakOnePt5E = walls_exterior_roofs_04_038
+    PeakTwoPt5S = walls_exterior_roofs_04_041
+    PeakTwoPt5E = walls_exterior_roofs_04_040
+    CapGapS1 = 
+    CapGapS2 = 
+    CapGapS3 = walls_exterior_house_01_053
+    CapGapE1 = 
+    CapGapE2 = 
+    CapGapE3 = walls_exterior_house_01_052
+    CapShallowRiseS1 = walls_exterior_roofs_04_078
+    CapShallowRiseS2 = walls_exterior_roofs_04_079
+    CapShallowFallS1 = walls_exterior_roofs_04_075
+    CapShallowFallS2 = walls_exterior_roofs_04_074
+    CapShallowRiseE1 = walls_exterior_roofs_04_072
+    CapShallowRiseE2 = walls_exterior_roofs_04_073
+    CapShallowFallE1 = walls_exterior_roofs_04_077
+    CapShallowFallE2 = walls_exterior_roofs_04_076
+}
+TileEntry
+{
+    category = roof_caps
+    CapRiseE1 = walls_exterior_roofs_06_000
+    CapRiseE2 = walls_exterior_roofs_06_001
+    CapRiseE3 = walls_exterior_roofs_06_002
+    CapFallE1 = walls_exterior_roofs_06_008
+    CapFallE2 = walls_exterior_roofs_06_009
+    CapFallE3 = walls_exterior_roofs_06_010
+    CapRiseS1 = walls_exterior_roofs_06_013
+    CapRiseS2 = walls_exterior_roofs_06_012
+    CapRiseS3 = walls_exterior_roofs_06_011
+    CapFallS1 = walls_exterior_roofs_06_005
+    CapFallS2 = walls_exterior_roofs_06_004
+    CapFallS3 = walls_exterior_roofs_06_003
+    PeakPt5S = walls_exterior_roofs_06_007
+    PeakPt5E = walls_exterior_roofs_06_015
+    PeakOnePt5S = walls_exterior_roofs_06_006
+    PeakOnePt5E = walls_exterior_roofs_06_014
+    PeakTwoPt5S = walls_exterior_roofs_06_017
+    PeakTwoPt5E = walls_exterior_roofs_06_016
+    CapGapS1 = 
+    CapGapS2 = 
+    CapGapS3 = walls_exterior_house_02_017
+    CapGapE1 = 
+    CapGapE2 = 
+    CapGapE3 = walls_exterior_house_02_016
+    CapShallowRiseS1 = walls_exterior_roofs_06_054
+    CapShallowRiseS2 = walls_exterior_roofs_06_055
+    CapShallowFallS1 = walls_exterior_roofs_06_051
+    CapShallowFallS2 = walls_exterior_roofs_06_050
+    CapShallowRiseE1 = walls_exterior_roofs_06_048
+    CapShallowRiseE2 = walls_exterior_roofs_06_049
+    CapShallowFallE1 = walls_exterior_roofs_06_053
+    CapShallowFallE2 = walls_exterior_roofs_06_052
+}
+TileEntry
+{
+    category = roof_caps
+    CapRiseE1 = walls_exterior_roofs_08_024
+    CapRiseE2 = walls_exterior_roofs_08_025
+    CapRiseE3 = walls_exterior_roofs_08_026
+    CapFallE1 = walls_exterior_roofs_08_032
+    CapFallE2 = walls_exterior_roofs_08_033
+    CapFallE3 = walls_exterior_roofs_08_034
+    CapRiseS1 = walls_exterior_roofs_08_037
+    CapRiseS2 = walls_exterior_roofs_08_036
+    CapRiseS3 = walls_exterior_roofs_08_035
+    CapFallS1 = walls_exterior_roofs_08_029
+    CapFallS2 = walls_exterior_roofs_08_028
+    CapFallS3 = walls_exterior_roofs_08_027
+    PeakPt5S = walls_exterior_roofs_08_031
+    PeakPt5E = walls_exterior_roofs_08_039
+    PeakOnePt5S = walls_exterior_roofs_08_030
+    PeakOnePt5E = walls_exterior_roofs_08_038
+    PeakTwoPt5S = walls_exterior_roofs_08_041
+    PeakTwoPt5E = walls_exterior_roofs_08_040
+    CapGapS1 = 
+    CapGapS2 = 
+    CapGapS3 = walls_interior_house_03_021
+    CapGapE1 = 
+    CapGapE2 = 
+    CapGapE3 = walls_interior_house_03_020
+    CapShallowRiseS1 = walls_exterior_roofs_08_078
+    CapShallowRiseS2 = walls_exterior_roofs_08_079
+    CapShallowFallS1 = walls_exterior_roofs_08_075
+    CapShallowFallS2 = walls_exterior_roofs_08_074
+    CapShallowRiseE1 = walls_exterior_roofs_08_072
+    CapShallowRiseE2 = walls_exterior_roofs_08_073
+    CapShallowFallE1 = walls_exterior_roofs_08_077
+    CapShallowFallE2 = walls_exterior_roofs_08_076
+}
+TileEntry
+{
+    category = roof_caps
+    CapRiseE1 = walls_exterior_roofs_09_080
+    CapRiseE2 = walls_exterior_roofs_09_081
+    CapRiseE3 = walls_exterior_roofs_09_082
+    CapFallE1 = walls_exterior_roofs_09_088
+    CapFallE2 = walls_exterior_roofs_09_089
+    CapFallE3 = walls_exterior_roofs_09_090
+    CapRiseS1 = walls_exterior_roofs_09_093
+    CapRiseS2 = walls_exterior_roofs_09_092
+    CapRiseS3 = walls_exterior_roofs_09_091
+    CapFallS1 = walls_exterior_roofs_09_085
+    CapFallS2 = walls_exterior_roofs_09_084
+    CapFallS3 = walls_exterior_roofs_09_083
+    PeakPt5S = walls_exterior_roofs_09_087
+    PeakPt5E = walls_exterior_roofs_09_095
+    PeakOnePt5S = walls_exterior_roofs_09_086
+    PeakOnePt5E = walls_exterior_roofs_09_094
+    PeakTwoPt5S = walls_exterior_roofs_09_097
+    PeakTwoPt5E = walls_exterior_roofs_09_096
+    CapGapS1 = 
+    CapGapS2 = 
+    CapGapS3 = walls_exterior_house_02_065
+    CapGapE1 = 
+    CapGapE2 = 
+    CapGapE3 = walls_exterior_house_02_064
+    CapShallowRiseS1 = 
+    CapShallowRiseS2 = 
+    CapShallowFallS1 = 
+    CapShallowFallS2 = 
+    CapShallowRiseE1 = 
+    CapShallowRiseE2 = 
+    CapShallowFallE1 = 
+    CapShallowFallE2 = 
+}
+TileEntry
+{
+    category = roof_caps
+    CapRiseE1 = walls_exterior_roofs_10_032
+    CapRiseE2 = walls_exterior_roofs_10_033
+    CapRiseE3 = walls_exterior_roofs_10_034
+    CapFallE1 = walls_exterior_roofs_10_040
+    CapFallE2 = walls_exterior_roofs_10_041
+    CapFallE3 = walls_exterior_roofs_10_042
+    CapRiseS1 = walls_exterior_roofs_10_045
+    CapRiseS2 = walls_exterior_roofs_10_044
+    CapRiseS3 = walls_exterior_roofs_10_043
+    CapFallS1 = walls_exterior_roofs_10_037
+    CapFallS2 = walls_exterior_roofs_10_036
+    CapFallS3 = walls_exterior_roofs_10_035
+    PeakPt5S = walls_exterior_roofs_10_039
+    PeakPt5E = walls_exterior_roofs_10_047
+    PeakOnePt5S = walls_exterior_roofs_10_038
+    PeakOnePt5E = walls_exterior_roofs_10_046
+    PeakTwoPt5S = walls_exterior_roofs_10_049
+    PeakTwoPt5E = walls_exterior_roofs_10_048
+    CapGapS1 = 
+    CapGapS2 = 
+    CapGapS3 = walls_interior_house_03_033
+    CapGapE1 = 
+    CapGapE2 = 
+    CapGapE3 = walls_interior_house_03_032
+    CapShallowRiseS1 = walls_exterior_roofs_10_062
+    CapShallowRiseS2 = walls_exterior_roofs_10_063
+    CapShallowFallS1 = walls_exterior_roofs_10_059
+    CapShallowFallS2 = walls_exterior_roofs_10_058
+    CapShallowRiseE1 = walls_exterior_roofs_10_056
+    CapShallowRiseE2 = walls_exterior_roofs_10_057
+    CapShallowFallE1 = walls_exterior_roofs_10_061
+    CapShallowFallE2 = walls_exterior_roofs_10_060
+}
+TileEntry
+{
+    category = roof_caps
+    CapRiseE1 = walls_exterior_roofs_10_224
+    CapRiseE2 = walls_exterior_roofs_10_225
+    CapRiseE3 = walls_exterior_roofs_10_226
+    CapFallE1 = walls_exterior_roofs_10_232
+    CapFallE2 = walls_exterior_roofs_10_233
+    CapFallE3 = walls_exterior_roofs_10_234
+    CapRiseS1 = walls_exterior_roofs_10_237
+    CapRiseS2 = walls_exterior_roofs_10_236
+    CapRiseS3 = walls_exterior_roofs_10_235
+    CapFallS1 = walls_exterior_roofs_10_229
+    CapFallS2 = walls_exterior_roofs_10_228
+    CapFallS3 = walls_exterior_roofs_10_227
+    PeakPt5S = walls_exterior_roofs_10_231
+    PeakPt5E = walls_exterior_roofs_10_239
+    PeakOnePt5S = walls_exterior_roofs_10_230
+    PeakOnePt5E = walls_exterior_roofs_10_238
+    PeakTwoPt5S = walls_exterior_roofs_10_241
+    PeakTwoPt5E = walls_exterior_roofs_10_240
+    CapGapS1 = 
+    CapGapS2 = 
+    CapGapS3 = walls_commercial_01_049
+    CapGapE1 = 
+    CapGapE2 = 
+    CapGapE3 = walls_commercial_01_048
+    CapShallowRiseS1 = walls_exterior_roofs_10_254
+    CapShallowRiseS2 = walls_exterior_roofs_10_255
+    CapShallowFallS1 = walls_exterior_roofs_10_251
+    CapShallowFallS2 = walls_exterior_roofs_10_250
+    CapShallowRiseE1 = walls_exterior_roofs_10_248
+    CapShallowRiseE2 = walls_exterior_roofs_10_249
+    CapShallowFallE1 = walls_exterior_roofs_10_253
+    CapShallowFallE2 = walls_exterior_roofs_10_252
+}
+TileEntry
+{
+    category = roof_caps
+    CapRiseE1 = walls_logs_016
+    CapRiseE2 = walls_logs_017
+    CapRiseE3 = walls_logs_018
+    CapFallE1 = walls_logs_024
+    CapFallE2 = walls_logs_025
+    CapFallE3 = walls_logs_026
+    CapRiseS1 = walls_logs_029
+    CapRiseS2 = walls_logs_028
+    CapRiseS3 = walls_logs_027
+    CapFallS1 = walls_logs_021
+    CapFallS2 = walls_logs_020
+    CapFallS3 = walls_logs_019
+    PeakPt5S = walls_logs_023
+    PeakPt5E = walls_logs_031
+    PeakOnePt5S = walls_logs_022
+    PeakOnePt5E = walls_logs_030
+    PeakTwoPt5S = walls_logs_033
+    PeakTwoPt5E = walls_logs_032
+    CapGapS1 = 
+    CapGapS2 = 
+    CapGapS3 = walls_logs_001
+    CapGapE1 = 
+    CapGapE2 = 
+    CapGapE3 = walls_logs_000
+    CapShallowRiseS1 = 
+    CapShallowRiseS2 = 
+    CapShallowFallS1 = 
+    CapShallowFallS2 = 
+    CapShallowRiseE1 = 
+    CapShallowRiseE2 = 
+    CapShallowFallE1 = 
+    CapShallowFallE2 = 
+}
+TileEntry
+{
     category = roof_slopes
     SlopeS1 = roofs_01_000
     SlopeS2 = roofs_01_001
@@ -451,34 +4054,346 @@ TileEntry
     SlopePt5E = roofs_01_014
     SlopeOnePt5S = roofs_01_015
     SlopeOnePt5E = roofs_01_014
-    SlopeTwoPt5S = roofs_01_015
-    SlopeTwoPt5E = roofs_01_014
-    ShallowSlopeW1 = 
-    ShallowSlopeW2 = 
-    ShallowSlopeE1 = 
-    ShallowSlopeE2 = 
-    ShallowSlopeN1 = 
-    ShallowSlopeN2 = 
-    ShallowSlopeS1 = 
-    ShallowSlopeS2 = 
+    SlopeTwoPt5S = roofs_01_071
+    SlopeTwoPt5E = roofs_01_070
+    ShallowSlopeW1 = roofs_01_083
+    ShallowSlopeW2 = roofs_01_082
+    ShallowSlopeE1 = roofs_01_080
+    ShallowSlopeE2 = roofs_01_081
+    ShallowSlopeN1 = roofs_01_084
+    ShallowSlopeN2 = roofs_01_085
+    ShallowSlopeS1 = roofs_01_087
+    ShallowSlopeS2 = roofs_01_086
     Inner1 = roofs_01_011
     Inner2 = roofs_01_012
     Inner3 = roofs_01_013
     Outer1 = roofs_01_008
     Outer2 = roofs_01_009
     Outer3 = roofs_01_010
+    InnerPt5 = roofs_01_067
+    InnerOnePt5 = roofs_01_068
+    InnerTwoPt5 = roofs_01_069
+    OuterPt5 = roofs_01_064
+    OuterOnePt5 = roofs_01_065
+    OuterTwoPt5 = roofs_01_066
+    CornerSW1 = roofs_01_024
+    CornerSW2 = roofs_01_025
+    CornerSW3 = roofs_01_026
+    CornerNE1 = roofs_01_029
+    CornerNE2 = roofs_01_028
+    CornerNE3 = roofs_01_027
+    offset = SlopePt5S 1 1
+    offset = SlopePt5E 1 1
+}
+TileEntry
+{
+    category = roof_slopes
+    SlopeS1 = roofs_01_032
+    SlopeS2 = roofs_01_033
+    SlopeS3 = roofs_01_034
+    SlopeE1 = roofs_01_037
+    SlopeE2 = roofs_01_036
+    SlopeE3 = roofs_01_035
+    SlopePt5S = roofs_01_047
+    SlopePt5E = roofs_01_046
+    SlopeOnePt5S = roofs_01_047
+    SlopeOnePt5E = roofs_01_046
+    SlopeTwoPt5S = roofs_01_079
+    SlopeTwoPt5E = roofs_01_078
+    ShallowSlopeW1 = roofs_shallow_01_123
+    ShallowSlopeW2 = roofs_shallow_01_122
+    ShallowSlopeE1 = roofs_shallow_01_120
+    ShallowSlopeE2 = roofs_shallow_01_121
+    ShallowSlopeN1 = roofs_shallow_01_124
+    ShallowSlopeN2 = roofs_shallow_01_125
+    ShallowSlopeS1 = roofs_shallow_01_127
+    ShallowSlopeS2 = roofs_shallow_01_126
+    Inner1 = roofs_01_043
+    Inner2 = roofs_01_044
+    Inner3 = roofs_01_045
+    Outer1 = roofs_01_040
+    Outer2 = roofs_01_041
+    Outer3 = roofs_01_042
+    InnerPt5 = roofs_01_075
+    InnerOnePt5 = roofs_01_076
+    InnerTwoPt5 = roofs_01_077
+    OuterPt5 = roofs_01_072
+    OuterOnePt5 = roofs_01_073
+    OuterTwoPt5 = roofs_01_074
+    CornerSW1 = roofs_01_056
+    CornerSW2 = roofs_01_057
+    CornerSW3 = roofs_01_058
+    CornerNE1 = roofs_01_061
+    CornerNE2 = roofs_01_060
+    CornerNE3 = roofs_01_059
+    offset = SlopePt5S 1 1
+    offset = SlopePt5E 1 1
+}
+TileEntry
+{
+    category = roof_slopes
+    SlopeS1 = roofs_02_000
+    SlopeS2 = roofs_02_001
+    SlopeS3 = roofs_02_002
+    SlopeE1 = roofs_02_005
+    SlopeE2 = roofs_02_004
+    SlopeE3 = roofs_02_003
+    SlopePt5S = roofs_02_015
+    SlopePt5E = roofs_02_014
+    SlopeOnePt5S = roofs_02_015
+    SlopeOnePt5E = roofs_02_014
+    SlopeTwoPt5S = roofs_02_071
+    SlopeTwoPt5E = roofs_02_070
+    ShallowSlopeW1 = roofs_02_083
+    ShallowSlopeW2 = roofs_02_082
+    ShallowSlopeE1 = roofs_02_080
+    ShallowSlopeE2 = roofs_02_081
+    ShallowSlopeN1 = roofs_02_084
+    ShallowSlopeN2 = roofs_02_085
+    ShallowSlopeS1 = roofs_02_087
+    ShallowSlopeS2 = roofs_02_086
+    Inner1 = roofs_02_011
+    Inner2 = roofs_02_012
+    Inner3 = roofs_02_013
+    Outer1 = roofs_02_008
+    Outer2 = roofs_02_009
+    Outer3 = roofs_02_010
+    InnerPt5 = roofs_02_067
+    InnerOnePt5 = roofs_02_068
+    InnerTwoPt5 = roofs_02_069
+    OuterPt5 = roofs_02_064
+    OuterOnePt5 = roofs_02_065
+    OuterTwoPt5 = roofs_02_066
+    CornerSW1 = roofs_02_024
+    CornerSW2 = roofs_02_025
+    CornerSW3 = roofs_02_026
+    CornerNE1 = roofs_02_029
+    CornerNE2 = roofs_02_028
+    CornerNE3 = roofs_02_027
+    offset = SlopePt5S 1 1
+    offset = SlopePt5E 1 1
+}
+TileEntry
+{
+    category = roof_slopes
+    SlopeS1 = roofs_03_000
+    SlopeS2 = roofs_03_001
+    SlopeS3 = roofs_03_002
+    SlopeE1 = roofs_03_005
+    SlopeE2 = roofs_03_004
+    SlopeE3 = roofs_03_003
+    SlopePt5S = roofs_03_015
+    SlopePt5E = roofs_03_014
+    SlopeOnePt5S = roofs_03_015
+    SlopeOnePt5E = roofs_03_014
+    SlopeTwoPt5S = roofs_03_071
+    SlopeTwoPt5E = roofs_03_070
+    ShallowSlopeW1 = roofs_shallow_01_003
+    ShallowSlopeW2 = roofs_shallow_01_002
+    ShallowSlopeE1 = roofs_shallow_01_000
+    ShallowSlopeE2 = roofs_shallow_01_001
+    ShallowSlopeN1 = roofs_shallow_01_004
+    ShallowSlopeN2 = roofs_shallow_01_005
+    ShallowSlopeS1 = roofs_shallow_01_007
+    ShallowSlopeS2 = roofs_shallow_01_006
+    Inner1 = roofs_03_011
+    Inner2 = roofs_03_012
+    Inner3 = roofs_03_013
+    Outer1 = roofs_03_008
+    Outer2 = roofs_03_009
+    Outer3 = roofs_03_010
     InnerPt5 = 
     InnerOnePt5 = 
     InnerTwoPt5 = 
     OuterPt5 = 
     OuterOnePt5 = 
     OuterTwoPt5 = 
-    CornerSW1 = 
-    CornerSW2 = 
-    CornerSW3 = 
-    CornerNE1 = 
-    CornerNE2 = 
-    CornerNE3 = 
+    CornerSW1 = roofs_03_024
+    CornerSW2 = roofs_03_025
+    CornerSW3 = roofs_03_026
+    CornerNE1 = roofs_03_029
+    CornerNE2 = roofs_03_028
+    CornerNE3 = roofs_03_027
+    offset = SlopePt5S 1 1
+    offset = SlopePt5E 1 1
+}
+TileEntry
+{
+    category = roof_slopes
+    SlopeS1 = roofs_03_032
+    SlopeS2 = roofs_03_033
+    SlopeS3 = roofs_03_034
+    SlopeE1 = roofs_03_037
+    SlopeE2 = roofs_03_036
+    SlopeE3 = roofs_03_035
+    SlopePt5S = roofs_03_047
+    SlopePt5E = roofs_03_046
+    SlopeOnePt5S = roofs_03_047
+    SlopeOnePt5E = roofs_03_046
+    SlopeTwoPt5S = 
+    SlopeTwoPt5E = 
+    ShallowSlopeW1 = roofs_shallow_01_027
+    ShallowSlopeW2 = roofs_shallow_01_026
+    ShallowSlopeE1 = roofs_shallow_01_024
+    ShallowSlopeE2 = roofs_shallow_01_025
+    ShallowSlopeN1 = roofs_shallow_01_028
+    ShallowSlopeN2 = roofs_shallow_01_029
+    ShallowSlopeS1 = roofs_shallow_01_031
+    ShallowSlopeS2 = roofs_shallow_01_030
+    Inner1 = roofs_03_043
+    Inner2 = roofs_03_044
+    Inner3 = roofs_03_045
+    Outer1 = roofs_03_040
+    Outer2 = roofs_03_041
+    Outer3 = roofs_03_042
+    InnerPt5 = 
+    InnerOnePt5 = 
+    InnerTwoPt5 = 
+    OuterPt5 = 
+    OuterOnePt5 = 
+    OuterTwoPt5 = 
+    CornerSW1 = roofs_03_056
+    CornerSW2 = roofs_03_057
+    CornerSW3 = roofs_03_058
+    CornerNE1 = roofs_03_061
+    CornerNE2 = roofs_03_060
+    CornerNE3 = roofs_03_059
+    offset = SlopePt5S 1 1
+    offset = SlopePt5E 1 1
+}
+TileEntry
+{
+    category = roof_slopes
+    SlopeS1 = roofs_04_000
+    SlopeS2 = roofs_04_001
+    SlopeS3 = roofs_04_002
+    SlopeE1 = roofs_04_005
+    SlopeE2 = roofs_04_004
+    SlopeE3 = roofs_04_003
+    SlopePt5S = roofs_04_015
+    SlopePt5E = roofs_04_014
+    SlopeOnePt5S = roofs_04_015
+    SlopeOnePt5E = roofs_04_014
+    SlopeTwoPt5S = roofs_04_015
+    SlopeTwoPt5E = roofs_04_014
+    ShallowSlopeW1 = roofs_shallow_01_051
+    ShallowSlopeW2 = roofs_shallow_01_050
+    ShallowSlopeE1 = roofs_shallow_01_048
+    ShallowSlopeE2 = roofs_shallow_01_049
+    ShallowSlopeN1 = roofs_shallow_01_052
+    ShallowSlopeN2 = roofs_shallow_01_053
+    ShallowSlopeS1 = roofs_shallow_01_055
+    ShallowSlopeS2 = roofs_shallow_01_054
+    Inner1 = roofs_04_011
+    Inner2 = roofs_04_012
+    Inner3 = roofs_04_013
+    Outer1 = roofs_04_008
+    Outer2 = roofs_04_009
+    Outer3 = roofs_04_010
+    InnerPt5 = 
+    InnerOnePt5 = 
+    InnerTwoPt5 = 
+    OuterPt5 = 
+    OuterOnePt5 = 
+    OuterTwoPt5 = 
+    CornerSW1 = roofs_04_024
+    CornerSW2 = roofs_04_025
+    CornerSW3 = roofs_04_026
+    CornerNE1 = roofs_04_029
+    CornerNE2 = roofs_04_028
+    CornerNE3 = roofs_04_027
+    offset = SlopePt5S 1 1
+    offset = SlopePt5E 1 1
+    offset = SlopeTwoPt5S -1 -1
+    offset = SlopeTwoPt5E -1 -1
+}
+TileEntry
+{
+    category = roof_slopes
+    SlopeS1 = roofs_04_032
+    SlopeS2 = roofs_04_033
+    SlopeS3 = roofs_04_034
+    SlopeE1 = roofs_04_037
+    SlopeE2 = roofs_04_036
+    SlopeE3 = roofs_04_035
+    SlopePt5S = roofs_04_047
+    SlopePt5E = roofs_04_046
+    SlopeOnePt5S = roofs_04_047
+    SlopeOnePt5E = roofs_04_046
+    SlopeTwoPt5S = roofs_04_047
+    SlopeTwoPt5E = roofs_04_046
+    ShallowSlopeW1 = roofs_shallow_01_075
+    ShallowSlopeW2 = roofs_shallow_01_074
+    ShallowSlopeE1 = roofs_shallow_01_072
+    ShallowSlopeE2 = roofs_shallow_01_073
+    ShallowSlopeN1 = roofs_shallow_01_076
+    ShallowSlopeN2 = roofs_shallow_01_077
+    ShallowSlopeS1 = roofs_shallow_01_079
+    ShallowSlopeS2 = roofs_shallow_01_078
+    Inner1 = roofs_04_043
+    Inner2 = roofs_04_044
+    Inner3 = roofs_04_045
+    Outer1 = roofs_04_040
+    Outer2 = roofs_04_041
+    Outer3 = roofs_04_042
+    InnerPt5 = 
+    InnerOnePt5 = 
+    InnerTwoPt5 = 
+    OuterPt5 = 
+    OuterOnePt5 = 
+    OuterTwoPt5 = 
+    CornerSW1 = roofs_04_056
+    CornerSW2 = roofs_04_057
+    CornerSW3 = roofs_04_058
+    CornerNE1 = roofs_04_061
+    CornerNE2 = roofs_04_060
+    CornerNE3 = roofs_04_059
+    offset = SlopePt5S 1 1
+    offset = SlopePt5E 1 1
+    offset = SlopeTwoPt5S -1 -1
+    offset = SlopeTwoPt5E -1 -1
+}
+TileEntry
+{
+    category = roof_slopes
+    SlopeS1 = roofs_burnt_01_000
+    SlopeS2 = roofs_burnt_01_001
+    SlopeS3 = roofs_burnt_01_002
+    SlopeE1 = roofs_burnt_01_005
+    SlopeE2 = roofs_burnt_01_004
+    SlopeE3 = roofs_burnt_01_003
+    SlopePt5S = roofs_burnt_01_015
+    SlopePt5E = roofs_burnt_01_014
+    SlopeOnePt5S = roofs_burnt_01_015
+    SlopeOnePt5E = roofs_burnt_01_014
+    SlopeTwoPt5S = roofs_burnt_01_015
+    SlopeTwoPt5E = roofs_burnt_01_014
+    ShallowSlopeW1 = roofs_burnt_01_083
+    ShallowSlopeW2 = roofs_burnt_01_082
+    ShallowSlopeE1 = roofs_burnt_01_080
+    ShallowSlopeE2 = roofs_burnt_01_081
+    ShallowSlopeN1 = roofs_burnt_01_084
+    ShallowSlopeN2 = roofs_burnt_01_085
+    ShallowSlopeS1 = roofs_burnt_01_087
+    ShallowSlopeS2 = roofs_burnt_01_086
+    Inner1 = roofs_burnt_01_011
+    Inner2 = roofs_burnt_01_012
+    Inner3 = roofs_burnt_01_013
+    Outer1 = roofs_burnt_01_008
+    Outer2 = roofs_burnt_01_009
+    Outer3 = roofs_burnt_01_010
+    InnerPt5 = roofs_burnt_01_067
+    InnerOnePt5 = roofs_burnt_01_068
+    InnerTwoPt5 = roofs_burnt_01_069
+    OuterPt5 = roofs_burnt_01_064
+    OuterOnePt5 = roofs_burnt_01_065
+    OuterTwoPt5 = roofs_burnt_01_066
+    CornerSW1 = roofs_burnt_01_024
+    CornerSW2 = roofs_burnt_01_025
+    CornerSW3 = roofs_burnt_01_026
+    CornerNE1 = roofs_burnt_01_029
+    CornerNE2 = roofs_burnt_01_028
+    CornerNE3 = roofs_burnt_01_027
     offset = SlopePt5S 1 1
     offset = SlopePt5E 1 1
     offset = SlopeTwoPt5S -1 -1
@@ -487,14 +4402,58 @@ TileEntry
 TileEntry
 {
     category = roof_tops
-    West1 = floors_exterior_street_01_018
-    West2 = floors_exterior_street_01_018
-    West3 = floors_exterior_street_01_018
-    North1 = 
-    North2 = 
-    North3 = 
+    West1 = carpentry_02_056
+    West2 = carpentry_02_056
+    West3 = carpentry_02_056
+    North1 = carpentry_02_056
+    North2 = carpentry_02_056
+    North3 = carpentry_02_056
     offset = West1 -1 -1
     offset = West2 -2 -2
+    offset = North1 -1 -1
+    offset = North2 -2 -2
+}
+TileEntry
+{
+    category = roof_tops
+    West1 = floors_exterior_street_01_000
+    West2 = floors_exterior_street_01_000
+    West3 = floors_exterior_street_01_000
+    North1 = floors_exterior_street_01_000
+    North2 = floors_exterior_street_01_000
+    North3 = floors_exterior_street_01_000
+    offset = West1 -1 -1
+    offset = West2 -2 -2
+    offset = North1 -1 -1
+    offset = North2 -2 -2
+}
+TileEntry
+{
+    category = roof_tops
+    West1 = location_restaurant_diner_01_041
+    West2 = location_restaurant_diner_01_041
+    West3 = location_restaurant_diner_01_041
+    North1 = location_restaurant_diner_01_041
+    North2 = location_restaurant_diner_01_041
+    North3 = location_restaurant_diner_01_041
+    offset = West1 -1 -1
+    offset = West2 -2 -2
+    offset = North1 -1 -1
+    offset = North2 -2 -2
+}
+TileEntry
+{
+    category = roof_tops
+    West1 = location_trailer_01_044
+    West2 = location_trailer_01_044
+    West3 = location_trailer_01_044
+    North1 = location_trailer_01_044
+    North2 = location_trailer_01_044
+    North3 = location_trailer_01_044
+    offset = West1 -1 -1
+    offset = West2 -2 -2
+    offset = North1 -1 -1
+    offset = North2 -2 -2
 }
 TileEntry
 {
@@ -512,6 +4471,82 @@ TileEntry
 }
 TileEntry
 {
+    category = roof_tops
+    West1 = roofs_01_054
+    West2 = roofs_01_054
+    West3 = roofs_01_054
+    North1 = roofs_01_054
+    North2 = roofs_01_054
+    North3 = roofs_01_054
+    offset = West1 -1 -1
+    offset = West2 -2 -2
+    offset = North1 -1 -1
+    offset = North2 -2 -2
+}
+TileEntry
+{
+    category = roof_tops
+    West1 = roofs_01_055
+    West2 = roofs_01_055
+    West3 = roofs_01_055
+    North1 = roofs_01_055
+    North2 = roofs_01_055
+    North3 = roofs_01_055
+    offset = West1 -1 -1
+    offset = West2 -2 -2
+    offset = North1 -1 -1
+    offset = North2 -2 -2
+}
+TileEntry
+{
+    category = roof_tops
+    West1 = roofs_04_054
+    West2 = roofs_04_054
+    West3 = roofs_04_054
+    North1 = roofs_04_054
+    North2 = roofs_04_054
+    North3 = roofs_04_054
+    offset = West1 -1 -1
+    offset = West2 -2 -2
+    offset = North1 -1 -1
+    offset = North2 -2 -2
+}
+TileEntry
+{
+    category = roof_tops
+    West1 = roofs_burnt_01_022
+    West2 = roofs_burnt_01_022
+    West3 = roofs_burnt_01_022
+    North1 = roofs_burnt_01_022
+    North2 = roofs_burnt_01_022
+    North3 = roofs_burnt_01_022
+    offset = West1 -1 -1
+    offset = West2 -2 -2
+    offset = North1 -1 -1
+    offset = North2 -2 -2
+}
+TileEntry
+{
+    category = stairs
+    West1 = carpentry_02_088
+    West2 = carpentry_02_089
+    West3 = carpentry_02_090
+    North1 = carpentry_02_096
+    North2 = carpentry_02_097
+    North3 = carpentry_02_098
+}
+TileEntry
+{
+    category = stairs
+    West1 = crafted_02_106
+    West2 = crafted_02_105
+    West3 = crafted_02_104
+    North1 = crafted_02_096
+    North2 = crafted_02_097
+    North3 = crafted_02_098
+}
+TileEntry
+{
     category = stairs
     West1 = fixtures_stairs_01_000
     West2 = fixtures_stairs_01_001
@@ -522,6 +4557,56 @@ TileEntry
 }
 TileEntry
 {
+    category = stairs
+    West1 = fixtures_stairs_01_003
+    West2 = fixtures_stairs_01_004
+    West3 = fixtures_stairs_01_005
+    North1 = fixtures_stairs_01_011
+    North2 = fixtures_stairs_01_012
+    North3 = fixtures_stairs_01_013
+}
+TileEntry
+{
+    category = stairs
+    West1 = fixtures_stairs_01_019
+    West2 = fixtures_stairs_01_020
+    West3 = fixtures_stairs_01_021
+    North1 = fixtures_stairs_01_027
+    North2 = fixtures_stairs_01_028
+    North3 = fixtures_stairs_01_029
+}
+TileEntry
+{
+    category = stairs
+    West1 = fixtures_stairs_01_032
+    West2 = fixtures_stairs_01_033
+    West3 = fixtures_stairs_01_034
+    North1 = fixtures_stairs_01_040
+    North2 = fixtures_stairs_01_041
+    North3 = fixtures_stairs_01_042
+}
+TileEntry
+{
+    category = stairs
+    West1 = fixtures_stairs_01_048
+    West2 = fixtures_stairs_01_049
+    West3 = fixtures_stairs_01_050
+    North1 = fixtures_stairs_01_056
+    North2 = fixtures_stairs_01_057
+    North3 = fixtures_stairs_01_058
+}
+TileEntry
+{
+    category = stairs
+    West1 = fixtures_stairs_01_064
+    West2 = fixtures_stairs_01_065
+    West3 = fixtures_stairs_01_066
+    North1 = fixtures_stairs_01_072
+    North2 = fixtures_stairs_01_073
+    North3 = fixtures_stairs_01_074
+}
+TileEntry
+{
     category = windows
     West = fixtures_windows_01_000
     North = fixtures_windows_01_001
@@ -529,8 +4614,20 @@ TileEntry
 TileEntry
 {
     category = windows
+    West = fixtures_windows_01_024
+    North = fixtures_windows_01_025
+}
+TileEntry
+{
+    category = windows
     West = fixtures_windows_01_032
     North = fixtures_windows_01_033
+}
+TileEntry
+{
+    category = windows
+    West = fixtures_windows_01_056
+    North = fixtures_windows_01_057
 }
 furniture
 {
@@ -596,14 +4693,14 @@ furniture
     entry
     {
         orient = W
-        0,0 = location_trailer_02_015
-        0,1 = location_trailer_02_014
+        0,0 = location_trailer_02_012
+        1,0 = location_trailer_02_013
     }
     entry
     {
         orient = N
-        0,0 = location_trailer_02_012
-        1,0 = location_trailer_02_013
+        0,0 = location_trailer_02_015
+        0,1 = location_trailer_02_014
     }
 }
 furniture
@@ -926,644 +5023,2221 @@ furniture
 }
 Template
 {
-    Name = Old Suburban
-    ExteriorWall = 11
+    Name = Default
+    ExteriorWall = 39
     ExteriorWallTrim = 0
-    Door = 3
-    DoorFrame = 2
-    Window = 48
+    Door = 8
+    DoorFrame = 5
+    Window = 167
     Curtains = 0
     Shutters = 0
-    Stairs = 47
-    RoofCap = 0
-    RoofSlope = 0
-    RoofTop = 0
-    GrimeWall = 0
+    Stairs = 163
+    RoofCap = 132
+    RoofSlope = 141
+    RoofTop = 153
+    GrimeWall = 82
     UsedTiles = 
     UsedFurniture = 
     Room
     {
-        Name = Foyer
-        Color = 255 255 255
-        InternalName = foyer
-        InteriorWall = 28
-        InteriorWallTrim = 0
-        Floor = 23
-        GrimeFloor = 0
-        GrimeWall = 0
-    }
-    Room
-    {
-        Name = Hall
-        Color = 200 200 200
+        Name = hall
+        Color = 86 76 5
         InternalName = hall
-        InteriorWall = 28
-        InteriorWallTrim = 0
-        Floor = 23
+        InteriorWall = 122
+        InteriorWallTrim = 89
+        Floor = 71
         GrimeFloor = 0
         GrimeWall = 0
+        Ceiling = 1
     }
     Room
     {
-        Name = Living Room
-        Color = 255 0 0
-        InternalName = livingroom
-        InteriorWall = 28
-        InteriorWallTrim = 0
-        Floor = 23
-        GrimeFloor = 0
-        GrimeWall = 0
-    }
-    Room
-    {
-        Name = Dining Room
-        Color = 255 0 128
-        InternalName = diningroom
-        InteriorWall = 28
-        InteriorWallTrim = 0
-        Floor = 23
-        GrimeFloor = 0
-        GrimeWall = 0
-    }
-    Room
-    {
-        Name = Bathroom
-        Color = 255 128 0
-        InternalName = bathroom
-        InteriorWall = 28
-        InteriorWallTrim = 0
-        Floor = 23
-        GrimeFloor = 0
-        GrimeWall = 0
-    }
-    Room
-    {
-        Name = Kitchen
-        Color = 0 255 0
+        Name = kitchen
+        Color = 205 145 160
         InternalName = kitchen
-        InteriorWall = 28
-        InteriorWallTrim = 0
-        Floor = 23
+        InteriorWall = 122
+        InteriorWallTrim = 89
+        Floor = 71
         GrimeFloor = 0
         GrimeWall = 0
+        Ceiling = 1
     }
     Room
     {
-        Name = Bedroom1
-        Color = 0 0 255
-        InternalName = bedroom
-        InteriorWall = 27
-        InteriorWallTrim = 0
-        Floor = 23
+        Name = diningroom
+        Color = 251 86 144
+        InternalName = diningroom
+        InteriorWall = 122
+        InteriorWallTrim = 89
+        Floor = 71
         GrimeFloor = 0
         GrimeWall = 0
+        Ceiling = 1
     }
     Room
     {
-        Name = Bedroom2
-        Color = 0 64 255
-        InternalName = bedroom
-        InteriorWall = 27
-        InteriorWallTrim = 0
-        Floor = 23
+        Name = livingroom
+        Color = 112 68 22
+        InternalName = livingroom
+        InteriorWall = 122
+        InteriorWallTrim = 89
+        Floor = 71
         GrimeFloor = 0
         GrimeWall = 0
+        Ceiling = 1
     }
     Room
     {
-        Name = Bedroom3
-        Color = 0 128 255
+        Name = closet
+        Color = 36 18 234
+        InternalName = closet
+        InteriorWall = 122
+        InteriorWallTrim = 89
+        Floor = 71
+        GrimeFloor = 79
+        GrimeWall = 0
+        Ceiling = 1
+    }
+    Room
+    {
+        Name = bedroom
+        Color = 26 26 52
         InternalName = bedroom
-        InteriorWall = 27
-        InteriorWallTrim = 0
-        Floor = 23
+        InteriorWall = 122
+        InteriorWallTrim = 89
+        Floor = 53
         GrimeFloor = 0
         GrimeWall = 0
+        Ceiling = 1
+    }
+    Room
+    {
+        Name = kidsbedroom
+        Color = 9 53 135
+        InternalName = bedroom
+        InteriorWall = 122
+        InteriorWallTrim = 89
+        Floor = 53
+        GrimeFloor = 0
+        GrimeWall = 0
+        Ceiling = 1
+    }
+    Room
+    {
+        Name = bathroom
+        Color = 95 191 146
+        InternalName = bathroom
+        InteriorWall = 115
+        InteriorWallTrim = 0
+        Floor = 60
+        GrimeFloor = 0
+        GrimeWall = 0
+        Ceiling = 1
+    }
+    Room
+    {
+        Name = laundry
+        Color = 50 109 111
+        InternalName = laundry
+        InteriorWall = 122
+        InteriorWallTrim = 89
+        Floor = 60
+        GrimeFloor = 0
+        GrimeWall = 0
+        Ceiling = 1
+    }
+    Room
+    {
+        Name = garagestorage
+        Color = 52 32 169
+        InternalName = bedroom
+        InteriorWall = 114
+        InteriorWallTrim = 0
+        Floor = 51
+        GrimeFloor = 79
+        GrimeWall = 82
+        Ceiling = 1
+    }
+    Room
+    {
+        Name = shed
+        Color = 95 115 162
+        InternalName = shed
+        InteriorWall = 111
+        InteriorWallTrim = 0
+        Floor = 70
+        GrimeFloor = 79
+        GrimeWall = 82
+        Ceiling = 1
+    }
+    Room
+    {
+        Name = emptyoutside
+        Color = 141 146 209
+        InternalName = emptyoutside
+        InteriorWall = 0
+        InteriorWallTrim = 0
+        Floor = 0
+        GrimeFloor = 0
+        GrimeWall = 0
+        Ceiling = 0
     }
 }
 Template
 {
-    Name = Suburban 1
-    ExteriorWall = 11
+    Name = -----
+    ExteriorWall = 24
     ExteriorWallTrim = 0
-    Door = 3
-    DoorFrame = 2
-    Window = 48
-    Curtains = 0
-    Shutters = 0
-    Stairs = 47
-    RoofCap = 0
-    RoofSlope = 0
-    RoofTop = 0
-    GrimeWall = 0
-    UsedTiles = 
-    UsedFurniture = 
-    Room
-    {
-        Name = Living Room
-        Color = 255 0 0
-        InternalName = livingroom
-        InteriorWall = 36
-        InteriorWallTrim = 0
-        Floor = 22
-        GrimeFloor = 0
-        GrimeWall = 0
-    }
-    Room
-    {
-        Name = Dining Room
-        Color = 255 0 128
-        InternalName = diningroom
-        InteriorWall = 36
-        InteriorWallTrim = 0
-        Floor = 22
-        GrimeFloor = 0
-        GrimeWall = 0
-    }
-    Room
-    {
-        Name = Bathroom
-        Color = 255 128 0
-        InternalName = bathroom
-        InteriorWall = 37
-        InteriorWallTrim = 0
-        Floor = 17
-        GrimeFloor = 0
-        GrimeWall = 0
-    }
-    Room
-    {
-        Name = Kitchen
-        Color = 0 255 0
-        InternalName = kitchen
-        InteriorWall = 38
-        InteriorWallTrim = 0
-        Floor = 17
-        GrimeFloor = 0
-        GrimeWall = 0
-    }
-    Room
-    {
-        Name = Bedroom1
-        Color = 0 0 255
-        InternalName = bedroom
-        InteriorWall = 39
-        InteriorWallTrim = 0
-        Floor = 13
-        GrimeFloor = 0
-        GrimeWall = 0
-    }
-    Room
-    {
-        Name = Bedroom2
-        Color = 0 64 255
-        InternalName = bedroom
-        InteriorWall = 41
-        InteriorWallTrim = 0
-        Floor = 13
-        GrimeFloor = 0
-        GrimeWall = 0
-    }
-    Room
-    {
-        Name = Bedroom3
-        Color = 0 128 255
-        InternalName = bedroom
-        InteriorWall = 41
-        InteriorWallTrim = 0
-        Floor = 13
-        GrimeFloor = 0
-        GrimeWall = 0
-    }
-}
-Template
-{
-    Name = Suburban 2
-    ExteriorWall = 10
-    ExteriorWallTrim = 0
-    Door = 3
-    DoorFrame = 2
-    Window = 48
-    Curtains = 0
-    Shutters = 0
-    Stairs = 47
-    RoofCap = 0
-    RoofSlope = 0
-    RoofTop = 0
-    GrimeWall = 0
-    UsedTiles = 
-    UsedFurniture = 
-    Room
-    {
-        Name = Foyer
-        Color = 255 255 255
-        InternalName = hall
-        InteriorWall = 42
-        InteriorWallTrim = 0
-        Floor = 19
-        GrimeFloor = 0
-        GrimeWall = 0
-    }
-    Room
-    {
-        Name = Hall
-        Color = 200 200 200
-        InternalName = hall
-        InteriorWall = 42
-        InteriorWallTrim = 0
-        Floor = 19
-        GrimeFloor = 0
-        GrimeWall = 0
-    }
-    Room
-    {
-        Name = Living Room
-        Color = 255 0 0
-        InternalName = livingroom
-        InteriorWall = 42
-        InteriorWallTrim = 0
-        Floor = 16
-        GrimeFloor = 0
-        GrimeWall = 0
-    }
-    Room
-    {
-        Name = Dining Room
-        Color = 255 0 128
-        InternalName = diningroom
-        InteriorWall = 42
-        InteriorWallTrim = 0
-        Floor = 16
-        GrimeFloor = 0
-        GrimeWall = 0
-    }
-    Room
-    {
-        Name = Bathroom
-        Color = 255 128 0
-        InternalName = bathroom
-        InteriorWall = 41
-        InteriorWallTrim = 0
-        Floor = 17
-        GrimeFloor = 0
-        GrimeWall = 0
-    }
-    Room
-    {
-        Name = Kitchen
-        Color = 0 255 0
-        InternalName = kitchen
-        InteriorWall = 38
-        InteriorWallTrim = 0
-        Floor = 17
-        GrimeFloor = 0
-        GrimeWall = 0
-    }
-    Room
-    {
-        Name = Bedroom1
-        Color = 0 0 255
-        InternalName = bedroom
-        InteriorWall = 40
-        InteriorWallTrim = 0
-        Floor = 14
-        GrimeFloor = 0
-        GrimeWall = 0
-    }
-    Room
-    {
-        Name = Bedroom2
-        Color = 0 64 255
-        InternalName = bedroom
-        InteriorWall = 42
-        InteriorWallTrim = 0
-        Floor = 14
-        GrimeFloor = 0
-        GrimeWall = 0
-    }
-    Room
-    {
-        Name = Bedroom3
-        Color = 0 128 255
-        InternalName = bedroom
-        InteriorWall = 42
-        InteriorWallTrim = 0
-        Floor = 14
-        GrimeFloor = 0
-        GrimeWall = 0
-    }
-}
-Template
-{
-    Name = Wooden Shack
-    ExteriorWall = 12
-    ExteriorWallTrim = 0
-    Door = 3
-    DoorFrame = 2
-    Window = 48
-    Curtains = 0
-    Shutters = 0
-    Stairs = 47
-    RoofCap = 0
-    RoofSlope = 0
-    RoofTop = 0
-    GrimeWall = 0
-    UsedTiles = 
-    UsedFurniture = 
-    Room
-    {
-        Name = Foyer
-        Color = 255 255 255
-        InternalName = hall
-        InteriorWall = 36
-        InteriorWallTrim = 0
-        Floor = 22
-        GrimeFloor = 0
-        GrimeWall = 0
-    }
-    Room
-    {
-        Name = Hall
-        Color = 200 200 200
-        InternalName = hall
-        InteriorWall = 36
-        InteriorWallTrim = 0
-        Floor = 22
-        GrimeFloor = 0
-        GrimeWall = 0
-    }
-    Room
-    {
-        Name = Living Room
-        Color = 255 0 0
-        InternalName = livingroom
-        InteriorWall = 34
-        InteriorWallTrim = 0
-        Floor = 15
-        GrimeFloor = 0
-        GrimeWall = 0
-    }
-    Room
-    {
-        Name = Dining Room
-        Color = 255 0 128
-        InternalName = diningroom
-        InteriorWall = 34
-        InteriorWallTrim = 0
-        Floor = 15
-        GrimeFloor = 0
-        GrimeWall = 0
-    }
-    Room
-    {
-        Name = Bathroom
-        Color = 255 128 0
-        InternalName = bathroom
-        InteriorWall = 34
-        InteriorWallTrim = 0
-        Floor = 15
-        GrimeFloor = 0
-        GrimeWall = 0
-    }
-    Room
-    {
-        Name = Kitchen
-        Color = 0 255 0
-        InternalName = kitchen
-        InteriorWall = 34
-        InteriorWallTrim = 0
-        Floor = 15
-        GrimeFloor = 0
-        GrimeWall = 0
-    }
-    Room
-    {
-        Name = Bedroom1
-        Color = 0 0 255
-        InternalName = bedroom
-        InteriorWall = 34
-        InteriorWallTrim = 0
-        Floor = 15
-        GrimeFloor = 0
-        GrimeWall = 0
-    }
-    Room
-    {
-        Name = Bedroom2
-        Color = 0 64 255
-        InternalName = bedroom
-        InteriorWall = 34
-        InteriorWallTrim = 0
-        Floor = 15
-        GrimeFloor = 0
-        GrimeWall = 0
-    }
-    Room
-    {
-        Name = Bedroom3
-        Color = 0 128 255
-        InternalName = bedroom
-        InteriorWall = 34
-        InteriorWallTrim = 0
-        Floor = 15
-        GrimeFloor = 0
-        GrimeWall = 0
-    }
-}
-Template
-{
-    Name = Spiffo's
-    ExteriorWall = 8
-    ExteriorWallTrim = 0
-    Door = 6
+    Door = 0
     DoorFrame = 0
-    Window = 48
+    Window = 0
     Curtains = 0
     Shutters = 0
-    Stairs = 47
-    RoofCap = 43
-    RoofSlope = 44
-    RoofTop = 45
+    Stairs = 161
+    RoofCap = 126
+    RoofSlope = 141
+    RoofTop = 0
+    GrimeWall = 0
+    UsedTiles = 
+    UsedFurniture = 
+}
+Template
+{
+    Name = Bank
+    ExteriorWall = 38
+    ExteriorWallTrim = 0
+    Door = 11
+    DoorFrame = 6
+    Window = 169
+    Curtains = 0
+    Shutters = 0
+    Stairs = 160
+    RoofCap = 133
+    RoofSlope = 143
+    RoofTop = 150
+    GrimeWall = 82
+    UsedTiles = 38 120 90 69 1 91 56 116 66 54 122 86 68 79 100 62 82 51 88 65 58 67 59
+    UsedFurniture = 
+    Room
+    {
+        Name = bank_brown
+        Color = 189 175 129
+        InternalName = bank
+        InteriorWall = 120
+        InteriorWallTrim = 90
+        Floor = 69
+        GrimeFloor = 0
+        GrimeWall = 0
+        Ceiling = 1
+    }
+    Room
+    {
+        Name = bank_blue
+        Color = 5 115 155
+        InternalName = bank
+        InteriorWall = 116
+        InteriorWallTrim = 90
+        Floor = 66
+        GrimeFloor = 0
+        GrimeWall = 0
+        Ceiling = 1
+    }
+    Room
+    {
+        Name = bank_black
+        Color = 133 50 121
+        InternalName = bank
+        InteriorWall = 122
+        InteriorWallTrim = 88
+        Floor = 65
+        GrimeFloor = 0
+        GrimeWall = 0
+        Ceiling = 1
+    }
+    Room
+    {
+        Name = bank_beige
+        Color = 20 249 48
+        InternalName = bank
+        InteriorWall = 120
+        InteriorWallTrim = 90
+        Floor = 67
+        GrimeFloor = 0
+        GrimeWall = 0
+        Ceiling = 1
+    }
+    Room
+    {
+        Name = office_brown
+        Color = 7 183 9
+        InternalName = office
+        InteriorWall = 120
+        InteriorWallTrim = 91
+        Floor = 56
+        GrimeFloor = 0
+        GrimeWall = 0
+        Ceiling = 1
+    }
+    Room
+    {
+        Name = office_blue
+        Color = 7 183 9
+        InternalName = office
+        InteriorWall = 116
+        InteriorWallTrim = 91
+        Floor = 54
+        GrimeFloor = 0
+        GrimeWall = 0
+        Ceiling = 1
+    }
+    Room
+    {
+        Name = office_black
+        Color = 47 29 81
+        InternalName = office
+        InteriorWall = 122
+        InteriorWallTrim = 88
+        Floor = 58
+        GrimeFloor = 0
+        GrimeWall = 0
+        Ceiling = 1
+    }
+    Room
+    {
+        Name = office_beige
+        Color = 213 72 114
+        InternalName = office
+        InteriorWall = 120
+        InteriorWallTrim = 91
+        Floor = 59
+        GrimeFloor = 0
+        GrimeWall = 0
+        Ceiling = 1
+    }
+    Room
+    {
+        Name = bathroom
+        Color = 95 191 146
+        InternalName = bathroom
+        InteriorWall = 122
+        InteriorWallTrim = 86
+        Floor = 68
+        GrimeFloor = 79
+        GrimeWall = 0
+        Ceiling = 1
+    }
+    Room
+    {
+        Name = janitor
+        Color = 20 79 5
+        InternalName = janitor
+        InteriorWall = 122
+        InteriorWallTrim = 88
+        Floor = 51
+        GrimeFloor = 79
+        GrimeWall = 82
+        Ceiling = 1
+    }
+    Room
+    {
+        Name = security
+        Color = 228 102 97
+        InternalName = security
+        InteriorWall = 122
+        InteriorWallTrim = 88
+        Floor = 51
+        GrimeFloor = 79
+        GrimeWall = 82
+        Ceiling = 1
+    }
+    Room
+    {
+        Name = bankstorage
+        Color = 249 152 48
+        InternalName = bankstorage
+        InteriorWall = 122
+        InteriorWallTrim = 88
+        Floor = 51
+        GrimeFloor = 79
+        GrimeWall = 82
+        Ceiling = 1
+    }
+    Room
+    {
+        Name = depositboxes
+        Color = 170 83 57
+        InternalName = depositboxes
+        InteriorWall = 110
+        InteriorWallTrim = 0
+        Floor = 51
+        GrimeFloor = 79
+        GrimeWall = 82
+        Ceiling = 1
+    }
+    Room
+    {
+        Name = vault
+        Color = 204 187 168
+        InternalName = vault
+        InteriorWall = 110
+        InteriorWallTrim = 0
+        Floor = 51
+        GrimeFloor = 79
+        GrimeWall = 82
+        Ceiling = 1
+    }
+}
+Template
+{
+    Name = Barn
+    ExteriorWall = 26
+    ExteriorWallTrim = 0
+    Door = 0
+    DoorFrame = 0
+    Window = 166
+    Curtains = 0
+    Shutters = 0
+    Stairs = 165
+    RoofCap = 127
+    RoofSlope = 142
+    RoofTop = 154
+    GrimeWall = 82
+    UsedTiles = 
+    UsedFurniture = 
+    Room
+    {
+        Name = barn
+        Color = 197 96 125
+        InternalName = barn
+        InteriorWall = 112
+        InteriorWallTrim = 0
+        Floor = 70
+        GrimeFloor = 78
+        GrimeWall = 81
+        Ceiling = 0
+    }
+    Room
+    {
+        Name = farmstorage
+        Color = 165 101 30
+        InternalName = farmstorage
+        InteriorWall = 112
+        InteriorWallTrim = 0
+        Floor = 70
+        GrimeFloor = 78
+        GrimeWall = 81
+        Ceiling = 0
+    }
+    Room
+    {
+        Name = haystorage
+        Color = 21 234 160
+        InternalName = haystorage
+        InteriorWall = 112
+        InteriorWallTrim = 0
+        Floor = 70
+        GrimeFloor = 78
+        GrimeWall = 81
+        Ceiling = 0
+    }
+}
+Template
+{
+    Name = Basement
+    ExteriorWall = 32
+    ExteriorWallTrim = 0
+    Door = 13
+    DoorFrame = 0
+    Window = 169
+    Curtains = 0
+    Shutters = 0
+    Stairs = 165
+    RoofCap = 126
+    RoofSlope = 143
+    RoofTop = 0
+    GrimeWall = 81
+    UsedTiles = 
+    UsedFurniture = 
+    Room
+    {
+        Name = storage
+        Color = 85 51 61
+        InternalName = storage
+        InteriorWall = 105
+        InteriorWallTrim = 0
+        Floor = 51
+        GrimeFloor = 79
+        GrimeWall = 81
+        Ceiling = 1
+    }
+}
+Template
+{
+    Name = Burnt
+    ExteriorWall = 36
+    ExteriorWallTrim = 0
+    Door = 0
+    DoorFrame = 0
+    Window = 0
+    Curtains = 0
+    Shutters = 0
+    Stairs = 158
+    RoofCap = 128
+    RoofSlope = 148
+    RoofTop = 157
     GrimeWall = 0
     UsedTiles = 
     UsedFurniture = 
     Room
     {
-        Name = Dining
-        Color = 200 200 200
-        InternalName = dining
-        InteriorWall = 31
+        Name = derelict
+        Color = 133 178 194
+        InternalName = derelict
+        InteriorWall = 109
         InteriorWallTrim = 0
-        Floor = 24
+        Floor = 49
         GrimeFloor = 0
         GrimeWall = 0
+        Ceiling = 0
+    }
+}
+Template
+{
+    Name = Carpentry
+    ExteriorWall = 44
+    ExteriorWallTrim = 0
+    Door = 9
+    DoorFrame = 0
+    Window = 166
+    Curtains = 0
+    Shutters = 0
+    Stairs = 158
+    RoofCap = 130
+    RoofSlope = 142
+    RoofTop = 149
+    GrimeWall = 81
+    UsedTiles = 
+    UsedFurniture = 
+    Room
+    {
+        Name = construction
+        Color = 148 38 127
+        InternalName = construction
+        InteriorWall = 92
+        InteriorWallTrim = 0
+        Floor = 48
+        GrimeFloor = 79
+        GrimeWall = 0
+        Ceiling = 1
     }
     Room
     {
-        Name = Kitchen
-        Color = 128 128 128
+        Name = construction
+        Color = 192 78 27
+        InternalName = construction
+        InteriorWall = 111
+        InteriorWallTrim = 0
+        Floor = 48
+        GrimeFloor = 79
+        GrimeWall = 82
+        Ceiling = 1
+    }
+}
+Template
+{
+    Name = Church
+    ExteriorWall = 27
+    ExteriorWallTrim = 0
+    Door = 8
+    DoorFrame = 5
+    Window = 166
+    Curtains = 0
+    Shutters = 0
+    Stairs = 163
+    RoofCap = 132
+    RoofSlope = 141
+    RoofTop = 153
+    GrimeWall = 82
+    UsedTiles = 
+    UsedFurniture = 
+    Room
+    {
+        Name = church
+        Color = 181 113 9
+        InternalName = church
+        InteriorWall = 95
+        InteriorWallTrim = 0
+        Floor = 71
+        GrimeFloor = 79
+        GrimeWall = 82
+        Ceiling = 1
+    }
+    Room
+    {
+        Name = hallway
+        Color = 180 101 18
+        InternalName = hallway
+        InteriorWall = 95
+        InteriorWallTrim = 0
+        Floor = 72
+        GrimeFloor = 79
+        GrimeWall = 82
+        Ceiling = 1
+    }
+    Room
+    {
+        Name = office
+        Color = 7 183 9
+        InternalName = office
+        InteriorWall = 95
+        InteriorWallTrim = 0
+        Floor = 57
+        GrimeFloor = 79
+        GrimeWall = 82
+        Ceiling = 1
+    }
+    Room
+    {
+        Name = recreation
+        Color = 13 144 36
+        InternalName = recreation
+        InteriorWall = 95
+        InteriorWallTrim = 0
+        Floor = 63
+        GrimeFloor = 79
+        GrimeWall = 82
+        Ceiling = 1
+    }
+    Room
+    {
+        Name = bathroom
+        Color = 95 191 146
+        InternalName = bathroom
+        InteriorWall = 95
+        InteriorWallTrim = 0
+        Floor = 62
+        GrimeFloor = 79
+        GrimeWall = 82
+        Ceiling = 1
+    }
+    Room
+    {
+        Name = kitchen
+        Color = 205 145 160
         InternalName = kitchen
-        InteriorWall = 32
+        InteriorWall = 95
         InteriorWallTrim = 0
-        Floor = 20
-        GrimeFloor = 0
-        GrimeWall = 0
+        Floor = 62
+        GrimeFloor = 79
+        GrimeWall = 82
+        Ceiling = 1
     }
     Room
     {
-        Name = Bathroom
-        Color = 255 0 0
+        Name = janitor
+        Color = 20 79 5
+        InternalName = janitor
+        InteriorWall = 95
+        InteriorWallTrim = 0
+        Floor = 51
+        GrimeFloor = 79
+        GrimeWall = 82
+        Ceiling = 1
+    }
+}
+Template
+{
+    Name = Diner
+    ExteriorWall = 30
+    ExteriorWallTrim = 0
+    Door = 11
+    DoorFrame = 6
+    Window = 169
+    Curtains = 0
+    Shutters = 0
+    Stairs = 161
+    RoofCap = 136
+    RoofSlope = 146
+    RoofTop = 151
+    GrimeWall = 82
+    UsedTiles = 
+    UsedFurniture = 
+    Room
+    {
+        Name = diner
+        Color = 91 181 81
+        InternalName = diner
+        InteriorWall = 99
+        InteriorWallTrim = 0
+        Floor = 73
+        GrimeFloor = 0
+        GrimeWall = 0
+        Ceiling = 1
+    }
+    Room
+    {
+        Name = dinerkitchen
+        Color = 94 126 166
+        InternalName = dinerkitchen
+        InteriorWall = 99
+        InteriorWallTrim = 0
+        Floor = 73
+        GrimeFloor = 0
+        GrimeWall = 0
+        Ceiling = 1
+    }
+    Room
+    {
+        Name = bathroom
+        Color = 95 191 146
         InternalName = bathroom
-        InteriorWall = 35
+        InteriorWall = 118
         InteriorWallTrim = 0
-        Floor = 21
+        Floor = 62
         GrimeFloor = 0
         GrimeWall = 0
+        Ceiling = 1
     }
     Room
     {
-        Name = Bathroom 2
-        Color = 0 0 255
+        Name = janitor
+        Color = 20 79 5
+        InternalName = janitor
+        InteriorWall = 118
+        InteriorWallTrim = 0
+        Floor = 62
+        GrimeFloor = 79
+        GrimeWall = 82
+        Ceiling = 1
+    }
+}
+Template
+{
+    Name = Fossoil
+    ExteriorWall = 33
+    ExteriorWallTrim = 0
+    Door = 17
+    DoorFrame = 0
+    Window = 169
+    Curtains = 0
+    Shutters = 0
+    Stairs = 160
+    RoofCap = 136
+    RoofSlope = 147
+    RoofTop = 156
+    GrimeWall = 82
+    UsedTiles = 
+    UsedFurniture = 
+    Room
+    {
+        Name = fossoil
+        Color = 2 188 211
+        InternalName = fossoil
+        InteriorWall = 106
+        InteriorWallTrim = 0
+        Floor = 77
+        GrimeFloor = 79
+        GrimeWall = 0
+        Ceiling = 1
+    }
+    Room
+    {
+        Name = empty
+        Color = 24 157 19
+        InternalName = empty
+        InteriorWall = 106
+        InteriorWallTrim = 0
+        Floor = 77
+        GrimeFloor = 79
+        GrimeWall = 82
+        Ceiling = 1
+    }
+    Room
+    {
+        Name = janitor
+        Color = 20 79 5
+        InternalName = janitor
+        InteriorWall = 114
+        InteriorWallTrim = 0
+        Floor = 51
+        GrimeFloor = 79
+        GrimeWall = 82
+        Ceiling = 1
+    }
+    Room
+    {
+        Name = gasstorage
+        Color = 179 201 191
+        InternalName = gasstorage
+        InteriorWall = 114
+        InteriorWallTrim = 0
+        Floor = 51
+        GrimeFloor = 79
+        GrimeWall = 82
+        Ceiling = 1
+    }
+    Room
+    {
+        Name = bathroom
+        Color = 95 191 146
         InternalName = bathroom
-        InteriorWall = 35
+        InteriorWall = 122
         InteriorWallTrim = 0
-        Floor = 21
-        GrimeFloor = 0
+        Floor = 62
+        GrimeFloor = 79
+        GrimeWall = 82
+        Ceiling = 1
+    }
+}
+Template
+{
+    Name = Gas2Go
+    ExteriorWall = 34
+    ExteriorWallTrim = 0
+    Door = 18
+    DoorFrame = 0
+    Window = 169
+    Curtains = 0
+    Shutters = 0
+    Stairs = 160
+    RoofCap = 136
+    RoofSlope = 146
+    RoofTop = 0
+    GrimeWall = 82
+    UsedTiles = 
+    UsedFurniture = 
+    Room
+    {
+        Name = gas2go
+        Color = 186 102 96
+        InternalName = gas2go
+        InteriorWall = 107
+        InteriorWallTrim = 0
+        Floor = 77
+        GrimeFloor = 79
         GrimeWall = 0
+        Ceiling = 1
     }
     Room
     {
-        Name = Hall
-        Color = 0 255 0
-        InternalName = hall
-        InteriorWall = 31
+        Name = empty
+        Color = 24 157 19
+        InternalName = empty
+        InteriorWall = 107
         InteriorWallTrim = 0
-        Floor = 24
+        Floor = 77
+        GrimeFloor = 79
+        GrimeWall = 82
+        Ceiling = 1
+    }
+    Room
+    {
+        Name = janitor
+        Color = 20 79 5
+        InternalName = janitor
+        InteriorWall = 114
+        InteriorWallTrim = 0
+        Floor = 51
+        GrimeFloor = 79
+        GrimeWall = 82
+        Ceiling = 1
+    }
+    Room
+    {
+        Name = gasstorage
+        Color = 179 201 191
+        InternalName = gasstorage
+        InteriorWall = 114
+        InteriorWallTrim = 0
+        Floor = 51
+        GrimeFloor = 79
+        GrimeWall = 82
+        Ceiling = 1
+    }
+    Room
+    {
+        Name = bathroom
+        Color = 95 191 146
+        InternalName = bathroom
+        InteriorWall = 122
+        InteriorWallTrim = 0
+        Floor = 62
+        GrimeFloor = 79
+        GrimeWall = 82
+        Ceiling = 1
+    }
+}
+Template
+{
+    Name = Gigamart
+    ExteriorWall = 46
+    ExteriorWallTrim = 0
+    Door = 12
+    DoorFrame = 0
+    Window = 169
+    Curtains = 0
+    Shutters = 0
+    Stairs = 161
+    RoofCap = 138
+    RoofSlope = 147
+    RoofTop = 156
+    GrimeWall = 82
+    UsedTiles = 
+    UsedFurniture = 
+    Room
+    {
+        Name = gigamart
+        Color = 57 116 99
+        InternalName = gigamart
+        InteriorWall = 122
+        InteriorWallTrim = 0
+        Floor = 63
+        GrimeFloor = 79
+        GrimeWall = 82
+        Ceiling = 1
+    }
+    Room
+    {
+        Name = gigamartkitchen
+        Color = 26 88 164
+        InternalName = gigamartkitchen
+        InteriorWall = 122
+        InteriorWallTrim = 0
+        Floor = 63
+        GrimeFloor = 79
+        GrimeWall = 82
+        Ceiling = 1
+    }
+    Room
+    {
+        Name = grocerystorage
+        Color = 95 4 144
+        InternalName = grocerystorage
+        InteriorWall = 114
+        InteriorWallTrim = 0
+        Floor = 52
+        GrimeFloor = 79
+        GrimeWall = 82
+        Ceiling = 1
+    }
+    Room
+    {
+        Name = bathroom
+        Color = 95 191 146
+        InternalName = bathroom
+        InteriorWall = 114
+        InteriorWallTrim = 0
+        Floor = 52
+        GrimeFloor = 79
+        GrimeWall = 82
+        Ceiling = 1
+    }
+    Room
+    {
+        Name = office
+        Color = 7 183 9
+        InternalName = office
+        InteriorWall = 122
+        InteriorWallTrim = 0
+        Floor = 55
+        GrimeFloor = 79
+        GrimeWall = 0
+        Ceiling = 1
+    }
+}
+Template
+{
+    Name = Log
+    ExteriorWall = 47
+    ExteriorWallTrim = 0
+    Door = 19
+    DoorFrame = 0
+    Window = 166
+    Curtains = 0
+    Shutters = 0
+    Stairs = 159
+    RoofCap = 140
+    RoofSlope = 142
+    RoofTop = 0
+    GrimeWall = 0
+    UsedTiles = 
+    UsedFurniture = 
+    Room
+    {
+        Name = empty
+        Color = 24 157 19
+        InternalName = empty
+        InteriorWall = 125
+        InteriorWallTrim = 0
+        Floor = 70
+        GrimeFloor = 79
+        GrimeWall = 0
+        Ceiling = 1
+    }
+}
+Template
+{
+    Name = Mechanic
+    ExteriorWall = 37
+    ExteriorWallTrim = 0
+    Door = 12
+    DoorFrame = 0
+    Window = 169
+    Curtains = 0
+    Shutters = 0
+    Stairs = 161
+    RoofCap = 139
+    RoofSlope = 144
+    RoofTop = 150
+    GrimeWall = 81
+    UsedTiles = 
+    UsedFurniture = 
+    Room
+    {
+        Name = mechanic
+        Color = 129 112 193
+        InternalName = mechanic
+        InteriorWall = 114
+        InteriorWallTrim = 0
+        Floor = 52
+        GrimeFloor = 78
+        GrimeWall = 81
+        Ceiling = 1
+    }
+    Room
+    {
+        Name = office
+        Color = 7 183 9
+        InternalName = office
+        InteriorWall = 122
+        InteriorWallTrim = 0
+        Floor = 63
+        GrimeFloor = 79
+        GrimeWall = 82
+        Ceiling = 1
+    }
+    Room
+    {
+        Name = factorystorage
+        Color = 101 209 204
+        InternalName = factorystorage
+        InteriorWall = 122
+        InteriorWallTrim = 0
+        Floor = 63
+        GrimeFloor = 79
+        GrimeWall = 82
+        Ceiling = 1
+    }
+    Room
+    {
+        Name = bathroom
+        Color = 95 191 146
+        InternalName = bathroom
+        InteriorWall = 122
+        InteriorWallTrim = 0
+        Floor = 63
+        GrimeFloor = 79
+        GrimeWall = 82
+        Ceiling = 1
+    }
+    Room
+    {
+        Name = janitor
+        Color = 20 79 5
+        InternalName = janitor
+        InteriorWall = 122
+        InteriorWallTrim = 0
+        Floor = 63
+        GrimeFloor = 79
+        GrimeWall = 82
+        Ceiling = 1
+    }
+}
+Template
+{
+    Name = Militarytent_green
+    ExteriorWall = 28
+    ExteriorWallTrim = 0
+    Door = 0
+    DoorFrame = 0
+    Window = 0
+    Curtains = 3
+    Shutters = 0
+    Stairs = 161
+    RoofCap = 126
+    RoofSlope = 145
+    RoofTop = 150
+    GrimeWall = 0
+    UsedTiles = 38 120 90 69 1 91 56 116 66 54 122 86 68 79 100 62 82 51 88 65 58 67 59 97 28 3 161 126 145
+    UsedFurniture = 
+    Room
+    {
+        Name = armytent
+        Color = 132 9 123
+        InternalName = armytent
+        InteriorWall = 97
+        InteriorWallTrim = 0
+        Floor = 51
+        GrimeFloor = 79
+        GrimeWall = 0
+        Ceiling = 1
+    }
+    Room
+    {
+        Name = armystorage
+        Color = 66 148 182
+        InternalName = armystorage
+        InteriorWall = 97
+        InteriorWallTrim = 0
+        Floor = 51
+        GrimeFloor = 79
+        GrimeWall = 0
+        Ceiling = 1
+    }
+    Room
+    {
+        Name = office
+        Color = 7 183 9
+        InternalName = office
+        InteriorWall = 97
+        InteriorWallTrim = 0
+        Floor = 51
+        GrimeFloor = 79
+        GrimeWall = 0
+        Ceiling = 1
+    }
+    Room
+    {
+        Name = security
+        Color = 228 102 97
+        InternalName = security
+        InteriorWall = 97
+        InteriorWallTrim = 0
+        Floor = 51
+        GrimeFloor = 79
+        GrimeWall = 0
+        Ceiling = 1
+    }
+    Room
+    {
+        Name = medical
+        Color = 9 184 97
+        InternalName = medical
+        InteriorWall = 97
+        InteriorWallTrim = 0
+        Floor = 51
+        GrimeFloor = 79
+        GrimeWall = 0
+        Ceiling = 1
+    }
+    Room
+    {
+        Name = restaurantkitchen
+        Color = 105 200 96
+        InternalName = restaurantkitchen
+        InteriorWall = 97
+        InteriorWallTrim = 0
+        Floor = 51
+        GrimeFloor = 79
+        GrimeWall = 0
+        Ceiling = 1
+    }
+    Room
+    {
+        Name = restaurantdining
+        Color = 60 133 139
+        InternalName = restaurantdining
+        InteriorWall = 97
+        InteriorWallTrim = 0
+        Floor = 51
+        GrimeFloor = 79
+        GrimeWall = 0
+        Ceiling = 1
+    }
+}
+Template
+{
+    Name = Militarytent_yellow
+    ExteriorWall = 29
+    ExteriorWallTrim = 0
+    Door = 0
+    DoorFrame = 0
+    Window = 0
+    Curtains = 4
+    Shutters = 0
+    Stairs = 161
+    RoofCap = 126
+    RoofSlope = 144
+    RoofTop = 150
+    GrimeWall = 0
+    UsedTiles = 38 120 90 69 1 91 56 116 66 54 122 86 68 79 100 62 82 51 88 65 58 67 59 97 28 3 161 126 145
+    UsedFurniture = 
+    Room
+    {
+        Name = armytent
+        Color = 132 9 123
+        InternalName = armytent
+        InteriorWall = 98
+        InteriorWallTrim = 0
+        Floor = 51
+        GrimeFloor = 79
+        GrimeWall = 0
+        Ceiling = 1
+    }
+    Room
+    {
+        Name = armystorage
+        Color = 66 148 182
+        InternalName = armystorage
+        InteriorWall = 98
+        InteriorWallTrim = 0
+        Floor = 51
+        GrimeFloor = 79
+        GrimeWall = 0
+        Ceiling = 1
+    }
+    Room
+    {
+        Name = office
+        Color = 7 183 9
+        InternalName = office
+        InteriorWall = 98
+        InteriorWallTrim = 0
+        Floor = 51
+        GrimeFloor = 79
+        GrimeWall = 0
+        Ceiling = 1
+    }
+    Room
+    {
+        Name = security
+        Color = 228 102 97
+        InternalName = security
+        InteriorWall = 98
+        InteriorWallTrim = 0
+        Floor = 51
+        GrimeFloor = 79
+        GrimeWall = 0
+        Ceiling = 1
+    }
+    Room
+    {
+        Name = medical
+        Color = 9 184 97
+        InternalName = medical
+        InteriorWall = 98
+        InteriorWallTrim = 0
+        Floor = 51
+        GrimeFloor = 79
+        GrimeWall = 0
+        Ceiling = 1
+    }
+    Room
+    {
+        Name = restaurantkitchen
+        Color = 105 200 96
+        InternalName = restaurantkitchen
+        InteriorWall = 98
+        InteriorWallTrim = 0
+        Floor = 51
+        GrimeFloor = 79
+        GrimeWall = 0
+        Ceiling = 1
+    }
+    Room
+    {
+        Name = restaurantdining
+        Color = 60 133 139
+        InternalName = restaurantdining
+        InteriorWall = 98
+        InteriorWallTrim = 0
+        Floor = 51
+        GrimeFloor = 79
+        GrimeWall = 0
+        Ceiling = 1
+    }
+}
+Template
+{
+    Name = PileoCrepe
+    ExteriorWall = 41
+    ExteriorWallTrim = 0
+    Door = 14
+    DoorFrame = 5
+    Window = 167
+    Curtains = 0
+    Shutters = 0
+    Stairs = 162
+    RoofCap = 129
+    RoofSlope = 143
+    RoofTop = 150
+    GrimeWall = 82
+    UsedTiles = 
+    UsedFurniture = 
+    Room
+    {
+        Name = dining_crepe
+        Color = 191 146 148
+        InternalName = room1
+        InteriorWall = 113
+        InteriorWallTrim = 0
+        Floor = 74
+        GrimeFloor = 79
+        GrimeWall = 0
+        Ceiling = 1
+    }
+    Room
+    {
+        Name = kitchen_crepe
+        Color = 42 109 254
+        InternalName = room1
+        InteriorWall = 117
+        InteriorWallTrim = 0
+        Floor = 61
+        GrimeFloor = 79
+        GrimeWall = 0
+        Ceiling = 1
+    }
+    Room
+    {
+        Name = bathroom
+        Color = 95 191 146
+        InternalName = bathroom
+        InteriorWall = 117
+        InteriorWallTrim = 0
+        Floor = 61
+        GrimeFloor = 79
+        GrimeWall = 0
+        Ceiling = 1
+    }
+    Room
+    {
+        Name = janitor
+        Color = 20 79 5
+        InternalName = janitor
+        InteriorWall = 122
+        InteriorWallTrim = 0
+        Floor = 51
+        GrimeFloor = 79
+        GrimeWall = 82
+        Ceiling = 1
+    }
+    Room
+    {
+        Name = office
+        Color = 7 183 9
+        InternalName = office
+        InteriorWall = 122
+        InteriorWallTrim = 89
+        Floor = 55
+        GrimeFloor = 79
+        GrimeWall = 0
+        Ceiling = 1
+    }
+}
+Template
+{
+    Name = PizzaWhirled
+    ExteriorWall = 43
+    ExteriorWallTrim = 21
+    Door = 15
+    DoorFrame = 6
+    Window = 169
+    Curtains = 0
+    Shutters = 0
+    Stairs = 160
+    RoofCap = 137
+    RoofSlope = 143
+    RoofTop = 0
+    GrimeWall = 82
+    UsedTiles = 
+    UsedFurniture = 
+    Room
+    {
+        Name = pizzawhirled
+        Color = 214 110 42
+        InternalName = pizzawhirled
+        InteriorWall = 100
+        InteriorWallTrim = 84
+        Floor = 75
         GrimeFloor = 0
         GrimeWall = 0
+        Ceiling = 1
+    }
+    Room
+    {
+        Name = pizzawhirledcounter
+        Color = 84 228 171
+        InternalName = pizzawhirledcounter
+        InteriorWall = 100
+        InteriorWallTrim = 84
+        Floor = 75
+        GrimeFloor = 0
+        GrimeWall = 0
+        Ceiling = 1
+    }
+    Room
+    {
+        Name = pizzakitchen
+        Color = 241 135 141
+        InternalName = pizzakitchen
+        InteriorWall = 122
+        InteriorWallTrim = 0
+        Floor = 62
+        GrimeFloor = 79
+        GrimeWall = 82
+        Ceiling = 1
+    }
+    Room
+    {
+        Name = bathroom
+        Color = 95 191 146
+        InternalName = bathroom
+        InteriorWall = 100
+        InteriorWallTrim = 0
+        Floor = 62
+        GrimeFloor = 79
+        GrimeWall = 0
+        Ceiling = 1
+    }
+    Room
+    {
+        Name = janitor
+        Color = 20 79 5
+        InternalName = janitor
+        InteriorWall = 100
+        InteriorWallTrim = 0
+        Floor = 62
+        GrimeFloor = 79
+        GrimeWall = 82
+        Ceiling = 1
+    }
+}
+Template
+{
+    Name = Police
+    ExteriorWall = 42
+    ExteriorWallTrim = 0
+    Door = 11
+    DoorFrame = 6
+    Window = 169
+    Curtains = 0
+    Shutters = 0
+    Stairs = 164
+    RoofCap = 135
+    RoofSlope = 143
+    RoofTop = 150
+    GrimeWall = 82
+    UsedTiles = 
+    UsedFurniture = 
+    Room
+    {
+        Name = policehall
+        Color = 171 217 174
+        InternalName = policehall
+        InteriorWall = 110
+        InteriorWallTrim = 0
+        Floor = 51
+        GrimeFloor = 79
+        GrimeWall = 0
+        Ceiling = 1
+    }
+    Room
+    {
+        Name = corridor
+        Color = 197 169 91
+        InternalName = corridor
+        InteriorWall = 96
+        InteriorWallTrim = 0
+        Floor = 51
+        GrimeFloor = 79
+        GrimeWall = 0
+        Ceiling = 1
+    }
+    Room
+    {
+        Name = policeoffice
+        Color = 111 145 228
+        InternalName = policeoffice
+        InteriorWall = 122
+        InteriorWallTrim = 90
+        Floor = 55
+        GrimeFloor = 79
+        GrimeWall = 0
+        Ceiling = 1
+    }
+    Room
+    {
+        Name = detectiveoffice
+        Color = 167 154 154
+        InternalName = detectiveoffice
+        InteriorWall = 122
+        InteriorWallTrim = 90
+        Floor = 54
+        GrimeFloor = 79
+        GrimeWall = 0
+        Ceiling = 1
+    }
+    Room
+    {
+        Name = captainoffice
+        Color = 7 183 9
+        InternalName = captainoffice
+        InteriorWall = 122
+        InteriorWallTrim = 90
+        Floor = 54
+        GrimeFloor = 79
+        GrimeWall = 0
+        Ceiling = 1
+    }
+    Room
+    {
+        Name = security
+        Color = 228 102 97
+        InternalName = security
+        InteriorWall = 110
+        InteriorWallTrim = 0
+        Floor = 51
+        GrimeFloor = 79
+        GrimeWall = 0
+        Ceiling = 1
+    }
+    Room
+    {
+        Name = prisonlocker
+        Color = 167 37 46
+        InternalName = prisoncells
+        InteriorWall = 110
+        InteriorWallTrim = 0
+        Floor = 51
+        GrimeFloor = 79
+        GrimeWall = 0
+        Ceiling = 1
+    }
+    Room
+    {
+        Name = prisoncells
+        Color = 141 215 71
+        InternalName = prisoncells
+        InteriorWall = 110
+        InteriorWallTrim = 0
+        Floor = 51
+        GrimeFloor = 79
+        GrimeWall = 0
+        Ceiling = 1
+    }
+    Room
+    {
+        Name = interrogationroom
+        Color = 218 41 17
+        InternalName = interrogationroom
+        InteriorWall = 110
+        InteriorWallTrim = 0
+        Floor = 51
+        GrimeFloor = 79
+        GrimeWall = 0
+        Ceiling = 1
+    }
+    Room
+    {
+        Name = policearchive
+        Color = 138 108 71
+        InternalName = policearchive
+        InteriorWall = 110
+        InteriorWallTrim = 0
+        Floor = 51
+        GrimeFloor = 79
+        GrimeWall = 0
+        Ceiling = 1
+    }
+    Room
+    {
+        Name = policegunstorage
+        Color = 10 198 66
+        InternalName = policegunstorage
+        InteriorWall = 110
+        InteriorWallTrim = 0
+        Floor = 51
+        GrimeFloor = 79
+        GrimeWall = 0
+        Ceiling = 1
+    }
+    Room
+    {
+        Name = policegarage
+        Color = 188 112 175
+        InternalName = policegarage
+        InteriorWall = 110
+        InteriorWallTrim = 0
+        Floor = 51
+        GrimeFloor = 79
+        GrimeWall = 0
+        Ceiling = 1
+    }
+    Room
+    {
+        Name = evidenceroom
+        Color = 241 114 167
+        InternalName = evidenceroom
+        InteriorWall = 110
+        InteriorWallTrim = 0
+        Floor = 51
+        GrimeFloor = 79
+        GrimeWall = 0
+        Ceiling = 1
+    }
+    Room
+    {
+        Name = policearchive
+        Color = 138 108 71
+        InternalName = policearchive
+        InteriorWall = 110
+        InteriorWallTrim = 0
+        Floor = 51
+        GrimeFloor = 79
+        GrimeWall = 0
+        Ceiling = 1
+    }
+    Room
+    {
+        Name = coroneroffice
+        Color = 99 107 253
+        InternalName = coroneroffice
+        InteriorWall = 110
+        InteriorWallTrim = 0
+        Floor = 62
+        GrimeFloor = 79
+        GrimeWall = 0
+        Ceiling = 1
+    }
+    Room
+    {
+        Name = morgue
+        Color = 155 159 214
+        InternalName = morgue
+        InteriorWall = 114
+        InteriorWallTrim = 0
+        Floor = 62
+        GrimeFloor = 79
+        GrimeWall = 0
+        Ceiling = 1
     }
 }
 Template
 {
     Name = Seahorse
-    ExteriorWall = 7
+    ExteriorWall = 43
     ExteriorWallTrim = 0
-    Door = 5
-    DoorFrame = 0
-    Window = 48
+    Door = 11
+    DoorFrame = 6
+    Window = 169
     Curtains = 0
     Shutters = 0
-    Stairs = 47
-    RoofCap = 43
-    RoofSlope = 44
-    RoofTop = 45
-    GrimeWall = 0
+    Stairs = 160
+    RoofCap = 137
+    RoofSlope = 143
+    RoofTop = 0
+    GrimeWall = 82
     UsedTiles = 
     UsedFurniture = 
     Room
     {
-        Name = Dining
-        Color = 200 200 200
-        InternalName = dining
-        InteriorWall = 29
+        Name = cafe
+        Color = 38 164 232
+        InternalName = cafe
+        InteriorWall = 101
         InteriorWallTrim = 0
-        Floor = 22
-        GrimeFloor = 0
+        Floor = 71
+        GrimeFloor = 79
         GrimeWall = 0
+        Ceiling = 1
     }
     Room
     {
-        Name = Kitchen
-        Color = 128 128 128
-        InternalName = kitchen
-        InteriorWall = 30
+        Name = cafekitchen
+        Color = 151 153 128
+        InternalName = cafekitchen
+        InteriorWall = 101
         InteriorWallTrim = 0
-        Floor = 18
-        GrimeFloor = 0
+        Floor = 71
+        GrimeFloor = 79
         GrimeWall = 0
+        Ceiling = 1
     }
     Room
     {
-        Name = Bathroom 1
-        Color = 255 0 0
+        Name = bathroom
+        Color = 95 191 146
         InternalName = bathroom
-        InteriorWall = 38
+        InteriorWall = 102
         InteriorWallTrim = 0
-        Floor = 20
-        GrimeFloor = 0
+        Floor = 61
+        GrimeFloor = 79
         GrimeWall = 0
+        Ceiling = 1
     }
     Room
     {
-        Name = Bathroom 2
-        Color = 0 255 0
-        InternalName = bathroom
-        InteriorWall = 38
+        Name = janitor
+        Color = 20 79 5
+        InternalName = janitor
+        InteriorWall = 122
         InteriorWallTrim = 0
-        Floor = 20
-        GrimeFloor = 0
-        GrimeWall = 0
+        Floor = 51
+        GrimeFloor = 79
+        GrimeWall = 82
+        Ceiling = 1
     }
+}
+Template
+{
+    Name = Shed
+    ExteriorWall = 44
+    ExteriorWallTrim = 0
+    Door = 9
+    DoorFrame = 7
+    Window = 166
+    Curtains = 0
+    Shutters = 0
+    Stairs = 158
+    RoofCap = 130
+    RoofSlope = 142
+    RoofTop = 155
+    GrimeWall = 82
+    UsedTiles = 
+    UsedFurniture = 
     Room
     {
-        Name = Hall
-        Color = 0 0 255
+        Name = hall
+        Color = 67 251 18
         InternalName = hall
-        InteriorWall = 29
+        InteriorWall = 111
         InteriorWallTrim = 0
-        Floor = 22
+        Floor = 70
+        GrimeFloor = 79
+        GrimeWall = 82
+        Ceiling = 1
+    }
+    Room
+    {
+        Name = livingroom
+        Color = 112 68 22
+        InternalName = livingroom
+        InteriorWall = 111
+        InteriorWallTrim = 0
+        Floor = 70
+        GrimeFloor = 79
+        GrimeWall = 82
+        Ceiling = 1
+    }
+    Room
+    {
+        Name = kitchen
+        Color = 205 145 160
+        InternalName = kitchen
+        InteriorWall = 111
+        InteriorWallTrim = 0
+        Floor = 70
+        GrimeFloor = 79
+        GrimeWall = 82
+        Ceiling = 1
+    }
+    Room
+    {
+        Name = bathroom
+        Color = 95 191 146
+        InternalName = bathroom
+        InteriorWall = 111
+        InteriorWallTrim = 0
+        Floor = 70
+        GrimeFloor = 79
+        GrimeWall = 82
+        Ceiling = 1
+    }
+    Room
+    {
+        Name = bedroom
+        Color = 26 26 52
+        InternalName = bedroom
+        InteriorWall = 111
+        InteriorWallTrim = 0
+        Floor = 70
+        GrimeFloor = 79
+        GrimeWall = 82
+        Ceiling = 1
+    }
+    Room
+    {
+        Name = garagestorage
+        Color = 93 75 137
+        InternalName = garagestorage
+        InteriorWall = 111
+        InteriorWallTrim = 0
+        Floor = 70
+        GrimeFloor = 79
+        GrimeWall = 82
+        Ceiling = 1
+    }
+    Room
+    {
+        Name = shed
+        Color = 95 115 162
+        InternalName = shed
+        InteriorWall = 111
+        InteriorWallTrim = 0
+        Floor = 70
+        GrimeFloor = 79
+        GrimeWall = 82
+        Ceiling = 1
+    }
+    Room
+    {
+        Name = emptyoutside
+        Color = 141 146 209
+        InternalName = emptyoutside
+        InteriorWall = 0
+        InteriorWallTrim = 0
+        Floor = 0
         GrimeFloor = 0
         GrimeWall = 0
+        Ceiling = 0
+    }
+}
+Template
+{
+    Name = Spiffo
+    ExteriorWall = 31
+    ExteriorWallTrim = 0
+    Door = 16
+    DoorFrame = 0
+    Window = 169
+    Curtains = 0
+    Shutters = 0
+    Stairs = 160
+    RoofCap = 138
+    RoofSlope = 142
+    RoofTop = 0
+    GrimeWall = 82
+    UsedTiles = 
+    UsedFurniture = 
+    Room
+    {
+        Name = spiffoservice
+        Color = 232 183 92
+        InternalName = spiffoservice
+        InteriorWall = 103
+        InteriorWallTrim = 0
+        Floor = 76
+        GrimeFloor = 0
+        GrimeWall = 0
+        Ceiling = 1
+    }
+    Room
+    {
+        Name = spifforestaurant
+        Color = 170 175 3
+        InternalName = spifforestaurant
+        InteriorWall = 103
+        InteriorWallTrim = 0
+        Floor = 76
+        GrimeFloor = 0
+        GrimeWall = 0
+        Ceiling = 1
+    }
+    Room
+    {
+        Name = spiffoskitchen
+        Color = 247 143 218
+        InternalName = spiffoskitchen
+        InteriorWall = 103
+        InteriorWallTrim = 0
+        Floor = 62
+        GrimeFloor = 0
+        GrimeWall = 0
+        Ceiling = 1
+    }
+    Room
+    {
+        Name = bathroom
+        Color = 95 191 146
+        InternalName = bathroom
+        InteriorWall = 104
+        InteriorWallTrim = 0
+        Floor = 76
+        GrimeFloor = 0
+        GrimeWall = 0
+        Ceiling = 1
+    }
+    Room
+    {
+        Name = janitor
+        Color = 20 79 5
+        InternalName = janitor
+        InteriorWall = 123
+        InteriorWallTrim = 0
+        Floor = 51
+        GrimeFloor = 79
+        GrimeWall = 82
+        Ceiling = 1
+    }
+}
+Template
+{
+    Name = StarEplex
+    ExteriorWall = 45
+    ExteriorWallTrim = 0
+    Door = 11
+    DoorFrame = 6
+    Window = 169
+    Curtains = 0
+    Shutters = 0
+    Stairs = 160
+    RoofCap = 136
+    RoofSlope = 141
+    RoofTop = 150
+    GrimeWall = 82
+    UsedTiles = 
+    UsedFurniture = 
+    Room
+    {
+        Name = theatrelobby
+        Color = 159 77 127
+        InternalName = theatre
+        InteriorWall = 119
+        InteriorWallTrim = 83
+        Floor = 54
+        GrimeFloor = 79
+        GrimeWall = 0
+        Ceiling = 1
+    }
+    Room
+    {
+        Name = theatrekitchenfront
+        Color = 164 17 164
+        InternalName = theatrekitchen
+        InteriorWall = 119
+        InteriorWallTrim = 0
+        Floor = 66
+        GrimeFloor = 79
+        GrimeWall = 0
+        Ceiling = 1
+    }
+    Room
+    {
+        Name = theatrekitchenback
+        Color = 165 218 216
+        InternalName = theatrekitchen
+        InteriorWall = 117
+        InteriorWallTrim = 0
+        Floor = 66
+        GrimeFloor = 79
+        GrimeWall = 0
+        Ceiling = 1
+    }
+    Room
+    {
+        Name = ticketoffice
+        Color = 83 71 80
+        InternalName = office
+        InteriorWall = 121
+        InteriorWallTrim = 0
+        Floor = 64
+        GrimeFloor = 79
+        GrimeWall = 0
+        Ceiling = 1
+    }
+    Room
+    {
+        Name = theatre
+        Color = 127 229 156
+        InternalName = theatre
+        InteriorWall = 124
+        InteriorWallTrim = 0
+        Floor = 54
+        GrimeFloor = 79
+        GrimeWall = 0
+        Ceiling = 1
+    }
+    Room
+    {
+        Name = bathroom
+        Color = 95 191 146
+        InternalName = bathroom
+        InteriorWall = 124
+        InteriorWallTrim = 0
+        Floor = 66
+        GrimeFloor = 79
+        GrimeWall = 0
+        Ceiling = 1
+    }
+    Room
+    {
+        Name = office
+        Color = 7 183 9
+        InternalName = office
+        InteriorWall = 120
+        InteriorWallTrim = 0
+        Floor = 64
+        GrimeFloor = 79
+        GrimeWall = 0
+        Ceiling = 1
+    }
+    Room
+    {
+        Name = theatrestorage
+        Color = 54 231 160
+        InternalName = theatrestorage
+        InteriorWall = 120
+        InteriorWallTrim = 0
+        Floor = 64
+        GrimeFloor = 79
+        GrimeWall = 0
+        Ceiling = 1
+    }
+    Room
+    {
+        Name = breakroom
+        Color = 211 65 176
+        InternalName = breakroom
+        InteriorWall = 120
+        InteriorWallTrim = 0
+        Floor = 64
+        GrimeFloor = 79
+        GrimeWall = 0
+        Ceiling = 1
+    }
+    Room
+    {
+        Name = janitor
+        Color = 20 79 5
+        InternalName = janitor
+        InteriorWall = 120
+        InteriorWallTrim = 0
+        Floor = 64
+        GrimeFloor = 79
+        GrimeWall = 0
+        Ceiling = 1
     }
 }
 Template
 {
     Name = Trailer
-    ExteriorWall = 9
-    ExteriorWallTrim = 0
-    Door = 4
+    ExteriorWall = 35
+    ExteriorWallTrim = 23
+    Door = 10
     DoorFrame = 0
-    Window = 49
-    Curtains = 1
+    Window = 169
+    Curtains = 0
     Shutters = 0
-    Stairs = 47
-    RoofCap = 43
-    RoofSlope = 44
-    RoofTop = 46
-    GrimeWall = 0
-    UsedTiles = 49 4 1 33 20 25 26
+    Stairs = 160
+    RoofCap = 131
+    RoofSlope = 144
+    RoofTop = 152
+    GrimeWall = 82
+    UsedTiles = 168 10 2 108 63 78 80
     UsedFurniture = 1 2 3 4 5 6 7 8 9 10 11 12 13 14 15 16 17
     Room
     {
-        Name = Living Room
+        Name = livingroom
         Color = 200 200 200
         InternalName = livingroom
-        InteriorWall = 33
+        InteriorWall = 108
         InteriorWallTrim = 0
-        Floor = 20
-        GrimeFloor = 25
-        GrimeWall = 26
-    }
-    Room
-    {
-        Name = Bathroom
-        Color = 128 128 128
-        InternalName = bathroom
-        InteriorWall = 33
-        InteriorWallTrim = 0
-        Floor = 20
+        Floor = 63
         GrimeFloor = 0
         GrimeWall = 0
+        Ceiling = 1
     }
     Room
     {
-        Name = Bedroom
+        Name = kitchen
+        Color = 205 145 160
+        InternalName = kitchen
+        InteriorWall = 108
+        InteriorWallTrim = 0
+        Floor = 63
+        GrimeFloor = 0
+        GrimeWall = 0
+        Ceiling = 1
+    }
+    Room
+    {
+        Name = bathroom
+        Color = 128 128 128
+        InternalName = bathroom
+        InteriorWall = 108
+        InteriorWallTrim = 0
+        Floor = 63
+        GrimeFloor = 0
+        GrimeWall = 0
+        Ceiling = 1
+    }
+    Room
+    {
+        Name = bedroom
         Color = 255 0 0
         InternalName = bedroom
-        InteriorWall = 33
+        InteriorWall = 108
         InteriorWallTrim = 0
-        Floor = 20
-        GrimeFloor = 25
-        GrimeWall = 26
+        Floor = 63
+        GrimeFloor = 0
+        GrimeWall = 0
+        Ceiling = 1
+    }
+}
+Template
+{
+    Name = Truck
+    ExteriorWall = 25
+    ExteriorWallTrim = 20
+    Door = 0
+    DoorFrame = 0
+    Window = 0
+    Curtains = 0
+    Shutters = 0
+    Stairs = 161
+    RoofCap = 126
+    RoofSlope = 147
+    RoofTop = 150
+    GrimeWall = 82
+    UsedTiles = 
+    UsedFurniture = 
+    Room
+    {
+        Name = empty
+        Color = 24 157 19
+        InternalName = empty
+        InteriorWall = 94
+        InteriorWallTrim = 0
+        Floor = 51
+        GrimeFloor = 79
+        GrimeWall = 82
+        Ceiling = 1
+    }
+    Room
+    {
+        Name = loggingtruck
+        Color = 100 53 179
+        InternalName = loggingtruck
+        InteriorWall = 93
+        InteriorWallTrim = 85
+        Floor = 50
+        GrimeFloor = 0
+        GrimeWall = 0
+        Ceiling = 1
+    }
+    Room
+    {
+        Name = sodatruck
+        Color = 169 222 241
+        InternalName = sodatruck
+        InteriorWall = 94
+        InteriorWallTrim = 0
+        Floor = 51
+        GrimeFloor = 79
+        GrimeWall = 82
+        Ceiling = 1
+    }
+    Room
+    {
+        Name = potatostorage
+        Color = 26 142 183
+        InternalName = potatostorage
+        InteriorWall = 94
+        InteriorWallTrim = 0
+        Floor = 51
+        GrimeFloor = 79
+        GrimeWall = 82
+        Ceiling = 1
+    }
+    Room
+    {
+        Name = grocerystorage
+        Color = 95 4 144
+        InternalName = grocerystorage
+        InteriorWall = 94
+        InteriorWallTrim = 0
+        Floor = 51
+        GrimeFloor = 79
+        GrimeWall = 82
+        Ceiling = 1
+    }
+    Room
+    {
+        Name = furniturestore
+        Color = 82 31 164
+        InternalName = furniturestore
+        InteriorWall = 94
+        InteriorWallTrim = 0
+        Floor = 51
+        GrimeFloor = 79
+        GrimeWall = 82
+        Ceiling = 1
+    }
+}
+Template
+{
+    Name = Zippee
+    ExteriorWall = 40
+    ExteriorWallTrim = 22
+    Door = 11
+    DoorFrame = 6
+    Window = 169
+    Curtains = 0
+    Shutters = 0
+    Stairs = 160
+    RoofCap = 134
+    RoofSlope = 143
+    RoofTop = 150
+    GrimeWall = 82
+    UsedTiles = 
+    UsedFurniture = 
+    Room
+    {
+        Name = zippeestore
+        Color = 8 50 112
+        InternalName = zippeestore
+        InteriorWall = 122
+        InteriorWallTrim = 87
+        Floor = 77
+        GrimeFloor = 79
+        GrimeWall = 0
+        Ceiling = 1
+    }
+    Room
+    {
+        Name = zippeestorage
+        Color = 70 6 102
+        InternalName = zippeestorage
+        InteriorWall = 114
+        InteriorWallTrim = 0
+        Floor = 51
+        GrimeFloor = 79
+        GrimeWall = 82
+        Ceiling = 1
+    }
+    Room
+    {
+        Name = janitor
+        Color = 20 79 5
+        InternalName = janitor
+        InteriorWall = 114
+        InteriorWallTrim = 0
+        Floor = 51
+        GrimeFloor = 79
+        GrimeWall = 82
+        Ceiling = 1
+    }
+    Room
+    {
+        Name = bathroom
+        Color = 95 191 146
+        InternalName = bathroom
+        InteriorWall = 122
+        InteriorWallTrim = 0
+        Floor = 62
+        GrimeFloor = 79
+        GrimeWall = 0
+        Ceiling = 1
     }
 }

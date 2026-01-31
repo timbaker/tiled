@@ -51,14 +51,16 @@ void BuildingTileEntryView::clear()
     MixedTilesetView::clear();
 }
 
-void BuildingTileEntryView::setEntries(const QList<BuildingTileEntry *> &entries,
-                                       bool categoryLabels)
+void BuildingTileEntryView::setEntries(const QList<BuildingTileEntry*> &entries, bool categoryLabels)
 {
     QList<Tiled::Tile*> tiles;
     QList<void*> userData;
     QStringList headers;
 
-    foreach (BuildingTileEntry *entry, entries) {
+    mEntries = entries;
+    mEntries.detach(); // userData points to individual elements of this list
+
+    for (BuildingTileEntry* entry : std::as_const(mEntries)) {
         if (Tiled::Tile *tile = BuildingTilesMgr::instance()->tileFor(entry->displayTile())) {
             tiles += tile;
             userData += entry;
@@ -72,7 +74,6 @@ void BuildingTileEntryView::setEntries(const QList<BuildingTileEntry *> &entries
     }
     setTiles(tiles, userData, headers);
 
-    mEntries = entries;
     mCategoryLabels = categoryLabels;
 }
 
@@ -106,7 +107,7 @@ void BuildingTileEntryView::tilesetAboutToBeRemoved(Tileset *tileset)
     QList<void*> userData;
     QStringList headers;
 
-    foreach (BuildingTileEntry *entry, mEntries) {
+    for (BuildingTileEntry* entry : std::as_const(mEntries)) {
         if (Tiled::Tile *tile = BuildingTilesMgr::instance()->tileFor(entry->displayTile())) {
             if (tile->tileset() == tileset)
                 tile = TilesetManager::instance()->missingTile();

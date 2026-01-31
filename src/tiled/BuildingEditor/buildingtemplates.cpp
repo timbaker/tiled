@@ -113,7 +113,12 @@ private:
 // VERSION2
 // Renamed Room.Wall -> Room.InteriorWall
 #define VERSION2 2
-#define VERSION_LATEST VERSION2
+
+// VERSION3
+// added window-frame shapes
+#define VERSION3 3
+
+#define VERSION_LATEST VERSION3
 
 TemplatesFile::TemplatesFile() :
     mVersion(0),
@@ -330,7 +335,7 @@ bool TemplatesFile::write(const QString &fileName,
     return true;
 }
 
-// this code is almost the same as BuildingTilesMgr::readTileEntry
+// this code is almost the same as BuildingTilesFile::readTileEntry
 BuildingTileEntry *TemplatesFile::readTileEntry(SimpleFileBlock &block, QString &error)
 {
     QString categoryName = block.value("category");
@@ -362,8 +367,13 @@ BuildingTileEntry *TemplatesFile::readTileEntry(SimpleFileBlock &block, QString 
             }
             entry->mTiles[e] = BuildingTilesMgr::instance()->get(kv.value);
         }
-
-        if (BuildingTileEntry *match = category->findMatch(entry)) {
+        int compareCount = entry->tileCount();
+        if (mVersion < VERSION3 && (category->asExteriorWalls() || category->asInteriorWalls())) {
+            // Version 3 added 16 new wall shapes for windows.
+            // Look for a match of the first 8 tiles only.
+            compareCount = 8;
+        }
+        if (BuildingTileEntry *match = category->findMatch(entry, compareCount)) {
             delete entry;
             entry = match;
         }
@@ -378,8 +388,7 @@ BuildingTileEntry *TemplatesFile::readTileEntry(SimpleFileBlock &block, QString 
 FurnitureTiles *TemplatesFile::readFurnitureTiles(SimpleFileBlock &block, QString &error)
 {
     FurnitureGroups *fg = FurnitureGroups::instance();
-    BuildingFurnitureFile file;
-    if (FurnitureTiles *result = file.furnitureTilesFromSFB(block, error)) {
+    if (FurnitureTiles *result = BuildingFurnitureFile::furnitureTilesFromSFB(block, error)) {
         FurnitureTiles *match = fg->findMatch(result);
         if (match) {
             delete result;
@@ -412,8 +421,7 @@ void TemplatesFile::writeTileEntry(SimpleFileBlock &parentBlock, BuildingTileEnt
 
 void TemplatesFile::writeFurnitureTiles(SimpleFileBlock &block, FurnitureTiles *ftiles)
 {
-    BuildingFurnitureFile file;
-    block.blocks += file.furnitureTilesToSFB(ftiles);
+    block.blocks += BuildingFurnitureFile::furnitureTilesToSFB(ftiles);
 }
 
 QString TemplatesFile::nameForEntry(BuildingTileEntry *entry)
