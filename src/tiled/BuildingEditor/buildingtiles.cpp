@@ -927,6 +927,9 @@ bool BTC_Doors::isWest(int e) const
 
 int BTC_Doors::wallEnum(const BuildingTileEntry *entry, int e) const
 {
+    if (entry == nullptr) {
+        return BuildingTileCategory::wallEnum(entry, e);
+    }
     switch (e) {
     case TileEnum::North:
     case TileEnum::NorthOpen:
@@ -1167,6 +1170,9 @@ bool BTC_Windows::isWest(int e) const
 
 int BTC_Windows::wallEnum(const BuildingTileEntry *entry, int e) const
 {
+    if (entry == nullptr) {
+        return defaultWallEnum(entry, e);
+    }
     BuildingTile *tile = entry->tile(e);
     if (tile == nullptr) {
         return defaultWallEnum(entry, e);

@@ -60,11 +60,6 @@ bool BuildingFurnitureFile::read(const QString &fileName)
         return false;
     }
 
-    if (mVersion != VERSION_LATEST) {
-        mError = QStringLiteral("Expected version %1, got %2\n(while reading %3)").arg(VERSION_LATEST).arg(mVersion).arg(nativePath);
-        return false;
-    }
-
     mRevision = simple.value("revision").toInt();
     mSourceRevision = simple.value("source_revision").toInt();
 
