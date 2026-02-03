@@ -3127,10 +3127,10 @@ int BuildingFloor::Square::getWallOffset(WallOrientation orient)
 
     switch (orient) {
     case WallOrientN:
-        if ((entry = mEntries[SectionDoor]) != nullptr && entry->asDoor() && entry->isNorth(mEntryEnum[SectionDoor]))
-            offset = entry->wallEnum(mEntryEnum[SectionDoor]);
-        else if ((entry = mEntries[SectionWindow]) != nullptr && entry->asWindow() && entry->isNorth(mEntryEnum[SectionWindow]))
-            offset = entry->wallEnum(mEntryEnum[SectionWindow]);
+        if ((entry = mEntries[SectionDoor]) != nullptr && BuildingTilesMgr::instance()->catDoors()->isNorth(mEntryEnum[SectionDoor]))
+            offset = BuildingTilesMgr::instance()->catDoors()->wallEnum(entry, mEntryEnum[SectionDoor]);
+        else if ((entry = mEntries[SectionWindow]) != nullptr && BuildingTilesMgr::instance()->catWindows()->isNorth(mEntryEnum[SectionWindow]))
+            offset = BuildingTilesMgr::instance()->catWindows()->wallEnum(entry, mEntryEnum[SectionWindow]);
         else
             offset = BTC_Walls::North;
         break;
@@ -3138,10 +3138,10 @@ int BuildingFloor::Square::getWallOffset(WallOrientation orient)
         offset = BTC_Walls::NorthWest;
         break;
     case WallOrientW:
-        if ((entry = mEntries[SectionDoor]) != nullptr && entry->asDoor() && entry->isWest(mEntryEnum[SectionDoor]))
-            offset = entry->wallEnum(mEntryEnum[SectionDoor]);
-        else if ((entry = mEntries[SectionWindow]) != nullptr && entry->asWindow() && entry->isWest(mEntryEnum[SectionWindow]))
-            offset = entry->wallEnum(mEntryEnum[SectionWindow]);
+        if ((entry = mEntries[SectionDoor]) != nullptr && BuildingTilesMgr::instance()->catDoors()->isWest(mEntryEnum[SectionDoor]))
+            offset = BuildingTilesMgr::instance()->catDoors()->wallEnum(entry, mEntryEnum[SectionDoor]);
+        else if ((entry = mEntries[SectionWindow]) != nullptr && BuildingTilesMgr::instance()->catWindows()->isWest(mEntryEnum[SectionWindow]))
+            offset = BuildingTilesMgr::instance()->catWindows()->wallEnum(entry, mEntryEnum[SectionWindow]);
         break;
     case WallOrientSE:
         offset = BTC_Walls::SouthEast;
