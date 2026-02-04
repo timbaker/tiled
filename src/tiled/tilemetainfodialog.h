@@ -23,6 +23,7 @@
 #include <QDialog>
 #include <QMap>
 
+class QSplitter;
 class QToolButton;
 class QUndoGroup;
 class QUndoStack;
@@ -79,6 +80,10 @@ private slots:
     void reject();
 
 private:
+    void saveSettings();
+    void restoreSettings();
+    void saveSplitterSizes(QSplitter *splitter);
+    void restoreSplitterSizes(QSplitter *splitter);
     void setTilesetList();
     void setTilesList();
 

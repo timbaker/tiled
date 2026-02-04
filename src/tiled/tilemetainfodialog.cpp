@@ -37,6 +37,7 @@
 #include <QFileInfo>
 #include <QMessageBox>
 #include <QScrollBar>
+#include <QSplitter>
 #include <QToolBar>
 #include <QUndoGroup>
 #include <QUndoStack>
@@ -229,6 +230,8 @@ TileMetaInfoDialog::TileMetaInfoDialog(QWidget *parent) :
     mSynching = false;
 
     updateUI();
+
+    restoreSettings();
 }
 
 TileMetaInfoDialog::~TileMetaInfoDialog()
@@ -493,6 +496,7 @@ void TileMetaInfoDialog::updateUI()
 void TileMetaInfoDialog::accept()
 {
     mClosing = true; // getting a crash when TileMetaInfoMgr is deleted before this in MainWindow::tilesetMetaInfoDialog
+    saveSettings();
     ui->tilesets->clear();
     ui->tiles->clear();
     QDialog::accept();
@@ -501,6 +505,69 @@ void TileMetaInfoDialog::accept()
 void TileMetaInfoDialog::reject()
 {
     accept();
+}
+
+void TileMetaInfoDialog::saveSettings()
+{
+    QSettings settings;
+    settings.beginGroup(QLatin1String("TilesetsDialog"));
+    settings.setValue(QLatin1String("geometry"), saveGeometry());
+    settings.setValue(QLatin1String("TileScale"), mZoomable->scale());
+    settings.endGroup();
+
+//    saveSplitterSizes(ui->splitter);
+}
+
+void TileMetaInfoDialog::restoreSettings()
+{
+    QSettings settings;
+    settings.beginGroup(QStringLiteral("TilesetsDialog"));
+    QByteArray geom = settings.value(QStringLiteral("geometry")).toByteArray();
+    if (!geom.isEmpty()) {
+        restoreGeometry(geom);
+    }
+    qreal scale = settings.value(QStringLiteral("TileScale"), 0.5f).toReal();
+    mZoomable->setScale(scale);
+    settings.endGroup();
+
+//    restoreSplitterSizes(ui->splitter);
+}
+
+void TileMetaInfoDialog::saveSplitterSizes(QSplitter *splitter)
+{
+    QSettings settings;
+    settings.beginGroup(QLatin1String("TilesetsDialog"));
+    QVariantList v;
+    foreach (int size, splitter->sizes()) {
+        v += size;
+    }
+    settings.setValue(tr("%1/sizes").arg(splitter->objectName()), v);
+    settings.endGroup();
+}
+
+void TileMetaInfoDialog::restoreSplitterSizes(QSplitter *splitter)
+{
+    QSettings settings;
+    settings.beginGroup(QLatin1String("TilesetsDialog"));
+    QVariant v = settings.value(tr("%1/sizes").arg(splitter->objectName()));
+#if QT_VERSION < QT_VERSION_CHECK(6, 0, 0)
+    if (v.canConvert(QVariant::List)) {
+        QList<int> sizes;
+        foreach (QVariant v2, v.toList()) {
+            sizes += v2.toInt();
+        }
+        splitter->setSizes(sizes);
+    }
+#else
+    if (v.canConvert<QList<QVariant>>()) {
+        QList<int> sizes;
+        for (const QVariant &v2 : v.toList()) {
+            sizes += v2.toInt();
+        }
+        splitter->setSizes(sizes);
+    }
+#endif
+    settings.endGroup();
 }
 
 void TileMetaInfoDialog::setTilesetList()
