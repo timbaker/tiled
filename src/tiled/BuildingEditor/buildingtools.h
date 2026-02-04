@@ -456,7 +456,7 @@ public slots:
     void activate();
     void deactivate();
 
-    void objectAboutToBeRemoved(BuildingObject *object);
+    void objectAboutToBeRemoved(BuildingEditor::BuildingObject *object);
 
 private:
     RoofObject *topmostRoofAt(const QPointF &scenePos);
@@ -514,7 +514,22 @@ public:
 private:
     Q_DISABLE_COPY(RoofShallowTool)
     static RoofShallowTool *mInstance;
-    ~RoofShallowTool() { mInstance = 0; }
+    ~RoofShallowTool() { mInstance = nullptr; }
+};
+
+/////
+
+class RoofSlope30Tool : public RoofTool
+{
+public:
+    static RoofSlope30Tool *instance();
+
+    RoofSlope30Tool();
+
+private:
+    Q_DISABLE_COPY(RoofSlope30Tool)
+    static RoofSlope30Tool *mInstance;
+    ~RoofSlope30Tool() { mInstance = nullptr; }
 };
 
 /////

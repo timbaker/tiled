@@ -2137,6 +2137,23 @@ RoofShallowTool::RoofShallowTool()
 
 /////
 
+RoofSlope30Tool *RoofSlope30Tool::mInstance = 0;
+
+RoofSlope30Tool *RoofSlope30Tool::instance()
+{
+    if (!mInstance)
+        mInstance = new RoofSlope30Tool;
+    return mInstance;
+}
+
+RoofSlope30Tool::RoofSlope30Tool()
+    : RoofTool()
+{
+    setRoofType(RoofObject::Slope30S);
+}
+
+/////
+
 RoofCornerTool *RoofCornerTool::mInstance = 0;
 
 RoofCornerTool *RoofCornerTool::instance()

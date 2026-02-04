@@ -546,6 +546,11 @@ void RoofObject::rotate(bool right)
         case ShallowPeakWE: mType = ShallowPeakNS; break;
         case ShallowPeakNS: mType = ShallowPeakWE; break;
 
+        case Slope30W: mType = Slope30N; break;
+        case Slope30N: mType = Slope30E; break;
+        case Slope30E: mType = Slope30S; break;
+        case Slope30S: mType = Slope30W; break;
+
         case CornerInnerSW: mType = CornerInnerNW; break;
         case CornerInnerNW: mType = CornerInnerNE; break;
         case CornerInnerNE: mType = CornerInnerSE; break;
@@ -590,6 +595,11 @@ void RoofObject::rotate(bool right)
         case ShallowSlopeS: mType = ShallowSlopeE; break;
         case ShallowPeakWE: mType = ShallowPeakNS; break;
         case ShallowPeakNS: mType = ShallowPeakWE; break;
+
+        case Slope30W: mType = Slope30S; break;
+        case Slope30N: mType = Slope30W; break;
+        case Slope30E: mType = Slope30N; break;
+        case Slope30S: mType = Slope30E; break;
 
         case CornerInnerSW: mType = CornerInnerSE; break;
         case CornerInnerNW: mType = CornerInnerSW; break;
@@ -638,6 +648,11 @@ void RoofObject::flip(bool horizontal)
         case ShallowPeakWE:  break;
         case ShallowPeakNS:  break;
 
+        case Slope30W: mType = Slope30E; break;
+        case Slope30N: break;
+        case Slope30E: mType = Slope30W; break;
+        case Slope30S: break;
+
         case CornerInnerSW: mType = CornerInnerSE; break;
         case CornerInnerNW: mType = CornerInnerNE; break;
         case CornerInnerNE: mType = CornerInnerNW; break;
@@ -673,6 +688,11 @@ void RoofObject::flip(bool horizontal)
         case ShallowSlopeS: mType = ShallowSlopeN; break;
         case ShallowPeakWE:  break;
         case ShallowPeakNS:  break;
+
+        case Slope30W:  break;
+        case Slope30N: mType = Slope30S; break;
+        case Slope30E:  break;
+        case Slope30S: mType = Slope30N; break;
 
         case CornerInnerSW: mType = CornerInnerNW; break;
         case CornerInnerNW: mType = CornerInnerSW; break;
@@ -865,6 +885,17 @@ void RoofObject::setWidth(int width)
         mDepth = Zero;
         break;
 
+    case Slope30W:
+    case Slope30E:
+        mWidth = qBound(1, width, 6);
+        mDepth = Zero;
+        break;
+    case Slope30N:
+    case Slope30S:
+        mWidth = width;
+        mDepth = Zero;
+        break;
+
     case CornerInnerSW:
     case CornerInnerNW:
     case CornerInnerNE:
@@ -980,6 +1011,17 @@ void RoofObject::setHeight(int height)
         break;
     case ShallowPeakNS:
         mHeight = height;
+        mDepth = Zero;
+        break;
+
+    case Slope30W:
+    case Slope30E:
+        mHeight = height;
+        mDepth = Zero;
+        break;
+    case Slope30N:
+    case Slope30S:
+        mHeight = qBound(1, height, 6);
         mDepth = Zero;
         break;
 
@@ -1269,6 +1311,10 @@ void RoofObject::setDefaultCaps()
     case ShallowSlopeN: mCappedS = false; break;
     case ShallowSlopeE: mCappedW = false; break;
     case ShallowSlopeS: mCappedN = false; break;
+    case Slope30W: mCappedE = false; break;
+    case Slope30N: mCappedS = false; break;
+    case Slope30E: mCappedW = false; break;
+    case Slope30S: mCappedN = false; break;
     case CornerInnerSW:
     case CornerInnerNW:
     case CornerInnerNE:
@@ -1300,6 +1346,11 @@ int RoofObject::getOffset(RoofObject::RoofTile tile) const
         BTC_RoofSlopes::ShallowSlopeN1, BTC_RoofSlopes::ShallowSlopeN2,
         BTC_RoofSlopes::ShallowSlopeS1, BTC_RoofSlopes::ShallowSlopeS2,
 
+        BTC_RoofSlopes::Slope30S1, BTC_RoofSlopes::Slope30S2, BTC_RoofSlopes::Slope30S3, BTC_RoofSlopes::Slope30S4, BTC_RoofSlopes::Slope30S5, BTC_RoofSlopes::Slope30S6,
+        BTC_RoofSlopes::Slope30E1, BTC_RoofSlopes::Slope30E2, BTC_RoofSlopes::Slope30E3, BTC_RoofSlopes::Slope30E4, BTC_RoofSlopes::Slope30E5, BTC_RoofSlopes::Slope30E6,
+        BTC_RoofSlopes::Slope30W1, BTC_RoofSlopes::Slope30W2, BTC_RoofSlopes::Slope30W3, BTC_RoofSlopes::Slope30W4, BTC_RoofSlopes::Slope30W5, BTC_RoofSlopes::Slope30W6,
+        BTC_RoofSlopes::Slope30N1, BTC_RoofSlopes::Slope30N2, BTC_RoofSlopes::Slope30N3, BTC_RoofSlopes::Slope30N4, BTC_RoofSlopes::Slope30N5, BTC_RoofSlopes::Slope30N6,
+
         BTC_RoofSlopes::Inner1, BTC_RoofSlopes::Inner2, BTC_RoofSlopes::Inner3,
         BTC_RoofSlopes::Outer1, BTC_RoofSlopes::Outer2, BTC_RoofSlopes::Outer3,
         BTC_RoofSlopes::InnerPt5, BTC_RoofSlopes::InnerOnePt5, BTC_RoofSlopes::InnerTwoPt5,
@@ -1318,10 +1369,16 @@ int RoofObject::getOffset(RoofObject::RoofTile tile) const
         BTC_RoofCaps::PeakTwoPt5S, BTC_RoofCaps::PeakTwoPt5E,
         BTC_RoofCaps::CapGapS1, BTC_RoofCaps::CapGapS2, BTC_RoofCaps::CapGapS3,
         BTC_RoofCaps::CapGapE1, BTC_RoofCaps::CapGapE2, BTC_RoofCaps::CapGapE3,
+
         BTC_RoofCaps::CapShallowRiseS1, BTC_RoofCaps::CapShallowRiseS2,
         BTC_RoofCaps::CapShallowFallS1, BTC_RoofCaps::CapShallowFallS2,
         BTC_RoofCaps::CapShallowRiseE1, BTC_RoofCaps::CapShallowRiseE2,
-        BTC_RoofCaps::CapShallowFallE1, BTC_RoofCaps::CapShallowFallE2
+        BTC_RoofCaps::CapShallowFallE1, BTC_RoofCaps::CapShallowFallE2,
+
+        BTC_RoofCaps::CapSlope30RiseE1, BTC_RoofCaps::CapSlope30RiseE2, BTC_RoofCaps::CapSlope30RiseE3, BTC_RoofCaps::CapSlope30RiseE4, BTC_RoofCaps::CapSlope30RiseE5, BTC_RoofCaps::CapSlope30RiseE6,
+        BTC_RoofCaps::CapSlope30FallE1, BTC_RoofCaps::CapSlope30FallE2, BTC_RoofCaps::CapSlope30FallE3, BTC_RoofCaps::CapSlope30FallE4, BTC_RoofCaps::CapSlope30FallE5, BTC_RoofCaps::CapSlope30FallE6,
+        BTC_RoofCaps::CapSlope30RiseS1, BTC_RoofCaps::CapSlope30RiseS2, BTC_RoofCaps::CapSlope30RiseS3, BTC_RoofCaps::CapSlope30RiseS4, BTC_RoofCaps::CapSlope30RiseS5, BTC_RoofCaps::CapSlope30RiseS6,
+        BTC_RoofCaps::CapSlope30FallS1, BTC_RoofCaps::CapSlope30FallS2, BTC_RoofCaps::CapSlope30FallS3, BTC_RoofCaps::CapSlope30FallS4, BTC_RoofCaps::CapSlope30FallS5, BTC_RoofCaps::CapSlope30FallS6,
     };
 
     if (tile >= CapRiseE1) {
@@ -1748,7 +1805,53 @@ QVector<RoofObject::RoofTile> RoofObject::slopeTiles(QRect &b)
             for (int x = 0; x < mWidth; x++)
                 ret += pat[y];
         break;
-    default:
+
+     case Slope30W:
+         pat << Slope30W1;
+         if (mWidth > 1) pat << Slope30W2;
+         if (mWidth > 2) pat << Slope30W3;
+         if (mWidth > 3) pat << Slope30W4;
+         if (mWidth > 4) pat << Slope30W5;
+         if (mWidth > 5) pat << Slope30W6;
+         for (int y = 0; y < mHeight; y++) {
+             ret += pat;
+         }
+         break;
+     case Slope30N:
+         pat << Slope30N1;
+         if (mHeight > 1) pat << Slope30N2;
+         if (mHeight > 2) pat << Slope30N3;
+         if (mHeight > 3) pat << Slope30N4;
+         if (mHeight > 4) pat << Slope30N5;
+         if (mHeight > 5) pat << Slope30N6;
+         for (int y = 0; y < pat.size(); y++)
+             for (int x = 0; x < mWidth; x++)
+                 ret += pat[y];
+         break;
+     case Slope30E:
+         if (mWidth > 5) pat << Slope30E6;
+         if (mWidth > 4) pat << Slope30E5;
+         if (mWidth > 3) pat << Slope30E4;
+         if (mWidth > 2) pat << Slope30E3;
+         if (mWidth > 1) pat << Slope30E2;
+         pat << Slope30E1;
+         for (int y = 0; y < mHeight; y++) {
+             ret += pat;
+         }
+         break;
+     case Slope30S:
+         if (mHeight > 5) pat << Slope30S6;
+         if (mHeight > 4) pat << Slope30S5;
+         if (mHeight > 3) pat << Slope30S4;
+         if (mHeight > 2) pat << Slope30S3;
+         if (mHeight > 1) pat << Slope30S2;
+         pat << Slope30S1;
+         for (int y = 0; y < pat.size(); y++)
+             for (int x = 0; x < mWidth; x++)
+                 ret += pat[y];
+         break;
+
+     default:
         break;
     }
     return ret;
@@ -1825,6 +1928,26 @@ QVector<RoofObject::RoofTile> RoofObject::westCapTiles(QRect &b)
         ret << CapShallowFallE1;
         if (mHeight > 2) ret << CapShallowFallE2 << CapShallowRiseE2;
         ret << CapShallowRiseE1;
+    case Slope30W:
+        break;
+    case Slope30N:
+        ret += CapSlope30FallE1;
+        if (mHeight > 1) ret += CapSlope30FallE2;
+        if (mHeight > 2) ret += CapSlope30FallE3;
+        if (mHeight > 3) ret += CapSlope30FallE4;
+        if (mHeight > 4) ret += CapSlope30FallE5;
+        if (mHeight > 5) ret += CapSlope30FallE6;
+        break;
+    case Slope30E:
+        break;
+    case Slope30S:
+        if (mHeight > 5) ret += CapSlope30RiseE6;
+        if (mHeight > 4) ret += CapSlope30RiseE5;
+        if (mHeight > 3) ret += CapSlope30RiseE4;
+        if (mHeight > 2) ret += CapSlope30RiseE3;
+        if (mHeight > 1) ret += CapSlope30RiseE2;
+        ret += CapSlope30RiseE1;
+        break;
     case FlatTop:
     case CornerInnerSW:
     case CornerInnerNW: {
@@ -1913,6 +2036,26 @@ QVector<RoofObject::RoofTile> RoofObject::eastCapTiles(QRect &b)
         ret += CapShallowFallE1;
         if (mHeight > 2) ret << CapShallowFallE2 << CapShallowRiseE2;
         ret += CapShallowRiseE1;
+        break;
+    case Slope30W:
+        break;
+    case Slope30N:
+        ret += CapSlope30FallE1;
+        if (mHeight > 1) ret += CapSlope30FallE2;
+        if (mHeight > 2) ret += CapSlope30FallE3;
+        if (mHeight > 3) ret += CapSlope30FallE4;
+        if (mHeight > 4) ret += CapSlope30FallE5;
+        if (mHeight > 5) ret += CapSlope30FallE6;
+        break;
+    case Slope30E:
+        break;
+    case Slope30S:
+        if (mHeight > 5) ret += CapSlope30RiseE6;
+        if (mHeight > 4) ret += CapSlope30RiseE5;
+        if (mHeight > 3) ret += CapSlope30RiseE4;
+        if (mHeight > 2) ret += CapSlope30RiseE3;
+        if (mHeight > 1) ret += CapSlope30RiseE2;
+        ret += CapSlope30RiseE1;
         break;
     case FlatTop:
     case CornerInnerSE:
@@ -2003,6 +2146,26 @@ QVector<RoofObject::RoofTile> RoofObject::northCapTiles(QRect &b)
         if (mWidth > 2) ret << CapShallowRiseS2 << CapShallowFallS2;
         ret += CapShallowFallS1;
         break;
+    case Slope30W:
+        ret += CapSlope30RiseS1;
+        if (mWidth > 1) ret += CapSlope30RiseS2;
+        if (mWidth > 2) ret += CapSlope30RiseS3;
+        if (mWidth > 3) ret += CapSlope30RiseS4;
+        if (mWidth > 4) ret += CapSlope30RiseS5;
+        if (mWidth > 5) ret += CapSlope30RiseS6;
+        break;
+    case Slope30N:
+        break;
+    case Slope30E:
+        if (mWidth > 5) ret += CapSlope30FallS6;
+        if (mWidth > 4) ret += CapSlope30FallS5;
+        if (mWidth > 3) ret += CapSlope30FallS4;
+        if (mWidth > 2) ret += CapSlope30FallS3;
+        if (mWidth > 1) ret += CapSlope30FallS2;
+        ret += CapSlope30FallS1;
+        break;
+    case Slope30S:
+        break;
     case FlatTop:
     case CornerInnerNW:
     case CornerInnerNE: {
@@ -2091,6 +2254,26 @@ QVector<RoofObject::RoofTile> RoofObject::southCapTiles(QRect &b)
         ret += CapShallowRiseS1;
         if (mWidth > 2) ret << CapShallowRiseS2 << CapShallowFallS2;
         ret += CapShallowFallS1;
+        break;
+    case Slope30W:
+        ret += CapSlope30RiseS1;
+        if (mWidth > 1) ret += CapSlope30RiseS2;
+        if (mWidth > 2) ret += CapSlope30RiseS3;
+        if (mWidth > 3) ret += CapSlope30RiseS4;
+        if (mWidth > 4) ret += CapSlope30RiseS5;
+        if (mWidth > 5) ret += CapSlope30RiseS6;
+        break;
+    case Slope30N:
+        break;
+    case Slope30E:
+        if (mWidth > 5) ret += CapSlope30FallS6;
+        if (mWidth > 4) ret += CapSlope30FallS5;
+        if (mWidth > 3) ret += CapSlope30FallS4;
+        if (mWidth > 2) ret += CapSlope30FallS3;
+        if (mWidth > 1) ret += CapSlope30FallS2;
+        ret += CapSlope30FallS1;
+        break;
+    case Slope30S:
         break;
     case FlatTop:
     case CornerInnerSE:
@@ -2283,78 +2466,88 @@ QRect RoofObject::cornerOuter()
 QString RoofObject::typeToString(RoofObject::RoofType type)
 {
     switch (type) {
-    case SlopeW: return QLatin1String("SlopeW");
-    case SlopeN: return QLatin1String("SlopeN");
-    case SlopeE: return QLatin1String("SlopeE");
-    case SlopeS: return QLatin1String("SlopeS");
+    case SlopeW: return QStringLiteral("SlopeW");
+    case SlopeN: return QStringLiteral("SlopeN");
+    case SlopeE: return QStringLiteral("SlopeE");
+    case SlopeS: return QStringLiteral("SlopeS");
 
-    case PeakWE: return QLatin1String("PeakWE");
-    case PeakNS: return QLatin1String("PeakNS");
+    case PeakWE: return QStringLiteral("PeakWE");
+    case PeakNS: return QStringLiteral("PeakNS");
 
-    case DormerW: return QLatin1String("DormerW");
-    case DormerN: return QLatin1String("DormerN");
-    case DormerE: return QLatin1String("DormerE");
-    case DormerS: return QLatin1String("DormerS");
+    case DormerW: return QStringLiteral("DormerW");
+    case DormerN: return QStringLiteral("DormerN");
+    case DormerE: return QStringLiteral("DormerE");
+    case DormerS: return QStringLiteral("DormerS");
 
-    case FlatTop: return QLatin1String("FlatTop");
+    case FlatTop: return QStringLiteral("FlatTop");
 
-    case ShallowSlopeW: return QLatin1String("ShallowSlopeW");
-    case ShallowSlopeE: return QLatin1String("ShallowSlopeE");
-    case ShallowSlopeN: return QLatin1String("ShallowSlopeN");
-    case ShallowSlopeS: return QLatin1String("ShallowSlopeS");
-    case ShallowPeakWE: return QLatin1String("ShallowPeakWE");
-    case ShallowPeakNS: return QLatin1String("ShallowPeakNS");
+    case ShallowSlopeW: return QStringLiteral("ShallowSlopeW");
+    case ShallowSlopeE: return QStringLiteral("ShallowSlopeE");
+    case ShallowSlopeN: return QStringLiteral("ShallowSlopeN");
+    case ShallowSlopeS: return QStringLiteral("ShallowSlopeS");
+    case ShallowPeakWE: return QStringLiteral("ShallowPeakWE");
+    case ShallowPeakNS: return QStringLiteral("ShallowPeakNS");
 
-    case CornerInnerSW: return QLatin1String("CornerInnerSW");
-    case CornerInnerNW: return QLatin1String("CornerInnerNW");
-    case CornerInnerNE: return QLatin1String("CornerInnerNE");
-    case CornerInnerSE: return QLatin1String("CornerInnerSE");
+    case Slope30W: return QStringLiteral("Slope30W");
+    case Slope30N: return QStringLiteral("Slope30N");
+    case Slope30E: return QStringLiteral("Slope30E");
+    case Slope30S: return QStringLiteral("Slope30S");
 
-    case CornerOuterSW: return QLatin1String("CornerOuterSW");
-    case CornerOuterNW: return QLatin1String("CornerOuterNW");
-    case CornerOuterNE: return QLatin1String("CornerOuterNE");
-    case CornerOuterSE: return QLatin1String("CornerOuterSE");
+    case CornerInnerSW: return QStringLiteral("CornerInnerSW");
+    case CornerInnerNW: return QStringLiteral("CornerInnerNW");
+    case CornerInnerNE: return QStringLiteral("CornerInnerNE");
+    case CornerInnerSE: return QStringLiteral("CornerInnerSE");
+
+    case CornerOuterSW: return QStringLiteral("CornerOuterSW");
+    case CornerOuterNW: return QStringLiteral("CornerOuterNW");
+    case CornerOuterNE: return QStringLiteral("CornerOuterNE");
+    case CornerOuterSE: return QStringLiteral("CornerOuterSE");
     default:
         break;
     }
 
-    return QLatin1String("Invalid");
+    return QStringLiteral("Invalid");
 }
 
 RoofObject::RoofType RoofObject::typeFromString(const QString &s)
 {
-    if (s == QLatin1String("SlopeW")) return SlopeW;
-    if (s == QLatin1String("SlopeN")) return SlopeN;
-    if (s == QLatin1String("SlopeE")) return SlopeE;
-    if (s == QLatin1String("SlopeS")) return SlopeS;
+    if (s == QStringLiteral("SlopeW")) return SlopeW;
+    if (s == QStringLiteral("SlopeN")) return SlopeN;
+    if (s == QStringLiteral("SlopeE")) return SlopeE;
+    if (s == QStringLiteral("SlopeS")) return SlopeS;
 
-    if (s == QLatin1String("PeakWE")) return PeakWE;
-    if (s == QLatin1String("PeakNS")) return PeakNS;
+    if (s == QStringLiteral("PeakWE")) return PeakWE;
+    if (s == QStringLiteral("PeakNS")) return PeakNS;
 
-    if (s == QLatin1String("DormerW")) return DormerW;
-    if (s == QLatin1String("DormerN")) return DormerN;
-    if (s == QLatin1String("DormerE")) return DormerE;
-    if (s == QLatin1String("DormerS")) return DormerS;
+    if (s == QStringLiteral("DormerW")) return DormerW;
+    if (s == QStringLiteral("DormerN")) return DormerN;
+    if (s == QStringLiteral("DormerE")) return DormerE;
+    if (s == QStringLiteral("DormerS")) return DormerS;
 
-    if (s == QLatin1String("FlatTop")) return FlatTop;
+    if (s == QStringLiteral("FlatTop")) return FlatTop;
 
-    if (s == QLatin1String("ShallowSlopeW")) return ShallowSlopeW;
-    if (s == QLatin1String("ShallowSlopeN")) return ShallowSlopeN;
-    if (s == QLatin1String("ShallowSlopeE")) return ShallowSlopeE;
-    if (s == QLatin1String("ShallowSlopeS")) return ShallowSlopeS;
+    if (s == QStringLiteral("ShallowSlopeW")) return ShallowSlopeW;
+    if (s == QStringLiteral("ShallowSlopeN")) return ShallowSlopeN;
+    if (s == QStringLiteral("ShallowSlopeE")) return ShallowSlopeE;
+    if (s == QStringLiteral("ShallowSlopeS")) return ShallowSlopeS;
 
-    if (s == QLatin1String("ShallowPeakWE")) return ShallowPeakWE;
-    if (s == QLatin1String("ShallowPeakNS")) return ShallowPeakNS;
+    if (s == QStringLiteral("ShallowPeakWE")) return ShallowPeakWE;
+    if (s == QStringLiteral("ShallowPeakNS")) return ShallowPeakNS;
 
-    if (s == QLatin1String("CornerInnerSW")) return CornerInnerSW;
-    if (s == QLatin1String("CornerInnerNW")) return CornerInnerNW;
-    if (s == QLatin1String("CornerInnerNE")) return CornerInnerNE;
-    if (s == QLatin1String("CornerInnerSE")) return CornerInnerSE;
+    if (s == QStringLiteral("Slope30W")) return Slope30W;
+    if (s == QStringLiteral("Slope30N")) return Slope30N;
+    if (s == QStringLiteral("Slope30E")) return Slope30E;
+    if (s == QStringLiteral("Slope30S")) return Slope30S;
 
-    if (s == QLatin1String("CornerOuterSW")) return CornerOuterSW;
-    if (s == QLatin1String("CornerOuterNW")) return CornerOuterNW;
-    if (s == QLatin1String("CornerOuterNE")) return CornerOuterNE;
-    if (s == QLatin1String("CornerOuterSE")) return CornerOuterSE;
+    if (s == QStringLiteral("CornerInnerSW")) return CornerInnerSW;
+    if (s == QStringLiteral("CornerInnerNW")) return CornerInnerNW;
+    if (s == QStringLiteral("CornerInnerNE")) return CornerInnerNE;
+    if (s == QStringLiteral("CornerInnerSE")) return CornerInnerSE;
+
+    if (s == QStringLiteral("CornerOuterSW")) return CornerOuterSW;
+    if (s == QStringLiteral("CornerOuterNW")) return CornerOuterNW;
+    if (s == QStringLiteral("CornerOuterNE")) return CornerOuterNE;
+    if (s == QStringLiteral("CornerOuterSE")) return CornerOuterSE;
 
     return InvalidType;
 }
@@ -2362,31 +2555,31 @@ RoofObject::RoofType RoofObject::typeFromString(const QString &s)
 QString RoofObject::depthToString(RoofObject::RoofDepth depth)
 {
     switch (depth) {
-    case Zero: return QLatin1String("Zero");
-    case Point5: return QLatin1String("Point5");
-    case One: return QLatin1String("One");
-    case OnePoint5: return QLatin1String("OnePoint5");
-    case Two: return QLatin1String("Two");
-    case TwoPoint5: return QLatin1String("TwoPoint5");
-    case Three: return QLatin1String("Three");
+    case Zero: return QStringLiteral("Zero");
+    case Point5: return QStringLiteral("Point5");
+    case One: return QStringLiteral("One");
+    case OnePoint5: return QStringLiteral("OnePoint5");
+    case Two: return QStringLiteral("Two");
+    case TwoPoint5: return QStringLiteral("TwoPoint5");
+    case Three: return QStringLiteral("Three");
     default:
         break;
     }
 
     qFatal("unhandled roof object depth");
 
-    return QLatin1String("Invalid");
+    return QStringLiteral("Invalid");
 }
 
 RoofObject::RoofDepth RoofObject::depthFromString(const QString &s)
 {
-    if (s == QLatin1String("Zero")) return Zero;
-    if (s == QLatin1String("Point5")) return Point5;
-    if (s == QLatin1String("One")) return One;
-    if (s == QLatin1String("OnePoint5")) return OnePoint5;
-    if (s == QLatin1String("Two")) return Two;
-    if (s == QLatin1String("TwoPoint5")) return OnePoint5;
-    if (s == QLatin1String("Three")) return Three;
+    if (s == QStringLiteral("Zero")) return Zero;
+    if (s == QStringLiteral("Point5")) return Point5;
+    if (s == QStringLiteral("One")) return One;
+    if (s == QStringLiteral("OnePoint5")) return OnePoint5;
+    if (s == QStringLiteral("Two")) return Two;
+    if (s == QStringLiteral("TwoPoint5")) return OnePoint5;
+    if (s == QStringLiteral("Three")) return Three;
 
     return InvalidDepth;
 }

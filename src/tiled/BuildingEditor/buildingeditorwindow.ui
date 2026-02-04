@@ -836,10 +836,25 @@
     <string>Floor Grime</string>
    </property>
   </action>
+  <action name="actionRoof30Degree">
+   <property name="checkable">
+    <bool>true</bool>
+   </property>
+   <property name="icon">
+    <iconset resource="buildingeditor.qrc">
+     <normaloff>:/BuildingEditor/icons/icon_roof_peakNS.png</normaloff>:/BuildingEditor/icons/icon_roof_peakNS.png</iconset>
+   </property>
+   <property name="text">
+    <string>Add Roof (30 Degree)</string>
+   </property>
+   <property name="toolTip">
+    <string>Place Roof (30 Degree)</string>
+   </property>
+  </action>
  </widget>
  <resources>
-  <include location="buildingeditor.qrc"/>
   <include location="../tiled.qrc"/>
+  <include location="buildingeditor.qrc"/>
  </resources>
  <connections/>
 </ui>

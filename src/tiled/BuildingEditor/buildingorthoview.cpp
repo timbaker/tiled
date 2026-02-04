@@ -1177,6 +1177,7 @@ void GraphicsRoofHandleItem::synchWithObject()
                 roof->roofType() != RoofObject::DormerS &&
                 roof->roofType() != RoofObject::ShallowSlopeW &&
                 roof->roofType() != RoofObject::ShallowPeakNS &&
+                roof->roofType() != RoofObject::Slope30W &&
                 roof->roofType() != RoofObject::CornerOuterNW &&
                 roof->roofType() != RoofObject::CornerOuterSW;
         break;
@@ -1188,6 +1189,7 @@ void GraphicsRoofHandleItem::synchWithObject()
                 roof->roofType() != RoofObject::DormerS &&
                 roof->roofType() != RoofObject::ShallowSlopeN &&
                 roof->roofType() != RoofObject::ShallowPeakWE &&
+                roof->roofType() != RoofObject::Slope30N &&
                 roof->roofType() != RoofObject::CornerOuterNW &&
                 roof->roofType() != RoofObject::CornerOuterNE;
         break;
@@ -1199,6 +1201,7 @@ void GraphicsRoofHandleItem::synchWithObject()
                 roof->roofType() != RoofObject::DormerS &&
                 roof->roofType() != RoofObject::ShallowSlopeE &&
                 roof->roofType() != RoofObject::ShallowPeakNS &&
+                roof->roofType() != RoofObject::Slope30E &&
                 roof->roofType() != RoofObject::CornerOuterNE &&
                 roof->roofType() != RoofObject::CornerOuterSE;
         break;
@@ -1210,6 +1213,7 @@ void GraphicsRoofHandleItem::synchWithObject()
                 roof->roofType() != RoofObject::DormerN &&
                 roof->roofType() != RoofObject::ShallowSlopeS &&
                 roof->roofType() != RoofObject::ShallowPeakWE &&
+                roof->roofType() != RoofObject::Slope30S &&
                 roof->roofType() != RoofObject::CornerOuterSW &&
                 roof->roofType() != RoofObject::CornerOuterSE;
         break;

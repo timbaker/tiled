@@ -620,6 +620,12 @@ public:
         CapShallowRiseS1, CapShallowRiseS2, CapShallowFallS1, CapShallowFallS2,
         CapShallowRiseE1, CapShallowRiseE2, CapShallowFallE1, CapShallowFallE2,
 
+        // Cap tiles for 30-degree roofs
+        CapSlope30RiseE1, CapSlope30RiseE2, CapSlope30RiseE3, CapSlope30RiseE4, CapSlope30RiseE5, CapSlope30RiseE6,
+        CapSlope30FallE1, CapSlope30FallE2, CapSlope30FallE3, CapSlope30FallE4, CapSlope30FallE5, CapSlope30FallE6,
+        CapSlope30RiseS1, CapSlope30RiseS2, CapSlope30RiseS3, CapSlope30RiseS4, CapSlope30RiseS5, CapSlope30RiseS6,
+        CapSlope30FallS1, CapSlope30FallS2, CapSlope30FallS3, CapSlope30FallS4, CapSlope30FallS5, CapSlope30FallS6,
+
         EnumCount
     };
 
@@ -650,6 +656,12 @@ public:
         ShallowSlopeE1, ShallowSlopeE2,
         ShallowSlopeN1, ShallowSlopeN2,
         ShallowSlopeS1, ShallowSlopeS2,
+
+        // 30-degree sides
+        Slope30S1, Slope30S2, Slope30S3, Slope30S4, Slope30S5, Slope30S6,
+        Slope30E1, Slope30E2, Slope30E3, Slope30E4, Slope30E5, Slope30E6,
+        Slope30W1, Slope30W2, Slope30W3, Slope30W4, Slope30W5, Slope30W6,
+        Slope30N1, Slope30N2, Slope30N3, Slope30N4, Slope30N5, Slope30N6,
 
         // Sloped corners
         Inner1, Inner2, Inner3,

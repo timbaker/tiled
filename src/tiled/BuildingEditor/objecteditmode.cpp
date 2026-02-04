@@ -73,6 +73,7 @@ ObjectEditModeToolBar::ObjectEditModeToolBar(ObjectEditMode *mode, QWidget *pare
     addAction(actions->actionStairs);
     addAction(actions->actionRoof);
     addAction(actions->actionRoofShallow);
+    addAction(actions->actionRoof30Degree);
     addAction(actions->actionRoofCorner);
     addAction(actions->actionFurniture);
     addAction(actions->actionSelectObject);
@@ -157,6 +158,23 @@ ObjectEditModeToolBar::ObjectEditModeToolBar(ObjectEditMode *mode, QWidget *pare
     connect(roofMenu, &QMenu::triggered, this, &ObjectEditModeToolBar::roofShallowTypeChanged);
 
     button = static_cast<QToolButton*>(widgetForAction(actions->actionRoofShallow));
+    button->setMenu(roofMenu);
+    button->setPopupMode(QToolButton::MenuButtonPopup);
+    /////
+
+    /////
+    roofMenu = new QMenu(this);
+    roofMenu->addAction(QPixmap(QLatin1String(":/BuildingEditor/icons/icon_roof_slopeW.png")),
+                        mode->tr("30-Degree Slope (W)"));
+    roofMenu->addAction(QPixmap(QLatin1String(":/BuildingEditor/icons/icon_roof_slopeE.png")),
+                        mode->tr("30-Degree Slope (E)"));
+    roofMenu->addAction(QPixmap(QLatin1String(":/BuildingEditor/icons/icon_roof_slopeN.png")),
+                        mode->tr("30-Degree Slope (N)"));
+    roofMenu->addAction(QPixmap(QLatin1String(":/BuildingEditor/icons/icon_roof_slopeS.png")),
+                        mode->tr("30-Degree Slope (S)"));
+    connect(roofMenu, &QMenu::triggered, this, &ObjectEditModeToolBar::roofSlope30TypeChanged);
+
+    button = static_cast<QToolButton*>(widgetForAction(actions->actionRoof30Degree));
     button->setMenu(roofMenu);
     button->setPopupMode(QToolButton::MenuButtonPopup);
     /////
@@ -342,11 +360,28 @@ void ObjectEditModeToolBar::roofShallowTypeChanged(QAction *action)
     };
 
     RoofShallowTool::instance()->setRoofType(roofTypes[index]);
-
     RoofShallowTool::instance()->action()->setIcon(action->icon());
 
     if (!RoofShallowTool::instance()->isCurrent())
         RoofShallowTool::instance()->makeCurrent();
+}
+
+void ObjectEditModeToolBar::roofSlope30TypeChanged(QAction *action)
+{
+    int index = qobject_cast<QWidget*>(action->parent())->actions().indexOf(action);
+
+    static RoofObject::RoofType roofTypes[] = {
+        RoofObject::Slope30W,
+        RoofObject::Slope30E,
+        RoofObject::Slope30N,
+        RoofObject::Slope30S,
+    };
+
+    RoofSlope30Tool::instance()->setRoofType(roofTypes[index]);
+    RoofSlope30Tool::instance()->action()->setIcon(action->icon());
+
+    if (!RoofSlope30Tool::instance()->isCurrent())
+        RoofSlope30Tool::instance()->makeCurrent();
 }
 
 void ObjectEditModeToolBar::roofCornerTypeChanged(QAction *action)
