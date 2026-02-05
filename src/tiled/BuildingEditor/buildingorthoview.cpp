@@ -1140,10 +1140,18 @@ void GraphicsRoofHandleItem::paint(QPainter *painter, const QStyleOptionGraphics
     }
 
     if (cross) {
+        const QPen oldPen = painter->pen();
+        QPen pen = oldPen;
+        pen.setWidth(3);
+        if (mHighlight) {
+            pen.setBrush(Qt::red);
+        }
+        painter->setPen(pen);
         mEditor->drawLine(painter, mTileBounds.topLeft(), mTileBounds.bottomRight(),
                           level);
         mEditor->drawLine(painter, mTileBounds.topRight(), mTileBounds.bottomLeft(),
                           level);
+        painter->setPen(oldPen);
     }
 }
 
@@ -1180,7 +1188,9 @@ void GraphicsRoofHandleItem::synchWithObject()
                 roof->roofType() != RoofObject::Slope30W &&
                 roof->roofType() != RoofObject::Peak30NS &&
                 roof->roofType() != RoofObject::CornerOuterNW &&
-                roof->roofType() != RoofObject::CornerOuterSW;
+                roof->roofType() != RoofObject::CornerOuterSW &&
+                roof->roofType() != RoofObject::CornerSlope30OuterNW &&
+                roof->roofType() != RoofObject::CornerSlope30OuterSW;
         break;
     case CappedN:
         visible = roof->roofType() != RoofObject::SlopeN &&
@@ -1193,7 +1203,9 @@ void GraphicsRoofHandleItem::synchWithObject()
                 roof->roofType() != RoofObject::Slope30N &&
                 roof->roofType() != RoofObject::Peak30WE &&
                 roof->roofType() != RoofObject::CornerOuterNW &&
-                roof->roofType() != RoofObject::CornerOuterNE;
+                roof->roofType() != RoofObject::CornerOuterNE &&
+                roof->roofType() != RoofObject::CornerSlope30OuterNW &&
+                roof->roofType() != RoofObject::CornerSlope30OuterNE;
         break;
     case CappedE:
         visible = roof->roofType() != RoofObject::SlopeE &&
@@ -1206,7 +1218,9 @@ void GraphicsRoofHandleItem::synchWithObject()
                 roof->roofType() != RoofObject::Slope30E &&
                 roof->roofType() != RoofObject::Peak30NS &&
                 roof->roofType() != RoofObject::CornerOuterNE &&
-                roof->roofType() != RoofObject::CornerOuterSE;
+                roof->roofType() != RoofObject::CornerOuterSE &&
+                roof->roofType() != RoofObject::CornerSlope30OuterNE &&
+                roof->roofType() != RoofObject::CornerSlope30OuterSE;
         break;
     case CappedS:
         visible = roof->roofType() != RoofObject::SlopeS &&
@@ -1219,7 +1233,9 @@ void GraphicsRoofHandleItem::synchWithObject()
                 roof->roofType() != RoofObject::Slope30S &&
                 roof->roofType() != RoofObject::Peak30WE &&
                 roof->roofType() != RoofObject::CornerOuterSW &&
-                roof->roofType() != RoofObject::CornerOuterSE;
+                roof->roofType() != RoofObject::CornerOuterSE &&
+                roof->roofType() != RoofObject::CornerSlope30OuterSW &&
+                roof->roofType() != RoofObject::CornerSlope30OuterSE;
         break;
     case Orient:
         break;
@@ -1238,27 +1254,34 @@ void GraphicsRoofHandleItem::setHighlight(bool highlight)
 QRectF GraphicsRoofHandleItem::calcBoundingRect()
 {
     QRectF r = mRoofItem->object()->bounds();
-
+    qreal insetW = 0.5;
+    qreal insetH = 0.5;
+    if (r.width() == 1) {
+        insetW = 1.0 / 3.0;
+    }
+    if (r.height() == 1) {
+        insetH = 1.0 / 3.0;
+    }
     switch (mType) {
     case Resize:
-        r.setLeft(r.right() - 15/30.0);
-        r.setTop(r.bottom() - 15/30.0);
+        r.setLeft(r.right() - insetW);
+        r.setTop(r.bottom() - insetH);
         break;
     case CappedW:
-        r.setRight(r.left() + 15/30.0);
-        r.adjust(0,15/30.0,0,-15/30.0);
+        r.setRight(r.left() + insetW);
+        r.adjust(0,insetH,0,-insetH);
         break;
     case CappedN:
-        r.setBottom(r.top() + 15/30.0);
-        r.adjust(15/30.0,0,-15/30.0,0);
+        r.setBottom(r.top() + insetH);
+        r.adjust(insetW,0,-insetW,0);
         break;
     case CappedE:
-        r.setLeft(r.right() - 15/30.0);
-        r.adjust(0,15/30.0,0,-15/30.0);
+        r.setLeft(r.right() - insetW);
+        r.adjust(0,insetH,0,-insetH);
         break;
     case CappedS:
-        r.setTop(r.bottom() - 15/30.0);
-        r.adjust(15/30.0,0,-15/30.0,0);
+        r.setTop(r.bottom() - insetH);
+        r.adjust(insetW,0,-insetW,0);
         break;
     case DepthUp:
         r = QRectF(r.center().x()-7/30.0,r.center().y()-14/30.0,

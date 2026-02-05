@@ -625,6 +625,8 @@ public:
         CapSlope30FallE1, CapSlope30FallE2, CapSlope30FallE3, CapSlope30FallE4, CapSlope30FallE5, CapSlope30FallE6,
         CapSlope30RiseS1, CapSlope30RiseS2, CapSlope30RiseS3, CapSlope30RiseS4, CapSlope30RiseS5, CapSlope30RiseS6,
         CapSlope30FallS1, CapSlope30FallS2, CapSlope30FallS3, CapSlope30FallS4, CapSlope30FallS5, CapSlope30FallS6,
+        CapPeak30E1, CapPeak30E2, CapPeak30E3, CapPeak30E4, CapPeak30E5, CapPeak30E6,
+        CapPeak30S1, CapPeak30S2, CapPeak30S3, CapPeak30S4, CapPeak30S5, CapPeak30S6,
 
         EnumCount
     };

@@ -1500,7 +1500,6 @@ int RoofObject::getOffset(RoofObject::RoofTile tile) const
         BTC_RoofSlopes::OuterSlope30NE1, BTC_RoofSlopes::OuterSlope30NE2, BTC_RoofSlopes::OuterSlope30NE3, BTC_RoofSlopes::OuterSlope30NE4, BTC_RoofSlopes::OuterSlope30NE5, BTC_RoofSlopes::OuterSlope30NE6,
         BTC_RoofSlopes::OuterSlope30NW1, BTC_RoofSlopes::OuterSlope30NW2, BTC_RoofSlopes::OuterSlope30NW3, BTC_RoofSlopes::OuterSlope30NW4, BTC_RoofSlopes::OuterSlope30NW5, BTC_RoofSlopes::OuterSlope30NW6,
         BTC_RoofSlopes::OuterSlope30SW1, BTC_RoofSlopes::OuterSlope30SW2, BTC_RoofSlopes::OuterSlope30SW3, BTC_RoofSlopes::OuterSlope30SW4, BTC_RoofSlopes::OuterSlope30SW5, BTC_RoofSlopes::OuterSlope30SW6,
-
     };
 
     static const BTC_RoofCaps::TileEnum mapCap[] = {
@@ -1523,6 +1522,8 @@ int RoofObject::getOffset(RoofObject::RoofTile tile) const
         BTC_RoofCaps::CapSlope30FallE1, BTC_RoofCaps::CapSlope30FallE2, BTC_RoofCaps::CapSlope30FallE3, BTC_RoofCaps::CapSlope30FallE4, BTC_RoofCaps::CapSlope30FallE5, BTC_RoofCaps::CapSlope30FallE6,
         BTC_RoofCaps::CapSlope30RiseS1, BTC_RoofCaps::CapSlope30RiseS2, BTC_RoofCaps::CapSlope30RiseS3, BTC_RoofCaps::CapSlope30RiseS4, BTC_RoofCaps::CapSlope30RiseS5, BTC_RoofCaps::CapSlope30RiseS6,
         BTC_RoofCaps::CapSlope30FallS1, BTC_RoofCaps::CapSlope30FallS2, BTC_RoofCaps::CapSlope30FallS3, BTC_RoofCaps::CapSlope30FallS4, BTC_RoofCaps::CapSlope30FallS5, BTC_RoofCaps::CapSlope30FallS6,
+        BTC_RoofCaps::CapPeak30E1, BTC_RoofCaps::CapPeak30E2, BTC_RoofCaps::CapPeak30E3, BTC_RoofCaps::CapPeak30E4, BTC_RoofCaps::CapPeak30E5, BTC_RoofCaps::CapPeak30E6,
+        BTC_RoofCaps::CapPeak30S1, BTC_RoofCaps::CapPeak30S2, BTC_RoofCaps::CapPeak30S3, BTC_RoofCaps::CapPeak30S4, BTC_RoofCaps::CapPeak30S5, BTC_RoofCaps::CapPeak30S6,
     };
 
     if (tile >= CapRiseE1) {
@@ -2159,26 +2160,31 @@ QVector<RoofObject::RoofTile> RoofObject::westCapTiles(QRect &b)
         break;
     case Peak30WE:
         ret.resize(mHeight);
-        ret[mHeight / 2] = TileCount;
+        ret[mHeight / 2] = CapPeak30E1;
         if (mHeight >= 3) {
             ret[0] = CapSlope30FallE1;
             ret[mHeight - 1] = CapSlope30RiseE1;
+            ret[mHeight / 2] = CapPeak30E2;
         }
         if (mHeight >= 5) {
             ret[1] = CapSlope30FallE2;
             ret[mHeight - 2] = CapSlope30RiseE2;
+            ret[mHeight / 2] = CapPeak30E3;
         }
         if (mHeight >= 7) {
             ret[2] = CapSlope30FallE3;
             ret[mHeight - 3] = CapSlope30RiseE3;
+            ret[mHeight / 2] = CapPeak30E4;
         }
         if (mHeight >= 9) {
             ret[3] = CapSlope30FallE4;
             ret[mHeight - 4] = CapSlope30RiseE4;
+            ret[mHeight / 2] = CapPeak30E5;
         }
         if (mHeight >= 11) {
             ret[4] = CapSlope30FallE5;
             ret[mHeight - 5] = CapSlope30RiseE5;
+            ret[mHeight / 2] = CapPeak30E6;
         }
         break;
     case FlatTop:
@@ -2292,26 +2298,31 @@ QVector<RoofObject::RoofTile> RoofObject::eastCapTiles(QRect &b)
         break;
     case Peak30WE:
         ret.resize(mHeight);
-        ret[mHeight / 2] = TileCount;
+        ret[mHeight / 2] = CapPeak30E1;
         if (mHeight >= 3) {
             ret[0] = CapSlope30FallE1;
             ret[mHeight - 1] = CapSlope30RiseE1;
+            ret[mHeight / 2] = CapPeak30E2;
         }
         if (mHeight >= 5) {
             ret[1] = CapSlope30FallE2;
             ret[mHeight - 2] = CapSlope30RiseE2;
+            ret[mHeight / 2] = CapPeak30E3;
         }
         if (mHeight >= 7) {
             ret[2] = CapSlope30FallE3;
             ret[mHeight - 3] = CapSlope30RiseE3;
+            ret[mHeight / 2] = CapPeak30E4;
         }
         if (mHeight >= 9) {
             ret[3] = CapSlope30FallE4;
             ret[mHeight - 4] = CapSlope30RiseE4;
+            ret[mHeight / 2] = CapPeak30E5;
         }
         if (mHeight >= 11) {
             ret[4] = CapSlope30FallE5;
             ret[mHeight - 5] = CapSlope30RiseE5;
+            ret[mHeight / 2] = CapPeak30E6;
         }
         break;
     case FlatTop:
@@ -2425,26 +2436,31 @@ QVector<RoofObject::RoofTile> RoofObject::northCapTiles(QRect &b)
         break;
     case Peak30NS:
         ret.resize(mWidth);
-        ret[mWidth / 2] = TileCount;
+        ret[mWidth / 2] = CapPeak30S1;
         if (mWidth >= 3) {
             ret[0] = CapSlope30RiseS1;
             ret[mWidth - 1] = CapSlope30FallS1;
+            ret[mWidth / 2] = CapPeak30S2;
         }
         if (mWidth >= 5) {
             ret[1] = CapSlope30RiseS2;
             ret[mWidth - 2] = CapSlope30FallS2;
+            ret[mWidth / 2] = CapPeak30S3;
         }
         if (mWidth >= 7) {
             ret[2] = CapSlope30RiseS3;
             ret[mWidth - 3] = CapSlope30FallS3;
+            ret[mWidth / 2] = CapPeak30S4;
         }
         if (mWidth >= 9) {
             ret[3] = CapSlope30RiseS4;
             ret[mWidth - 4] = CapSlope30FallS4;
+            ret[mWidth / 2] = CapPeak30S5;
         }
         if (mWidth >= 11) {
             ret[4] = CapSlope30RiseS5;
             ret[mWidth - 5] = CapSlope30FallS5;
+            ret[mWidth / 2] = CapPeak30S6;
         }
         break;
     case FlatTop:
@@ -2558,26 +2574,31 @@ QVector<RoofObject::RoofTile> RoofObject::southCapTiles(QRect &b)
         break;
     case Peak30NS:
         ret.resize(mWidth);
-        ret[mWidth / 2] = TileCount;
+        ret[mWidth / 2] = CapPeak30S1;
         if (mWidth >= 3) {
             ret[0] = CapSlope30RiseS1;
             ret[mWidth - 1] = CapSlope30FallS1;
+            ret[mWidth / 2] = CapPeak30S2;
         }
         if (mWidth >= 5) {
             ret[1] = CapSlope30RiseS2;
             ret[mWidth - 2] = CapSlope30FallS2;
+            ret[mWidth / 2] = CapPeak30S3;
         }
         if (mWidth >= 7) {
             ret[2] = CapSlope30RiseS3;
             ret[mWidth - 3] = CapSlope30FallS3;
+            ret[mWidth / 2] = CapPeak30S4;
         }
         if (mWidth >= 9) {
             ret[3] = CapSlope30RiseS4;
             ret[mWidth - 4] = CapSlope30FallS4;
+            ret[mWidth / 2] = CapPeak30S5;
         }
         if (mWidth >= 11) {
             ret[4] = CapSlope30RiseS5;
             ret[mWidth - 5] = CapSlope30FallS5;
+            ret[mWidth / 2] = CapPeak30S6;
         }
         break;
     case FlatTop:
