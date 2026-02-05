@@ -550,6 +550,8 @@ void RoofObject::rotate(bool right)
         case Slope30N: mType = Slope30E; break;
         case Slope30E: mType = Slope30S; break;
         case Slope30S: mType = Slope30W; break;
+        case Peak30WE: mType = Peak30NS; break;
+        case Peak30NS: mType = Peak30WE; break;
 
         case CornerInnerSW: mType = CornerInnerNW; break;
         case CornerInnerNW: mType = CornerInnerNE; break;
@@ -560,6 +562,17 @@ void RoofObject::rotate(bool right)
         case CornerOuterNW: mType = CornerOuterNE; break;
         case CornerOuterNE: mType = CornerOuterSE; break;
         case CornerOuterSE: mType = CornerOuterSW; break;
+
+        case CornerSlope30InnerSW: mType = CornerSlope30InnerNW; break;
+        case CornerSlope30InnerNW: mType = CornerSlope30InnerNE; break;
+        case CornerSlope30InnerNE: mType = CornerSlope30InnerSE; break;
+        case CornerSlope30InnerSE: mType = CornerSlope30InnerSW; break;
+
+        case CornerSlope30OuterSW: mType = CornerSlope30OuterNW; break;
+        case CornerSlope30OuterNW: mType = CornerSlope30OuterNE; break;
+        case CornerSlope30OuterNE: mType = CornerSlope30OuterSE; break;
+        case CornerSlope30OuterSE: mType = CornerSlope30OuterSW; break;
+
         default:
             break;
         }
@@ -600,6 +613,8 @@ void RoofObject::rotate(bool right)
         case Slope30N: mType = Slope30W; break;
         case Slope30E: mType = Slope30N; break;
         case Slope30S: mType = Slope30E; break;
+        case Peak30WE: mType = Peak30NS; break;
+        case Peak30NS: mType = Peak30WE; break;
 
         case CornerInnerSW: mType = CornerInnerSE; break;
         case CornerInnerNW: mType = CornerInnerSW; break;
@@ -610,6 +625,17 @@ void RoofObject::rotate(bool right)
         case CornerOuterNW: mType = CornerOuterSW; break;
         case CornerOuterNE: mType = CornerOuterNW; break;
         case CornerOuterSE: mType = CornerOuterNE; break;
+
+        case CornerSlope30InnerSW: mType = CornerSlope30InnerSE; break;
+        case CornerSlope30InnerNW: mType = CornerSlope30InnerSW; break;
+        case CornerSlope30InnerNE: mType = CornerSlope30InnerNW; break;
+        case CornerSlope30InnerSE: mType = CornerSlope30InnerNE; break;
+
+        case CornerSlope30OuterSW: mType = CornerSlope30OuterSE; break;
+        case CornerSlope30OuterNW: mType = CornerSlope30OuterSW; break;
+        case CornerSlope30OuterNE: mType = CornerSlope30OuterNW; break;
+        case CornerSlope30OuterSE: mType = CornerSlope30OuterNE; break;
+
         default:
             break;
         }
@@ -895,6 +921,19 @@ void RoofObject::setWidth(int width)
         mWidth = width;
         mDepth = Zero;
         break;
+    case Peak30WE:
+        mWidth = width;
+        mDepth = Zero;
+        break;
+    case Peak30NS:
+        if (width > 9) mWidth = 11;
+        else if (width > 7) mWidth = 9;
+        else if (width > 5) mWidth = 7;
+        else if (width > 3) mWidth = 5;
+        else if (width > 1) mWidth = 3;
+        else mWidth = 1;
+        mDepth = Zero;
+        break;
 
     case CornerInnerSW:
     case CornerInnerNW:
@@ -1054,6 +1093,19 @@ void RoofObject::setHeight(int height)
     case Slope30N:
     case Slope30S:
         mHeight = qBound(1, height, 6);
+        mDepth = Zero;
+        break;
+    case Peak30WE:
+        if (height > 9) mHeight = 11;
+        else if (height > 7) mHeight = 9;
+        else if (height > 5) mHeight = 7;
+        else if (height > 3) mHeight = 5;
+        else if (height > 1) mHeight = 3;
+        else mHeight = 1;
+        mDepth = Zero;
+        break;
+    case Peak30NS:
+        mHeight = height;
         mDepth = Zero;
         break;
 
@@ -1379,6 +1431,8 @@ void RoofObject::setDefaultCaps()
     case Slope30N: mCappedS = false; break;
     case Slope30E: mCappedW = false; break;
     case Slope30S: mCappedN = false; break;
+    case Peak30WE: mCappedW = mCappedE = false; break;
+    case Peak30NS: mCappedN = mCappedS = false; break;
     case CornerInnerSW:
     case CornerInnerNW:
     case CornerInnerNE:
@@ -1389,6 +1443,18 @@ void RoofObject::setDefaultCaps()
     case CornerOuterNW:
     case CornerOuterNE:
     case CornerOuterSE:
+        mCappedW = mCappedN = mCappedE = mCappedS = false;
+        break;
+    case CornerSlope30InnerSW:
+    case CornerSlope30InnerNW:
+    case CornerSlope30InnerNE:
+    case CornerSlope30InnerSE:
+        mCappedW = mCappedN = mCappedE = mCappedS = false;
+        break;
+    case CornerSlope30OuterSW:
+    case CornerSlope30OuterNW:
+    case CornerSlope30OuterNE:
+    case CornerSlope30OuterSE:
         mCappedW = mCappedN = mCappedE = mCappedS = false;
         break;
     default:
@@ -1414,6 +1480,9 @@ int RoofObject::getOffset(RoofObject::RoofTile tile) const
         BTC_RoofSlopes::Slope30E1, BTC_RoofSlopes::Slope30E2, BTC_RoofSlopes::Slope30E3, BTC_RoofSlopes::Slope30E4, BTC_RoofSlopes::Slope30E5, BTC_RoofSlopes::Slope30E6,
         BTC_RoofSlopes::Slope30W1, BTC_RoofSlopes::Slope30W2, BTC_RoofSlopes::Slope30W3, BTC_RoofSlopes::Slope30W4, BTC_RoofSlopes::Slope30W5, BTC_RoofSlopes::Slope30W6,
         BTC_RoofSlopes::Slope30N1, BTC_RoofSlopes::Slope30N2, BTC_RoofSlopes::Slope30N3, BTC_RoofSlopes::Slope30N4, BTC_RoofSlopes::Slope30N5, BTC_RoofSlopes::Slope30N6,
+
+        BTC_RoofSlopes::Peak30NS1, BTC_RoofSlopes::Peak30NS2, BTC_RoofSlopes::Peak30NS3, BTC_RoofSlopes::Peak30NS4, BTC_RoofSlopes::Peak30NS5, BTC_RoofSlopes::Peak30NS6,
+        BTC_RoofSlopes::Peak30WE1, BTC_RoofSlopes::Peak30WE2, BTC_RoofSlopes::Peak30WE3, BTC_RoofSlopes::Peak30WE4, BTC_RoofSlopes::Peak30WE5, BTC_RoofSlopes::Peak30WE6,
 
         BTC_RoofSlopes::Inner1, BTC_RoofSlopes::Inner2, BTC_RoofSlopes::Inner3,
         BTC_RoofSlopes::Outer1, BTC_RoofSlopes::Outer2, BTC_RoofSlopes::Outer3,
@@ -1872,7 +1941,7 @@ QVector<RoofObject::RoofTile> RoofObject::slopeTiles(QRect &b)
             for (int x = 0; x < mWidth; x++)
                 ret += pat[y];
         break;
-     case ShallowPeakWE:
+    case ShallowPeakWE:
         pat << ShallowSlopeN1;
         if (mHeight > 2) pat << ShallowSlopeN2 << ShallowSlopeS2;
         pat << ShallowSlopeS1;
@@ -1881,52 +1950,115 @@ QVector<RoofObject::RoofTile> RoofObject::slopeTiles(QRect &b)
                 ret += pat[y];
         break;
 
-     case Slope30W:
-         pat << Slope30W1;
-         if (mWidth > 1) pat << Slope30W2;
-         if (mWidth > 2) pat << Slope30W3;
-         if (mWidth > 3) pat << Slope30W4;
-         if (mWidth > 4) pat << Slope30W5;
-         if (mWidth > 5) pat << Slope30W6;
-         for (int y = 0; y < mHeight; y++) {
-             ret += pat;
-         }
-         break;
-     case Slope30N:
-         pat << Slope30N1;
-         if (mHeight > 1) pat << Slope30N2;
-         if (mHeight > 2) pat << Slope30N3;
-         if (mHeight > 3) pat << Slope30N4;
-         if (mHeight > 4) pat << Slope30N5;
-         if (mHeight > 5) pat << Slope30N6;
-         for (int y = 0; y < pat.size(); y++)
-             for (int x = 0; x < mWidth; x++)
-                 ret += pat[y];
-         break;
-     case Slope30E:
-         if (mWidth > 5) pat << Slope30E6;
-         if (mWidth > 4) pat << Slope30E5;
-         if (mWidth > 3) pat << Slope30E4;
-         if (mWidth > 2) pat << Slope30E3;
-         if (mWidth > 1) pat << Slope30E2;
-         pat << Slope30E1;
-         for (int y = 0; y < mHeight; y++) {
-             ret += pat;
-         }
-         break;
-     case Slope30S:
-         if (mHeight > 5) pat << Slope30S6;
-         if (mHeight > 4) pat << Slope30S5;
-         if (mHeight > 3) pat << Slope30S4;
-         if (mHeight > 2) pat << Slope30S3;
-         if (mHeight > 1) pat << Slope30S2;
-         pat << Slope30S1;
-         for (int y = 0; y < pat.size(); y++)
-             for (int x = 0; x < mWidth; x++)
-                 ret += pat[y];
-         break;
+    case Slope30W:
+        pat << Slope30W1;
+        if (mWidth > 1) pat << Slope30W2;
+        if (mWidth > 2) pat << Slope30W3;
+        if (mWidth > 3) pat << Slope30W4;
+        if (mWidth > 4) pat << Slope30W5;
+        if (mWidth > 5) pat << Slope30W6;
+        for (int y = 0; y < mHeight; y++) {
+            ret += pat;
+        }
+        break;
+    case Slope30N:
+        pat << Slope30N1;
+        if (mHeight > 1) pat << Slope30N2;
+        if (mHeight > 2) pat << Slope30N3;
+        if (mHeight > 3) pat << Slope30N4;
+        if (mHeight > 4) pat << Slope30N5;
+        if (mHeight > 5) pat << Slope30N6;
+        for (int y = 0; y < pat.size(); y++)
+            for (int x = 0; x < mWidth; x++)
+                ret += pat[y];
+        break;
+    case Slope30E:
+        if (mWidth > 5) pat << Slope30E6;
+        if (mWidth > 4) pat << Slope30E5;
+        if (mWidth > 3) pat << Slope30E4;
+        if (mWidth > 2) pat << Slope30E3;
+        if (mWidth > 1) pat << Slope30E2;
+        pat << Slope30E1;
+        for (int y = 0; y < mHeight; y++) {
+            ret += pat;
+        }
+        break;
+    case Slope30S:
+        if (mHeight > 5) pat << Slope30S6;
+        if (mHeight > 4) pat << Slope30S5;
+        if (mHeight > 3) pat << Slope30S4;
+        if (mHeight > 2) pat << Slope30S3;
+        if (mHeight > 1) pat << Slope30S2;
+        pat << Slope30S1;
+        for (int y = 0; y < pat.size(); y++)
+            for (int x = 0; x < mWidth; x++)
+                ret += pat[y];
+        break;
+    case Peak30WE:
+        pat.resize(mHeight);
+        pat[mHeight / 2] = Peak30NS1;
+        if (mHeight >= 3) {
+            pat[0] = Slope30N1;
+            pat[mHeight - 1] = Slope30S1;
+            pat[mHeight / 2] = Peak30NS2;
+        }
+        if (mHeight >= 5) {
+            pat[1] = Slope30N2;
+            pat[mHeight - 2] = Slope30S2;
+            pat[mHeight / 2] = Peak30NS3;
+        }
+        if (mHeight >= 7) {
+            pat[2] = Slope30N3;
+            pat[mHeight - 3] = Slope30S3;
+            pat[mHeight / 2] = Peak30NS4;
+        }
+        if (mHeight >= 9) {
+            pat[3] = Slope30N4;
+            pat[mHeight - 4] = Slope30S4;
+            pat[mHeight / 2] = Peak30NS5;
+        }
+        if (mHeight >= 11) {
+            pat[4] = Slope30N5;
+            pat[mHeight - 5] = Slope30S5;
+            pat[mHeight / 2] = Peak30NS6;
+        }
+        for (int y = 0; y < pat.size(); y++)
+            for (int x = 0; x < mWidth; x++)
+                ret += pat[y];
+        break;
+    case Peak30NS:
+        pat.resize(mWidth);
+        pat[mWidth / 2] = Peak30WE1;
+        if (mWidth >= 3) {
+            pat[0] = Slope30W1;
+            pat[mWidth - 1] = Slope30E1;
+            pat[mWidth / 2] = Peak30WE2;
+        }
+        if (mWidth >= 5) {
+            pat[1] = Slope30W2;
+            pat[mWidth - 2] = Slope30E2;
+            pat[mWidth / 2] = Peak30WE3;
+        }
+        if (mWidth >= 7) {
+            pat[2] = Slope30W3;
+            pat[mWidth - 3] = Slope30E3;
+            pat[mWidth / 2] = Peak30WE4;
+        }
+        if (mWidth >= 9) {
+            pat[3] = Slope30W4;
+            pat[mWidth - 4] = Slope30E4;
+            pat[mWidth / 2] = Peak30WE5;
+        }
+        if (mWidth >= 11) {
+            pat[4] = Slope30W5;
+            pat[mWidth - 5] = Slope30E5;
+            pat[mWidth / 2] = Peak30WE6;
+        }
+        for (int y = 0; y < mHeight; y++)
+            ret += pat;
+        break;
 
-     default:
+    default:
         break;
     }
     return ret;
@@ -2022,6 +2154,32 @@ QVector<RoofObject::RoofTile> RoofObject::westCapTiles(QRect &b)
         if (mHeight > 2) ret += CapSlope30RiseE3;
         if (mHeight > 1) ret += CapSlope30RiseE2;
         ret += CapSlope30RiseE1;
+        break;
+    case Peak30NS:
+        break;
+    case Peak30WE:
+        ret.resize(mHeight);
+        ret[mHeight / 2] = TileCount;
+        if (mHeight >= 3) {
+            ret[0] = CapSlope30FallE1;
+            ret[mHeight - 1] = CapSlope30RiseE1;
+        }
+        if (mHeight >= 5) {
+            ret[1] = CapSlope30FallE2;
+            ret[mHeight - 2] = CapSlope30RiseE2;
+        }
+        if (mHeight >= 7) {
+            ret[2] = CapSlope30FallE3;
+            ret[mHeight - 3] = CapSlope30RiseE3;
+        }
+        if (mHeight >= 9) {
+            ret[3] = CapSlope30FallE4;
+            ret[mHeight - 4] = CapSlope30RiseE4;
+        }
+        if (mHeight >= 11) {
+            ret[4] = CapSlope30FallE5;
+            ret[mHeight - 5] = CapSlope30RiseE5;
+        }
         break;
     case FlatTop:
     case CornerInnerSW:
@@ -2132,6 +2290,30 @@ QVector<RoofObject::RoofTile> RoofObject::eastCapTiles(QRect &b)
         if (mHeight > 1) ret += CapSlope30RiseE2;
         ret += CapSlope30RiseE1;
         break;
+    case Peak30WE:
+        ret.resize(mHeight);
+        ret[mHeight / 2] = TileCount;
+        if (mHeight >= 3) {
+            ret[0] = CapSlope30FallE1;
+            ret[mHeight - 1] = CapSlope30RiseE1;
+        }
+        if (mHeight >= 5) {
+            ret[1] = CapSlope30FallE2;
+            ret[mHeight - 2] = CapSlope30RiseE2;
+        }
+        if (mHeight >= 7) {
+            ret[2] = CapSlope30FallE3;
+            ret[mHeight - 3] = CapSlope30RiseE3;
+        }
+        if (mHeight >= 9) {
+            ret[3] = CapSlope30FallE4;
+            ret[mHeight - 4] = CapSlope30RiseE4;
+        }
+        if (mHeight >= 11) {
+            ret[4] = CapSlope30FallE5;
+            ret[mHeight - 5] = CapSlope30RiseE5;
+        }
+        break;
     case FlatTop:
     case CornerInnerSE:
     case CornerInnerNE: {
@@ -2241,6 +2423,30 @@ QVector<RoofObject::RoofTile> RoofObject::northCapTiles(QRect &b)
         break;
     case Slope30S:
         break;
+    case Peak30NS:
+        ret.resize(mWidth);
+        ret[mWidth / 2] = TileCount;
+        if (mWidth >= 3) {
+            ret[0] = CapSlope30RiseS1;
+            ret[mWidth - 1] = CapSlope30FallS1;
+        }
+        if (mWidth >= 5) {
+            ret[1] = CapSlope30RiseS2;
+            ret[mWidth - 2] = CapSlope30FallS2;
+        }
+        if (mWidth >= 7) {
+            ret[2] = CapSlope30RiseS3;
+            ret[mWidth - 3] = CapSlope30FallS3;
+        }
+        if (mWidth >= 9) {
+            ret[3] = CapSlope30RiseS4;
+            ret[mWidth - 4] = CapSlope30FallS4;
+        }
+        if (mWidth >= 11) {
+            ret[4] = CapSlope30RiseS5;
+            ret[mWidth - 5] = CapSlope30FallS5;
+        }
+        break;
     case FlatTop:
     case CornerInnerNW:
     case CornerInnerNE: {
@@ -2349,6 +2555,30 @@ QVector<RoofObject::RoofTile> RoofObject::southCapTiles(QRect &b)
         ret += CapSlope30FallS1;
         break;
     case Slope30S:
+        break;
+    case Peak30NS:
+        ret.resize(mWidth);
+        ret[mWidth / 2] = TileCount;
+        if (mWidth >= 3) {
+            ret[0] = CapSlope30RiseS1;
+            ret[mWidth - 1] = CapSlope30FallS1;
+        }
+        if (mWidth >= 5) {
+            ret[1] = CapSlope30RiseS2;
+            ret[mWidth - 2] = CapSlope30FallS2;
+        }
+        if (mWidth >= 7) {
+            ret[2] = CapSlope30RiseS3;
+            ret[mWidth - 3] = CapSlope30FallS3;
+        }
+        if (mWidth >= 9) {
+            ret[3] = CapSlope30RiseS4;
+            ret[mWidth - 4] = CapSlope30FallS4;
+        }
+        if (mWidth >= 11) {
+            ret[4] = CapSlope30RiseS5;
+            ret[mWidth - 5] = CapSlope30FallS5;
+        }
         break;
     case FlatTop:
     case CornerInnerSE:
@@ -3085,6 +3315,8 @@ QString RoofObject::typeToString(RoofObject::RoofType type)
     case Slope30N: return QStringLiteral("Slope30N");
     case Slope30E: return QStringLiteral("Slope30E");
     case Slope30S: return QStringLiteral("Slope30S");
+    case Peak30WE: return QStringLiteral("Peak30WE");
+    case Peak30NS: return QStringLiteral("Peak30NS");
 
     case CornerInnerSW: return QStringLiteral("CornerInnerSW");
     case CornerInnerNW: return QStringLiteral("CornerInnerNW");
@@ -3141,6 +3373,8 @@ RoofObject::RoofType RoofObject::typeFromString(const QString &s)
     if (s == QStringLiteral("Slope30N")) return Slope30N;
     if (s == QStringLiteral("Slope30E")) return Slope30E;
     if (s == QStringLiteral("Slope30S")) return Slope30S;
+    if (s == QStringLiteral("Peak30WE")) return Peak30WE;
+    if (s == QStringLiteral("Peak30NS")) return Peak30NS;
 
     if (s == QStringLiteral("CornerInnerSW")) return CornerInnerSW;
     if (s == QStringLiteral("CornerInnerNW")) return CornerInnerNW;

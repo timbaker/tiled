@@ -409,6 +409,8 @@ public:
         Slope30N,
         Slope30E,
         Slope30S,
+        Peak30WE,
+        Peak30NS,
 
         CornerInnerSW,
         CornerInnerNW,
@@ -569,6 +571,10 @@ public:
         Slope30E1, Slope30E2, Slope30E3, Slope30E4, Slope30E5, Slope30E6,
         Slope30W1, Slope30W2, Slope30W3, Slope30W4, Slope30W5, Slope30W6,
         Slope30N1, Slope30N2, Slope30N3, Slope30N4, Slope30N5, Slope30N6,
+
+        // 30-degree peaks
+        Peak30NS1, Peak30NS2, Peak30NS3, Peak30NS4, Peak30NS5, Peak30NS6, // intersection runs west-east
+        Peak30WE1, Peak30WE2, Peak30WE3, Peak30WE4, Peak30WE5, Peak30WE6, // intersection runs north-south
 
         // Corners
         Inner1, Inner2, Inner3,
