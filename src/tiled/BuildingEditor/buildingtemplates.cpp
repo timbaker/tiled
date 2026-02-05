@@ -363,6 +363,7 @@ BuildingTileEntry *TemplatesFile::readTileEntry(SimpleFileBlock &block, QString 
             int e = category->enumFromString(kv.name);
             if (e == BuildingTileCategory::Invalid) {
                 error = tr("Unknown %1 enum %2").arg(categoryName).arg(kv.name);
+                delete entry;
                 return 0;
             }
             entry->mTiles[e] = BuildingTilesMgr::instance()->get(kv.value);

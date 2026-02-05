@@ -1415,9 +1415,9 @@ BTC_RoofSlopes::BTC_RoofSlopes(const QString &label) :
     mEnumNames += QStringLiteral("ShallowSlopeS2");
 
     mEnumNames << QStringLiteral("Slope30S1") << QStringLiteral("Slope30S2") << QStringLiteral("Slope30S3") << QStringLiteral("Slope30S4") << QStringLiteral("Slope30S5") << QStringLiteral("Slope30S6");
-    mEnumNames << QStringLiteral("Slope30E1") << QStringLiteral("Slope30E2") << QStringLiteral("Slope30E3") << QStringLiteral("Slope30E4") << QStringLiteral("Slope30E5") << QStringLiteral("Slope30E6"),
-    mEnumNames << QStringLiteral("Slope30W1") << QStringLiteral("Slope30W2") << QStringLiteral("Slope30W3") << QStringLiteral("Slope30W4") << QStringLiteral("Slope30W5") << QStringLiteral("Slope30W6"),
-    mEnumNames << QStringLiteral("Slope30N1") << QStringLiteral("Slope30N2") << QStringLiteral("Slope30N3") << QStringLiteral("Slope30N4") << QStringLiteral("Slope30N5") << QStringLiteral("Slope30N6"),
+    mEnumNames << QStringLiteral("Slope30E1") << QStringLiteral("Slope30E2") << QStringLiteral("Slope30E3") << QStringLiteral("Slope30E4") << QStringLiteral("Slope30E5") << QStringLiteral("Slope30E6");
+    mEnumNames << QStringLiteral("Slope30W1") << QStringLiteral("Slope30W2") << QStringLiteral("Slope30W3") << QStringLiteral("Slope30W4") << QStringLiteral("Slope30W5") << QStringLiteral("Slope30W6");
+    mEnumNames << QStringLiteral("Slope30N1") << QStringLiteral("Slope30N2") << QStringLiteral("Slope30N3") << QStringLiteral("Slope30N4") << QStringLiteral("Slope30N5") << QStringLiteral("Slope30N6");
 
     mEnumNames += QStringLiteral("Inner1");
     mEnumNames += QStringLiteral("Inner2");
@@ -1437,6 +1437,16 @@ BTC_RoofSlopes::BTC_RoofSlopes(const QString &label) :
     mEnumNames += QStringLiteral("CornerNE1");
     mEnumNames += QStringLiteral("CornerNE2");
     mEnumNames += QStringLiteral("CornerNE3");
+
+    mEnumNames << QStringLiteral("InnerSlope30SE1") << QStringLiteral("InnerSlope30SE2") << QStringLiteral("InnerSlope30SE3") << QStringLiteral("InnerSlope30SE4") << QStringLiteral("InnerSlope30SE5") << QStringLiteral("InnerSlope30SE6");
+    mEnumNames << QStringLiteral("InnerSlope30NE1") << QStringLiteral("InnerSlope30NE2") << QStringLiteral("InnerSlope30NE3") << QStringLiteral("InnerSlope30NE4") << QStringLiteral("InnerSlope30NE5") << QStringLiteral("InnerSlope30NE6");
+    mEnumNames << QStringLiteral("InnerSlope30NW1") << QStringLiteral("InnerSlope30NW2") << QStringLiteral("InnerSlope30NW3") << QStringLiteral("InnerSlope30NW4") << QStringLiteral("InnerSlope30NW5") << QStringLiteral("InnerSlope30NW6");
+    mEnumNames << QStringLiteral("InnerSlope30SW1") << QStringLiteral("InnerSlope30SW2") << QStringLiteral("InnerSlope30SW3") << QStringLiteral("InnerSlope30SW4") << QStringLiteral("InnerSlope30SW5") << QStringLiteral("InnerSlope30SW6");
+
+    mEnumNames << QStringLiteral("OuterSlope30SE1") << QStringLiteral("OuterSlope30SE2") << QStringLiteral("OuterSlope30SE3") << QStringLiteral("OuterSlope30SE4") << QStringLiteral("OuterSlope30SE5") << QStringLiteral("OuterSlope30SE6");
+    mEnumNames << QStringLiteral("OuterSlope30NE1") << QStringLiteral("OuterSlope30NE2") << QStringLiteral("OuterSlope30NE3") << QStringLiteral("OuterSlope30NE4") << QStringLiteral("OuterSlope30NE5") << QStringLiteral("OuterSlope30NE6");
+    mEnumNames << QStringLiteral("OuterSlope30NW1") << QStringLiteral("OuterSlope30NW2") << QStringLiteral("OuterSlope30NW3") << QStringLiteral("OuterSlope30NW4") << QStringLiteral("OuterSlope30NW5") << QStringLiteral("OuterSlope30NW6");
+    mEnumNames << QStringLiteral("OuterSlope30SW1") << QStringLiteral("OuterSlope30SW2") << QStringLiteral("OuterSlope30SW3") << QStringLiteral("OuterSlope30SW4") << QStringLiteral("OuterSlope30SW5") << QStringLiteral("OuterSlope30SW6");
 
     Q_ASSERT(mEnumNames.size() == EnumCount);
 }
@@ -1491,7 +1501,17 @@ int BTC_RoofSlopes::shadowToEnum(int shadowIndex)
         Slope30S1, Slope30S2, Slope30S3, Slope30S4, Slope30S5, Slope30S6,
         Slope30E6, Slope30E5, Slope30E4, Slope30E3, Slope30E2, Slope30E1,
         Slope30W1, Slope30W2, Slope30W3, Slope30W4, Slope30W5, Slope30W6,
-        Slope30N6, Slope30N5, Slope30N4, Slope30N3, Slope30N2, Slope30N1
+        Slope30N6, Slope30N5, Slope30N4, Slope30N3, Slope30N2, Slope30N1,
+
+        InnerSlope30NW1, InnerSlope30NW2, InnerSlope30NW3, InnerSlope30NW4, InnerSlope30NW5, InnerSlope30NW6,
+        InnerSlope30SW6, InnerSlope30SW5, InnerSlope30SW4, InnerSlope30SW3, InnerSlope30SW2, InnerSlope30SW1,
+        InnerSlope30SE1, InnerSlope30SE2, InnerSlope30SE3, InnerSlope30SE4, InnerSlope30SE5, InnerSlope30SE6,
+        InnerSlope30NE6, InnerSlope30NE5, InnerSlope30NE4, InnerSlope30NE3, InnerSlope30NE2, InnerSlope30NE1,
+
+        OuterSlope30SE1, OuterSlope30SE2, OuterSlope30SE3, OuterSlope30SE4, OuterSlope30SE5, OuterSlope30SE6,
+        OuterSlope30NE6, OuterSlope30NE5, OuterSlope30NE4, OuterSlope30NE3, OuterSlope30NE2, OuterSlope30NE1,
+        OuterSlope30SW1, OuterSlope30SW2, OuterSlope30SW3, OuterSlope30SW4, OuterSlope30SW5, OuterSlope30SW6,
+        OuterSlope30NW6, OuterSlope30NW5, OuterSlope30NW4, OuterSlope30NW3, OuterSlope30NW2, OuterSlope30NW1,
     };
     return map[shadowIndex];
 }
@@ -1688,7 +1708,7 @@ int BuildingTileCategory::shadowRows() const
 
 int BuildingTileCategory::enumToShadow(int e)
 {
-    QVector<int> map(100);
+    QVector<int> map(enumCount());
     for (int i = 0; i < enumCount(); i++)
         map[i] = -1;
     for (int i = 0; i < shadowCount(); i++) {

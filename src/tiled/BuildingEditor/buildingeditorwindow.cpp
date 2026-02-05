@@ -357,6 +357,7 @@ BuildingEditorWindow::BuildingEditorWindow(QWidget *parent) :
     RoofShallowTool::instance()->setAction(ui->actionRoofShallow);
     RoofSlope30Tool::instance()->setAction(ui->actionRoof30Degree);
     RoofCornerTool::instance()->setAction(ui->actionRoofCorner);
+    RoofCornerSlope30Tool::instance()->setAction(ui->actionRoofCorner30Degree);
     SelectMoveObjectTool::instance()->setAction(ui->actionSelectObject);
     BasementAccessTool::instance()->setAction(ui->actionBasementAccessTool);
 
@@ -2336,6 +2337,7 @@ void BuildingEditorWindow::initActionManager()
     actionManager->registerAction(ui->actionRoofShallow, CONTEXT_TOOLS, CATEGORY_TOOL_OBJECT, QStringLiteral("Tools.Object."));
     actionManager->registerAction(ui->actionRoof30Degree, CONTEXT_TOOLS, CATEGORY_TOOL_OBJECT, QStringLiteral("Tools.Object."));
     actionManager->registerAction(ui->actionRoofCorner, CONTEXT_TOOLS, CATEGORY_TOOL_OBJECT, QStringLiteral("Tools.Object."));
+    actionManager->registerAction(ui->actionRoofCorner30Degree, CONTEXT_TOOLS, CATEGORY_TOOL_OBJECT, QStringLiteral("Tools.Object."));
     actionManager->registerAction(ui->actionFurniture, CONTEXT_TOOLS, CATEGORY_TOOL_OBJECT, QStringLiteral("Tools.Object."));
     actionManager->registerAction(ui->actionSelectObject, CONTEXT_TOOLS, CATEGORY_TOOL_OBJECT, QStringLiteral("Tools.Object."));
     actionManager->registerAction(ui->actionBasementAccessTool, CONTEXT_TOOLS, CATEGORY_TOOL_OBJECT, QStringLiteral("Tools.Object.BasementAccess"));
@@ -2539,6 +2541,7 @@ void BuildingEditorWindow::updateActions()
     RoofShallowTool::instance()->setEnabled(hasEditor && objectMode && showObjects && roofTilesOK);
     RoofSlope30Tool::instance()->setEnabled(hasEditor && objectMode && showObjects && roofTilesOK);
     RoofCornerTool::instance()->setEnabled(hasEditor && objectMode && showObjects && roofTilesOK);
+    RoofCornerSlope30Tool::instance()->setEnabled(hasEditor && objectMode && showObjects && roofTilesOK);
     SelectMoveObjectTool::instance()->setEnabled(hasEditor && objectMode && showObjects);
     BasementAccessTool::instance()->setEnabled(hasEditor && objectMode && mCurrentDocument->building()->hasBasementAccess());
 

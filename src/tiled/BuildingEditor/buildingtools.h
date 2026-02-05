@@ -544,7 +544,22 @@ public:
 private:
     Q_DISABLE_COPY(RoofCornerTool)
     static RoofCornerTool *mInstance;
-    ~RoofCornerTool() { mInstance = 0; }
+    ~RoofCornerTool() { mInstance = nullptr; }
+};
+
+/////
+
+class RoofCornerSlope30Tool : public RoofTool
+{
+public:
+    static RoofCornerSlope30Tool *instance();
+
+    RoofCornerSlope30Tool();
+
+private:
+    Q_DISABLE_COPY(RoofCornerSlope30Tool)
+    static RoofCornerSlope30Tool *mInstance;
+    ~RoofCornerSlope30Tool() { mInstance = nullptr; }
 };
 
 /////

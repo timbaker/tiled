@@ -48319,6 +48319,34 @@ group
         {
             orient = W
             0,0 = floors_exterior_natural_01_018
+            0,1 = location_trailer_01_022
+            1,0 = location_trailer_01_021
+            1,1 = location_trailer_01_020
+        }
+        entry
+        {
+            orient = N
+            0,0 = floors_exterior_natural_01_016
+            0,1 = location_trailer_01_022
+            1,0 = location_trailer_01_021
+            1,1 = location_trailer_01_020
+        }
+        entry
+        {
+            orient = E
+            0,0 = floors_exterior_natural_01_017
+            0,1 = location_trailer_01_022
+            1,0 = location_trailer_01_021
+            1,1 = location_trailer_01_020
+        }
+    }
+    furniture
+    {
+        layer = FloorFurniture
+        entry
+        {
+            orient = W
+            0,0 = floors_exterior_natural_01_018
             0,1 = floors_exterior_natural_01_018
             0,2 = location_trailer_01_022
             1,0 = location_trailer_01_021
@@ -48465,6 +48493,70 @@ group
             3,0 = location_trailer_01_021
             3,1 = location_trailer_01_017
             3,2 = location_trailer_01_020
+        }
+    }
+    furniture
+    {
+        layer = FloorFurniture
+        entry
+        {
+            orient = W
+            0,0 = floors_exterior_natural_01_018
+            0,1 = floors_exterior_natural_01_018
+            0,2 = floors_exterior_natural_01_018
+            0,3 = location_trailer_01_022
+            1,0 = floors_exterior_natural_01_018
+            1,1 = floors_exterior_natural_01_018
+            1,2 = floors_exterior_natural_01_018
+            1,3 = location_trailer_01_018
+            2,0 = floors_exterior_natural_01_018
+            2,1 = floors_exterior_natural_01_018
+            2,2 = floors_exterior_natural_01_018
+            2,3 = location_trailer_01_018
+            3,0 = location_trailer_01_021
+            3,1 = location_trailer_01_017
+            3,2 = location_trailer_01_017
+            3,3 = location_trailer_01_020
+        }
+        entry
+        {
+            orient = N
+            0,0 = floors_exterior_natural_01_016
+            0,1 = floors_exterior_natural_01_016
+            0,2 = floors_exterior_natural_01_016
+            0,3 = location_trailer_01_022
+            1,0 = floors_exterior_natural_01_016
+            1,1 = floors_exterior_natural_01_016
+            1,2 = floors_exterior_natural_01_016
+            1,3 = location_trailer_01_018
+            2,0 = floors_exterior_natural_01_016
+            2,1 = floors_exterior_natural_01_016
+            2,2 = floors_exterior_natural_01_016
+            2,3 = location_trailer_01_018
+            3,0 = location_trailer_01_021
+            3,1 = location_trailer_01_017
+            3,2 = location_trailer_01_017
+            3,3 = location_trailer_01_020
+        }
+        entry
+        {
+            orient = E
+            0,0 = floors_exterior_natural_01_017
+            0,1 = floors_exterior_natural_01_017
+            0,2 = floors_exterior_natural_01_017
+            0,3 = location_trailer_01_022
+            1,0 = floors_exterior_natural_01_017
+            1,1 = floors_exterior_natural_01_017
+            1,2 = floors_exterior_natural_01_017
+            1,3 = location_trailer_01_018
+            2,0 = floors_exterior_natural_01_017
+            2,1 = floors_exterior_natural_01_017
+            2,2 = floors_exterior_natural_01_017
+            2,3 = location_trailer_01_018
+            3,0 = location_trailer_01_021
+            3,1 = location_trailer_01_017
+            3,2 = location_trailer_01_017
+            3,3 = location_trailer_01_020
         }
     }
     furniture
@@ -49229,6 +49321,501 @@ group
             6,1 = carpentry_03_043
             6,2 = carpentry_03_043
             6,3 = carpentry_03_052
+        }
+    }
+    furniture
+    {
+        entry
+        {
+            orient = W
+            0,0 = walls_exterior_house_low_01_006
+            0,1 = walls_exterior_house_low_01_005
+            1,0 = walls_exterior_house_low_01_004
+            1,1 = walls_exterior_house_low_01_007
+        }
+        entry
+        {
+            orient = N
+            0,0 = walls_exterior_house_low_01_026
+            0,1 = walls_exterior_house_low_01_025
+            1,0 = walls_exterior_house_low_01_024
+            1,1 = walls_exterior_house_low_01_027
+        }
+        entry
+        {
+            orient = E
+            0,0 = walls_exterior_house_low_01_030
+            0,1 = walls_exterior_house_low_01_029
+            1,0 = walls_exterior_house_low_01_028
+            1,1 = walls_exterior_house_low_01_031
+        }
+        entry
+        {
+            orient = S
+            0,0 = walls_exterior_house_low_01_050
+            0,1 = walls_exterior_house_low_01_049
+            1,0 = walls_exterior_house_low_01_048
+            1,1 = walls_exterior_house_low_01_051
+        }
+    }
+    furniture
+    {
+        entry
+        {
+            orient = W
+            0,0 = walls_exterior_house_low_01_006
+            0,1 = walls_exterior_house_low_01_004
+            0,2 = walls_exterior_house_low_01_005
+            1,0 = walls_exterior_house_low_01_004
+            1,1 = walls_exterior_house_low_01_004
+            1,2 = walls_exterior_house_low_01_007
+        }
+        entry
+        {
+            orient = N
+            0,0 = walls_exterior_house_low_01_026
+            0,1 = walls_exterior_house_low_01_024
+            0,2 = walls_exterior_house_low_01_025
+            1,0 = walls_exterior_house_low_01_024
+            1,1 = walls_exterior_house_low_01_024
+            1,2 = walls_exterior_house_low_01_027
+        }
+        entry
+        {
+            orient = E
+            0,0 = walls_exterior_house_low_01_030
+            0,1 = walls_exterior_house_low_01_028
+            0,2 = walls_exterior_house_low_01_029
+            1,0 = walls_exterior_house_low_01_028
+            1,1 = walls_exterior_house_low_01_028
+            1,2 = walls_exterior_house_low_01_031
+        }
+        entry
+        {
+            orient = S
+            0,0 = walls_exterior_house_low_01_050
+            0,1 = walls_exterior_house_low_01_048
+            0,2 = walls_exterior_house_low_01_049
+            1,0 = walls_exterior_house_low_01_048
+            1,1 = walls_exterior_house_low_01_048
+            1,2 = walls_exterior_house_low_01_051
+        }
+    }
+    furniture
+    {
+        entry
+        {
+            orient = W
+            0,0 = walls_exterior_house_low_01_006
+            0,1 = walls_exterior_house_low_01_005
+            1,0 = walls_exterior_house_low_01_005
+            1,1 = walls_exterior_house_low_01_005
+            2,0 = walls_exterior_house_low_01_004
+            2,1 = walls_exterior_house_low_01_007
+        }
+        entry
+        {
+            orient = N
+            0,0 = walls_exterior_house_low_01_026
+            0,1 = walls_exterior_house_low_01_025
+            1,0 = walls_exterior_house_low_01_025
+            1,1 = walls_exterior_house_low_01_025
+            2,0 = walls_exterior_house_low_01_024
+            2,1 = walls_exterior_house_low_01_027
+        }
+        entry
+        {
+            orient = E
+            0,0 = walls_exterior_house_low_01_030
+            0,1 = walls_exterior_house_low_01_029
+            1,0 = walls_exterior_house_low_01_029
+            1,1 = walls_exterior_house_low_01_029
+            2,0 = walls_exterior_house_low_01_028
+            2,1 = walls_exterior_house_low_01_031
+        }
+        entry
+        {
+            orient = S
+            0,0 = walls_exterior_house_low_01_050
+            0,1 = walls_exterior_house_low_01_049
+            1,0 = walls_exterior_house_low_01_049
+            1,1 = walls_exterior_house_low_01_049
+            2,0 = walls_exterior_house_low_01_048
+            2,1 = walls_exterior_house_low_01_051
+        }
+    }
+    furniture
+    {
+        entry
+        {
+            orient = W
+            0,0 = walls_exterior_house_low_01_006
+            0,1 = walls_exterior_house_low_01_004
+            0,2 = walls_exterior_house_low_01_005
+            1,0 = walls_exterior_house_low_01_005
+            1,2 = walls_exterior_house_low_01_005
+            2,0 = walls_exterior_house_low_01_004
+            2,1 = walls_exterior_house_low_01_004
+            2,2 = walls_exterior_house_low_01_007
+        }
+        entry
+        {
+            orient = N
+            0,0 = walls_exterior_house_low_01_026
+            0,1 = walls_exterior_house_low_01_024
+            0,2 = walls_exterior_house_low_01_025
+            1,0 = walls_exterior_house_low_01_025
+            1,2 = walls_exterior_house_low_01_025
+            2,0 = walls_exterior_house_low_01_024
+            2,1 = walls_exterior_house_low_01_024
+            2,2 = walls_exterior_house_low_01_027
+        }
+        entry
+        {
+            orient = E
+            0,0 = walls_exterior_house_low_01_030
+            0,1 = walls_exterior_house_low_01_028
+            0,2 = walls_exterior_house_low_01_029
+            1,0 = walls_exterior_house_low_01_029
+            1,2 = walls_exterior_house_low_01_029
+            2,0 = walls_exterior_house_low_01_028
+            2,1 = walls_exterior_house_low_01_028
+            2,2 = walls_exterior_house_low_01_031
+        }
+        entry
+        {
+            orient = S
+            0,0 = walls_exterior_house_low_01_050
+            0,1 = walls_exterior_house_low_01_048
+            0,2 = walls_exterior_house_low_01_049
+            1,0 = walls_exterior_house_low_01_049
+            1,2 = walls_exterior_house_low_01_049
+            2,0 = walls_exterior_house_low_01_048
+            2,1 = walls_exterior_house_low_01_048
+            2,2 = walls_exterior_house_low_01_051
+        }
+    }
+    furniture
+    {
+        entry
+        {
+            orient = W
+            0,0 = walls_exterior_house_low_01_006
+            0,1 = walls_exterior_house_low_01_004
+            0,2 = walls_exterior_house_low_01_004
+            0,3 = walls_exterior_house_low_01_005
+            1,0 = walls_exterior_house_low_01_004
+            1,1 = walls_exterior_house_low_01_004
+            1,2 = walls_exterior_house_low_01_004
+            1,3 = walls_exterior_house_low_01_007
+        }
+        entry
+        {
+            orient = N
+            0,0 = walls_exterior_house_low_01_026
+            0,1 = walls_exterior_house_low_01_024
+            0,2 = walls_exterior_house_low_01_024
+            0,3 = walls_exterior_house_low_01_025
+            1,0 = walls_exterior_house_low_01_024
+            1,1 = walls_exterior_house_low_01_024
+            1,2 = walls_exterior_house_low_01_024
+            1,3 = walls_exterior_house_low_01_027
+        }
+        entry
+        {
+            orient = E
+            0,0 = walls_exterior_house_low_01_030
+            0,1 = walls_exterior_house_low_01_028
+            0,2 = walls_exterior_house_low_01_028
+            0,3 = walls_exterior_house_low_01_029
+            1,0 = walls_exterior_house_low_01_028
+            1,1 = walls_exterior_house_low_01_028
+            1,2 = walls_exterior_house_low_01_028
+            1,3 = walls_exterior_house_low_01_031
+        }
+        entry
+        {
+            orient = S
+            0,0 = walls_exterior_house_low_01_050
+            0,1 = walls_exterior_house_low_01_048
+            0,2 = walls_exterior_house_low_01_048
+            0,3 = walls_exterior_house_low_01_049
+            1,0 = walls_exterior_house_low_01_048
+            1,1 = walls_exterior_house_low_01_048
+            1,2 = walls_exterior_house_low_01_048
+            1,3 = walls_exterior_house_low_01_051
+        }
+    }
+    furniture
+    {
+        entry
+        {
+            orient = W
+            0,0 = walls_exterior_house_low_01_006
+            0,1 = walls_exterior_house_low_01_005
+            1,0 = walls_exterior_house_low_01_005
+            1,1 = walls_exterior_house_low_01_005
+            2,0 = walls_exterior_house_low_01_005
+            2,1 = walls_exterior_house_low_01_005
+            3,0 = walls_exterior_house_low_01_004
+            3,1 = walls_exterior_house_low_01_007
+        }
+        entry
+        {
+            orient = N
+            0,0 = walls_exterior_house_low_01_026
+            0,1 = walls_exterior_house_low_01_025
+            1,0 = walls_exterior_house_low_01_025
+            1,1 = walls_exterior_house_low_01_025
+            2,0 = walls_exterior_house_low_01_025
+            2,1 = walls_exterior_house_low_01_025
+            3,0 = walls_exterior_house_low_01_024
+            3,1 = walls_exterior_house_low_01_027
+        }
+        entry
+        {
+            orient = E
+            0,0 = walls_exterior_house_low_01_030
+            0,1 = walls_exterior_house_low_01_029
+            1,0 = walls_exterior_house_low_01_029
+            1,1 = walls_exterior_house_low_01_029
+            2,0 = walls_exterior_house_low_01_029
+            2,1 = walls_exterior_house_low_01_029
+            3,0 = walls_exterior_house_low_01_028
+            3,1 = walls_exterior_house_low_01_031
+        }
+        entry
+        {
+            orient = S
+            0,0 = walls_exterior_house_low_01_050
+            0,1 = walls_exterior_house_low_01_049
+            1,0 = walls_exterior_house_low_01_049
+            1,1 = walls_exterior_house_low_01_049
+            2,0 = walls_exterior_house_low_01_049
+            2,1 = walls_exterior_house_low_01_049
+            3,0 = walls_exterior_house_low_01_048
+            3,1 = walls_exterior_house_low_01_051
+        }
+    }
+    furniture
+    {
+        entry
+        {
+            orient = W
+            0,0 = walls_exterior_house_low_01_006
+            0,1 = walls_exterior_house_low_01_004
+            0,2 = walls_exterior_house_low_01_004
+            0,3 = walls_exterior_house_low_01_005
+            1,0 = walls_exterior_house_low_01_005
+            1,3 = walls_exterior_house_low_01_005
+            2,0 = walls_exterior_house_low_01_004
+            2,1 = walls_exterior_house_low_01_004
+            2,2 = walls_exterior_house_low_01_004
+            2,3 = walls_exterior_house_low_01_007
+        }
+        entry
+        {
+            orient = N
+            0,0 = walls_exterior_house_low_01_026
+            0,1 = walls_exterior_house_low_01_024
+            0,2 = walls_exterior_house_low_01_024
+            0,3 = walls_exterior_house_low_01_025
+            1,0 = walls_exterior_house_low_01_025
+            1,3 = walls_exterior_house_low_01_025
+            2,0 = walls_exterior_house_low_01_024
+            2,1 = walls_exterior_house_low_01_024
+            2,2 = walls_exterior_house_low_01_024
+            2,3 = walls_exterior_house_low_01_027
+        }
+        entry
+        {
+            orient = E
+            0,0 = walls_exterior_house_low_01_030
+            0,1 = walls_exterior_house_low_01_028
+            0,2 = walls_exterior_house_low_01_028
+            0,3 = walls_exterior_house_low_01_029
+            1,0 = walls_exterior_house_low_01_029
+            1,3 = walls_exterior_house_low_01_029
+            2,0 = walls_exterior_house_low_01_028
+            2,1 = walls_exterior_house_low_01_028
+            2,2 = walls_exterior_house_low_01_028
+            2,3 = walls_exterior_house_low_01_031
+        }
+        entry
+        {
+            orient = S
+            0,0 = walls_exterior_house_low_01_050
+            0,1 = walls_exterior_house_low_01_048
+            0,2 = walls_exterior_house_low_01_048
+            0,3 = walls_exterior_house_low_01_049
+            1,0 = walls_exterior_house_low_01_049
+            1,3 = walls_exterior_house_low_01_049
+            2,0 = walls_exterior_house_low_01_048
+            2,1 = walls_exterior_house_low_01_048
+            2,2 = walls_exterior_house_low_01_048
+            2,3 = walls_exterior_house_low_01_051
+        }
+    }
+    furniture
+    {
+        entry
+        {
+            orient = W
+            0,0 = walls_exterior_house_low_01_006
+            0,1 = walls_exterior_house_low_01_004
+            0,2 = walls_exterior_house_low_01_005
+            1,0 = walls_exterior_house_low_01_005
+            1,2 = walls_exterior_house_low_01_005
+            2,0 = walls_exterior_house_low_01_005
+            2,2 = walls_exterior_house_low_01_005
+            3,0 = walls_exterior_house_low_01_004
+            3,1 = walls_exterior_house_low_01_004
+            3,2 = walls_exterior_house_low_01_007
+        }
+        entry
+        {
+            orient = N
+            0,0 = walls_exterior_house_low_01_026
+            0,1 = walls_exterior_house_low_01_024
+            0,2 = walls_exterior_house_low_01_025
+            1,0 = walls_exterior_house_low_01_025
+            1,2 = walls_exterior_house_low_01_025
+            2,0 = walls_exterior_house_low_01_025
+            2,2 = walls_exterior_house_low_01_025
+            3,0 = walls_exterior_house_low_01_024
+            3,1 = walls_exterior_house_low_01_024
+            3,2 = walls_exterior_house_low_01_027
+        }
+        entry
+        {
+            orient = E
+            0,0 = walls_exterior_house_low_01_030
+            0,1 = walls_exterior_house_low_01_028
+            0,2 = walls_exterior_house_low_01_029
+            1,0 = walls_exterior_house_low_01_029
+            1,2 = walls_exterior_house_low_01_029
+            2,0 = walls_exterior_house_low_01_029
+            2,2 = walls_exterior_house_low_01_029
+            3,0 = walls_exterior_house_low_01_028
+            3,1 = walls_exterior_house_low_01_028
+            3,2 = walls_exterior_house_low_01_031
+        }
+        entry
+        {
+            orient = S
+            0,0 = walls_exterior_house_low_01_050
+            0,1 = walls_exterior_house_low_01_048
+            0,2 = walls_exterior_house_low_01_049
+            1,0 = walls_exterior_house_low_01_049
+            1,2 = walls_exterior_house_low_01_049
+            2,0 = walls_exterior_house_low_01_049
+            2,2 = walls_exterior_house_low_01_049
+            3,0 = walls_exterior_house_low_01_048
+            3,1 = walls_exterior_house_low_01_048
+            3,2 = walls_exterior_house_low_01_051
+        }
+    }
+    furniture
+    {
+        entry
+        {
+            orient = W
+            0,0 = walls_exterior_house_low_01_006
+            0,1 = walls_exterior_house_low_01_004
+            0,2 = walls_exterior_house_low_01_004
+            0,3 = walls_exterior_house_low_01_005
+            1,0 = walls_exterior_house_low_01_005
+            1,3 = walls_exterior_house_low_01_005
+            2,0 = walls_exterior_house_low_01_005
+            2,3 = walls_exterior_house_low_01_005
+            3,0 = walls_exterior_house_low_01_004
+            3,1 = walls_exterior_house_low_01_004
+            3,2 = walls_exterior_house_low_01_004
+            3,3 = walls_exterior_house_low_01_007
+        }
+        entry
+        {
+            orient = N
+            0,0 = walls_exterior_house_low_01_026
+            0,1 = walls_exterior_house_low_01_024
+            0,2 = walls_exterior_house_low_01_024
+            0,3 = walls_exterior_house_low_01_025
+            1,0 = walls_exterior_house_low_01_025
+            1,3 = walls_exterior_house_low_01_025
+            2,0 = walls_exterior_house_low_01_025
+            2,3 = walls_exterior_house_low_01_025
+            3,0 = walls_exterior_house_low_01_024
+            3,1 = walls_exterior_house_low_01_024
+            3,2 = walls_exterior_house_low_01_024
+            3,3 = walls_exterior_house_low_01_027
+        }
+        entry
+        {
+            orient = E
+            0,0 = walls_exterior_house_low_01_030
+            0,1 = walls_exterior_house_low_01_028
+            0,2 = walls_exterior_house_low_01_028
+            0,3 = walls_exterior_house_low_01_029
+            1,0 = walls_exterior_house_low_01_029
+            1,3 = walls_exterior_house_low_01_029
+            2,0 = walls_exterior_house_low_01_029
+            2,3 = walls_exterior_house_low_01_029
+            3,0 = walls_exterior_house_low_01_028
+            3,1 = walls_exterior_house_low_01_028
+            3,2 = walls_exterior_house_low_01_028
+            3,3 = walls_exterior_house_low_01_031
+        }
+        entry
+        {
+            orient = S
+            0,0 = walls_exterior_house_low_01_050
+            0,1 = walls_exterior_house_low_01_048
+            0,2 = walls_exterior_house_low_01_048
+            0,3 = walls_exterior_house_low_01_049
+            1,0 = walls_exterior_house_low_01_049
+            1,3 = walls_exterior_house_low_01_049
+            2,0 = walls_exterior_house_low_01_049
+            2,3 = walls_exterior_house_low_01_049
+            3,0 = walls_exterior_house_low_01_048
+            3,1 = walls_exterior_house_low_01_048
+            3,2 = walls_exterior_house_low_01_048
+            3,3 = walls_exterior_house_low_01_051
+        }
+    }
+    furniture
+    {
+        layer = FloorFurniture
+        entry
+        {
+            orient = W
+            0,0 = location_community_park_01_025
+            0,1 = location_community_park_01_026
+            1,0 = location_community_park_01_027
+            1,1 = location_community_park_01_024
+        }
+        entry
+        {
+            orient = N
+            0,0 = location_community_park_01_033
+            0,1 = location_community_park_01_034
+            1,0 = location_community_park_01_035
+            1,1 = location_community_park_01_032
+        }
+        entry
+        {
+            orient = E
+            0,0 = street_curbs_01_003
+            0,1 = street_curbs_01_004
+            1,0 = street_curbs_01_005
+            1,1 = street_curbs_01_000
+        }
+        entry
+        {
+            orient = S
+            0,0 = street_curbs_01_001
+            0,1 = street_curbs_01_006
+            1,0 = street_curbs_01_007
+            1,1 = street_curbs_01_002
         }
     }
 }
@@ -61106,6 +61693,31 @@ group
             orient = SE
             grime = false
             0,0 = location_shop_bargNclothes_01_062
+        }
+    }
+    furniture
+    {
+        corners = true
+        layer = RoofCap
+        entry
+        {
+            orient = W
+            0,0 = walls_burnt_roofs_01_018
+        }
+        entry
+        {
+            orient = N
+            0,0 = walls_burnt_roofs_01_019
+        }
+        entry
+        {
+            orient = NW
+            0,0 = walls_burnt_roofs_01_020
+        }
+        entry
+        {
+            orient = SE
+            0,0 = walls_burnt_roofs_01_021
         }
     }
 }

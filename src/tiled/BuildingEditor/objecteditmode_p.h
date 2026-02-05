@@ -56,6 +56,7 @@ private slots:
     void roofShallowTypeChanged(QAction *action);
     void roofSlope30TypeChanged(QAction *action);
     void roofCornerTypeChanged(QAction *action);
+    void roofCornerSlope30TypeChanged(QAction *action);
 
     void updateActions();
 

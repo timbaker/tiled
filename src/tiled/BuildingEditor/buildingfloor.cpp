@@ -437,10 +437,14 @@ static void ReplaceRoofCorner(RoofObject *ro, const QRect &r,
                               const QVector<RoofObject::RoofTile> &tiles,
                               QVector<QVector<BuildingFloor::Square> > &squares)
 {
-    if (tiles.isEmpty()) return;
+    if (tiles.isEmpty())
+        return;
     for (int y = r.top(); y <= r.bottom(); y++)
         for (int x = r.left(); x <= r.right(); x++) {
-            RoofObject::RoofTile tile = tiles.at(x - r.left() + (y - r.top()) * r.width());
+            int index = x - r.left() + (y - r.top()) * r.width();
+            if (index >= tiles.size())
+                continue;
+            RoofObject::RoofTile tile = tiles.at(index);
             if (tile != RoofObject::TileCount)
                 ReplaceRoofCorner(ro, x, y, squares, tile);
         }

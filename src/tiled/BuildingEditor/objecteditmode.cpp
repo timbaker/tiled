@@ -75,6 +75,7 @@ ObjectEditModeToolBar::ObjectEditModeToolBar(ObjectEditMode *mode, QWidget *pare
     addAction(actions->actionRoofShallow);
     addAction(actions->actionRoof30Degree);
     addAction(actions->actionRoofCorner);
+    addAction(actions->actionRoofCorner30Degree);
     addAction(actions->actionFurniture);
     addAction(actions->actionSelectObject);
     addAction(actions->actionBasementAccessTool);
@@ -179,6 +180,7 @@ ObjectEditModeToolBar::ObjectEditModeToolBar(ObjectEditMode *mode, QWidget *pare
     button->setPopupMode(QToolButton::MenuButtonPopup);
     /////
 
+    /////
     roofMenu = new QMenu(this);
     roofMenu->addAction(QPixmap(QLatin1String(":/BuildingEditor/icons/icon_corner_innerNW.png")),
                         mode->tr("Inner (NW)"));
@@ -199,6 +201,31 @@ ObjectEditModeToolBar::ObjectEditModeToolBar(ObjectEditMode *mode, QWidget *pare
     connect(roofMenu, &QMenu::triggered, this, &ObjectEditModeToolBar::roofCornerTypeChanged);
 
     button = static_cast<QToolButton*>(widgetForAction(actions->actionRoofCorner));
+    button->setMenu(roofMenu);
+    button->setPopupMode(QToolButton::MenuButtonPopup);
+    /////
+
+    /////
+    roofMenu = new QMenu(this);
+    roofMenu->addAction(QPixmap(QLatin1String(":/BuildingEditor/icons/icon_corner_innerNW.png")),
+                        mode->tr("Inner (NW)"));
+    roofMenu->addAction(QPixmap(QLatin1String(":/BuildingEditor/icons/icon_corner_innerNE.png")),
+                        mode->tr("Inner (NE)"));
+    roofMenu->addAction(QPixmap(QLatin1String(":/BuildingEditor/icons/icon_corner_innerSE.png")),
+                        mode->tr("Inner (SE)"));
+    roofMenu->addAction(QPixmap(QLatin1String(":/BuildingEditor/icons/icon_corner_innerSW.png")),
+                        mode->tr("Inner (SW)"));
+    roofMenu->addAction(QPixmap(QLatin1String(":/BuildingEditor/icons/icon_corner_outerNW.png")),
+                        mode->tr("Outer (NW)"));
+    roofMenu->addAction(QPixmap(QLatin1String(":/BuildingEditor/icons/icon_corner_outerNE.png")),
+                        mode->tr("Outer (NE)"));
+    roofMenu->addAction(QPixmap(QLatin1String(":/BuildingEditor/icons/icon_corner_outerSE.png")),
+                        mode->tr("Outer (SE)"));
+    roofMenu->addAction(QPixmap(QLatin1String(":/BuildingEditor/icons/icon_corner_outerSW.png")),
+                        mode->tr("Outer (SW)"));
+    connect(roofMenu, &QMenu::triggered, this, &ObjectEditModeToolBar::roofCornerSlope30TypeChanged);
+
+    button = static_cast<QToolButton*>(widgetForAction(actions->actionRoofCorner30Degree));
     button->setMenu(roofMenu);
     button->setPopupMode(QToolButton::MenuButtonPopup);
     /////
@@ -404,9 +431,34 @@ void ObjectEditModeToolBar::roofCornerTypeChanged(QAction *action)
 
     RoofCornerTool::instance()->action()->setIcon(action->icon());
 
-    if (!RoofCornerTool::instance()->isCurrent())
+    if (!RoofCornerTool::instance()->isCurrent()) {
         RoofCornerTool::instance()->makeCurrent();
+    }
+}
 
+void ObjectEditModeToolBar::roofCornerSlope30TypeChanged(QAction *action)
+{
+    int index = qobject_cast<QWidget*>(action->parent())->actions().indexOf(action);
+
+    static RoofObject::RoofType roofTypes[] = {
+        RoofObject::CornerSlope30InnerNW,
+        RoofObject::CornerSlope30InnerNE,
+        RoofObject::CornerSlope30InnerSE,
+        RoofObject::CornerSlope30InnerSW,
+
+        RoofObject::CornerSlope30OuterNW,
+        RoofObject::CornerSlope30OuterNE,
+        RoofObject::CornerSlope30OuterSE,
+        RoofObject::CornerSlope30OuterSW
+    };
+
+    RoofCornerSlope30Tool::instance()->setRoofType(roofTypes[index]);
+
+    RoofCornerSlope30Tool::instance()->action()->setIcon(action->icon());
+
+    if (!RoofCornerSlope30Tool::instance()->isCurrent()) {
+        RoofCornerSlope30Tool::instance()->makeCurrent();
+    }
 }
 
 void ObjectEditModeToolBar::updateActions()

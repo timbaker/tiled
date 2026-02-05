@@ -851,10 +851,25 @@
     <string>Place Roof (30 Degree)</string>
    </property>
   </action>
+  <action name="actionRoofCorner30Degree">
+   <property name="checkable">
+    <bool>true</bool>
+   </property>
+   <property name="icon">
+    <iconset resource="buildingeditor.qrc">
+     <normaloff>:/BuildingEditor/icons/icon_corner_innerNW.png</normaloff>:/BuildingEditor/icons/icon_corner_innerNW.png</iconset>
+   </property>
+   <property name="text">
+    <string>Add Roof Corner (30 Degree)</string>
+   </property>
+   <property name="toolTip">
+    <string>Place Roof Corner (30 Degree)</string>
+   </property>
+  </action>
  </widget>
  <resources>
-  <include location="../tiled.qrc"/>
   <include location="buildingeditor.qrc"/>
+  <include location="../tiled.qrc"/>
  </resources>
  <connections/>
 </ui>

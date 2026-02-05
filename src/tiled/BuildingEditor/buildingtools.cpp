@@ -2154,7 +2154,7 @@ RoofSlope30Tool::RoofSlope30Tool()
 
 /////
 
-RoofCornerTool *RoofCornerTool::mInstance = 0;
+RoofCornerTool *RoofCornerTool::mInstance = nullptr;
 
 RoofCornerTool *RoofCornerTool::instance()
 {
@@ -2167,6 +2167,23 @@ RoofCornerTool::RoofCornerTool()
     : RoofTool()
 {
     setRoofType(RoofObject::CornerInnerNW);
+}
+
+/////
+
+RoofCornerSlope30Tool *RoofCornerSlope30Tool::mInstance = nullptr;
+
+RoofCornerSlope30Tool *RoofCornerSlope30Tool::instance()
+{
+    if (!mInstance)
+        mInstance = new RoofCornerSlope30Tool;
+    return mInstance;
+}
+
+RoofCornerSlope30Tool::RoofCornerSlope30Tool()
+    : RoofTool()
+{
+    setRoofType(RoofObject::CornerSlope30InnerNW);
 }
 
 /////

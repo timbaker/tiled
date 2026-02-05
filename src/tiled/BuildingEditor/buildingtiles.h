@@ -671,6 +671,17 @@ public:
         CornerSW1, CornerSW2, CornerSW3,
         CornerNE1, CornerNE2, CornerNE3,
 
+        // 30-degree corners
+        InnerSlope30SE1, InnerSlope30SE2, InnerSlope30SE3, InnerSlope30SE4, InnerSlope30SE5, InnerSlope30SE6,
+        InnerSlope30NE1, InnerSlope30NE2, InnerSlope30NE3, InnerSlope30NE4, InnerSlope30NE5, InnerSlope30NE6,
+        InnerSlope30NW1, InnerSlope30NW2, InnerSlope30NW3, InnerSlope30NW4, InnerSlope30NW5, InnerSlope30NW6,
+        InnerSlope30SW1, InnerSlope30SW2, InnerSlope30SW3, InnerSlope30SW4, InnerSlope30SW5, InnerSlope30SW6,
+
+        OuterSlope30SE1, OuterSlope30SE2, OuterSlope30SE3, OuterSlope30SE4, OuterSlope30SE5, OuterSlope30SE6,
+        OuterSlope30NE1, OuterSlope30NE2, OuterSlope30NE3, OuterSlope30NE4, OuterSlope30NE5, OuterSlope30NE6,
+        OuterSlope30NW1, OuterSlope30NW2, OuterSlope30NW3, OuterSlope30NW4, OuterSlope30NW5, OuterSlope30NW6,
+        OuterSlope30SW1, OuterSlope30SW2, OuterSlope30SW3, OuterSlope30SW4, OuterSlope30SW5, OuterSlope30SW6,
+
         EnumCount
     };
 
