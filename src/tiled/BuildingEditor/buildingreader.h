@@ -30,6 +30,33 @@ class BuildingReaderPrivate;
 class BuildingReader
 {
 public:
+
+    // version="1.0"
+    static const int VERSION1 = 1;
+
+    // version="2"
+    // BuildingTileEntry rewrite
+    // added FurnitureTiles::mCorners
+    static const int VERSION2 = 2;
+
+    // version="3"
+    // Added <properties> for the in-game map
+    static const int VERSION3 = 3;
+
+    // version="4"
+    // Added Ceiling tile category to rooms
+    static const int VERSION4 = 4;
+
+    // version="5"
+    // Added window-frame shapes
+    static const int VERSION5 = 5;
+
+    // version="6"
+    // Added 30-degree roof shapes
+    static const int VERSION6 = 6;
+
+    static const int VERSION_LATEST = VERSION6;
+
     explicit BuildingReader();
     ~BuildingReader();
 

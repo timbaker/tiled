@@ -17,10 +17,10 @@
 
 #include "buildingtiles.h"
 
-#include "buildingpreferences.h"
 #include "buildingfloor.h"
+#include "buildingpreferences.h"
+#include "buildingreader.h"
 #include "buildingtilesfile.h"
-#include "simplefile.h"
 
 #include "preferences.h"
 #include "tiledeffile.h"
@@ -709,13 +709,13 @@ bool BuildingTileEntry::equals(BuildingTileEntry *other) const
             (mOffsets == other->mOffsets);
 }
 
-bool BuildingTileEntry::equals(BuildingTileEntry *other, int tileCount) const
+bool BuildingTileEntry::equals(BuildingTileEntry *other, const QVector<int> &enums) const
 {
     if (mCategory != other->mCategory) {
         return false;
     }
-    for (int i = 0; i < tileCount; i++) {
-        if (mTiles[i] != other->mTiles[i]) {
+    for (int e : enums) {
+        if (mTiles[e] != other->mTiles[e]) {
             return false;
         }
     }
@@ -1121,6 +1121,30 @@ BTC_Walls::TileEnum BTC_Walls::windowShapeToEnumN(const QString &windowShape)
 
 /////
 
+QVector<int> BTC_EWalls::enumsForVersion(int version) const
+{
+    if (version < BuildingReader::VERSION5) {
+        // Version 5 added 16 new wall shapes for windows.
+        // Look for a match of the first 8 tiles only.
+        return { West, North, NorthWest, SouthEast, WestWindow, NorthWindow, WestDoor, NorthDoor };
+    }
+    return BuildingTileCategory::enumsForVersion(version);
+}
+
+/////
+
+QVector<int> BTC_IWalls::enumsForVersion(int version) const
+{
+    if (version < BuildingReader::VERSION5) {
+        // Version 5 added 16 new wall shapes for windows.
+        // Look for a match of the first 8 tiles only.
+        return { West, North, NorthWest, SouthEast, WestWindow, NorthWindow, WestDoor, NorthDoor };
+    }
+    return BuildingTileCategory::enumsForVersion(version);
+}
+
+/////
+
 BTC_Windows::BTC_Windows(const QString &label) :
     BuildingTileCategory(QLatin1String("windows"), label, West)
 {
@@ -1401,6 +1425,19 @@ int BTC_RoofCaps::shadowToEnum(int shadowIndex)
     return map[shadowIndex];
 }
 
+QVector<int> BTC_RoofCaps::enumsForVersion(int version) const
+{
+    if (version < BuildingReader::VERSION6) {
+        // Version 6 added 30-degree roofs
+        QVector<int> ret;
+        for (int i = CapRiseE1; i <= CapShallowFallE2; i++) {
+            ret += i;
+        }
+        return ret;
+    }
+    return BuildingTileCategory::enumsForVersion(version);
+}
+
 /////
 
 BTC_RoofSlopes::BTC_RoofSlopes(const QString &label) :
@@ -1537,6 +1574,22 @@ int BTC_RoofSlopes::shadowToEnum(int shadowIndex)
         Peak30Quad1, Peak30Quad2, Peak30Quad3, Peak30Quad4, Peak30Quad5, Peak30Quad6,
     };
     return map[shadowIndex];
+}
+
+QVector<int> BTC_RoofSlopes::enumsForVersion(int version) const
+{
+    if (version < BuildingReader::VERSION6) {
+        // Version 6 added 30-degree roofs
+        QVector<int> ret;
+        for (int i = SlopeS1; i <= ShallowSlopeS2; i++) {
+            ret += i;
+        }
+        for (int i = Inner1; i <= CornerNE3; i++) {
+            ret += i;
+        }
+        return ret;
+    }
+    return BuildingTileCategory::enumsForVersion(version);
 }
 
 /////
@@ -1752,14 +1805,25 @@ BuildingTileEntry *BuildingTileCategory::findMatch(BuildingTileEntry *entry) con
     return nullptr;
 }
 
-BuildingTileEntry *BuildingTileCategory::findMatch(BuildingTileEntry *entry, int tileCount) const
+BuildingTileEntry *BuildingTileCategory::findMatchForVersion(BuildingTileEntry *entry, int version) const
 {
-    foreach (BuildingTileEntry *candidate, mEntries) {
-        if (candidate->equals(entry, tileCount)) {
+    const QVector<int> enums = enumsForVersion(version);
+    for (BuildingTileEntry *candidate : std::as_const(mEntries)) {
+        if (candidate->equals(entry, enums)) {
             return candidate;
         }
     }
     return nullptr;
+}
+
+QVector<int> BuildingTileCategory::enumsForVersion(int version) const
+{
+    Q_UNUSED(version)
+    QVector<int> ret;
+    for (int i = 0; i < enumCount(); i++) {
+        ret += i;
+    }
+    return ret;
 }
 
 BuildingTileEntry *BuildingTileCategory::findMatchIgnoreCategory(BuildingTileEntry *entry) const

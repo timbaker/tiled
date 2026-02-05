@@ -1,5 +1,5 @@
 version = 3
-revision = 9
+revision = 10
 category
 {
     label = Exterior Walls
@@ -24193,41 +24193,6 @@ category
         CapPeak30S4 = walls_exterior_roofs_30_20_043
         CapPeak30S5 = walls_exterior_roofs_30_20_044
         CapPeak30S6 = walls_exterior_roofs_30_20_045
-    }
-    entry
-    {
-        CapRiseE1 = 
-        CapRiseE2 = 
-        CapRiseE3 = 
-        CapFallE1 = 
-        CapFallE2 = 
-        CapFallE3 = 
-        CapRiseS1 = 
-        CapRiseS2 = 
-        CapRiseS3 = 
-        CapFallS1 = 
-        CapFallS2 = 
-        CapFallS3 = 
-        PeakPt5S = 
-        PeakPt5E = 
-        PeakOnePt5S = 
-        PeakOnePt5E = 
-        PeakTwoPt5S = 
-        PeakTwoPt5E = 
-        CapGapS1 = 
-        CapGapS2 = 
-        CapGapS3 = 
-        CapGapE1 = 
-        CapGapE2 = 
-        CapGapE3 = 
-        CapShallowRiseS1 = 
-        CapShallowRiseS2 = 
-        CapShallowFallS1 = 
-        CapShallowFallS2 = 
-        CapShallowRiseE1 = 
-        CapShallowRiseE2 = 
-        CapShallowFallE1 = 
-        CapShallowFallE2 = 
     }
     entry
     {

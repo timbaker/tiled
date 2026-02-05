@@ -19,6 +19,7 @@
 
 #include "building.h"
 #include "buildingfurniturefile.h"
+#include "buildingreader.h"
 #include "buildingtiles.h"
 #include "buildingpreferences.h"
 #include "furnituregroups.h"
@@ -44,6 +45,26 @@ class TemplatesFile
     Q_DECLARE_TR_FUNCTIONS(TemplatesFile)
 
 public:
+    static const int VERSION0 = 0;
+
+    // VERSION1
+    // Massive rewrite -> BuildingTileEntry
+    static const int VERSION1 = 1;
+
+    // VERSION2
+    // Renamed Room.Wall -> Room.InteriorWall
+    static const int VERSION2 = 2;
+
+    // VERSION3
+    // added window-frame shapes
+    static const int VERSION3 = 3;
+
+    // VERSION4
+    // added 30-degree roofs
+    static const int VERSION4 = 4;
+
+    static const int VERSION_LATEST = VERSION4;
+
     TemplatesFile();
     ~TemplatesFile();
 
@@ -81,6 +102,7 @@ private:
     FurnitureTiles *getFurnitureTiles(const QString &s);
 
     BuildingTileEntry *readTileEntry(SimpleFileBlock &block, QString &error);
+    int buildingReaderVersion() const;
     FurnitureTiles *readFurnitureTiles(SimpleFileBlock &block, QString &error);
 
     void writeTileEntry(SimpleFileBlock &parentBlock, BuildingTileEntry *entry);
@@ -102,23 +124,6 @@ private:
 };
 
 } // namespace BuildingEditor
-
-
-#define VERSION0 0
-
-// VERSION1
-// Massive rewrite -> BuildingTileEntry
-#define VERSION1 1
-
-// VERSION2
-// Renamed Room.Wall -> Room.InteriorWall
-#define VERSION2 2
-
-// VERSION3
-// added window-frame shapes
-#define VERSION3 3
-
-#define VERSION_LATEST VERSION3
 
 TemplatesFile::TemplatesFile() :
     mVersion(0),
@@ -368,13 +373,7 @@ BuildingTileEntry *TemplatesFile::readTileEntry(SimpleFileBlock &block, QString 
             }
             entry->mTiles[e] = BuildingTilesMgr::instance()->get(kv.value);
         }
-        int compareCount = entry->tileCount();
-        if (mVersion < VERSION3 && (category->asExteriorWalls() || category->asInteriorWalls())) {
-            // Version 3 added 16 new wall shapes for windows.
-            // Look for a match of the first 8 tiles only.
-            compareCount = 8;
-        }
-        if (BuildingTileEntry *match = category->findMatch(entry, compareCount)) {
+        if (BuildingTileEntry *match = category->findMatchForVersion(entry, buildingReaderVersion())) {
             delete entry;
             entry = match;
         }
@@ -384,6 +383,17 @@ BuildingTileEntry *TemplatesFile::readTileEntry(SimpleFileBlock &block, QString 
 
     error = tr("Unknown tile category '%1'").arg(categoryName);
     return 0;
+}
+
+int TemplatesFile::buildingReaderVersion() const
+{
+    if (mVersion == VERSION3) {
+        return BuildingReader::VERSION5;
+    }
+    if (mVersion == VERSION4) {
+        return BuildingReader::VERSION6;
+    }
+    return BuildingReader::VERSION4;
 }
 
 FurnitureTiles *TemplatesFile::readFurnitureTiles(SimpleFileBlock &block, QString &error)
@@ -631,7 +641,7 @@ bool BuildingTemplates::mergeTxt()
         mError = userFile.errorString();
         return false;
     }
-    Q_ASSERT(userFile.version() == VERSION_LATEST);
+    Q_ASSERT(userFile.version() == TemplatesFile::VERSION_LATEST);
 
     QString sourcePath = Tiled::Internal::Preferences::instance()->appConfigPath(txtName());
 
@@ -640,7 +650,7 @@ bool BuildingTemplates::mergeTxt()
         mError = sourceFile.errorString();
         return false;
     }
-    Q_ASSERT(sourceFile.version() == VERSION_LATEST);
+    Q_ASSERT(sourceFile.version() == TemplatesFile::VERSION_LATEST);
 
     int userSourceRevision = userFile.value("source_revision").toInt();
     int sourceRevision = sourceFile.value("revision").toInt();
