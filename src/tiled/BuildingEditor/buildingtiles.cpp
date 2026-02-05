@@ -1436,6 +1436,7 @@ BTC_RoofSlopes::BTC_RoofSlopes(const QString &label) :
 
     mEnumNames << QStringLiteral("Peak30NS1") << QStringLiteral("Peak30NS2") << QStringLiteral("Peak30NS3") << QStringLiteral("Peak30NS4") << QStringLiteral("Peak30NS5") << QStringLiteral("Peak30NS6");
     mEnumNames << QStringLiteral("Peak30WE1") << QStringLiteral("Peak30WE2") << QStringLiteral("Peak30WE3") << QStringLiteral("Peak30WE4") << QStringLiteral("Peak30WE5") << QStringLiteral("Peak30WE6");
+    mEnumNames << QStringLiteral("Peak30Quad1") << QStringLiteral("Peak30Quad2") << QStringLiteral("Peak30Quad3") << QStringLiteral("Peak30Quad4") << QStringLiteral("Peak30Quad5") << QStringLiteral("Peak30Quad6");
 
     mEnumNames += QStringLiteral("Inner1");
     mEnumNames += QStringLiteral("Inner2");
@@ -1533,6 +1534,7 @@ int BTC_RoofSlopes::shadowToEnum(int shadowIndex)
 
         Peak30NS1, Peak30NS2, Peak30NS3, Peak30NS4, Peak30NS5, Peak30NS6, // intersection runs west-east
         Peak30WE6, Peak30WE5, Peak30WE4, Peak30WE3, Peak30WE2, Peak30WE1, // intersection runs north-south
+        Peak30Quad1, Peak30Quad2, Peak30Quad3, Peak30Quad4, Peak30Quad5, Peak30Quad6,
     };
     return map[shadowIndex];
 }

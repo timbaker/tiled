@@ -411,6 +411,7 @@ public:
         Slope30S,
         Peak30WE,
         Peak30NS,
+        Peak30Quad,
 
         CornerInnerSW,
         CornerInnerNW,
@@ -575,6 +576,7 @@ public:
         // 30-degree peaks
         Peak30NS1, Peak30NS2, Peak30NS3, Peak30NS4, Peak30NS5, Peak30NS6, // intersection runs west-east
         Peak30WE1, Peak30WE2, Peak30WE3, Peak30WE4, Peak30WE5, Peak30WE6, // intersection runs north-south
+        Peak30Quad1, Peak30Quad2, Peak30Quad3, Peak30Quad4, Peak30Quad5, Peak30Quad6,
 
         // Corners
         Inner1, Inner2, Inner3,

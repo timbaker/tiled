@@ -177,6 +177,8 @@ ObjectEditModeToolBar::ObjectEditModeToolBar(ObjectEditMode *mode, QWidget *pare
                         mode->tr("30-Degree Peak (Horizontal)"));
     roofMenu->addAction(QPixmap(QLatin1String(":/BuildingEditor/icons/icon_roof_peakNS.png")),
                         mode->tr("30-Degree Peak (Vertical)"));
+    roofMenu->addAction(QPixmap(QLatin1String(":/BuildingEditor/icons/icon_roof_peakQuad.png")),
+                        mode->tr("30-Degree Peak (Quad)"));
     connect(roofMenu, &QMenu::triggered, this, &ObjectEditModeToolBar::roofSlope30TypeChanged);
 
     button = static_cast<QToolButton*>(widgetForAction(actions->actionRoof30Degree));
@@ -407,7 +409,8 @@ void ObjectEditModeToolBar::roofSlope30TypeChanged(QAction *action)
         RoofObject::Slope30N,
         RoofObject::Slope30S,
         RoofObject::Peak30WE,
-        RoofObject::Peak30NS
+        RoofObject::Peak30NS,
+        RoofObject::Peak30Quad
     };
 
     RoofSlope30Tool::instance()->setRoofType(roofTypes[index]);

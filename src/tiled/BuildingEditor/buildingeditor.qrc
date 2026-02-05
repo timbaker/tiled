@@ -60,5 +60,6 @@
         <file>icons/icon_roof_dormerW.png</file>
         <file>icons/mode_attributes.png</file>
         <file>icons/icon_floor_grime.png</file>
+        <file>icons/icon_roof_peakQuad.png</file>
     </qresource>
 </RCC>
