@@ -21,6 +21,7 @@
 #include "buildingfurniturefile.h"
 #include "buildingreader.h"
 #include "buildingtiles.h"
+#include "buildingtilesfile.h"
 #include "buildingpreferences.h"
 #include "furnituregroups.h"
 #include "simplefile.h"
@@ -56,14 +57,18 @@ public:
     static const int VERSION2 = 2;
 
     // VERSION3
-    // added window-frame shapes
+    // added window-frame shapes 1-16
     static const int VERSION3 = 3;
 
     // VERSION4
     // added 30-degree roofs
     static const int VERSION4 = 4;
 
-    static const int VERSION_LATEST = VERSION4;
+    // VERSION5
+    // added window-frame shapes 17-19
+    static const int VERSION5 = 5;
+
+    static const int VERSION_LATEST = VERSION5;
 
     TemplatesFile();
     ~TemplatesFile();
@@ -102,7 +107,7 @@ private:
     FurnitureTiles *getFurnitureTiles(const QString &s);
 
     BuildingTileEntry *readTileEntry(SimpleFileBlock &block, QString &error);
-    int buildingReaderVersion() const;
+    int buildingTilesFileVersion() const;
     FurnitureTiles *readFurnitureTiles(SimpleFileBlock &block, QString &error);
 
     void writeTileEntry(SimpleFileBlock &parentBlock, BuildingTileEntry *entry);
@@ -373,7 +378,7 @@ BuildingTileEntry *TemplatesFile::readTileEntry(SimpleFileBlock &block, QString 
             }
             entry->mTiles[e] = BuildingTilesMgr::instance()->get(kv.value);
         }
-        if (BuildingTileEntry *match = category->findMatchForVersion(entry, buildingReaderVersion())) {
+        if (BuildingTileEntry *match = category->findMatchForVersion(entry, buildingTilesFileVersion())) {
             delete entry;
             entry = match;
         }
@@ -385,15 +390,18 @@ BuildingTileEntry *TemplatesFile::readTileEntry(SimpleFileBlock &block, QString 
     return 0;
 }
 
-int TemplatesFile::buildingReaderVersion() const
+int TemplatesFile::buildingTilesFileVersion() const
 {
-    if (mVersion == VERSION3) {
-        return BuildingReader::VERSION5;
+    if (mVersion == VERSION3) { // window-frame shapes 1-16
+        return BuildingTilesFile::VERSION3;
     }
-    if (mVersion == VERSION4) {
-        return BuildingReader::VERSION6;
+    if (mVersion == VERSION4) { // 30-degree roofs
+        return BuildingTilesFile::VERSION3; // no new version of BuildingTilesFile!!!
     }
-    return BuildingReader::VERSION4;
+    if (mVersion == VERSION5) { // window-frame shapes 1-16
+        return BuildingTilesFile::VERSION4;
+    }
+    return BuildingTilesFile::VERSION_LATEST;
 }
 
 FurnitureTiles *TemplatesFile::readFurnitureTiles(SimpleFileBlock &block, QString &error)

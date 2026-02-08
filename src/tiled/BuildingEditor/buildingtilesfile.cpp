@@ -25,24 +25,6 @@
 
 using namespace BuildingEditor;
 
-// VERSION0: original format without 'version' keyvalue
-#define VERSION0 0
-
-// VERSION1
-// added 'version' keyvalue
-// added 'curtains' category
-#define VERSION1 1
-
-// VERSION2
-// massive rewrite!
-#define VERSION2 2
-
-// VERSION3
-// added window-frame shapes
-#define VERSION3 3
-
-#define VERSION_LATEST VERSION3
-
 BuildingTilesFile::BuildingTilesFile()
 {
     BuildingTilesMgr::createCategories(mCategories);

@@ -73,6 +73,7 @@ public:
     BuildingTileEntry(BuildingTileCategory *category);
     virtual ~BuildingTileEntry() {}
 
+    void set(const BuildingTileEntry *other);
     BuildingTileEntry *createCopy(BuildingTileCategory *category) const;
 
     BuildingTileCategory *category() const
@@ -102,7 +103,7 @@ public:
 
     bool equals(BuildingTileEntry *other) const;
     bool equals(BuildingTileEntry *other, const QVector<int> &enums) const;
-    bool equalsIgnoreCategory(BuildingTileEntry *other) const;
+    bool equalsIgnoreCategory(BuildingTileEntry *other, const QVector<int> &enums) const;
 
     bool isNorth(int e) const;
     bool isWest(int e) const;
@@ -220,9 +221,9 @@ public:
     virtual BuildingTileEntry *createEntryFromSingleTile(const QString &tileName);
 
     BuildingTileEntry *findMatch(BuildingTileEntry *entry) const;
-    BuildingTileEntry *findMatchForVersion(BuildingTileEntry *entry, int version) const;
-    virtual QVector<int> enumsForVersion(int version) const;
-    BuildingTileEntry *findMatchIgnoreCategory(BuildingTileEntry *entry) const;
+    BuildingTileEntry *findMatchForVersion(BuildingTileEntry *entry, int buildingTilesFileVersion) const;
+    virtual QVector<int> enumsForVersion(int buildingTilesFileVersion) const;
+    BuildingTileEntry *findMatchIgnoreCategory(BuildingTileEntry *entry, int buildingTilesFileVersion) const;
     bool usesTile(Tiled::Tile *tile) const;
 
     virtual bool canAssignNone() const
@@ -476,8 +477,18 @@ public:
         WestWindow16,
         NorthWindow16,
 
+        WestWindow17, // 2-part trailer type - left
+        NorthWindow17,
+        WestWindow18, // 2-part trailer type - right
+        NorthWindow18,
+
+        WestWindow19, // Tall skinny round top
+        NorthWindow19,
+
         EnumCount
     };
+
+    static const int NUM_WINDOW_FRAMES = 19;
 
     BTC_Walls(const QString &name, const QString &label);
 
@@ -504,7 +515,7 @@ public:
 
     BuildingTileCategory *asExteriorWalls() override { return this; }
 
-    QVector<int> enumsForVersion(int version) const override;
+    QVector<int> enumsForVersion(int buildingTilesFileVersion) const override;
 };
 
 class BTC_IWalls : public BTC_Walls
@@ -519,7 +530,7 @@ public:
 
     BuildingTileCategory *asInteriorWalls() override { return this; }
 
-    QVector<int> enumsForVersion(int version) const override;
+    QVector<int> enumsForVersion(int buildingTilesFileVersion) const override;
 };
 
 class BTC_EWallTrim : public BTC_Walls
@@ -645,7 +656,7 @@ public:
     int shadowCount() const override { return EnumCount + 4; }
     int shadowToEnum(int shadowIndex) override;
 
-    QVector<int> enumsForVersion(int version) const override;
+    QVector<int> enumsForVersion(int buildingTilesFileVersion) const override;
 };
 
 class BTC_RoofSlopes : public BuildingTileCategory
@@ -708,7 +719,7 @@ public:
     int shadowCount() const override { return EnumCount + 4; }
     int shadowToEnum(int shadowIndex) override;
 
-    QVector<int> enumsForVersion(int version) const override;
+    QVector<int> enumsForVersion(int buildingTilesFileVersion) const override;
 };
 
 class BTC_RoofTops : public BuildingTileCategory
@@ -949,7 +960,6 @@ public:
     { return mError; }
 
 private:
-    bool upgradeTxt();
     bool mergeTxt();
 
 signals:

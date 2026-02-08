@@ -8915,6 +8915,7 @@ group
     furniture
     {
         corners = true
+        layer = Roof
         entry
         {
             orient = W
@@ -8959,6 +8960,7 @@ group
     furniture
     {
         corners = true
+        layer = Roof
         entry
         {
             orient = W
@@ -9003,6 +9005,7 @@ group
     furniture
     {
         corners = true
+        layer = Roof
         entry
         {
             orient = W
@@ -9047,6 +9050,7 @@ group
     furniture
     {
         corners = true
+        layer = Roof
         entry
         {
             orient = W
@@ -9091,6 +9095,7 @@ group
     furniture
     {
         corners = true
+        layer = Roof
         entry
         {
             orient = W
@@ -9135,6 +9140,7 @@ group
     furniture
     {
         corners = true
+        layer = Roof
         entry
         {
             orient = W
@@ -9179,6 +9185,7 @@ group
     furniture
     {
         corners = true
+        layer = Roof
         entry
         {
             orient = W
@@ -9223,6 +9230,7 @@ group
     furniture
     {
         corners = true
+        layer = Roof
         entry
         {
             orient = W
@@ -9267,6 +9275,7 @@ group
     furniture
     {
         corners = true
+        layer = Roof
         entry
         {
             orient = W
@@ -9311,6 +9320,7 @@ group
     furniture
     {
         corners = true
+        layer = Roof
         entry
         {
             orient = W
@@ -9355,6 +9365,7 @@ group
     furniture
     {
         corners = true
+        layer = Roof
         entry
         {
             orient = W
@@ -22526,6 +22537,7 @@ group
     label = Location - Business - Machinery
     furniture
     {
+        layer = WallFurniture
         entry
         {
             orient = W
@@ -50939,6 +50951,30 @@ group
         entry
         {
             orient = W
+            0,0 = location_community_school_01_037
+        }
+        entry
+        {
+            orient = N
+            0,0 = location_community_school_01_036
+        }
+        entry
+        {
+            orient = E
+            0,0 = location_community_school_01_039
+        }
+        entry
+        {
+            orient = S
+            0,0 = location_community_school_01_038
+        }
+    }
+    furniture
+    {
+        layer = WallFurniture
+        entry
+        {
+            orient = W
             0,0 = location_community_school_01_031
             0,1 = location_community_school_01_030
         }
@@ -52502,22 +52538,22 @@ group
         entry
         {
             orient = W
-            0,0 = walls_decoration_02_008
-        }
-        entry
-        {
-            orient = N
-            0,0 = walls_decoration_02_000
-        }
-        entry
-        {
-            orient = E
             0,0 = walls_decoration_02_041
         }
         entry
         {
-            orient = S
+            orient = N
             0,0 = walls_decoration_02_033
+        }
+        entry
+        {
+            orient = E
+            0,0 = walls_decoration_02_008
+        }
+        entry
+        {
+            orient = S
+            0,0 = walls_decoration_02_000
         }
     }
     furniture
@@ -52526,22 +52562,22 @@ group
         entry
         {
             orient = W
-            0,0 = walls_decoration_02_009
-        }
-        entry
-        {
-            orient = N
-            0,0 = walls_decoration_02_001
-        }
-        entry
-        {
-            orient = E
             0,0 = walls_decoration_02_027
         }
         entry
         {
-            orient = S
+            orient = N
             0,0 = walls_decoration_02_019
+        }
+        entry
+        {
+            orient = E
+            0,0 = walls_decoration_02_009
+        }
+        entry
+        {
+            orient = S
+            0,0 = walls_decoration_02_001
         }
     }
     furniture
@@ -52598,22 +52634,22 @@ group
         entry
         {
             orient = W
-            0,0 = walls_decoration_02_012
-        }
-        entry
-        {
-            orient = N
-            0,0 = walls_decoration_02_004
-        }
-        entry
-        {
-            orient = E
             0,0 = walls_decoration_02_030
         }
         entry
         {
-            orient = S
+            orient = N
             0,0 = walls_decoration_02_022
+        }
+        entry
+        {
+            orient = E
+            0,0 = walls_decoration_02_012
+        }
+        entry
+        {
+            orient = S
+            0,0 = walls_decoration_02_004
         }
     }
     furniture
@@ -52622,22 +52658,22 @@ group
         entry
         {
             orient = W
-            0,0 = walls_decoration_02_013
-        }
-        entry
-        {
-            orient = N
-            0,0 = walls_decoration_02_005
-        }
-        entry
-        {
-            orient = E
             0,0 = walls_decoration_02_045
         }
         entry
         {
-            orient = S
+            orient = N
             0,0 = walls_decoration_02_035
+        }
+        entry
+        {
+            orient = E
+            0,0 = walls_decoration_02_013
+        }
+        entry
+        {
+            orient = S
+            0,0 = walls_decoration_02_005
         }
     }
     furniture
@@ -52718,22 +52754,22 @@ group
         entry
         {
             orient = W
-            0,0 = walls_decoration_02_031
-        }
-        entry
-        {
-            orient = N
-            0,0 = walls_decoration_02_023
-        }
-        entry
-        {
-            orient = E
             0,0 = walls_decoration_02_044
         }
         entry
         {
-            orient = S
+            orient = N
             0,0 = walls_decoration_02_036
+        }
+        entry
+        {
+            orient = E
+            0,0 = walls_decoration_02_031
+        }
+        entry
+        {
+            orient = S
+            0,0 = walls_decoration_02_023
         }
     }
     furniture
@@ -52742,22 +52778,22 @@ group
         entry
         {
             orient = W
-            0,0 = walls_decoration_02_047
-        }
-        entry
-        {
-            orient = N
-            0,0 = walls_decoration_02_039
-        }
-        entry
-        {
-            orient = E
             0,0 = walls_decoration_02_046
         }
         entry
         {
-            orient = S
+            orient = N
             0,0 = walls_decoration_02_038
+        }
+        entry
+        {
+            orient = E
+            0,0 = walls_decoration_02_047
+        }
+        entry
+        {
+            orient = S
+            0,0 = walls_decoration_02_039
         }
     }
     furniture

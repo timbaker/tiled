@@ -272,8 +272,6 @@ void FurnitureObject::rotate(bool right)
     int oldWidth = mFloor->height();
     int oldHeight = mFloor->width();
 
-    FurnitureTile *oldTile = mFurnitureTile;
-    FurnitureTile *newTile = mFurnitureTile;
     FurnitureTile::FurnitureOrientation map[8];
     if (right) {
         map[FurnitureTile::FurnitureW] = FurnitureTile::FurnitureN;
@@ -294,7 +292,8 @@ void FurnitureObject::rotate(bool right)
         map[FurnitureTile::FurnitureNE] = FurnitureTile::FurnitureNW;
         map[FurnitureTile::FurnitureNW] = FurnitureTile::FurnitureSW;
     }
-    newTile = oldTile->owner()->tile(map[oldTile->orient()]);
+    FurnitureTile *oldTile = mFurnitureTile;
+    FurnitureTile *newTile = oldTile->owner()->tile(map[oldTile->orient()]);
 
     if (right) {
         int x = mX;

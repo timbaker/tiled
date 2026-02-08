@@ -1788,6 +1788,9 @@ property
         14 =
         15 =
         16 =
+        17 =
+        18 =
+        19 =
     }
     Default = None
     ValueAsPropertyName = false
@@ -2156,6 +2159,7 @@ property
         ZombieThumpChainlinkFence =
         ZombieThumpGarageDoor =
         ZombieThumpGeneric =
+        ZombieThumpMetalPoleFence =
         ZombieThumpMetalPoleGate =
         ZombieThumpMetal =
         ZombieThumpWindow =

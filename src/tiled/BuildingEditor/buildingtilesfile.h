@@ -30,6 +30,30 @@ class BuildingTileEntry;
 class BuildingTilesFile
 {
 public:
+
+    // VERSION0: original format without 'version' keyvalue
+    static const int VERSION0 = 0;
+
+    // VERSION1
+    // added 'version' keyvalue
+    // added 'curtains' category
+    static const int VERSION1 = 1;
+
+    // VERSION2
+    // massive rewrite!
+    static const int VERSION2 = 2;
+
+    // VERSION3
+    // added window-frame shapes 1-16
+    // added 30-degree roofs
+    static const int VERSION3 = 3;
+
+    // VERSION4
+    // added window-frame shapes 17-19
+    static const int VERSION4 = 4;
+
+    static const int VERSION_LATEST = VERSION4;
+
     BuildingTilesFile();
     ~BuildingTilesFile();
 

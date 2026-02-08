@@ -23,6 +23,7 @@
 #include "buildingobjects.h"
 #include "buildingtemplates.h"
 #include "buildingtiles.h"
+#include "buildingtilesfile.h"
 #include "furnituregroups.h"
 
 #include "qtlockedfile.h"
@@ -360,6 +361,7 @@ private:
     QSet<FurnitureTiles*> deadFurniture;
 
     BuildingTileEntry *fixEntry(BuildingTileEntry *entry);
+    int buildingTilesFileVersion() const;
     QMap<BuildingTileEntry*,BuildingTileEntry*> fixedEntries;
     QSet<BuildingTileEntry*> deadEntries;
 
@@ -1430,7 +1432,7 @@ BuildingTileEntry *BuildingReaderPrivate::fixEntry(BuildingTileEntry *entry)
                 entry->setTile(i, BuildingTilesMgr::instance()->get(btile->name()));
             }
         }
-        if (BuildingTileEntry *match = category->findMatchForVersion(entry, mVersion)) {
+        if (BuildingTileEntry *match = category->findMatchForVersion(entry, buildingTilesFileVersion())) {
             fixedEntries[entry] = match;
             fixedEntries[match] = match;
             deadEntries.insert(entry);
@@ -1439,4 +1441,18 @@ BuildingTileEntry *BuildingReaderPrivate::fixEntry(BuildingTileEntry *entry)
         }
     }
     return fixedEntries[entry];
+}
+
+int BuildingReaderPrivate::buildingTilesFileVersion() const
+{
+    if (mVersion == BuildingReader::VERSION5) { // window-frame shapes 1-16
+        return BuildingTilesFile::VERSION3;
+    }
+    if (mVersion == BuildingReader::VERSION6) { // 30-degree roofs
+        return BuildingTilesFile::VERSION3; // no new version of BuildingTilesFile!
+    }
+    if (mVersion == BuildingReader::VERSION7) { // window-frame shapes 17-19
+        return BuildingTilesFile::VERSION4;
+    }
+    return BuildingTilesFile::VERSION_LATEST;
 }

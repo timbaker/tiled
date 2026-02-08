@@ -48,14 +48,18 @@ public:
     static const int VERSION4 = 4;
 
     // version="5"
-    // Added window-frame shapes
+    // Added window-frame shapes 1-16
     static const int VERSION5 = 5;
 
     // version="6"
     // Added 30-degree roof shapes
     static const int VERSION6 = 6;
 
-    static const int VERSION_LATEST = VERSION6;
+    // version="7"
+    // Added window-frame shapes 17-19
+    static const int VERSION7 = 7;
+
+    static const int VERSION_LATEST = VERSION7;
 
     explicit BuildingReader();
     ~BuildingReader();

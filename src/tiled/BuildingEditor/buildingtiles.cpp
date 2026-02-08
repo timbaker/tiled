@@ -316,9 +316,6 @@ bool BuildingTilesMgr::readTxt()
         return false;
     }
 #if !defined(WORLDED)
-    if (!upgradeTxt())
-        return false;
-
     if (!mergeTxt())
         return false;
 #endif
@@ -401,31 +398,6 @@ BuildingTileEntry *BuildingTilesMgr::defaultCategoryTile(int e) const
     return mCategories[e]->defaultEntry();
 }
 
-bool BuildingTilesMgr::upgradeTxt()
-{
-    QString userPath = txtPath();
-
-    BuildingTilesFile userFile;
-    if (!userFile.read(userPath)) {
-        mError = userFile.errorString();
-        return false;
-    }
-
-    int userVersion = userFile.getVersion(); // may be zero for unversioned file
-    if (userVersion == BuildingTilesFile::getVersionLatest()) {
-        return true;
-    }
-
-    // Not the latest version -> upgrade it.
-
-    // Write the user file out with the latest version and format.
-    if (!userFile.write(userPath)) {
-        mError = userFile.errorString();
-        return false;
-    }
-    return true;
-}
-
 bool BuildingTilesMgr::mergeTxt()
 {
     QString userPath = txtPath();
@@ -434,7 +406,6 @@ bool BuildingTilesMgr::mergeTxt()
         mError = userFile.errorString();
         return false;
     }
-    Q_ASSERT(userFile.getVersion() == BuildingTilesFile::getVersionLatest());
 
     QString sourcePath = Tiled::Internal::Preferences::instance()->appConfigPath(txtName());
     BuildingTilesFile sourceFile;
@@ -444,9 +415,11 @@ bool BuildingTilesMgr::mergeTxt()
     }
     Q_ASSERT(sourceFile.getVersion() == BuildingTilesFile::getVersionLatest());
 
-    int userSourceRevision = userFile.getSourceRevision();
+    int sourceVersion = sourceFile.getVersion();
     int sourceRevision = sourceFile.getRevision();
-    if (sourceRevision == userSourceRevision) {
+    int userVersion = userFile.getVersion();
+    int userSourceRevision = userFile.getSourceRevision();
+    if (userVersion == sourceVersion && sourceRevision == userSourceRevision) {
         return true;
     }
 
@@ -457,7 +430,8 @@ bool BuildingTilesMgr::mergeTxt()
         BuildingTileCategory *userCategory = userFile.categories().at(i);
         // Copy unique source-entries to the user-category.
         for (BuildingTileEntry *sourceEntry : sourceCategory->entries()) {
-            if (userCategory->findMatchIgnoreCategory(sourceEntry) != nullptr) {
+            if (BuildingTileEntry *userEntry = userCategory->findMatchIgnoreCategory(sourceEntry, userVersion)) {
+                userEntry->set(sourceEntry); // copy any new tiles
                 continue;
             }
             BuildingTileEntry *userEntry = sourceEntry->createCopy(userCategory);
@@ -465,67 +439,6 @@ bool BuildingTilesMgr::mergeTxt()
         }
     }
 
-#if 0
-    QMap<QString,SimpleFileBlock> userCategoriesByName;
-    QMap<QString,int> userCategoryIndexByName;
-    QMap<QString,QStringList> userEntriesByCategoryName;
-    int index = 0;
-    foreach (SimpleFileBlock b, userFile.blocks) {
-        QString name = b.value("name");
-        userCategoriesByName[name] = b;
-        userCategoryIndexByName[name] = index++;
-        foreach (SimpleFileBlock b2, b.blocks)
-            userEntriesByCategoryName[name] += b2.toString();
-    }
-
-    QMap<QString,SimpleFileBlock> sourceCategoriesByName;
-    QMap<QString,QStringList> sourceEntriesByCategoryName;
-    foreach (SimpleFileBlock b, sourceFile.blocks) {
-        QString name = b.value("name");
-        sourceCategoriesByName[name] = b;
-        foreach (SimpleFileBlock b2, b.blocks)
-            sourceEntriesByCategoryName[name] += b2.toString();
-    }
-
-    foreach (QString categoryName, sourceCategoriesByName.keys()) {
-        if (userCategoriesByName.contains(categoryName)) {
-            // A user-category with the same name as a source-category exists.
-            // Copy unique source-entries to the user-category.
-            int userGroupIndex = userCategoryIndexByName[categoryName];
-            int userEntryIndex = userEntriesByCategoryName[categoryName].size();
-            int sourceEntryIndex = 0;
-            foreach (QString f, sourceEntriesByCategoryName[categoryName]) {
-                if (userEntriesByCategoryName[categoryName].contains(f)) {
-                    userEntryIndex = userEntriesByCategoryName[categoryName].indexOf(f) + 1;
-                } else {
-                    userEntriesByCategoryName[categoryName].insert(userEntryIndex, f);
-                    SimpleFileBlock entryBlock = sourceCategoriesByName[categoryName].blocks.at(sourceEntryIndex);
-                    userFile.blocks[userGroupIndex].blocks.insert(userEntryIndex, entryBlock);
-                    qDebug() << "BuildingTiles.txt merge: inserted entry in category" << categoryName << "at" << userEntryIndex;
-                    userEntryIndex++;
-                }
-                ++sourceEntryIndex;
-            }
-        } else {
-            // The source-category doesn't exist in the user-file.
-            // Copy the source-category to the user-file.
-            userCategoriesByName[categoryName] = sourceCategoriesByName[categoryName];
-            int index = userCategoriesByName.keys().indexOf(categoryName); // insert group alphabetically
-            userFile.blocks.insert(index, userCategoriesByName[categoryName]);
-            foreach (QString label, userCategoriesByName.keys()) {
-                if (userCategoryIndexByName[label] >= index)
-                    userCategoryIndexByName[label]++;
-            }
-            userCategoryIndexByName[categoryName] = index;
-            qDebug() << "BuildingTiles.txt merge: inserted category" << categoryName << "at" << index;
-        }
-    }
-
-    userFile.replaceValue("revision", QString::number(sourceRevision + 1));
-    userFile.replaceValue("source_revision", QString::number(sourceRevision));
-
-    userFile.setVersion(VERSION_LATEST);
-#endif
     if (!userFile.write(userPath, sourceRevision + 1, sourceRevision, userFile.categories())) {
         mError = userFile.errorString();
         return false;
@@ -655,6 +568,13 @@ BuildingTileEntry::BuildingTileEntry(BuildingTileCategory *category) :
     }
 }
 
+void BuildingTileEntry::set(const BuildingTileEntry *other)
+{
+    // NOTE: Not changing mCategory
+    mTiles = other->mTiles;
+    mOffsets = other->mOffsets;
+}
+
 BuildingTileEntry *BuildingTileEntry::createCopy(BuildingTileCategory *category) const
 {
     BuildingTileEntry *copy = new BuildingTileEntry(category);
@@ -718,15 +638,27 @@ bool BuildingTileEntry::equals(BuildingTileEntry *other, const QVector<int> &enu
         if (mTiles[e] != other->mTiles[e]) {
             return false;
         }
+        if (mOffsets[e] != other->mOffsets[e]) {
+            return false;
+        }
     }
     return true;
 }
 
-bool BuildingTileEntry::equalsIgnoreCategory(BuildingTileEntry *other) const
+bool BuildingTileEntry::equalsIgnoreCategory(BuildingTileEntry *other, const QVector<int> &enums) const
 {
-    return (mCategory->name() == other->mCategory->name()) &&
-           (mTiles == other->mTiles) &&
-           (mOffsets == other->mOffsets);
+    if (mCategory->name() != other->mCategory->name()) {
+        return false;
+    }
+    for (int e : enums) {
+        if (mTiles[e] != other->mTiles[e]) {
+            return false;
+        }
+        if (mOffsets[e] != other->mOffsets[e]) {
+            return false;
+        }
+    }
+    return true;
 }
 
 bool BuildingTileEntry::isNorth(int e) const
@@ -1036,11 +968,10 @@ BTC_Walls::BTC_Walls(const QString &name, const QString &label) :
     mEnumNames += QStringLiteral("NorthWindow");
     mEnumNames += QStringLiteral("WestDoor");
     mEnumNames += QStringLiteral("NorthDoor");
-    for (int i = 1; i <= 16; i++) {
+    for (int i = 1; i <= NUM_WINDOW_FRAMES; i++) {
         mEnumNames += QStringLiteral("WestWindow%1").arg(i);
         mEnumNames += QStringLiteral("NorthWindow%1").arg(i);
     }
-
     Q_ASSERT(mEnumNames.size() == EnumCount);
 }
 
@@ -1060,13 +991,22 @@ BuildingTileEntry *BTC_Walls::createEntryFromSingleTile(const QString &tileName)
 
 int BTC_Walls::shadowToEnum(int shadowIndex)
 {
-    int map[EnumCount] = {
+    int map[EnumCount + 2] = {
         West, North, NorthWest, SouthEast, WestWindow, NorthWindow, WestDoor, NorthDoor
     };
     for (int i = 0; i < 16; i++) {
         map[WestWindow1 + i * 2] = WestWindow1 + i * 2;
         map[NorthWindow1 + i * 2] = NorthWindow1 + i * 2;
     }
+    // Order is west west north north
+    map[40] = WestWindow17; // west trailer left
+    map[41] = WestWindow18; // west trailer right
+    map[42] = NorthWindow17; // north trailer left
+    map[43] = NorthWindow18; // north trailer right
+    map[44] = WestWindow19; // tall skinny round top
+    map[45] = NorthWindow19;// tall skinny round top
+    map[46] = -1;
+    map[47] = -1;
     return map[shadowIndex];
 }
 
@@ -1075,7 +1015,7 @@ bool BTC_Walls::isNorth(int e) const
     if (e == TileEnum::North || e == TileEnum::NorthDoor || e == TileEnum::NorthWindow) {
         return true;
     }
-    for (int i = 0; i < 16; i++) {
+    for (int i = 0; i < NUM_WINDOW_FRAMES; i++) {
         if (e == TileEnum::NorthWindow1 + i * 2) {
             return true;
         }
@@ -1088,7 +1028,7 @@ bool BTC_Walls::isWest(int e) const
     if (e == TileEnum::West || e == TileEnum::WestDoor || e == TileEnum::WestWindow) {
         return true;
     }
-    for (int i = 0; i < 16; i++) {
+    for (int i = 0; i < NUM_WINDOW_FRAMES; i++) {
         if (e == TileEnum::WestWindow1 + i * 2) {
             return true;
         }
@@ -1102,7 +1042,7 @@ static QMap<QString,BTC_Walls::TileEnum> WindowShapeN;
 BTC_Walls::TileEnum BTC_Walls::windowShapeToEnumW(const QString &windowShape)
 {
     if (WindowShapeW.isEmpty()) {
-        for (int i = 0; i < 16; i++) {
+        for (int i = 0; i < NUM_WINDOW_FRAMES; i++) {
             WindowShapeW.insert(QStringLiteral("%1").arg(i + 1), static_cast<TileEnum>(TileEnum::WestWindow1 + i * 2));
         }
     }
@@ -1112,7 +1052,7 @@ BTC_Walls::TileEnum BTC_Walls::windowShapeToEnumW(const QString &windowShape)
 BTC_Walls::TileEnum BTC_Walls::windowShapeToEnumN(const QString &windowShape)
 {
     if (WindowShapeN.isEmpty()) {
-        for (int i = 0; i < 16; i++) {
+        for (int i = 0; i < NUM_WINDOW_FRAMES; i++) {
             WindowShapeN.insert(QStringLiteral("%1").arg(i + 1), static_cast<TileEnum>(TileEnum::NorthWindow1 + i * 2));
         }
     }
@@ -1121,26 +1061,42 @@ BTC_Walls::TileEnum BTC_Walls::windowShapeToEnumN(const QString &windowShape)
 
 /////
 
-QVector<int> BTC_EWalls::enumsForVersion(int version) const
+QVector<int> BTC_EWalls::enumsForVersion(int buildingTilesFileVersion) const
 {
-    if (version < BuildingReader::VERSION5) {
-        // Version 5 added 16 new wall shapes for windows.
+    if (buildingTilesFileVersion < BuildingTilesFile::VERSION3) {
+        // Version 3 added window-frame shapes 1-16 and 30-degree roofs.
         // Look for a match of the first 8 tiles only.
         return { West, North, NorthWest, SouthEast, WestWindow, NorthWindow, WestDoor, NorthDoor };
     }
-    return BuildingTileCategory::enumsForVersion(version);
+    if (buildingTilesFileVersion < BuildingTilesFile::VERSION4) {
+        // Version 4 added window-frame shapes 17-19.
+        QVector<int> ret;
+        for (int i = 0; i < WestWindow17; i++) {
+            ret += i;
+        }
+        return ret;
+    }
+    return BuildingTileCategory::enumsForVersion(buildingTilesFileVersion);
 }
 
 /////
 
-QVector<int> BTC_IWalls::enumsForVersion(int version) const
+QVector<int> BTC_IWalls::enumsForVersion(int buildingTilesFileVersion) const
 {
-    if (version < BuildingReader::VERSION5) {
-        // Version 5 added 16 new wall shapes for windows.
+    if (buildingTilesFileVersion < BuildingTilesFile::VERSION3) {
+        // Version 3 added window-frame shapes 1-16 and 30-degree roofs.
         // Look for a match of the first 8 tiles only.
         return { West, North, NorthWest, SouthEast, WestWindow, NorthWindow, WestDoor, NorthDoor };
     }
-    return BuildingTileCategory::enumsForVersion(version);
+    if (buildingTilesFileVersion < BuildingTilesFile::VERSION4) {
+        // Version 4 added window-frame shapes 17-19.
+        QVector<int> ret;
+        for (int i = 0; i < WestWindow17; i++) {
+            ret += i;
+        }
+        return ret;
+    }
+    return BuildingTileCategory::enumsForVersion(buildingTilesFileVersion);
 }
 
 /////
@@ -1231,13 +1187,47 @@ bool BTC_Windows::shadowHack(const BuildingTileEntry *entry, int e, QPoint &p) c
     }
     TileDefTile *tdTile = tdTileset->tileAt(tile->mIndex);
     if (tdTile == nullptr || !tdTile->mProperties.contains(QStringLiteral("WindowShape"))) {
-        return false;
+        return false; // original 2 window shapes don't use the WindowShape property
     }
     bool ok = false;
     int WindowShape = tdTile->mProperties.value(QStringLiteral("WindowShape")).toInt(&ok);
-    if (!ok || WindowShape < 1 || WindowShape > 16) {
+    if (!ok || WindowShape < 1 || WindowShape > BTC_Walls::NUM_WINDOW_FRAMES) {
         return false;
     }
+    if (WindowShape == 17) { // trailer left
+        if (e == TileEnum::West) {
+            p = QPoint(2, 0);
+            return true;
+        }
+        if (e == TileEnum::North) {
+            p = QPoint(4-1, 0);
+            return true;
+        }
+        return false;
+    }
+    if (WindowShape == 18) { // trailer right
+        if (e == TileEnum::West) {
+            p = QPoint(3, 0);
+            return true;
+        }
+        if (e == TileEnum::North) {
+            p = QPoint(5-1, 0);
+            return true;
+        }
+        return false;
+    }
+    if (WindowShape == 19) { // tall skinny round top
+        if (e == TileEnum::West) {
+            p = QPoint(6, 0);
+            return true;
+        }
+        if (e == TileEnum::North) {
+            p = QPoint(7-1, 0);
+            return true;
+        }
+        return false;
+    }
+    // Shape 1-16 on rows 1-4
     WindowShape -= 1;
     switch (e) {
     case TileEnum::West:
@@ -1425,17 +1415,17 @@ int BTC_RoofCaps::shadowToEnum(int shadowIndex)
     return map[shadowIndex];
 }
 
-QVector<int> BTC_RoofCaps::enumsForVersion(int version) const
+QVector<int> BTC_RoofCaps::enumsForVersion(int buildingTilesFileVersion) const
 {
-    if (version < BuildingReader::VERSION6) {
-        // Version 6 added 30-degree roofs
+    if (buildingTilesFileVersion < BuildingTilesFile::VERSION3) {
+        // Version 3 added 30-degree roofs
         QVector<int> ret;
         for (int i = CapRiseE1; i <= CapShallowFallE2; i++) {
             ret += i;
         }
         return ret;
     }
-    return BuildingTileCategory::enumsForVersion(version);
+    return BuildingTileCategory::enumsForVersion(buildingTilesFileVersion);
 }
 
 /////
@@ -1576,10 +1566,10 @@ int BTC_RoofSlopes::shadowToEnum(int shadowIndex)
     return map[shadowIndex];
 }
 
-QVector<int> BTC_RoofSlopes::enumsForVersion(int version) const
+QVector<int> BTC_RoofSlopes::enumsForVersion(int buildingTilesFileVersion) const
 {
-    if (version < BuildingReader::VERSION6) {
-        // Version 6 added 30-degree roofs
+    if (buildingTilesFileVersion < BuildingTilesFile::VERSION3) {
+        // Version 3 added 30-degree roofs
         QVector<int> ret;
         for (int i = SlopeS1; i <= ShallowSlopeS2; i++) {
             ret += i;
@@ -1589,7 +1579,7 @@ QVector<int> BTC_RoofSlopes::enumsForVersion(int version) const
         }
         return ret;
     }
-    return BuildingTileCategory::enumsForVersion(version);
+    return BuildingTileCategory::enumsForVersion(buildingTilesFileVersion);
 }
 
 /////
@@ -1805,9 +1795,9 @@ BuildingTileEntry *BuildingTileCategory::findMatch(BuildingTileEntry *entry) con
     return nullptr;
 }
 
-BuildingTileEntry *BuildingTileCategory::findMatchForVersion(BuildingTileEntry *entry, int version) const
+BuildingTileEntry *BuildingTileCategory::findMatchForVersion(BuildingTileEntry *entry, int buildingTilesFileVersion) const
 {
-    const QVector<int> enums = enumsForVersion(version);
+    const QVector<int> enums = enumsForVersion(buildingTilesFileVersion);
     for (BuildingTileEntry *candidate : std::as_const(mEntries)) {
         if (candidate->equals(entry, enums)) {
             return candidate;
@@ -1816,9 +1806,9 @@ BuildingTileEntry *BuildingTileCategory::findMatchForVersion(BuildingTileEntry *
     return nullptr;
 }
 
-QVector<int> BuildingTileCategory::enumsForVersion(int version) const
+QVector<int> BuildingTileCategory::enumsForVersion(int buildingTilesFileVersion) const
 {
-    Q_UNUSED(version)
+    Q_UNUSED(buildingTilesFileVersion)
     QVector<int> ret;
     for (int i = 0; i < enumCount(); i++) {
         ret += i;
@@ -1826,10 +1816,11 @@ QVector<int> BuildingTileCategory::enumsForVersion(int version) const
     return ret;
 }
 
-BuildingTileEntry *BuildingTileCategory::findMatchIgnoreCategory(BuildingTileEntry *entry) const
+BuildingTileEntry *BuildingTileCategory::findMatchIgnoreCategory(BuildingTileEntry *entry, int buildingTilesFileVersion) const
 {
-    foreach (BuildingTileEntry *candidate, mEntries) {
-        if (candidate->equalsIgnoreCategory(entry)) {
+    const QVector<int> enums = enumsForVersion(buildingTilesFileVersion);
+    for (BuildingTileEntry *candidate : std::as_const(mEntries)) {
+        if (candidate->equalsIgnoreCategory(entry, enums)) {
             return candidate;
         }
     }
