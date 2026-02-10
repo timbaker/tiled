@@ -113,27 +113,27 @@ ObjectEditModeToolBar::ObjectEditModeToolBar(ObjectEditMode *mode, QWidget *pare
 
     /////
     QMenu *roofMenu = new QMenu(this);
-    roofMenu->addAction(QPixmap(QLatin1String(":/BuildingEditor/icons/icon_roof_slopeW.png")),
+    roofMenu->addAction(QPixmap(QStringLiteral(":/BuildingEditor/icons/icon_roof_slopeW.png")),
                         mode->tr("Slope (W)"));
-    roofMenu->addAction(QPixmap(QLatin1String(":/BuildingEditor/icons/icon_roof_slopeE.png")),
+    roofMenu->addAction(QPixmap(QStringLiteral(":/BuildingEditor/icons/icon_roof_slopeE.png")),
                          mode->tr("Slope (E)"));
-    roofMenu->addAction(QPixmap(QLatin1String(":/BuildingEditor/icons/icon_roof_slopeN.png")),
+    roofMenu->addAction(QPixmap(QStringLiteral(":/BuildingEditor/icons/icon_roof_slopeN.png")),
                          mode->tr("Slope (N)"));
-    roofMenu->addAction(QPixmap(QLatin1String(":/BuildingEditor/icons/icon_roof_slopeS.png")),
+    roofMenu->addAction(QPixmap(QStringLiteral(":/BuildingEditor/icons/icon_roof_slopeS.png")),
                          mode->tr("Slope (S)"));
-    roofMenu->addAction(QPixmap(QLatin1String(":/BuildingEditor/icons/icon_roof_peakWE.png")),
+    roofMenu->addAction(QPixmap(QStringLiteral(":/BuildingEditor/icons/icon_roof_peakWE.png")),
                          mode->tr("Peak (Horizontal)"));
-    roofMenu->addAction(QPixmap(QLatin1String(":/BuildingEditor/icons/icon_roof_peakNS.png")),
+    roofMenu->addAction(QPixmap(QStringLiteral(":/BuildingEditor/icons/icon_roof_peakNS.png")),
                          mode->tr("Peak (Vertical)"));
-    roofMenu->addAction(QPixmap(QLatin1String(":/BuildingEditor/icons/icon_roof_dormerW.png")),
+    roofMenu->addAction(QPixmap(QStringLiteral(":/BuildingEditor/icons/icon_roof_dormerW.png")),
                          mode->tr("Dormer (W)"));
-    roofMenu->addAction(QPixmap(QLatin1String(":/BuildingEditor/icons/icon_roof_dormerE.png")),
+    roofMenu->addAction(QPixmap(QStringLiteral(":/BuildingEditor/icons/icon_roof_dormerE.png")),
                          mode->tr("Dormer (E)"));
-    roofMenu->addAction(QPixmap(QLatin1String(":/BuildingEditor/icons/icon_roof_dormerN.png")),
+    roofMenu->addAction(QPixmap(QStringLiteral(":/BuildingEditor/icons/icon_roof_dormerN.png")),
                          mode->tr("Dormer (N)"));
-    roofMenu->addAction(QPixmap(QLatin1String(":/BuildingEditor/icons/icon_roof_dormerS.png")),
+    roofMenu->addAction(QPixmap(QStringLiteral(":/BuildingEditor/icons/icon_roof_dormerS.png")),
                          mode->tr("Dormer (S)"));
-    roofMenu->addAction(QPixmap(QLatin1String(":/BuildingEditor/icons/icon_roof_flat.png")),
+    roofMenu->addAction(QPixmap(QStringLiteral(":/BuildingEditor/icons/icon_roof_flat.png")),
                          mode->tr("Flat Top"));
     connect(roofMenu, &QMenu::triggered, this, &ObjectEditModeToolBar::roofTypeChanged);
 
@@ -144,17 +144,17 @@ ObjectEditModeToolBar::ObjectEditModeToolBar(ObjectEditMode *mode, QWidget *pare
 
     /////
     roofMenu = new QMenu(this);
-    roofMenu->addAction(QPixmap(QLatin1String(":/BuildingEditor/icons/icon_roof_slopeW.png")),
+    roofMenu->addAction(QPixmap(QStringLiteral(":/BuildingEditor/icons/icon_roof_slopeW.png")),
                         mode->tr("Shallow Slope (W)"));
-    roofMenu->addAction(QPixmap(QLatin1String(":/BuildingEditor/icons/icon_roof_slopeE.png")),
+    roofMenu->addAction(QPixmap(QStringLiteral(":/BuildingEditor/icons/icon_roof_slopeE.png")),
                          mode->tr("Shallow Slope (E)"));
-    roofMenu->addAction(QPixmap(QLatin1String(":/BuildingEditor/icons/icon_roof_slopeN.png")),
+    roofMenu->addAction(QPixmap(QStringLiteral(":/BuildingEditor/icons/icon_roof_slopeN.png")),
                          mode->tr("Shallow Slope (N)"));
-    roofMenu->addAction(QPixmap(QLatin1String(":/BuildingEditor/icons/icon_roof_slopeS.png")),
+    roofMenu->addAction(QPixmap(QStringLiteral(":/BuildingEditor/icons/icon_roof_slopeS.png")),
                          mode->tr("Shallow Slope (S)"));
-    roofMenu->addAction(QPixmap(QLatin1String(":/BuildingEditor/icons/icon_roof_peakWE.png")),
+    roofMenu->addAction(QPixmap(QStringLiteral(":/BuildingEditor/icons/icon_roof_peakWE.png")),
                          mode->tr("Shallow Peak (Horizontal)"));
-    roofMenu->addAction(QPixmap(QLatin1String(":/BuildingEditor/icons/icon_roof_peakNS.png")),
+    roofMenu->addAction(QPixmap(QStringLiteral(":/BuildingEditor/icons/icon_roof_peakNS.png")),
                          mode->tr("Shallow Peak (Vertical)"));
     connect(roofMenu, &QMenu::triggered, this, &ObjectEditModeToolBar::roofShallowTypeChanged);
 
@@ -165,20 +165,28 @@ ObjectEditModeToolBar::ObjectEditModeToolBar(ObjectEditMode *mode, QWidget *pare
 
     /////
     roofMenu = new QMenu(this);
-    roofMenu->addAction(QPixmap(QLatin1String(":/BuildingEditor/icons/icon_roof_slopeW.png")),
+    roofMenu->addAction(QPixmap(QStringLiteral(":/BuildingEditor/icons/icon_roof_slopeW.png")),
                         mode->tr("30-Degree Slope (W)"));
-    roofMenu->addAction(QPixmap(QLatin1String(":/BuildingEditor/icons/icon_roof_slopeE.png")),
+    roofMenu->addAction(QPixmap(QStringLiteral(":/BuildingEditor/icons/icon_roof_slopeE.png")),
                         mode->tr("30-Degree Slope (E)"));
-    roofMenu->addAction(QPixmap(QLatin1String(":/BuildingEditor/icons/icon_roof_slopeN.png")),
+    roofMenu->addAction(QPixmap(QStringLiteral(":/BuildingEditor/icons/icon_roof_slopeN.png")),
                         mode->tr("30-Degree Slope (N)"));
-    roofMenu->addAction(QPixmap(QLatin1String(":/BuildingEditor/icons/icon_roof_slopeS.png")),
+    roofMenu->addAction(QPixmap(QStringLiteral(":/BuildingEditor/icons/icon_roof_slopeS.png")),
                         mode->tr("30-Degree Slope (S)"));
-    roofMenu->addAction(QPixmap(QLatin1String(":/BuildingEditor/icons/icon_roof_peakWE.png")),
+    roofMenu->addAction(QPixmap(QStringLiteral(":/BuildingEditor/icons/icon_roof_peakWE.png")),
                         mode->tr("30-Degree Peak (Horizontal)"));
-    roofMenu->addAction(QPixmap(QLatin1String(":/BuildingEditor/icons/icon_roof_peakNS.png")),
+    roofMenu->addAction(QPixmap(QStringLiteral(":/BuildingEditor/icons/icon_roof_peakNS.png")),
                         mode->tr("30-Degree Peak (Vertical)"));
-    roofMenu->addAction(QPixmap(QLatin1String(":/BuildingEditor/icons/icon_roof_peakQuad.png")),
+    roofMenu->addAction(QPixmap(QStringLiteral(":/BuildingEditor/icons/icon_roof_peakQuad.png")),
                         mode->tr("30-Degree Peak (Quad)"));
+    roofMenu->addAction(QPixmap(QStringLiteral(":/BuildingEditor/icons/icon_roof_dormerW.png")),
+                        mode->tr("30-Degree Dormer (W)"));
+    roofMenu->addAction(QPixmap(QStringLiteral(":/BuildingEditor/icons/icon_roof_dormerE.png")),
+                        mode->tr("30-Degree Dormer (E)"));
+    roofMenu->addAction(QPixmap(QStringLiteral(":/BuildingEditor/icons/icon_roof_dormerN.png")),
+                        mode->tr("30-Degree Dormer (N)"));
+    roofMenu->addAction(QPixmap(QStringLiteral(":/BuildingEditor/icons/icon_roof_dormerS.png")),
+                        mode->tr("30-Degree Dormer (S)"));
     connect(roofMenu, &QMenu::triggered, this, &ObjectEditModeToolBar::roofSlope30TypeChanged);
 
     button = static_cast<QToolButton*>(widgetForAction(actions->actionRoof30Degree));
@@ -188,21 +196,21 @@ ObjectEditModeToolBar::ObjectEditModeToolBar(ObjectEditMode *mode, QWidget *pare
 
     /////
     roofMenu = new QMenu(this);
-    roofMenu->addAction(QPixmap(QLatin1String(":/BuildingEditor/icons/icon_corner_innerNW.png")),
+    roofMenu->addAction(QPixmap(QStringLiteral(":/BuildingEditor/icons/icon_corner_innerNW.png")),
                         mode->tr("Inner (NW)"));
-    roofMenu->addAction(QPixmap(QLatin1String(":/BuildingEditor/icons/icon_corner_innerNE.png")),
+    roofMenu->addAction(QPixmap(QStringLiteral(":/BuildingEditor/icons/icon_corner_innerNE.png")),
                         mode->tr("Inner (NE)"));
-    roofMenu->addAction(QPixmap(QLatin1String(":/BuildingEditor/icons/icon_corner_innerSE.png")),
+    roofMenu->addAction(QPixmap(QStringLiteral(":/BuildingEditor/icons/icon_corner_innerSE.png")),
                         mode->tr("Inner (SE)"));
-    roofMenu->addAction(QPixmap(QLatin1String(":/BuildingEditor/icons/icon_corner_innerSW.png")),
+    roofMenu->addAction(QPixmap(QStringLiteral(":/BuildingEditor/icons/icon_corner_innerSW.png")),
                         mode->tr("Inner (SW)"));
-    roofMenu->addAction(QPixmap(QLatin1String(":/BuildingEditor/icons/icon_corner_outerNW.png")),
+    roofMenu->addAction(QPixmap(QStringLiteral(":/BuildingEditor/icons/icon_corner_outerNW.png")),
                         mode->tr("Outer (NW)"));
-    roofMenu->addAction(QPixmap(QLatin1String(":/BuildingEditor/icons/icon_corner_outerNE.png")),
+    roofMenu->addAction(QPixmap(QStringLiteral(":/BuildingEditor/icons/icon_corner_outerNE.png")),
                         mode->tr("Outer (NE)"));
-    roofMenu->addAction(QPixmap(QLatin1String(":/BuildingEditor/icons/icon_corner_outerSE.png")),
+    roofMenu->addAction(QPixmap(QStringLiteral(":/BuildingEditor/icons/icon_corner_outerSE.png")),
                         mode->tr("Outer (SE)"));
-    roofMenu->addAction(QPixmap(QLatin1String(":/BuildingEditor/icons/icon_corner_outerSW.png")),
+    roofMenu->addAction(QPixmap(QStringLiteral(":/BuildingEditor/icons/icon_corner_outerSW.png")),
                         mode->tr("Outer (SW)"));
     connect(roofMenu, &QMenu::triggered, this, &ObjectEditModeToolBar::roofCornerTypeChanged);
 
@@ -213,21 +221,21 @@ ObjectEditModeToolBar::ObjectEditModeToolBar(ObjectEditMode *mode, QWidget *pare
 
     /////
     roofMenu = new QMenu(this);
-    roofMenu->addAction(QPixmap(QLatin1String(":/BuildingEditor/icons/icon_corner_innerNW.png")),
+    roofMenu->addAction(QPixmap(QStringLiteral(":/BuildingEditor/icons/icon_corner_innerNW.png")),
                         mode->tr("30-Degree Inner (NW)"));
-    roofMenu->addAction(QPixmap(QLatin1String(":/BuildingEditor/icons/icon_corner_innerNE.png")),
+    roofMenu->addAction(QPixmap(QStringLiteral(":/BuildingEditor/icons/icon_corner_innerNE.png")),
                         mode->tr("30-Degree Inner (NE)"));
-    roofMenu->addAction(QPixmap(QLatin1String(":/BuildingEditor/icons/icon_corner_innerSE.png")),
+    roofMenu->addAction(QPixmap(QStringLiteral(":/BuildingEditor/icons/icon_corner_innerSE.png")),
                         mode->tr("30-Degree Inner (SE)"));
-    roofMenu->addAction(QPixmap(QLatin1String(":/BuildingEditor/icons/icon_corner_innerSW.png")),
+    roofMenu->addAction(QPixmap(QStringLiteral(":/BuildingEditor/icons/icon_corner_innerSW.png")),
                         mode->tr("30-Degree Inner (SW)"));
-    roofMenu->addAction(QPixmap(QLatin1String(":/BuildingEditor/icons/icon_corner_outerNW.png")),
+    roofMenu->addAction(QPixmap(QStringLiteral(":/BuildingEditor/icons/icon_corner_outerNW.png")),
                         mode->tr("30-Degree Outer (NW)"));
-    roofMenu->addAction(QPixmap(QLatin1String(":/BuildingEditor/icons/icon_corner_outerNE.png")),
+    roofMenu->addAction(QPixmap(QStringLiteral(":/BuildingEditor/icons/icon_corner_outerNE.png")),
                         mode->tr("30-Degree Outer (NE)"));
-    roofMenu->addAction(QPixmap(QLatin1String(":/BuildingEditor/icons/icon_corner_outerSE.png")),
+    roofMenu->addAction(QPixmap(QStringLiteral(":/BuildingEditor/icons/icon_corner_outerSE.png")),
                         mode->tr("30-Degree Outer (SE)"));
-    roofMenu->addAction(QPixmap(QLatin1String(":/BuildingEditor/icons/icon_corner_outerSW.png")),
+    roofMenu->addAction(QPixmap(QStringLiteral(":/BuildingEditor/icons/icon_corner_outerSW.png")),
                         mode->tr("30-Degree Outer (SW)"));
     connect(roofMenu, &QMenu::triggered, this, &ObjectEditModeToolBar::roofCornerSlope30TypeChanged);
 
@@ -410,7 +418,11 @@ void ObjectEditModeToolBar::roofSlope30TypeChanged(QAction *action)
         RoofObject::Slope30S,
         RoofObject::Peak30WE,
         RoofObject::Peak30NS,
-        RoofObject::Peak30Quad
+        RoofObject::Peak30Quad,
+        RoofObject::Dormer30W,
+        RoofObject::Dormer30E,
+        RoofObject::Dormer30N,
+        RoofObject::Dormer30S
     };
 
     RoofSlope30Tool::instance()->setRoofType(roofTypes[index]);

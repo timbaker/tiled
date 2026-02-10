@@ -1189,6 +1189,9 @@ void GraphicsRoofHandleItem::synchWithObject()
                 roof->roofType() != RoofObject::Slope30E &&
                 roof->roofType() != RoofObject::Peak30NS &&
                 roof->roofType() != RoofObject::Peak30Quad &&
+                roof->roofType() != RoofObject::Dormer30E &&
+                roof->roofType() != RoofObject::Dormer30N &&
+                roof->roofType() != RoofObject::Dormer30S &&
                 roof->roofType() != RoofObject::CornerOuterNW &&
                 roof->roofType() != RoofObject::CornerOuterSW &&
                 roof->roofType() != RoofObject::CornerSlope30OuterNW &&
@@ -1206,6 +1209,9 @@ void GraphicsRoofHandleItem::synchWithObject()
                 roof->roofType() != RoofObject::Slope30S &&
                 roof->roofType() != RoofObject::Peak30WE &&
                 roof->roofType() != RoofObject::Peak30Quad &&
+                roof->roofType() != RoofObject::Dormer30W &&
+                roof->roofType() != RoofObject::Dormer30E &&
+                roof->roofType() != RoofObject::Dormer30S &&
                 roof->roofType() != RoofObject::CornerOuterNW &&
                 roof->roofType() != RoofObject::CornerOuterNE &&
                 roof->roofType() != RoofObject::CornerSlope30OuterNW &&
@@ -1223,6 +1229,9 @@ void GraphicsRoofHandleItem::synchWithObject()
                 roof->roofType() != RoofObject::Slope30E &&
                 roof->roofType() != RoofObject::Peak30NS &&
                 roof->roofType() != RoofObject::Peak30Quad &&
+                roof->roofType() != RoofObject::Dormer30W &&
+                roof->roofType() != RoofObject::Dormer30N &&
+                roof->roofType() != RoofObject::Dormer30S &&
                 roof->roofType() != RoofObject::CornerOuterNE &&
                 roof->roofType() != RoofObject::CornerOuterSE &&
                 roof->roofType() != RoofObject::CornerSlope30OuterNE &&
@@ -1240,6 +1249,9 @@ void GraphicsRoofHandleItem::synchWithObject()
                 roof->roofType() != RoofObject::Slope30S &&
                 roof->roofType() != RoofObject::Peak30WE &&
                 roof->roofType() != RoofObject::Peak30Quad &&
+                roof->roofType() != RoofObject::Dormer30W &&
+                roof->roofType() != RoofObject::Dormer30E &&
+                roof->roofType() != RoofObject::Dormer30N &&
                 roof->roofType() != RoofObject::CornerOuterSW &&
                 roof->roofType() != RoofObject::CornerOuterSE &&
                 roof->roofType() != RoofObject::CornerSlope30OuterSW &&

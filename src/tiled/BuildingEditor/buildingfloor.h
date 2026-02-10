@@ -195,7 +195,7 @@ public:
         void ReplaceFurniture(BuildingTileEntry *tile, int offset = 0);
         void ReplaceFurniture(BuildingTile *btile, SquareSection sectionMin,
                               SquareSection sectionMax);
-        void ReplaceRoof(BuildingTileEntry *tile, int offset = 0);
+        void ReplaceRoof(RoofObject *object, BuildingTileEntry *tile, int offset = 0);
         void ReplaceRoofCap(BuildingTileEntry *tile, int offset = 0);
         void ReplaceRoofTop(BuildingTileEntry *tile, int offset);
         void ReplaceFloorGrime(BuildingTileEntry *grimeTile);

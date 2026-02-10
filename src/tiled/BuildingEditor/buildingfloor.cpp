@@ -347,9 +347,11 @@ static void ReplaceRoofSlope(RoofObject *ro, const QRect &r,
     QPoint tileOffset = ro->slopeTiles()->offset(offset);
     QRect bounds(0, 0, squares.size(), squares[0].size());
     QRect rOffset = r.translated(tileOffset) & bounds;
-    for (int x = rOffset.left(); x <= rOffset.right(); x++)
-        for (int y = rOffset.top(); y <= rOffset.bottom(); y++)
-            squares[x][y].ReplaceRoof(ro->slopeTiles(), offset);
+    for (int x = rOffset.left(); x <= rOffset.right(); x++) {
+        for (int y = rOffset.top(); y <= rOffset.bottom(); y++) {
+            squares[x][y].ReplaceRoof(ro, ro->slopeTiles(), offset);
+        }
+    }
 }
 
 static void ReplaceRoofSlope(RoofObject *ro, const QRect &r,
@@ -357,9 +359,11 @@ static void ReplaceRoofSlope(RoofObject *ro, const QRect &r,
                            QVector<QVector<BuildingFloor::Square> > &squares)
 {
     if (tiles.isEmpty()) return;
-    for (int y = r.top(); y <= r.bottom(); y++)
-        for (int x = r.left(); x <= r.right(); x++)
+    for (int y = r.top(); y <= r.bottom(); y++) {
+        for (int x = r.left(); x <= r.right(); x++) {
             ReplaceRoofSlope(ro, QRect(x, y, 1, 1), squares, tiles.at(x - r.left() + (y - r.top()) * r.width()));
+        }
+    }
 }
 
 static void ReplaceRoofGap(RoofObject *ro, const QRect &r,
@@ -430,7 +434,7 @@ static void ReplaceRoofCorner(RoofObject *ro, int x, int y,
     QRect bounds(0, 0, squares.size(), squares[0].size());
     QPoint p = QPoint(x, y) + tileOffset;
     if (bounds.contains(p))
-        squares[p.x()][p.y()].ReplaceRoof(ro->slopeTiles(), offset);
+        squares[p.x()][p.y()].ReplaceRoof(ro, ro->slopeTiles(), offset);
 }
 
 static void ReplaceRoofCorner(RoofObject *ro, const QRect &r,
@@ -1591,8 +1595,14 @@ void BuildingFloor::Square::ReplaceFurniture(BuildingTile *btile,
     mEntryEnum[sectionMax] = 0;
 }
 
-void BuildingFloor::Square::ReplaceRoof(BuildingTileEntry *tile, int offset)
+void BuildingFloor::Square::ReplaceRoof(RoofObject *object, BuildingTileEntry *tile, int offset)
 {
+    // Placing a dormer onto a sloped roof should keep only the dormer tile.
+    // FIXME: The reverse order doesn't work here, i.e. placing a sloped roof onto a dormer.
+    if (tile != nullptr && !tile->tile(offset)->isNone() && object->isDormer()) {
+        mEntries[SectionRoof] = nullptr;
+        mEntryEnum[SectionRoof] = 0;
+    }
     if (mEntries[SectionRoof] && !mEntries[SectionRoof]->isNone()) {
         mEntries[SectionRoof2] = tile;
         mEntryEnum[SectionRoof2] = offset;

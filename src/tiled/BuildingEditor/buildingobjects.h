@@ -413,6 +413,11 @@ public:
         Peak30NS,
         Peak30Quad,
 
+        Dormer30W,
+        Dormer30N,
+        Dormer30E,
+        Dormer30S,
+
         CornerInnerSW,
         CornerInnerNW,
         CornerInnerNE,
@@ -506,6 +511,9 @@ public:
 
     bool isCorner() const
     { return (mType >= CornerInnerSW && mType <= CornerOuterSE) || (mType >= CornerSlope30InnerSW && mType <= CornerSlope30OuterSE); }
+
+    bool isDormer() const
+    { return (mType >= DormerW && mType <= DormerS) || (mType >= Dormer30W && mType <= Dormer30S); }
 
     void setWidth(int width);
 
