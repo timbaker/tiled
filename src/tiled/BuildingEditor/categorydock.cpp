@@ -740,35 +740,42 @@ void CategoryDock::currentRoofTileChanged(BuildingTileEntry *entry, int which, b
     BuildingEditorWindow::instance()->hackUpdateActions(); // in case the roof tools should be enabled
 
     QList<RoofObject*> objectList;
-    bool selectedOnly = (which == RoofObject::TileTop);
-    if (selectedOnly) {
-        foreach (BuildingObject *object, mCurrentDocument->selectedObjects()) {
-            if (RoofObject *roof = object->asRoof())
-                if (roof->tile(which) != entry)
+    const QSet<BuildingObject*> selectedRoofs = mCurrentDocument->selectedObjects([](BuildingObject* o) { return o->asRoof() != nullptr; });
+    if (!selectedRoofs.isEmpty()) {
+        for (BuildingObject *object : selectedRoofs) {
+            if (RoofObject *roof = object->asRoof()) {
+                if (roof->tile(which) != entry) {
                     objectList += roof;
+                }
+            }
         }
     } else {
         // Change the tiles for each roof object.
-        foreach (BuildingFloor *floor, mCurrentDocument->building()->floors()) {
-            foreach (BuildingObject *object, floor->objects()) {
-                if (RoofObject *roof = object->asRoof())
-                    if (roof->tile(which) != entry)
+        for (BuildingFloor *floor : mCurrentDocument->building()->floors()) {
+            for (BuildingObject *object : floor->objects()) {
+                if (RoofObject *roof = object->asRoof()) {
+                    if (roof->tile(which) != entry) {
                         objectList += roof;
+                    }
+                }
             }
         }
     }
 
     if (objectList.count()) {
-        if (objectList.count() > 1)
+        if (objectList.count() > 1) {
             mCurrentDocument->undoStack()->beginMacro(tr("Change Roof Tiles"));
-        foreach (RoofObject *roof, objectList)
+        }
+        for (RoofObject *roof : std::as_const(objectList)) {
             mCurrentDocument->undoStack()->push(new ChangeObjectTile(mCurrentDocument,
                                                                      roof,
                                                                      entry,
                                                                      mergeable,
                                                                      which));
-        if (objectList.count() > 1)
+        }
+        if (objectList.count() > 1) {
             mCurrentDocument->undoStack()->endMacro();
+        }
     }
 }
 

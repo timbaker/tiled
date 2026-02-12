@@ -98,6 +98,18 @@ public:
     const QSet<BuildingObject*> &selectedObjects() const
     { return mSelectedObjects; }
 
+    template<typename UnaryPredicate>
+    QSet<BuildingObject*> selectedObjects(UnaryPredicate predicate)
+    {
+        QSet<BuildingObject*> ret;
+        for (BuildingObject *object : selectedObjects()) {
+            if (predicate(object)) {
+                ret += object;
+            }
+        }
+        return ret;
+    }
+
     const QRegion &roomSelection() const
     { return mRoomSelection; }
 
