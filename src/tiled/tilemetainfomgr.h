@@ -20,6 +20,8 @@
 #ifndef TILEMETAINFOMGR_H
 #define TILEMETAINFOMGR_H
 
+#include "tilesetstxtfile.h"
+
 #include <QMap>
 #include <QObject>
 #include <QStringList>
@@ -93,8 +95,15 @@ public:
     QString txtName();
     QString txtPath();
 
+    int revision() const
+    { return mRevision; }
+
+    int sourceRevision() const
+    { return mSourceRevision; }
+
     bool readTxt();
     bool writeTxt();
+    bool writeTxt(const QString &fileName, int revision, int sourceRevision);
     bool upgradeTxt();
     bool mergeTxt();
 
@@ -106,6 +115,8 @@ public:
 
     bool addNewTilesets();
 
+    Tileset *createTilesetFromTxtFile(TilesetsTxtFile::Tileset *fileTileset);
+
     Tileset *loadTileset(const QString &source);
     bool loadTilesetImage(Tileset *ts, const QString &source);
     void addTileset(Tileset *ts);
@@ -115,6 +126,8 @@ public:
     { loadTilesets(QList<Tileset*>(), processEvents); }
 
     void loadTilesets(const QList<Tileset*> &tilesets = QList<Tileset*>(), bool processEvents = false);
+
+    void replaceEnums(QMap<QString,int> &enums, QStringList &names);
 
     void setTileEnum(Tile *tile, const QString &enumName);
     QString tileEnum(Tile *tile);

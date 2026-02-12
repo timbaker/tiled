@@ -166,12 +166,12 @@ bool TileMetaInfoMgr::readTxt()
     mRevision = reader.mRevision;
     mSourceRevision = reader.mSourceRevision;
 
-    for (const TilesetsTxtFile::MetaEnum& metaEnum : reader.mEnums) {
+    for (const TilesetsTxtFile::MetaEnum& metaEnum : std::as_const(reader.mEnums)) {
         mEnumNames += metaEnum.mName;
         mEnums.insert(metaEnum.mName, metaEnum.mValue);
     }
 
-    for (const TilesetsTxtFile::Tileset* fileTileset : reader.mTilesets) {
+    for (const TilesetsTxtFile::Tileset* fileTileset : std::as_const(reader.mTilesets)) {
         QSize tilesetSize = Tiled::getZomboidTilesetSize1x(fileTileset->mName);
         int tileWidth = tilesetSize.width();
         int tileHeight = tilesetSize.height();
@@ -200,7 +200,7 @@ bool TileMetaInfoMgr::readTxt()
         mTilesetInfo[fileTileset->mName] = info;
     }
 
-    for (const QString& enumName : mEnumNames) {
+    for (const QString& enumName : std::as_const(mEnumNames)) {
         if (isEnumWest(enumName) || isEnumNorth(enumName)) {
             if (mEnums.values().contains(mEnums[enumName] + 1)) {
                 QString enumImplicit = enumName;
@@ -223,10 +223,19 @@ bool TileMetaInfoMgr::readTxt()
 
 bool TileMetaInfoMgr::writeTxt()
 {
+    if (!writeTxt(txtPath(), mRevision + 1, mSourceRevision)) {
+        return false;
+    }
+    ++mRevision;
+    return true;
+}
+
+bool TileMetaInfoMgr::writeTxt(const QString &fileName, int revision, int sourceRevision)
+{
     QList<TilesetsTxtFile::Tileset*> fileTilesets;
     QList<TilesetsTxtFile::MetaEnum> fileMetaEnums;
 
-    for (const QString& name : mEnumNames) {
+    for (const QString& name : std::as_const(mEnumNames)) {
         fileMetaEnums += TilesetsTxtFile::MetaEnum(name, mEnums[name]);
     }
 
@@ -264,7 +273,7 @@ bool TileMetaInfoMgr::writeTxt()
     }
 
     TilesetsTxtFile writer;
-    if (!writer.write(txtPath(), ++mRevision, mSourceRevision, fileTilesets, fileMetaEnums)) {
+    if (!writer.write(fileName, revision, sourceRevision, fileTilesets, fileMetaEnums)) {
         mError = writer.errorString();
         return false;
     }
@@ -602,6 +611,39 @@ bool TileMetaInfoMgr::addNewTilesets()
     return true;
 }
 
+Tileset *TileMetaInfoMgr::createTilesetFromTxtFile(TilesetsTxtFile::Tileset *fileTileset)
+{
+    QSize tilesetSize = Tiled::getZomboidTilesetSize1x(fileTileset->mName);
+    int tileWidth = tilesetSize.width();
+    int tileHeight = tilesetSize.height();
+    Tileset *tileset = new Tileset(fileTileset->mName, tileWidth, tileHeight);
+    Tiled::setZomboidTileOffset(tileset);
+
+    // Don't load the tileset yet because the user might not have
+    // chosen the Tiles directory. The tileset will be loaded when
+    // other code asks for it or when the Tiles directory is changed.
+    int width = fileTileset->mColumns * tileWidth;
+    int height = fileTileset->mRows * tileHeight;
+    QString tilesetFileName = fileTileset->mFile + QLatin1String(".png");
+    tileset->loadFromNothing(QSize(width, height), tilesetFileName);
+    Tile *missingTile = TilesetManager::instance()->missingTile();
+    for (int i = 0; i < tileset->tileCount(); i++) {
+        tileset->tileAt(i)->setImage(missingTile);
+    }
+    tileset->setMissing(true);
+#if 0
+    addTileset(tileset);
+
+    TilesetMetaInfo *info = new TilesetMetaInfo;
+    for (const TilesetsTxtFile::Tile& fileTile : std::as_const(fileTileset->mTiles)) {
+        QString coordString = QStringLiteral("%1,%2").arg(fileTile.mX).arg(fileTile.mY);
+        info->mInfo[coordString].mMetaGameEnum = fileTile.mMetaEnum;
+    }
+    mTilesetInfo[fileTileset->mName] = info;
+#endif
+    return tileset;
+}
+
 Tileset *TileMetaInfoMgr::loadTileset(const QString &source)
 {
     QFileInfo info(source);
@@ -672,7 +714,7 @@ void TileMetaInfoMgr::loadTilesets(const QList<Tileset *> &tilesets, bool proces
 
     foreach (Tileset *ts, _tilesets) {
         if (ts->isMissing()) {
-            QString imageSource,imageSource2x;
+            QString imageSource, imageSource2x;
             TilesetManager::instance()->getTilesetFileName(ts->name(), imageSource, imageSource2x);
             QImageReader ir2x(imageSource2x);
             if (ir2x.size().isValid()) {
@@ -693,6 +735,16 @@ void TileMetaInfoMgr::loadTilesets(const QList<Tileset *> &tilesets, bool proces
             }
         }
     }
+}
+
+void TileMetaInfoMgr::replaceEnums(QMap<QString, int> &enums, QStringList &names)
+{
+    const QMap<QString, int> oldEnums = mEnums;
+    const QStringList oldNames = mEnumNames;
+    mEnumNames = names;
+    mEnums = enums;
+    names = oldNames;
+    enums = oldEnums;
 }
 
 void TileMetaInfoMgr::tilesetChanged(Tileset *ts)

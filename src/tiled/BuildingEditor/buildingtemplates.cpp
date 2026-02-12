@@ -649,7 +649,6 @@ bool BuildingTemplates::mergeTxt()
         mError = userFile.errorString();
         return false;
     }
-    Q_ASSERT(userFile.version() == TemplatesFile::VERSION_LATEST);
 
     QString sourcePath = Tiled::Internal::Preferences::instance()->appConfigPath(txtName());
 

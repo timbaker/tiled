@@ -20,6 +20,8 @@
 #ifndef TILEMETAINFODIALOG_H
 #define TILEMETAINFODIALOG_H
 
+#include "tilesetstxtfile.h"
+
 #include <QDialog>
 #include <QMap>
 
@@ -51,8 +53,10 @@ public:
     ~TileMetaInfoDialog();
     
     QString setTileEnum(Tile *tile, const QString &enumName);
+    TilesetsTxtFile::Tileset setTilesetEnums(Tileset *tileset, const TilesetsTxtFile::Tileset &txtTileset);
     void addTileset(Tileset *ts);
     void removeTileset(Tileset *ts);
+    void replaceTileMetaMgrEnums(QMap<QString,int> &metaEnums, QStringList &enumNames);
 
 private slots:
 
@@ -74,6 +78,10 @@ private slots:
 
     void tilesetChanged(Tiled::Tileset *tileset);
 
+    void exportFile();
+    void importFile();
+    void reloadFile();
+
     void updateUI();
 
     void accept();
@@ -86,6 +94,8 @@ private:
     void restoreSplitterSizes(QSplitter *splitter);
     void setTilesetList();
     void setTilesList();
+    bool exportTxt(const QString &fileName);
+    bool reloadTxt(const QString &fileName);
 
 private:
     Ui::TileMetaInfoDialog *ui;

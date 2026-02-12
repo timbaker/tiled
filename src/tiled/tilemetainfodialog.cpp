@@ -81,20 +81,24 @@ public:
         mDialog(d),
         mTileset(tileset)
     {
+        mTxtTileset.fromTileset(tileset);
     }
 
     void undo()
     {
         mDialog->addTileset(mTileset);
+        mTxtTileset = mDialog->setTilesetEnums(mTileset, mTxtTileset);
     }
 
     void redo()
     {
+        mTxtTileset = mDialog->setTilesetEnums(mTileset, mTxtTileset);
         mDialog->removeTileset(mTileset);
     }
 
     TileMetaInfoDialog *mDialog;
     Tileset *mTileset;
+    TilesetsTxtFile::Tileset mTxtTileset;
 };
 
 class SetTileMetaEnum : public QUndoCommand
@@ -119,6 +123,54 @@ public:
     TileMetaInfoDialog *mDialog;
     Tile *mTile;
     QString mEnumName;
+};
+
+class SetTilesetEnums : public QUndoCommand
+{
+public:
+    SetTilesetEnums(TileMetaInfoDialog *d, Tileset *tileset, TilesetsTxtFile::Tileset *txtTileset) :
+        QUndoCommand(QCoreApplication::translate("UndoCommands", "Set Tileset Meta-Enums")),
+        mDialog(d),
+        mTileset(tileset),
+        mTxtTileset(*txtTileset)
+    {
+    }
+
+    void undo() override { swap(); }
+    void redo() override { swap(); }
+
+    void swap()
+    {
+        mTxtTileset = mDialog->setTilesetEnums(mTileset, mTxtTileset);
+    }
+
+    TileMetaInfoDialog *mDialog;
+    Tileset *mTileset;
+    TilesetsTxtFile::Tileset mTxtTileset;
+};
+
+class ReplaceTileMetaMgrEnums : public QUndoCommand
+{
+public:
+    ReplaceTileMetaMgrEnums(TileMetaInfoDialog *d, const QMap<QString,int> &enums, const QStringList &enumNames) :
+        QUndoCommand(QCoreApplication::translate("UndoCommands", "Set Meta-Enums")),
+        mDialog(d),
+        mEnums(enums),
+        mEnumNames(enumNames)
+    {
+    }
+
+    void undo() override { swap(); }
+    void redo() override { swap(); }
+
+    void swap()
+    {
+        mDialog->replaceTileMetaMgrEnums(mEnums, mEnumNames);
+    }
+
+    TileMetaInfoDialog *mDialog;
+    QMap<QString,int> mEnums;
+    QStringList mEnumNames;
 };
 
 } // namespace TileMetaUndoRedo
@@ -184,6 +236,12 @@ TileMetaInfoDialog::TileMetaInfoDialog(QWidget *parent) :
 
     /////
 
+    connect(ui->buttonExport, &QToolButton::clicked, this, &TileMetaInfoDialog::exportFile);
+    connect(ui->buttonImport, &QToolButton::clicked, this, &TileMetaInfoDialog::importFile);
+    connect(ui->buttonReload, &QToolButton::clicked, this, &TileMetaInfoDialog::reloadFile);
+
+    /////
+
     mZoomable->setScale(0.5); // FIXME
     mZoomable->connectToComboBox(ui->scaleComboBox);
     ui->tiles->setZoomable(mZoomable);
@@ -246,6 +304,14 @@ QString TileMetaInfoDialog::setTileEnum(Tile *tile, const QString &enumName)
     ui->tiles->model()->setLabel(tile, enumName);
     updateUI();
     return old;
+}
+
+TilesetsTxtFile::Tileset TileMetaInfoDialog::setTilesetEnums(Tileset *tileset, const TilesetsTxtFile::Tileset &txtTileset)
+{
+    TilesetsTxtFile::Tileset ret;
+    ret.fromTileset(tileset);
+    txtTileset.toTileset(tileset);
+    return ret;
 }
 
 void TileMetaInfoDialog::addTileset()
@@ -344,6 +410,11 @@ void TileMetaInfoDialog::removeTileset(Tileset *ts)
     TileMetaInfoMgr::instance()->removeTileset(ts);
     setTilesetList();
     ui->tilesets->setCurrentRow(row);
+}
+
+void TileMetaInfoDialog::replaceTileMetaMgrEnums(QMap<QString, int> &metaEnums, QStringList& enumNames)
+{
+    TileMetaInfoMgr::instance()->replaceEnums(metaEnums, enumNames);
 }
 
 void TileMetaInfoDialog::currentTilesetChanged(int row)
@@ -464,6 +535,65 @@ void TileMetaInfoDialog::tilesetChanged(Tileset *tileset)
         setTilesList();
         updateUI();
     }
+}
+
+static const QString SETTINGS_KEY_FILENAME = QStringLiteral("TilesetsDialog/ExportFileName");
+
+void TileMetaInfoDialog::exportFile()
+{
+    QSettings &settings = *Preferences::instance()->settings();
+    QString suggestedFileName = TileMetaInfoMgr::instance()->txtPath();
+    suggestedFileName = settings.value(SETTINGS_KEY_FILENAME, suggestedFileName).toString();
+    QString caption = tr("Export Tilesets");
+    QString fileName = QFileDialog::getSaveFileName(this, caption, suggestedFileName, QStringLiteral("Tilesets.txt files (*.txt)"));
+    if (fileName.isEmpty()) {
+        return;
+    }
+    settings.setValue(SETTINGS_KEY_FILENAME, QFileInfo(fileName).absoluteFilePath());
+    fileName = QDir::toNativeSeparators(fileName);
+    if (!exportTxt(fileName)) {
+        return;
+    }
+    QMessageBox::information(this, tr("Export Tiless"), tr("Saved.\n%1").arg(fileName));
+}
+
+void TileMetaInfoDialog::importFile()
+{
+    QSettings &settings = *Preferences::instance()->settings();
+    QString suggestedFileName = TileMetaInfoMgr::instance()->txtPath();
+    suggestedFileName = settings.value(SETTINGS_KEY_FILENAME, suggestedFileName).toString();
+    QString caption = tr("Import Tilesets");
+    QString fileName = QFileDialog::getOpenFileName(this, caption, suggestedFileName, QStringLiteral("Tilesets.txt files (*.txt)"));
+    if (fileName.isEmpty()) {
+        return;
+    }
+    settings.setValue(SETTINGS_KEY_FILENAME, QFileInfo(fileName).absoluteFilePath());
+    fileName = QDir::toNativeSeparators(fileName);
+    QMessageBox::StandardButton result = QMessageBox::question(this, tr("Import Tilesets"), tr("This will replace the current tilesets with the following file:\n\n%1\n\nChoose Yes to continue or No to cancel.").arg(fileName));
+    if (result == QMessageBox::StandardButton::No) {
+        return;
+    }
+    reloadTxt(fileName);
+}
+
+void TileMetaInfoDialog::reloadFile()
+{
+    QSettings &settings = *Preferences::instance()->settings();
+    QString fileName = settings.value(SETTINGS_KEY_FILENAME, QString()).toString();
+    if (fileName.isEmpty()) {
+        importFile();
+        return;
+    }
+    if (!QFileInfo::exists(fileName) || QFileInfo(fileName).isDir()) {
+        importFile();
+        return;
+    }
+    fileName = QDir::toNativeSeparators(fileName);
+    QMessageBox::StandardButton result = QMessageBox::question(this, tr("Reload Tilesets"), tr("This will replace the current tilesets with the following file:\n\n%1\n\nChoose Yes to continue or No to cancel.").arg(fileName));
+    if (result == QMessageBox::StandardButton::No) {
+        return;
+    }
+    reloadTxt(fileName);
 }
 
 void TileMetaInfoDialog::updateUI()
@@ -606,4 +736,56 @@ void TileMetaInfoDialog::setTilesList()
     } else {
         ui->tiles->clear();
     }
+}
+
+bool TileMetaInfoDialog::exportTxt(const QString &fileName)
+{
+    int revision = TileMetaInfoMgr::instance()->revision();
+    int sourceRevision = TileMetaInfoMgr::instance()->sourceRevision();
+    if (TileMetaInfoMgr::instance()->writeTxt(fileName, revision, sourceRevision)) {
+        return true;
+    }
+    QMessageBox::warning(this, tr("Export Tilesets Failed"), TileMetaInfoMgr::instance()->errorString());
+    return false;
+}
+
+bool TileMetaInfoDialog::reloadTxt(const QString &fileName)
+{
+    TilesetsTxtFile file;
+    if (!file.read(fileName)) {
+        QMessageBox::warning(this, tr("Reading Tilesets Failed"), file.errorString());
+        return false;
+    }
+    mUndoStack->beginMacro(tr("Import Tilesets"));
+
+    QMap<QString,int> enums;
+    QStringList enumNames;
+    file.toMgrEnums(enums, enumNames);
+    mUndoStack->push(new ReplaceTileMetaMgrEnums(this, enums, enumNames));
+
+    QList<Tileset*> newTilesets;
+    QSet<QString> loadedTilesetNames;
+    for (TilesetsTxtFile::Tileset *txtTileset : std::as_const(file.mTilesets)) {
+        if (Tiled::Tileset* existingTileset = TileMetaInfoMgr::instance()->tileset(txtTileset->mName)) {
+            mUndoStack->push(new SetTilesetEnums(this, existingTileset, txtTileset));
+        } else {
+            if (Tiled::Tileset *newTileset = TileMetaInfoMgr::instance()->createTilesetFromTxtFile(txtTileset)) {
+                mUndoStack->push(new AddGlobalTileset(this, newTileset));
+                mUndoStack->push(new SetTilesetEnums(this, newTileset, txtTileset));
+                newTilesets += newTileset;
+            }
+        }
+        loadedTilesetNames += txtTileset->mName;
+    }
+
+    const QStringList tilesetNames = TileMetaInfoMgr::instance()->tilesetNames();
+    const QSet<QString> deletedTilesets = QSet<QString>(tilesetNames.constBegin(), tilesetNames.constEnd()) - loadedTilesetNames;
+    for (const QString &tilesetName : deletedTilesets) {
+        if (Tileset *existingTileset = TileMetaInfoMgr::instance()->tileset(tilesetName)) {
+            mUndoStack->push(new RemoveGlobalTileset(this, existingTileset));
+        }
+    }
+    mUndoStack->endMacro();
+    TileMetaInfoMgr::instance()->loadTilesets(newTilesets);
+    return true;
 }

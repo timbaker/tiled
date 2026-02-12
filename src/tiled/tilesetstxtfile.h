@@ -5,6 +5,10 @@
 #include <QSize>
 #include <QString>
 
+namespace Tiled {
+class Tileset;
+}
+
 class TilesetsTxtFile : public QObject
 {
     Q_OBJECT
@@ -39,6 +43,9 @@ public:
         void setTile(const Tile& source);
         int findTile(int column, int row);
 
+        void fromTileset(Tiled::Tileset *tileset);
+        void toTileset(Tiled::Tileset *tileset) const;
+
         QString mName;
         QString mFile;
         int mColumns;
@@ -50,6 +57,8 @@ public:
 
     bool read(const QString& path);
     bool write(const QString& path, int revision, int sourceRevision, const QList<Tileset*>& tilesets, const QList<MetaEnum>& metaEnums);
+
+    void toMgrEnums(QMap<QString,int> &enums, QStringList &enumNames) const;
 
     const QString& errorString() const { return mError; }
 

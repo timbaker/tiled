@@ -2,6 +2,10 @@
 
 #include "BuildingEditor/simplefile.h"
 
+#include "tilemetainfomgr.h"
+
+#include "tileset.h"
+
 #include <QFileInfo>
 #include <QSet>
 #include <QScopedPointer>
@@ -51,7 +55,7 @@ bool TilesetsTxtFile::read(const QString &path)
     QSet<int> enumValueSet;
     QSet<QString> tilesetNameSet;
 
-    for (const SimpleFileBlock& block : simple.blocks) {
+    for (const SimpleFileBlock& block : std::as_const(simple.blocks)) {
         if (block.name == QLatin1String("meta-enums")) {
             for (const SimpleFileKeyValue& kv : block.values) {
                 if (enumNameSet.contains(kv.name)) {
@@ -140,6 +144,16 @@ bool TilesetsTxtFile::read(const QString &path)
     return true;
 }
 
+void TilesetsTxtFile::toMgrEnums(QMap<QString, int> &enums, QStringList &enumNames) const
+{
+    enums.clear();
+    enumNames.clear();
+    for (const MetaEnum &metaEnum : std::as_const(mEnums)) {
+        enums.insert(metaEnum.mName, metaEnum.mValue);
+        enumNames += metaEnum.mName;
+    }
+}
+
 bool TilesetsTxtFile::write(const QString &path, int revision, int sourceRevision, const QList<TilesetsTxtFile::Tileset *> &tilesets, const QList<MetaEnum> &metaEnums)
 {
     SimpleFile simpleFile;
@@ -211,11 +225,50 @@ void TilesetsTxtFile::Tileset::setTile(const TilesetsTxtFile::Tile &source)
 int TilesetsTxtFile::Tileset::findTile(int column, int row)
 {
     int i = 0;
-    for (const Tile& tile : mTiles) {
+    for (const Tile& tile : std::as_const(mTiles)) {
         if ((tile.mX == column) && (tile.mY == row)) {
             return i;
         }
         i++;
     }
     return -1;
+}
+
+void TilesetsTxtFile::Tileset::fromTileset(Tiled::Tileset *tileset)
+{
+    mName = tileset->name();
+    mFile = tileset->fileName();
+    mColumns = tileset->columnCount();
+    mRows = tileset->tileCount() / tileset->columnCount();
+    if (tileset->isLoaded()) {
+        mColumns = tileset->columnCountForWidth(tileset->imageWidth());
+        mRows = tileset->imageHeight() / (tileset->imageSource2x().isEmpty() ? 128 : (128 * 2));
+    }
+    mTiles.clear();
+
+    for (int i = 0; i < tileset->tileCount(); i++) {
+        Tiled::Tile *tile = tileset->tileAt(i);
+        QString metaEnum = Tiled::Internal::TileMetaInfoMgr::instance()->tileEnum(tile);
+        if (!metaEnum.isEmpty()) {
+            Tile txtTile;
+            txtTile.mX = i % tileset->columnCount();
+            txtTile.mY = i / tileset->columnCount();
+            txtTile.mMetaEnum = metaEnum;
+            setTile(txtTile);
+        }
+    }
+}
+
+void TilesetsTxtFile::Tileset::toTileset(Tiled::Tileset *tileset) const
+{
+    for (int i = 0; i < tileset->tileCount(); i++) {
+        Tiled::Tile *tile = tileset->tileAt(i);
+        Tiled::Internal::TileMetaInfoMgr::instance()->setTileEnum(tile, QString());
+    }
+    for (const Tile &txtTile : std::as_const(mTiles)) {
+        int index = txtTile.mX + txtTile.mY * tileset->columnCount();
+        if (Tiled::Tile *tile = tileset->tileAt(index)) {
+            Tiled::Internal::TileMetaInfoMgr::instance()->setTileEnum(tile, txtTile.mMetaEnum);
+        }
+    }
 }
