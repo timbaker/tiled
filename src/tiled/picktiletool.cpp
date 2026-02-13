@@ -23,6 +23,7 @@
 #include "preferences.h"
 #include "tilesetmanager.h"
 
+#include "customtilesize.h"
 #include "maprenderer.h"
 #include "tile.h"
 #include "tilelayer.h"
@@ -91,11 +92,12 @@ Tile *PickTileTool::pickTile(const QPointF &pos)
         if (!lg->isVisible()) continue;
         if (highlightLevel && lg->level() > mapDocument()->currentLevel()) continue;
         QPoint tilePos = mapDocument()->renderer()->pixelToTileCoordsInt(pos, lg->level());
+        const int DXY = 16; // must handle JUMBOXXL
         lg->prepareDrawing(mapDocument()->renderer(),
                            mapDocument()->renderer()->boundingRect(
-                               QRect(tilePos - QPoint(8, 8), QSize(8*2+1, 8*2+1)), lg->level()));
-        for (int ty = tilePos.y() - 8; ty <= tilePos.y() + 8; ty++) {
-            for (int tx = tilePos.x() - 8; tx <= tilePos.x() + 8; tx++) {
+                               QRect(tilePos - QPoint(DXY, DXY), QSize(DXY*2+1, DXY*2+1)), lg->level()));
+        for (int ty = tilePos.y() - DXY; ty <= tilePos.y() + DXY; ty++) {
+            for (int tx = tilePos.x() - DXY; tx <= tilePos.x() + DXY; tx++) {
                 QRectF tileBox = mapDocument()->renderer()->boundingRect(QRect(tx, ty, 1, 1), lg->level());
                 cells.resize(0);
                 if (!lg->orderedCellsAt(QPoint(tx, ty), cells, opacities, reinterpret_cast<ZTileLayerGroupRenderData*>(&vars)))
@@ -111,9 +113,9 @@ Tile *PickTileTool::pickTile(const QPointF &pos)
                     }
                     QRect imageBox(test->offset(), test->image().size());
                     QPoint p = QPoint(x, y) - (tileBox.bottomLeft().toPoint() - QPoint(0, test->height()));
-
-                    if (test->tileset()->name().contains(QStringLiteral("JUMBO_"))) {
-                        QRectF tileBox2 = tileBox.translated(-64 * 2, 0);
+                    QSize customSize = CustomTileSize::forTileset(test->tileset()->name());
+                    if (!customSize.isEmpty()) {
+                        QRectF tileBox2 = tileBox.translated(-(customSize.width() - 64), 0);
                         p = QPoint(x, y) - (tileBox2.bottomLeft().toPoint() - QPoint(0, test->height()));
                     }
                     else if (test->width() == qRound(tileBox.width()) / 2) {

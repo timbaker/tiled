@@ -31,6 +31,7 @@
 #include "mapreader.h"
 
 #include "compression.h"
+#include "customtilesize.h"
 #include "gidmapper.h"
 #include "imagelayer.h"
 #include "objectgroup.h"
@@ -332,10 +333,10 @@ Tileset *MapReaderPrivate::readTileset()
                 atts.value(QLatin1String("tilewidth")).toString().toInt();
         int tileHeight =
                 atts.value(QLatin1String("tileheight")).toString().toInt();
-        if (name.contains(QStringLiteral("JUMBO_"))) {
-            QSize tilesetSize = getZomboidTilesetSize1x(name);
-            tileWidth = tilesetSize.width();
-            tileHeight = tilesetSize.height();
+        QSize size = CustomTileSize::forTileset(name);
+        if (!size.isEmpty()) {
+            tileWidth = size.width();
+            tileHeight = size.height();
         }
 #else
         const int tileWidth =

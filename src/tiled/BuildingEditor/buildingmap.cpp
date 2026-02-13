@@ -27,13 +27,14 @@
 
 #include "bmpblender.h"
 #include "mapcomposite.h"
-#include "maplevel.h"
 #include "mapmanager.h"
 #include "tilemetainfomgr.h"
 #include "tilesetmanager.h"
 
+#include "customtilesize.h"
 #include "isometricrenderer.h"
 #include "map.h"
+#include "maplevel.h"
 #include "mapobject.h"
 #include "maprenderer.h"
 #include "objectgroup.h"
@@ -117,8 +118,9 @@ QString BuildingMap::buildingTileAt(int x, int y, const QList<bool> visibleLevel
         CompositeLayerGroup *lgBlend = mBlendMapComposite->layerGroupForLevel(level);
         CompositeLayerGroup *lg = mMapComposite->layerGroupForLevel(level);
         QPoint tilePos = mMapRenderer->pixelToTileCoordsInt(QPoint(x, y), level);
-        for (int ty = tilePos.y() - 8; ty < tilePos.y() + 8; ty++) {
-            for (int tx = tilePos.x() - 8; tx < tilePos.x() + 8; tx++) {
+        const int DXY = 16; // must handle JUMBOXXL
+        for (int ty = tilePos.y() - DXY; ty < tilePos.y() + DXY; ty++) {
+            for (int tx = tilePos.x() - DXY; tx < tilePos.x() + DXY; tx++) {
                 QRectF tileBox = mMapRenderer->boundingRect(QRect(tx, ty, 1, 1), level);
                 for (int i = 0; i < lg->layerCount(); i++) {
                     // Automatic building tiles first.
@@ -142,8 +144,9 @@ QString BuildingMap::buildingTileAt(int x, int y, const QList<bool> visibleLevel
                         }
                         QRect imageBox(test->offset(), test->image().size());
                         QPoint p = QPoint(x, y) - (tileBox.bottomLeft().toPoint() - QPoint(0, test->height()));
-                        if (test->tileset()->name().contains(QStringLiteral("JUMBO_"))) {
-                            QRectF tileBox2 = tileBox.translated(-64 * 2, 0);
+                        QSize customSize = CustomTileSize::forTileset(test->tileset()->name());
+                        if (!customSize.isEmpty()) {
+                            QRectF tileBox2 = tileBox.translated(-(customSize.width() - 64), 0);
                             p = QPoint(x, y) - (tileBox2.bottomLeft().toPoint() - QPoint(0, test->height()));
                         }
                         // Handle double-size tiles

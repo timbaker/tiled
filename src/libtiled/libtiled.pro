@@ -23,6 +23,7 @@ DEFINES += ZOMBOID
 contains(QT_CONFIG, reduce_exports): CONFIG += hide_symbols
 #OBJECTS_DIR = .obj
 SOURCES += compression.cpp \
+    customtilesize.cpp \
     imagelayer.cpp \
     isometricrenderer.cpp \
     layer.cpp \
@@ -44,6 +45,7 @@ SOURCES += compression.cpp \
     ztilelayergroup.cpp \
     tile.cpp
 HEADERS += compression.h \
+    customtilesize.h \
     imagelayer.h \
     isometricrenderer.h \
     layer.h \

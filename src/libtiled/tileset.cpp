@@ -28,6 +28,7 @@
  */
 
 #include "tileset.h"
+#include "customtilesize.h"
 #include "tile.h"
 
 #include <QBitmap>
@@ -326,20 +327,18 @@ void TilesetImageCache::checkLookupTables()
 
 QSize Tiled::getZomboidTilesetSize1x(const QString &tilesetName)
 {
-    int tileWidth = 64;
-    int tileHeight = 128;
-    if (tilesetName.contains(QStringLiteral("JUMBO_"))) {
-        tileWidth = 64 * 3;
-        tileHeight = 128 * 2;
+    QSize size = CustomTileSize::forTileset(tilesetName);
+    if (!size.isEmpty()) {
+        return size;
     }
-    return QSize(tileWidth, tileHeight);
+    return QSize(64, 128);
 }
 
 QPoint Tiled::getZomboidTileOffset(const QString &tilesetName)
 {
-    if (tilesetName.contains(QStringLiteral("JUMBO_"))) {
-        int tileWidth = 64 * 3;
-        return QPoint(-tileWidth / 3, 0);
+    QSize size = CustomTileSize::forTileset(tilesetName);
+    if (!size.isEmpty()) {
+        return QPoint(-(size.width() - 64) / 2, 0);
     }
     return QPoint();
 }
