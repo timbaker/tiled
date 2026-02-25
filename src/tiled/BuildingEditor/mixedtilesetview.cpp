@@ -818,7 +818,7 @@ void MixedTilesetModel::setTiles(const QList<Tile *> &tiles,
 
     mTiles = tiles;
     mUserData = userData;
-    mTileset = 0;
+    mTileset = tiles.isEmpty() ? nullptr : tiles.first()->tileset();
     mTileToItem.clear();
     mUserDataToItem.clear();
     mTileItemsByIndex.clear();
@@ -849,6 +849,9 @@ void MixedTilesetModel::setTiles(const QList<Tile *> &tiles,
             mTileToItem[tile] = item; // may not be unique!
         if (!mUserDataToItem.contains(item->mUserData))
             mUserDataToItem[item->mUserData] = item; // may not be unique!
+        if (mTileset != nullptr && tile->tileset() != mTileset) {
+            mTileset = nullptr;
+        }
         index++;
     }
 

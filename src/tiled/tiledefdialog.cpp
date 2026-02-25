@@ -32,6 +32,7 @@
 #include "BuildingEditor/listofstringsdialog.h"
 #include "BuildingEditor/buildingtiles.h"
 
+#include "customtilesize.h"
 #include "tile.h"
 #include "tileset.h"
 
@@ -1817,10 +1818,12 @@ Tileset *TileDefDialog::loadTileset(const QString &source)
     QString tilesetName = info.completeBaseName();
     QString imageSource, imageSource2x;
     TilesetManager::instance()->getTilesetFileName(tilesetName, imageSource, imageSource2x);
+    const QSize customSize = CustomTileSize::forTileset(tilesetName);
+    const QSize tileSize = customSize.isEmpty() ? QSize(64, 128) : customSize;
 
     QImageReader ir2x(imageSource2x);
     if (ir2x.size().isValid()) {
-        Tileset *ts = new Tileset(tilesetName, 64, 128);
+        Tileset *ts = new Tileset(tilesetName, tileSize.width(), tileSize.height());
         ts->loadFromNothing(ir2x.size() / 2, imageSource);
         ts->setMissing(true);
         // can't use canonicalFilePath since the 1x tileset may not exist
@@ -1831,7 +1834,7 @@ Tileset *TileDefDialog::loadTileset(const QString &source)
     QImageReader reader(imageSource);
     if (reader.size().isValid()) {
         info = QFileInfo(imageSource);
-        Tileset *ts = new Tileset(tilesetName, 64, 128);
+        Tileset *ts = new Tileset(tilesetName, tileSize.width(), tileSize.height());
         ts->loadFromNothing(reader.size(), info.canonicalFilePath());
         ts->setMissing(true); // prevent FileSystemWatcher warning in TilesetManager::changeTilesetSource
         TilesetManager::instance()->loadTileset(ts, info.canonicalFilePath());
@@ -1928,8 +1931,10 @@ void TileDefDialog::tilesDirChanged()
         if (reused)
             continue;
 
-        Tileset *tileset = new Tileset(tsDef->mName, 64, 128);
-        int width = tsDef->mColumns * 64, height = tsDef->mRows * 128;
+        const QSize customSize = CustomTileSize::forTileset(tsDef->mName);
+        const QSize tileSize = customSize.isEmpty() ? QSize(64, 128) : customSize;
+        Tileset *tileset = new Tileset(tsDef->mName, tileSize.width(), tileSize.height());
+        int width = tsDef->mColumns * tileSize.width(), height = tsDef->mRows * tileSize.height();
         tileset->loadFromNothing(QSize(width, height), imageSource);
         Tile *missingTile = TilesetManager::instance()->missingTile();
         for (int i = 0; i < tileset->tileCount(); i++)
