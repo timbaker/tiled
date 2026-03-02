@@ -1,5 +1,5 @@
 version = 0
-revision = 22
+revision = 23
 group
 {
     label = Appliances - Com
@@ -3034,7 +3034,6 @@ group
     }
     furniture
     {
-        layer = WallFurniture
         entry
         {
             orient = W
@@ -3058,7 +3057,6 @@ group
     }
     furniture
     {
-        layer = WallFurniture
         entry
         {
             orient = W
@@ -3082,7 +3080,6 @@ group
     }
     furniture
     {
-        layer = WallFurniture
         entry
         {
             orient = W
@@ -3394,7 +3391,7 @@ group
     furniture
     {
         corners = true
-        layer = WallFurniture
+        layer = Roof
         entry
         {
             orient = W
@@ -4038,7 +4035,6 @@ group
     }
     furniture
     {
-        layer = WallFurniture
         entry
         {
             orient = W
@@ -4892,6 +4888,7 @@ group
     }
     furniture
     {
+        layer = FloorFurniture
         entry
         {
             orient = W
@@ -7861,6 +7858,29 @@ group
         {
             orient = W
             0,0 = fixtures_bathroom_01_045
+        }
+        entry
+        {
+            orient = N
+            0,0 = fixtures_bathroom_01_041
+        }
+        entry
+        {
+            orient = E
+            0,0 = fixtures_bathroom_01_044
+        }
+        entry
+        {
+            orient = S
+            0,0 = fixtures_bathroom_01_040
+        }
+    }
+    furniture
+    {
+        entry
+        {
+            orient = W
+            0,0 = fixtures_bathroom_01_045
             0,1 = fixtures_bathroom_01_045
             1,0 = fixtures_bathroom_01_046
             1,1 = fixtures_bathroom_01_047
@@ -7942,6 +7962,29 @@ group
         {
             orient = W
             0,0 = fixtures_bathroom_01_061
+        }
+        entry
+        {
+            orient = N
+            0,0 = fixtures_bathroom_01_057
+        }
+        entry
+        {
+            orient = E
+            0,0 = fixtures_bathroom_01_060
+        }
+        entry
+        {
+            orient = S
+            0,0 = fixtures_bathroom_01_056
+        }
+    }
+    furniture
+    {
+        entry
+        {
+            orient = W
+            0,0 = fixtures_bathroom_01_061
             1,0 = fixtures_bathroom_01_062
         }
         entry
@@ -7992,6 +8035,20 @@ group
             orient = S
             0,0 = fixtures_bathroom_01_058
             1,0 = fixtures_bathroom_01_056
+        }
+    }
+    furniture
+    {
+        layer = WallFurniture
+        entry
+        {
+            orient = W
+            0,0 = fixtures_bathroom_01_018
+        }
+        entry
+        {
+            orient = N
+            0,0 = fixtures_bathroom_01_020
         }
     }
     furniture
@@ -9119,22 +9176,22 @@ group
         entry
         {
             orient = SW
-            0,0 = fixtures_counters_01_161
+            0,0 = fixtures_counters_01_177
         }
         entry
         {
             orient = NW
-            0,0 = fixtures_counters_01_160
+            0,0 = fixtures_counters_01_176
         }
         entry
         {
             orient = NE
-            0,0 = fixtures_counters_01_163
+            0,0 = fixtures_counters_01_179
         }
         entry
         {
             orient = SE
-            0,0 = fixtures_counters_01_162
+            0,0 = fixtures_counters_01_178
         }
     }
     furniture
@@ -9425,8 +9482,8 @@ group
         {
             orient = N
             grime = false
-            0,0 = fixtures_doors_01_113
-            1,0 = fixtures_doors_01_117
+            0,0 = fixtures_doors_01_117
+            1,0 = fixtures_doors_01_113
         }
     }
     furniture
@@ -9443,8 +9500,8 @@ group
         {
             orient = N
             grime = false
-            0,0 = fixtures_doors_01_105
-            1,0 = fixtures_doors_01_109
+            0,0 = fixtures_doors_01_109
+            1,0 = fixtures_doors_01_105
         }
     }
 }
@@ -16942,7 +16999,6 @@ group
     }
     furniture
     {
-        layer = WallFurniture
         entry
         {
             orient = W
@@ -16967,7 +17023,6 @@ group
     furniture
     {
         corners = true
-        layer = WallFurniture
         entry
         {
             orient = W
@@ -17086,7 +17141,6 @@ group
     }
     furniture
     {
-        layer = WallFurniture
         entry
         {
             orient = W
@@ -17110,7 +17164,6 @@ group
     }
     furniture
     {
-        layer = WallFurniture
         entry
         {
             orient = W
@@ -17188,7 +17241,6 @@ group
     }
     furniture
     {
-        layer = RoofCap
         entry
         {
             orient = W
@@ -20216,7 +20268,7 @@ group
     furniture
     {
         corners = true
-        layer = RoofCap
+        layer = Roof
         entry
         {
             orient = W
@@ -20250,7 +20302,7 @@ group
     }
     furniture
     {
-        layer = RoofCap
+        layer = Roof
         entry
         {
             orient = W
@@ -21520,7 +21572,6 @@ group
     }
     furniture
     {
-        layer = Roof
         entry
         {
             orient = W
@@ -23638,12 +23689,12 @@ group
         entry
         {
             orient = W
-            0,0 = location_business_office_generic_02_016
+            0,0 = location_business_office_generic_02_019
         }
         entry
         {
             orient = N
-            0,0 = location_business_office_generic_02_019
+            0,0 = location_business_office_generic_02_016
         }
         entry
         {
@@ -26016,7 +26067,6 @@ group
     label = Location - Community - Police
     furniture
     {
-        layer = WallFurniture
         entry
         {
             orient = W
@@ -30534,6 +30584,19 @@ group
     }
     furniture
     {
+        entry
+        {
+            orient = W
+            0,0 = location_restaurant_bar_01_025
+        }
+        entry
+        {
+            orient = N
+            0,0 = location_restaurant_bar_01_026
+        }
+    }
+    furniture
+    {
         corners = true
         entry
         {
@@ -30856,19 +30919,6 @@ group
         {
             orient = N
             0,0 = location_restaurant_bar_01_085
-        }
-    }
-    furniture
-    {
-        entry
-        {
-            orient = W
-            0,0 = location_restaurant_bar_01_025
-        }
-        entry
-        {
-            orient = N
-            0,0 = location_restaurant_bar_01_026
         }
     }
     furniture
@@ -32494,7 +32544,7 @@ group
         entry
         {
             orient = SW
-            0,0 = location_restaurant_spiffos_01_056
+            0,0 = location_restaurant_spiffos_01_058
         }
         entry
         {
@@ -32509,7 +32559,7 @@ group
         entry
         {
             orient = SE
-            0,0 = location_restaurant_spiffos_01_058
+            0,0 = location_restaurant_spiffos_01_056
         }
     }
     furniture
@@ -34258,7 +34308,6 @@ group
     }
     furniture
     {
-        layer = WallFurniture
         entry
         {
             orient = W
@@ -35670,6 +35719,58 @@ group
             0,2 = location_trailer_02_037
             0,3 = location_trailer_02_036
             0,4 = location_trailer_02_041
+            1,0 = location_trailer_02_039
+            1,1 = location_trailer_02_038
+            1,2 = location_trailer_02_037
+            1,3 = location_trailer_02_036
+            1,4 = location_trailer_02_041
+            2,0 = location_trailer_02_039
+            2,1 = location_trailer_02_038
+            2,2 = location_trailer_02_037
+            2,3 = location_trailer_02_036
+            2,4 = location_trailer_02_041
+            3,0 = location_trailer_02_039
+            3,1 = location_trailer_02_038
+            3,2 = location_trailer_02_037
+            3,3 = location_trailer_02_036
+            3,4 = location_trailer_02_041
+        }
+        entry
+        {
+            orient = N
+            0,0 = location_trailer_02_047
+            0,1 = location_trailer_02_047
+            0,2 = location_trailer_02_047
+            0,3 = location_trailer_02_047
+            1,0 = location_trailer_02_046
+            1,1 = location_trailer_02_046
+            1,2 = location_trailer_02_046
+            1,3 = location_trailer_02_046
+            2,0 = location_trailer_02_045
+            2,1 = location_trailer_02_045
+            2,2 = location_trailer_02_045
+            2,3 = location_trailer_02_045
+            3,0 = location_trailer_02_044
+            3,1 = location_trailer_02_044
+            3,2 = location_trailer_02_044
+            3,3 = location_trailer_02_044
+            4,0 = location_trailer_02_042
+            4,1 = location_trailer_02_042
+            4,2 = location_trailer_02_042
+            4,3 = location_trailer_02_042
+        }
+    }
+    furniture
+    {
+        layer = Roof
+        entry
+        {
+            orient = W
+            0,0 = location_trailer_02_039
+            0,1 = location_trailer_02_038
+            0,2 = location_trailer_02_037
+            0,3 = location_trailer_02_036
+            0,4 = location_trailer_02_041
         }
         entry
         {
@@ -35834,6 +35935,16 @@ group
             orient = N
             0,0 = location_trailer_02_016
         }
+        entry
+        {
+            orient = E
+            0,0 = location_trailer_02_011
+        }
+        entry
+        {
+            orient = S
+            0,0 = location_trailer_02_010
+        }
     }
     furniture
     {
@@ -35882,7 +35993,7 @@ group
     furniture
     {
         corners = true
-        layer = WallFurniture
+        layer = Roof
         entry
         {
             orient = W
@@ -36201,6 +36312,14 @@ group
             1,0 = recreational_01_062
             1,1 = recreational_01_064
             2,1 = recreational_01_066
+        }
+    }
+    furniture
+    {
+        entry
+        {
+            orient = W
+            0,0 = recreational_01_062
         }
     }
     furniture
@@ -37279,6 +37398,29 @@ group
             5,0 = walls_decoration_03_181
         }
     }
+    furniture
+    {
+        entry
+        {
+            orient = W
+            0,0 = walls_decoration_04_029
+            0,1 = walls_decoration_04_028
+            0,2 = walls_decoration_04_027
+            0,3 = walls_decoration_04_026
+            0,4 = walls_decoration_04_025
+            0,5 = walls_decoration_04_024
+        }
+        entry
+        {
+            orient = N
+            0,0 = walls_decoration_04_016
+            1,0 = walls_decoration_04_017
+            2,0 = walls_decoration_04_018
+            3,0 = walls_decoration_04_019
+            4,0 = walls_decoration_04_020
+            5,0 = walls_decoration_04_021
+        }
+    }
 }
 group
 {
@@ -37401,6 +37543,26 @@ group
             1,0 = walls_decoration_03_161
             2,0 = walls_decoration_03_162
             3,0 = walls_decoration_03_163
+        }
+    }
+    furniture
+    {
+        layer = WallFurniture
+        entry
+        {
+            orient = W
+            0,0 = walls_decoration_04_011
+            0,1 = walls_decoration_04_010
+            0,2 = walls_decoration_04_009
+            0,3 = walls_decoration_04_008
+        }
+        entry
+        {
+            orient = N
+            0,0 = walls_decoration_04_000
+            1,0 = walls_decoration_04_001
+            2,0 = walls_decoration_04_002
+            3,0 = walls_decoration_04_003
         }
     }
 }
@@ -51117,6 +51279,23 @@ group
     }
     furniture
     {
+        layer = WallFurniture
+        entry
+        {
+            orient = W
+            0,0 = location_business_office_generic_01_037
+            0,1 = location_business_office_generic_01_036
+        }
+        entry
+        {
+            orient = N
+            0,0 = location_business_office_generic_01_038
+            1,0 = location_business_office_generic_01_039
+        }
+    }
+    furniture
+    {
+        layer = WallFurniture
         entry
         {
             orient = W
@@ -51143,15 +51322,33 @@ group
             orient = N
             0,0 = papernotices_01_007
         }
+    }
+    furniture
+    {
+        layer = WallFurniture
         entry
         {
-            orient = E
+            orient = W
             0,0 = papernotices_01_005
         }
         entry
         {
-            orient = S
+            orient = N
             0,0 = papernotices_01_006
+        }
+    }
+    furniture
+    {
+        layer = WallFurniture
+        entry
+        {
+            orient = W
+            0,0 = location_business_office_generic_01_015
+        }
+        entry
+        {
+            orient = N
+            0,0 = location_business_office_generic_01_007
         }
     }
     furniture
@@ -51194,6 +51391,48 @@ group
         {
             orient = N
             0,0 = trash_walls_01_003
+        }
+    }
+    furniture
+    {
+        layer = WallFurniture
+        entry
+        {
+            orient = W
+            0,0 = trash_walls_01_004
+        }
+        entry
+        {
+            orient = N
+            0,0 = trash_walls_01_005
+        }
+    }
+    furniture
+    {
+        layer = WallFurniture
+        entry
+        {
+            orient = W
+            0,0 = trash_walls_01_006
+        }
+        entry
+        {
+            orient = N
+            0,0 = trash_walls_01_007
+        }
+    }
+    furniture
+    {
+        layer = WallFurniture
+        entry
+        {
+            orient = W
+            0,0 = trash_walls_01_008
+        }
+        entry
+        {
+            orient = N
+            0,0 = trash_walls_01_009
         }
     }
     furniture
@@ -51715,6 +51954,7 @@ group
     }
     furniture
     {
+        layer = Walls
         entry
         {
             orient = W
@@ -51984,12 +52224,12 @@ group
         entry
         {
             orient = E
-            0,0 = walls_decoration_01_038
+            0,0 = walls_decoration_01_039
         }
         entry
         {
             orient = S
-            0,0 = walls_decoration_01_039
+            0,0 = walls_decoration_01_038
         }
     }
     furniture
@@ -52823,2152 +53063,19 @@ group
 }
 group
 {
-    label = Walls - Decoration - Posters - Sport
+    label = Walls - Decoration - Posters - Movies
     furniture
     {
         layer = WallFurniture
         entry
         {
             orient = W
-            0,0 = walls_decoration_02_056
+            0,0 = location_entertainment_theatre_01_078
         }
         entry
         {
             orient = N
-            0,0 = walls_decoration_02_048
-        }
-        entry
-        {
-            orient = E
-            0,0 = walls_decoration_02_057
-        }
-        entry
-        {
-            orient = S
-            0,0 = walls_decoration_02_049
-        }
-    }
-    furniture
-    {
-        layer = WallFurniture
-        entry
-        {
-            orient = W
-            0,0 = walls_decoration_02_058
-        }
-        entry
-        {
-            orient = N
-            0,0 = walls_decoration_02_050
-        }
-        entry
-        {
-            orient = E
-            0,0 = walls_decoration_02_059
-        }
-        entry
-        {
-            orient = S
-            0,0 = walls_decoration_02_051
-        }
-    }
-    furniture
-    {
-        layer = WallFurniture
-        entry
-        {
-            orient = W
-            0,0 = walls_decoration_02_060
-        }
-        entry
-        {
-            orient = N
-            0,0 = walls_decoration_02_052
-        }
-        entry
-        {
-            orient = E
-            0,0 = walls_decoration_02_061
-        }
-        entry
-        {
-            orient = S
-            0,0 = walls_decoration_02_053
-        }
-    }
-    furniture
-    {
-        layer = WallFurniture
-        entry
-        {
-            orient = W
-            0,0 = walls_decoration_02_062
-        }
-        entry
-        {
-            orient = N
-            0,0 = walls_decoration_02_054
-        }
-        entry
-        {
-            orient = E
-            0,0 = walls_decoration_02_063
-        }
-        entry
-        {
-            orient = S
-            0,0 = walls_decoration_02_055
-        }
-    }
-    furniture
-    {
-        layer = WallFurniture
-        entry
-        {
-            orient = W
-            0,0 = walls_decoration_02_065
-        }
-        entry
-        {
-            orient = N
-            0,0 = walls_decoration_02_064
-        }
-        entry
-        {
-            orient = E
-            0,0 = walls_decoration_02_068
-        }
-        entry
-        {
-            orient = S
-            0,0 = walls_decoration_02_066
-        }
-    }
-    furniture
-    {
-        layer = WallFurniture
-        entry
-        {
-            orient = W
-            0,0 = walls_decoration_02_069
-        }
-        entry
-        {
-            orient = N
-            0,0 = walls_decoration_02_067
-        }
-        entry
-        {
-            orient = E
-            0,0 = walls_decoration_02_070
-        }
-        entry
-        {
-            orient = S
-            0,0 = walls_decoration_02_071
-        }
-    }
-    furniture
-    {
-        layer = WallFurniture
-        entry
-        {
-            orient = W
-            0,0 = walls_decoration_02_080
-        }
-        entry
-        {
-            orient = N
-            0,0 = walls_decoration_02_072
-        }
-        entry
-        {
-            orient = E
-            0,0 = walls_decoration_02_081
-        }
-        entry
-        {
-            orient = S
-            0,0 = walls_decoration_02_073
-        }
-    }
-    furniture
-    {
-        layer = WallFurniture
-        entry
-        {
-            orient = W
-            0,0 = walls_decoration_02_082
-        }
-        entry
-        {
-            orient = N
-            0,0 = walls_decoration_02_074
-        }
-        entry
-        {
-            orient = E
-            0,0 = walls_decoration_02_083
-        }
-        entry
-        {
-            orient = S
-            0,0 = walls_decoration_02_075
-        }
-    }
-    furniture
-    {
-        layer = WallFurniture
-        entry
-        {
-            orient = W
-            0,0 = walls_decoration_02_084
-        }
-        entry
-        {
-            orient = N
-            0,0 = walls_decoration_02_076
-        }
-        entry
-        {
-            orient = E
-            0,0 = walls_decoration_02_085
-        }
-        entry
-        {
-            orient = S
-            0,0 = walls_decoration_02_078
-        }
-    }
-    furniture
-    {
-        layer = WallFurniture
-        entry
-        {
-            orient = W
-            0,0 = walls_decoration_02_086
-        }
-        entry
-        {
-            orient = N
-            0,0 = walls_decoration_02_077
-        }
-        entry
-        {
-            orient = E
-            0,0 = walls_decoration_02_087
-        }
-        entry
-        {
-            orient = S
-            0,0 = walls_decoration_02_079
-        }
-    }
-    furniture
-    {
-        layer = WallFurniture
-        entry
-        {
-            orient = W
-            0,0 = walls_decoration_02_088
-        }
-        entry
-        {
-            orient = N
-            0,0 = walls_decoration_02_090
-        }
-        entry
-        {
-            orient = E
-            0,0 = walls_decoration_02_089
-        }
-        entry
-        {
-            orient = S
-            0,0 = walls_decoration_02_092
-        }
-    }
-    furniture
-    {
-        layer = WallFurniture
-        entry
-        {
-            orient = W
-            0,0 = walls_decoration_02_091
-        }
-        entry
-        {
-            orient = N
-            0,0 = walls_decoration_02_094
-        }
-        entry
-        {
-            orient = E
-            0,0 = walls_decoration_02_093
-        }
-        entry
-        {
-            orient = S
-            0,0 = walls_decoration_02_095
-        }
-    }
-    furniture
-    {
-        layer = WallFurniture
-        entry
-        {
-            orient = W
-            0,0 = walls_decoration_02_104
-        }
-        entry
-        {
-            orient = N
-            0,0 = walls_decoration_02_096
-        }
-        entry
-        {
-            orient = E
-            0,0 = walls_decoration_02_105
-        }
-        entry
-        {
-            orient = S
-            0,0 = walls_decoration_02_097
-        }
-    }
-    furniture
-    {
-        layer = WallFurniture
-        entry
-        {
-            orient = W
-            0,0 = walls_decoration_02_106
-        }
-        entry
-        {
-            orient = N
-            0,0 = walls_decoration_02_098
-        }
-        entry
-        {
-            orient = E
-            0,0 = walls_decoration_02_110
-        }
-        entry
-        {
-            orient = S
-            0,0 = walls_decoration_02_099
-        }
-    }
-    furniture
-    {
-        layer = WallFurniture
-        entry
-        {
-            orient = W
-            0,0 = walls_decoration_02_107
-        }
-        entry
-        {
-            orient = N
-            0,0 = walls_decoration_02_100
-        }
-        entry
-        {
-            orient = E
-            0,0 = walls_decoration_02_108
-        }
-        entry
-        {
-            orient = S
-            0,0 = walls_decoration_02_101
-        }
-    }
-    furniture
-    {
-        layer = WallFurniture
-        entry
-        {
-            orient = W
-            0,0 = walls_decoration_02_109
-        }
-        entry
-        {
-            orient = N
-            0,0 = walls_decoration_02_102
-        }
-        entry
-        {
-            orient = E
-            0,0 = walls_decoration_02_111
-        }
-        entry
-        {
-            orient = S
-            0,0 = walls_decoration_02_103
-        }
-    }
-    furniture
-    {
-        layer = WallFurniture
-        entry
-        {
-            orient = W
-            0,0 = walls_decoration_02_113
-        }
-        entry
-        {
-            orient = N
-            0,0 = walls_decoration_02_112
-        }
-        entry
-        {
-            orient = E
-            0,0 = walls_decoration_02_115
-        }
-        entry
-        {
-            orient = S
-            0,0 = walls_decoration_02_114
-        }
-    }
-    furniture
-    {
-        layer = WallFurniture
-        entry
-        {
-            orient = W
-            0,0 = walls_decoration_02_117
-        }
-        entry
-        {
-            orient = N
-            0,0 = walls_decoration_02_116
-        }
-        entry
-        {
-            orient = E
-            0,0 = walls_decoration_02_118
-        }
-        entry
-        {
-            orient = S
-            0,0 = walls_decoration_02_119
-        }
-    }
-    furniture
-    {
-        layer = WallFurniture
-        entry
-        {
-            orient = W
-            0,0 = walls_decoration_02_128
-        }
-        entry
-        {
-            orient = N
-            0,0 = walls_decoration_02_120
-        }
-        entry
-        {
-            orient = E
-            0,0 = walls_decoration_02_129
-        }
-        entry
-        {
-            orient = S
-            0,0 = walls_decoration_02_121
-        }
-    }
-    furniture
-    {
-        layer = WallFurniture
-        entry
-        {
-            orient = W
-            0,0 = walls_decoration_02_130
-        }
-        entry
-        {
-            orient = N
-            0,0 = walls_decoration_02_122
-        }
-        entry
-        {
-            orient = E
-            0,0 = walls_decoration_02_131
-        }
-        entry
-        {
-            orient = S
-            0,0 = walls_decoration_02_123
-        }
-    }
-    furniture
-    {
-        layer = WallFurniture
-        entry
-        {
-            orient = W
-            0,0 = walls_decoration_02_132
-        }
-        entry
-        {
-            orient = N
-            0,0 = walls_decoration_02_124
-        }
-        entry
-        {
-            orient = E
-            0,0 = walls_decoration_02_133
-        }
-        entry
-        {
-            orient = S
-            0,0 = walls_decoration_02_125
-        }
-    }
-    furniture
-    {
-        layer = WallFurniture
-        entry
-        {
-            orient = W
-            0,0 = walls_decoration_02_134
-        }
-        entry
-        {
-            orient = N
-            0,0 = walls_decoration_02_126
-        }
-        entry
-        {
-            orient = E
-            0,0 = walls_decoration_02_135
-        }
-        entry
-        {
-            orient = S
-            0,0 = walls_decoration_02_127
-        }
-    }
-    furniture
-    {
-        layer = WallFurniture
-        entry
-        {
-            orient = W
-            0,0 = walls_decoration_02_137
-        }
-        entry
-        {
-            orient = N
-            0,0 = walls_decoration_02_136
-        }
-        entry
-        {
-            orient = E
-            0,0 = walls_decoration_02_139
-        }
-        entry
-        {
-            orient = S
-            0,0 = walls_decoration_02_140
-        }
-    }
-    furniture
-    {
-        layer = WallFurniture
-        entry
-        {
-            orient = W
-            0,0 = walls_decoration_02_141
-        }
-        entry
-        {
-            orient = N
-            0,0 = walls_decoration_02_138
-        }
-        entry
-        {
-            orient = E
-            0,0 = walls_decoration_02_143
-        }
-        entry
-        {
-            orient = S
-            0,0 = walls_decoration_02_142
-        }
-    }
-    furniture
-    {
-        layer = WallFurniture
-        entry
-        {
-            orient = W
-            0,0 = walls_decoration_02_152
-        }
-        entry
-        {
-            orient = N
-            0,0 = walls_decoration_02_144
-        }
-        entry
-        {
-            orient = E
-            0,0 = walls_decoration_02_153
-        }
-        entry
-        {
-            orient = S
-            0,0 = walls_decoration_02_145
-        }
-    }
-    furniture
-    {
-        layer = WallFurniture
-        entry
-        {
-            orient = W
-            0,0 = walls_decoration_02_154
-        }
-        entry
-        {
-            orient = N
-            0,0 = walls_decoration_02_146
-        }
-        entry
-        {
-            orient = E
-            0,0 = walls_decoration_02_155
-        }
-        entry
-        {
-            orient = S
-            0,0 = walls_decoration_02_148
-        }
-    }
-    furniture
-    {
-        layer = WallFurniture
-        entry
-        {
-            orient = W
-            0,0 = walls_decoration_02_156
-        }
-        entry
-        {
-            orient = N
-            0,0 = walls_decoration_02_147
-        }
-        entry
-        {
-            orient = E
-            0,0 = walls_decoration_02_158
-        }
-        entry
-        {
-            orient = S
-            0,0 = walls_decoration_02_150
-        }
-    }
-    furniture
-    {
-        layer = WallFurniture
-        entry
-        {
-            orient = W
-            0,0 = walls_decoration_02_157
-        }
-        entry
-        {
-            orient = N
-            0,0 = walls_decoration_02_149
-        }
-        entry
-        {
-            orient = E
-            0,0 = walls_decoration_02_159
-        }
-        entry
-        {
-            orient = S
-            0,0 = walls_decoration_02_151
-        }
-    }
-    furniture
-    {
-        layer = WallFurniture
-        entry
-        {
-            orient = W
-            0,0 = walls_decoration_02_161
-        }
-        entry
-        {
-            orient = N
-            0,0 = walls_decoration_02_160
-        }
-        entry
-        {
-            orient = E
-            0,0 = walls_decoration_02_163
-        }
-        entry
-        {
-            orient = S
-            0,0 = walls_decoration_02_162
-        }
-    }
-    furniture
-    {
-        layer = WallFurniture
-        entry
-        {
-            orient = W
-            0,0 = walls_decoration_02_165
-        }
-        entry
-        {
-            orient = N
-            0,0 = walls_decoration_02_167
-        }
-        entry
-        {
-            orient = E
-            0,0 = walls_decoration_02_166
-        }
-        entry
-        {
-            orient = S
-            0,0 = walls_decoration_02_164
-        }
-    }
-    furniture
-    {
-        layer = WallFurniture
-        entry
-        {
-            orient = W
-            0,0 = walls_decoration_02_176
-        }
-        entry
-        {
-            orient = N
-            0,0 = walls_decoration_02_168
-        }
-        entry
-        {
-            orient = E
-            0,0 = walls_decoration_02_177
-        }
-        entry
-        {
-            orient = S
-            0,0 = walls_decoration_02_169
-        }
-    }
-    furniture
-    {
-        layer = WallFurniture
-        entry
-        {
-            orient = W
-            0,0 = walls_decoration_02_178
-        }
-        entry
-        {
-            orient = N
-            0,0 = walls_decoration_02_170
-        }
-        entry
-        {
-            orient = E
-            0,0 = walls_decoration_02_179
-        }
-        entry
-        {
-            orient = S
-            0,0 = walls_decoration_02_174
-        }
-    }
-    furniture
-    {
-        layer = WallFurniture
-        entry
-        {
-            orient = W
-            0,0 = walls_decoration_02_180
-        }
-        entry
-        {
-            orient = N
-            0,0 = walls_decoration_02_171
-        }
-        entry
-        {
-            orient = E
-            0,0 = walls_decoration_02_181
-        }
-        entry
-        {
-            orient = S
-            0,0 = walls_decoration_02_172
-        }
-    }
-    furniture
-    {
-        layer = WallFurniture
-        entry
-        {
-            orient = W
-            0,0 = walls_decoration_02_182
-        }
-        entry
-        {
-            orient = N
-            0,0 = walls_decoration_02_173
-        }
-        entry
-        {
-            orient = E
-            0,0 = walls_decoration_02_183
-        }
-        entry
-        {
-            orient = S
-            0,0 = walls_decoration_02_175
-        }
-    }
-    furniture
-    {
-        layer = WallFurniture
-        entry
-        {
-            orient = W
-            0,0 = walls_decoration_02_185
-        }
-        entry
-        {
-            orient = N
-            0,0 = walls_decoration_02_184
-        }
-        entry
-        {
-            orient = E
-            0,0 = walls_decoration_02_187
-        }
-        entry
-        {
-            orient = S
-            0,0 = walls_decoration_02_186
-        }
-    }
-    furniture
-    {
-        layer = WallFurniture
-        entry
-        {
-            orient = W
-            0,0 = walls_decoration_02_188
-        }
-        entry
-        {
-            orient = N
-            0,0 = walls_decoration_02_189
-        }
-        entry
-        {
-            orient = E
-            0,0 = walls_decoration_02_190
-        }
-        entry
-        {
-            orient = S
-            0,0 = walls_decoration_02_191
-        }
-    }
-    furniture
-    {
-        layer = WallFurniture
-        entry
-        {
-            orient = W
-            0,0 = walls_decoration_05_008
-        }
-        entry
-        {
-            orient = N
-            0,0 = walls_decoration_05_000
-        }
-        entry
-        {
-            orient = E
-            0,0 = walls_decoration_05_009
-        }
-        entry
-        {
-            orient = S
-            0,0 = walls_decoration_05_001
-        }
-    }
-    furniture
-    {
-        layer = WallFurniture
-        entry
-        {
-            orient = W
-            0,0 = walls_decoration_05_010
-        }
-        entry
-        {
-            orient = N
-            0,0 = walls_decoration_05_002
-        }
-        entry
-        {
-            orient = E
-            0,0 = walls_decoration_05_011
-        }
-        entry
-        {
-            orient = S
-            0,0 = walls_decoration_05_003
-        }
-    }
-    furniture
-    {
-        layer = WallFurniture
-        entry
-        {
-            orient = W
-            0,0 = walls_decoration_05_013
-        }
-        entry
-        {
-            orient = N
-            0,0 = walls_decoration_05_006
-        }
-        entry
-        {
-            orient = E
-            0,0 = walls_decoration_05_014
-        }
-        entry
-        {
-            orient = S
-            0,0 = walls_decoration_05_005
-        }
-    }
-    furniture
-    {
-        layer = WallFurniture
-        entry
-        {
-            orient = W
-            0,0 = walls_decoration_05_012
-        }
-        entry
-        {
-            orient = N
-            0,0 = walls_decoration_05_004
-        }
-        entry
-        {
-            orient = E
-            0,0 = walls_decoration_05_015
-        }
-        entry
-        {
-            orient = S
-            0,0 = walls_decoration_05_007
-        }
-    }
-    furniture
-    {
-        layer = WallFurniture
-        entry
-        {
-            orient = W
-            0,0 = walls_decoration_05_017
-        }
-        entry
-        {
-            orient = N
-            0,0 = walls_decoration_05_016
-        }
-        entry
-        {
-            orient = E
-            0,0 = walls_decoration_05_020
-        }
-        entry
-        {
-            orient = S
-            0,0 = walls_decoration_05_018
-        }
-    }
-    furniture
-    {
-        layer = WallFurniture
-        entry
-        {
-            orient = W
-            0,0 = walls_decoration_05_017
-        }
-        entry
-        {
-            orient = N
-            0,0 = walls_decoration_05_019
-        }
-    }
-    furniture
-    {
-        layer = WallFurniture
-        entry
-        {
-            orient = W
-            0,0 = walls_decoration_05_021
-        }
-        entry
-        {
-            orient = N
-            0,0 = walls_decoration_05_022
-        }
-        entry
-        {
-            orient = S
-            0,0 = walls_decoration_05_023
-        }
-    }
-    furniture
-    {
-        layer = WallFurniture
-        entry
-        {
-            orient = W
-            0,0 = walls_decoration_05_032
-        }
-        entry
-        {
-            orient = N
-            0,0 = walls_decoration_05_024
-        }
-        entry
-        {
-            orient = E
-            0,0 = walls_decoration_05_033
-        }
-        entry
-        {
-            orient = S
-            0,0 = walls_decoration_05_025
-        }
-    }
-    furniture
-    {
-        layer = WallFurniture
-        entry
-        {
-            orient = W
-            0,0 = walls_decoration_05_034
-        }
-        entry
-        {
-            orient = N
-            0,0 = walls_decoration_05_026
-        }
-        entry
-        {
-            orient = E
-            0,0 = walls_decoration_05_035
-        }
-        entry
-        {
-            orient = S
-            0,0 = walls_decoration_05_027
-        }
-    }
-    furniture
-    {
-        layer = WallFurniture
-        entry
-        {
-            orient = W
-            0,0 = walls_decoration_05_036
-        }
-        entry
-        {
-            orient = N
-            0,0 = walls_decoration_05_028
-        }
-        entry
-        {
-            orient = E
-            0,0 = walls_decoration_05_038
-        }
-        entry
-        {
-            orient = S
-            0,0 = walls_decoration_05_030
-        }
-    }
-    furniture
-    {
-        layer = WallFurniture
-        entry
-        {
-            orient = W
-            0,0 = walls_decoration_05_037
-        }
-        entry
-        {
-            orient = N
-            0,0 = walls_decoration_05_029
-        }
-        entry
-        {
-            orient = E
-            0,0 = walls_decoration_05_039
-        }
-        entry
-        {
-            orient = S
-            0,0 = walls_decoration_05_031
-        }
-    }
-    furniture
-    {
-        layer = WallFurniture
-        entry
-        {
-            orient = W
-            0,0 = walls_decoration_05_045
-        }
-        entry
-        {
-            orient = N
-            0,0 = walls_decoration_05_041
-        }
-        entry
-        {
-            orient = E
-            0,0 = walls_decoration_05_047
-        }
-        entry
-        {
-            orient = S
-            0,0 = walls_decoration_05_043
-        }
-    }
-    furniture
-    {
-        layer = WallFurniture
-        entry
-        {
-            orient = W
-            0,0 = walls_decoration_05_040
-        }
-        entry
-        {
-            orient = N
-            0,0 = walls_decoration_05_046
-        }
-        entry
-        {
-            orient = E
-            0,0 = walls_decoration_05_042
-        }
-        entry
-        {
-            orient = S
-            0,0 = walls_decoration_05_044
-        }
-    }
-    furniture
-    {
-        layer = WallFurniture
-        entry
-        {
-            orient = W
-            0,0 = walls_decoration_05_056
-        }
-        entry
-        {
-            orient = N
-            0,0 = walls_decoration_05_048
-        }
-        entry
-        {
-            orient = E
-            0,0 = walls_decoration_05_057
-        }
-        entry
-        {
-            orient = S
-            0,0 = walls_decoration_05_049
-        }
-    }
-    furniture
-    {
-        layer = WallFurniture
-        entry
-        {
-            orient = W
-            0,0 = walls_decoration_05_058
-        }
-        entry
-        {
-            orient = N
-            0,0 = walls_decoration_05_050
-        }
-        entry
-        {
-            orient = E
-            0,0 = walls_decoration_05_059
-        }
-        entry
-        {
-            orient = S
-            0,0 = walls_decoration_05_051
-        }
-    }
-    furniture
-    {
-        layer = WallFurniture
-        entry
-        {
-            orient = W
-            0,0 = walls_decoration_05_060
-        }
-        entry
-        {
-            orient = N
-            0,0 = walls_decoration_05_052
-        }
-        entry
-        {
-            orient = E
-            0,0 = walls_decoration_05_061
-        }
-        entry
-        {
-            orient = S
-            0,0 = walls_decoration_05_054
-        }
-    }
-    furniture
-    {
-        layer = WallFurniture
-        entry
-        {
-            orient = W
-            0,0 = walls_decoration_05_062
-        }
-        entry
-        {
-            orient = N
-            0,0 = walls_decoration_05_055
-        }
-        entry
-        {
-            orient = E
-            0,0 = walls_decoration_05_063
-        }
-        entry
-        {
-            orient = S
-            0,0 = walls_decoration_05_053
-        }
-    }
-    furniture
-    {
-        layer = WallFurniture
-        entry
-        {
-            orient = W
-            0,0 = walls_decoration_05_065
-        }
-        entry
-        {
-            orient = N
-            0,0 = walls_decoration_05_064
-        }
-        entry
-        {
-            orient = E
-            0,0 = walls_decoration_05_067
-        }
-        entry
-        {
-            orient = S
-            0,0 = walls_decoration_05_066
-        }
-    }
-    furniture
-    {
-        layer = WallFurniture
-        entry
-        {
-            orient = W
-            0,0 = walls_decoration_05_069
-        }
-        entry
-        {
-            orient = N
-            0,0 = walls_decoration_05_068
-        }
-        entry
-        {
-            orient = E
-            0,0 = walls_decoration_05_071
-        }
-        entry
-        {
-            orient = S
-            0,0 = walls_decoration_05_070
-        }
-    }
-    furniture
-    {
-        layer = WallFurniture
-        entry
-        {
-            orient = W
-            0,0 = walls_decoration_05_080
-        }
-        entry
-        {
-            orient = N
-            0,0 = walls_decoration_05_072
-        }
-        entry
-        {
-            orient = E
-            0,0 = walls_decoration_05_081
-        }
-        entry
-        {
-            orient = S
-            0,0 = walls_decoration_05_073
-        }
-    }
-    furniture
-    {
-        layer = WallFurniture
-        entry
-        {
-            orient = W
-            0,0 = walls_decoration_05_082
-        }
-        entry
-        {
-            orient = N
-            0,0 = walls_decoration_05_074
-        }
-        entry
-        {
-            orient = E
-            0,0 = walls_decoration_05_083
-        }
-        entry
-        {
-            orient = S
-            0,0 = walls_decoration_05_075
-        }
-    }
-    furniture
-    {
-        layer = WallFurniture
-        entry
-        {
-            orient = W
-            0,0 = walls_decoration_05_084
-        }
-        entry
-        {
-            orient = N
-            0,0 = walls_decoration_05_076
-        }
-        entry
-        {
-            orient = E
-            0,0 = walls_decoration_05_085
-        }
-        entry
-        {
-            orient = S
-            0,0 = walls_decoration_05_077
-        }
-    }
-    furniture
-    {
-        layer = WallFurniture
-        entry
-        {
-            orient = W
-            0,0 = walls_decoration_05_086
-        }
-        entry
-        {
-            orient = N
-            0,0 = walls_decoration_05_078
-        }
-        entry
-        {
-            orient = E
-            0,0 = walls_decoration_05_087
-        }
-        entry
-        {
-            orient = S
-            0,0 = walls_decoration_05_079
-        }
-    }
-    furniture
-    {
-        layer = WallFurniture
-        entry
-        {
-            orient = W
-            0,0 = walls_decoration_05_089
-        }
-        entry
-        {
-            orient = N
-            0,0 = walls_decoration_05_088
-        }
-        entry
-        {
-            orient = E
-            0,0 = walls_decoration_05_093
-        }
-        entry
-        {
-            orient = S
-            0,0 = walls_decoration_05_090
-        }
-    }
-    furniture
-    {
-        layer = WallFurniture
-        entry
-        {
-            orient = W
-            0,0 = walls_decoration_05_094
-        }
-        entry
-        {
-            orient = N
-            0,0 = walls_decoration_05_092
-        }
-        entry
-        {
-            orient = E
-            0,0 = walls_decoration_05_091
-        }
-        entry
-        {
-            orient = S
-            0,0 = walls_decoration_05_095
-        }
-    }
-    furniture
-    {
-        layer = WallFurniture
-        entry
-        {
-            orient = W
-            0,0 = walls_decoration_05_104
-        }
-        entry
-        {
-            orient = N
-            0,0 = walls_decoration_05_096
-        }
-        entry
-        {
-            orient = E
-            0,0 = walls_decoration_05_105
-        }
-        entry
-        {
-            orient = S
-            0,0 = walls_decoration_05_097
-        }
-    }
-    furniture
-    {
-        layer = WallFurniture
-        entry
-        {
-            orient = W
-            0,0 = walls_decoration_05_106
-        }
-        entry
-        {
-            orient = N
-            0,0 = walls_decoration_05_098
-        }
-        entry
-        {
-            orient = E
-            0,0 = walls_decoration_05_107
-        }
-        entry
-        {
-            orient = S
-            0,0 = walls_decoration_05_099
-        }
-    }
-    furniture
-    {
-        layer = WallFurniture
-        entry
-        {
-            orient = W
-            0,0 = walls_decoration_05_108
-        }
-        entry
-        {
-            orient = N
-            0,0 = walls_decoration_05_100
-        }
-        entry
-        {
-            orient = E
-            0,0 = walls_decoration_05_110
-        }
-        entry
-        {
-            orient = S
-            0,0 = walls_decoration_05_102
-        }
-    }
-    furniture
-    {
-        layer = WallFurniture
-        entry
-        {
-            orient = W
-            0,0 = walls_decoration_05_109
-        }
-        entry
-        {
-            orient = N
-            0,0 = walls_decoration_05_101
-        }
-        entry
-        {
-            orient = E
-            0,0 = walls_decoration_05_111
-        }
-        entry
-        {
-            orient = S
-            0,0 = walls_decoration_05_103
-        }
-    }
-    furniture
-    {
-        layer = WallFurniture
-        entry
-        {
-            orient = W
-            0,0 = walls_decoration_05_113
-        }
-        entry
-        {
-            orient = N
-            0,0 = walls_decoration_05_112
-        }
-        entry
-        {
-            orient = E
-            0,0 = walls_decoration_05_115
-        }
-        entry
-        {
-            orient = S
-            0,0 = walls_decoration_05_114
-        }
-    }
-    furniture
-    {
-        layer = WallFurniture
-        entry
-        {
-            orient = W
-            0,0 = walls_decoration_05_119
-        }
-        entry
-        {
-            orient = N
-            0,0 = walls_decoration_05_116
-        }
-        entry
-        {
-            orient = E
-            0,0 = walls_decoration_05_118
-        }
-        entry
-        {
-            orient = S
-            0,0 = walls_decoration_05_116
-        }
-    }
-    furniture
-    {
-        layer = WallFurniture
-        entry
-        {
-            orient = W
-            0,0 = walls_decoration_05_117
-        }
-        entry
-        {
-            orient = N
-            0,0 = walls_decoration_05_112
-        }
-    }
-    furniture
-    {
-        layer = WallFurniture
-        entry
-        {
-            orient = W
-            0,0 = walls_decoration_05_128
-        }
-        entry
-        {
-            orient = N
-            0,0 = walls_decoration_05_120
-        }
-        entry
-        {
-            orient = E
-            0,0 = walls_decoration_05_129
-        }
-        entry
-        {
-            orient = S
-            0,0 = walls_decoration_05_121
-        }
-    }
-    furniture
-    {
-        layer = WallFurniture
-        entry
-        {
-            orient = W
-            0,0 = walls_decoration_05_130
-        }
-        entry
-        {
-            orient = N
-            0,0 = walls_decoration_05_122
-        }
-        entry
-        {
-            orient = E
-            0,0 = walls_decoration_05_131
-        }
-        entry
-        {
-            orient = S
-            0,0 = walls_decoration_05_123
-        }
-    }
-    furniture
-    {
-        layer = WallFurniture
-        entry
-        {
-            orient = W
-            0,0 = walls_decoration_05_132
-        }
-        entry
-        {
-            orient = N
-            0,0 = walls_decoration_05_124
-        }
-        entry
-        {
-            orient = E
-            0,0 = walls_decoration_05_133
-        }
-        entry
-        {
-            orient = S
-            0,0 = walls_decoration_05_125
-        }
-    }
-    furniture
-    {
-        layer = WallFurniture
-        entry
-        {
-            orient = W
-            0,0 = walls_decoration_05_134
-        }
-        entry
-        {
-            orient = N
-            0,0 = walls_decoration_05_126
-        }
-        entry
-        {
-            orient = E
-            0,0 = walls_decoration_05_135
-        }
-        entry
-        {
-            orient = S
-            0,0 = walls_decoration_05_127
-        }
-    }
-    furniture
-    {
-        layer = WallFurniture
-        entry
-        {
-            orient = W
-            0,0 = walls_decoration_05_140
-        }
-        entry
-        {
-            orient = N
-            0,0 = walls_decoration_05_136
-        }
-        entry
-        {
-            orient = E
-            0,0 = walls_decoration_05_141
-        }
-        entry
-        {
-            orient = S
-            0,0 = walls_decoration_05_137
-        }
-    }
-    furniture
-    {
-        layer = WallFurniture
-        entry
-        {
-            orient = W
-            0,0 = walls_decoration_05_143
-        }
-        entry
-        {
-            orient = N
-            0,0 = walls_decoration_05_138
-        }
-        entry
-        {
-            orient = E
-            0,0 = walls_decoration_05_142
-        }
-        entry
-        {
-            orient = S
-            0,0 = walls_decoration_05_139
-        }
-    }
-    furniture
-    {
-        layer = WallFurniture
-        entry
-        {
-            orient = W
-            0,0 = walls_decoration_05_148
-        }
-        entry
-        {
-            orient = N
-            0,0 = walls_decoration_05_144
-        }
-        entry
-        {
-            orient = E
-            0,0 = walls_decoration_05_149
-        }
-        entry
-        {
-            orient = S
-            0,0 = walls_decoration_05_145
-        }
-    }
-    furniture
-    {
-        layer = WallFurniture
-        entry
-        {
-            orient = W
-            0,0 = walls_decoration_05_150
-        }
-        entry
-        {
-            orient = N
-            0,0 = walls_decoration_05_146
-        }
-        entry
-        {
-            orient = E
-            0,0 = walls_decoration_05_151
-        }
-        entry
-        {
-            orient = S
-            0,0 = walls_decoration_05_147
-        }
-    }
-    furniture
-    {
-        layer = WallFurniture
-        entry
-        {
-            orient = W
-            0,0 = walls_decoration_05_156
-        }
-        entry
-        {
-            orient = N
-            0,0 = walls_decoration_05_152
-        }
-        entry
-        {
-            orient = E
-            0,0 = walls_decoration_05_157
-        }
-        entry
-        {
-            orient = S
-            0,0 = walls_decoration_05_153
-        }
-    }
-    furniture
-    {
-        layer = WallFurniture
-        entry
-        {
-            orient = W
-            0,0 = walls_decoration_05_158
-        }
-        entry
-        {
-            orient = N
-            0,0 = walls_decoration_05_154
-        }
-        entry
-        {
-            orient = E
-            0,0 = walls_decoration_05_158
-        }
-        entry
-        {
-            orient = S
-            0,0 = walls_decoration_05_155
-        }
-    }
-    furniture
-    {
-        layer = WallFurniture
-        entry
-        {
-            orient = W
-            0,0 = walls_decoration_05_164
-        }
-        entry
-        {
-            orient = N
-            0,0 = walls_decoration_05_160
-        }
-        entry
-        {
-            orient = E
-            0,0 = walls_decoration_05_165
-        }
-        entry
-        {
-            orient = S
-            0,0 = walls_decoration_05_161
-        }
-    }
-    furniture
-    {
-        layer = WallFurniture
-        entry
-        {
-            orient = W
-            0,0 = walls_decoration_05_166
-        }
-        entry
-        {
-            orient = N
-            0,0 = walls_decoration_05_162
-        }
-        entry
-        {
-            orient = E
-            0,0 = walls_decoration_05_167
-        }
-        entry
-        {
-            orient = S
-            0,0 = walls_decoration_05_163
-        }
-    }
-    furniture
-    {
-        layer = WallFurniture
-        entry
-        {
-            orient = W
-            0,0 = walls_decoration_05_172
-        }
-        entry
-        {
-            orient = N
-            0,0 = walls_decoration_05_168
-        }
-        entry
-        {
-            orient = E
-            0,0 = walls_decoration_05_173
-        }
-        entry
-        {
-            orient = S
-            0,0 = walls_decoration_05_169
-        }
-    }
-    furniture
-    {
-        layer = WallFurniture
-        entry
-        {
-            orient = W
-            0,0 = walls_decoration_05_173
-        }
-        entry
-        {
-            orient = N
-            0,0 = walls_decoration_05_170
-        }
-        entry
-        {
-            orient = E
-            0,0 = walls_decoration_05_175
-        }
-        entry
-        {
-            orient = S
-            0,0 = walls_decoration_05_171
-        }
-    }
-    furniture
-    {
-        layer = WallFurniture
-        entry
-        {
-            orient = W
-            0,0 = walls_decoration_05_189
-        }
-        entry
-        {
-            orient = N
-            0,0 = walls_decoration_05_176
-        }
-        entry
-        {
-            orient = E
-            0,0 = walls_decoration_05_185
-        }
-        entry
-        {
-            orient = S
-            0,0 = walls_decoration_05_177
-        }
-    }
-    furniture
-    {
-        layer = WallFurniture
-        entry
-        {
-            orient = W
-            0,0 = walls_decoration_05_186
-        }
-        entry
-        {
-            orient = N
-            0,0 = walls_decoration_05_178
-        }
-        entry
-        {
-            orient = E
-            0,0 = walls_decoration_05_187
-        }
-        entry
-        {
-            orient = S
-            0,0 = walls_decoration_05_179
-        }
-    }
-    furniture
-    {
-        layer = WallFurniture
-        entry
-        {
-            orient = W
-            0,0 = walls_decoration_05_188
-        }
-        entry
-        {
-            orient = N
-            0,0 = walls_decoration_05_180
-        }
-        entry
-        {
-            orient = E
-            0,0 = walls_decoration_05_184
-        }
-        entry
-        {
-            orient = S
-            0,0 = walls_decoration_05_181
-        }
-    }
-    furniture
-    {
-        layer = WallFurniture
-        entry
-        {
-            orient = W
-            0,0 = walls_decoration_05_190
-        }
-        entry
-        {
-            orient = N
-            0,0 = walls_decoration_05_182
-        }
-        entry
-        {
-            orient = E
-            0,0 = walls_decoration_05_191
-        }
-        entry
-        {
-            orient = S
-            0,0 = walls_decoration_05_183
-        }
-    }
-    furniture
-    {
-        layer = WallFurniture
-        entry
-        {
-            orient = W
-            0,0 = walls_decoration_05_196
-        }
-        entry
-        {
-            orient = N
-            0,0 = walls_decoration_05_192
-        }
-        entry
-        {
-            orient = E
-            0,0 = walls_decoration_05_197
-        }
-        entry
-        {
-            orient = S
-            0,0 = walls_decoration_05_193
-        }
-    }
-    furniture
-    {
-        layer = WallFurniture
-        entry
-        {
-            orient = W
-            0,0 = walls_decoration_05_198
-        }
-        entry
-        {
-            orient = N
-            0,0 = walls_decoration_05_194
-        }
-        entry
-        {
-            orient = E
-            0,0 = walls_decoration_05_199
-        }
-        entry
-        {
-            orient = S
-            0,0 = walls_decoration_05_195
-        }
-    }
-}
-group
-{
-    label = Walls - Decoration - Posters - Other
-    furniture
-    {
-        layer = WallFurniture
-        entry
-        {
-            orient = W
-            0,0 = walls_decoration_01_032
-        }
-        entry
-        {
-            orient = N
-            0,0 = walls_decoration_01_033
-        }
-    }
-    furniture
-    {
-        layer = WallFurniture
-        entry
-        {
-            orient = W
-            0,0 = walls_decoration_01_047
-        }
-        entry
-        {
-            orient = N
-            0,0 = walls_decoration_01_046
-        }
-    }
-    furniture
-    {
-        layer = WallFurniture
-        entry
-        {
-            orient = W
-            0,0 = walls_decoration_01_049
-        }
-        entry
-        {
-            orient = N
-            0,0 = walls_decoration_01_048
-        }
-    }
-    furniture
-    {
-        layer = WallFurniture
-        entry
-        {
-            orient = W
-            0,0 = walls_decoration_01_051
-        }
-        entry
-        {
-            orient = N
-            0,0 = walls_decoration_01_050
+            0,0 = location_entertainment_theatre_01_079
         }
     }
     furniture
@@ -55011,34 +53118,6 @@ group
         {
             orient = N
             0,0 = location_entertainment_theatre_01_085
-        }
-    }
-    furniture
-    {
-        layer = WallFurniture
-        entry
-        {
-            orient = W
-            0,0 = location_military_generic_01_070
-        }
-        entry
-        {
-            orient = N
-            0,0 = location_military_generic_01_068
-        }
-    }
-    furniture
-    {
-        layer = WallFurniture
-        entry
-        {
-            orient = W
-            0,0 = location_military_generic_01_071
-        }
-        entry
-        {
-            orient = N
-            0,0 = location_military_generic_01_069
         }
     }
     furniture
@@ -55207,6 +53286,3681 @@ group
         {
             orient = N
             0,0 = walls_decoration_03_165
+        }
+    }
+    furniture
+    {
+        layer = WallFurniture
+        entry
+        {
+            orient = W
+            0,0 = walls_decoration_04_012
+        }
+        entry
+        {
+            orient = N
+            0,0 = walls_decoration_04_004
+        }
+    }
+    furniture
+    {
+        layer = WallFurniture
+        entry
+        {
+            orient = W
+            0,0 = walls_decoration_04_013
+        }
+        entry
+        {
+            orient = N
+            0,0 = walls_decoration_04_005
+        }
+    }
+    furniture
+    {
+        layer = WallFurniture
+        entry
+        {
+            orient = W
+            0,0 = walls_decoration_04_040
+        }
+        entry
+        {
+            orient = N
+            0,0 = walls_decoration_04_032
+        }
+    }
+    furniture
+    {
+        layer = WallFurniture
+        entry
+        {
+            orient = W
+            0,0 = walls_decoration_04_041
+        }
+        entry
+        {
+            orient = N
+            0,0 = walls_decoration_04_033
+        }
+    }
+    furniture
+    {
+        layer = WallFurniture
+        entry
+        {
+            orient = W
+            0,0 = walls_decoration_04_042
+        }
+        entry
+        {
+            orient = N
+            0,0 = walls_decoration_04_034
+        }
+    }
+    furniture
+    {
+        layer = WallFurniture
+        entry
+        {
+            orient = W
+            0,0 = walls_decoration_04_043
+        }
+        entry
+        {
+            orient = N
+            0,0 = walls_decoration_04_035
+        }
+    }
+    furniture
+    {
+        layer = WallFurniture
+        entry
+        {
+            orient = W
+            0,0 = walls_decoration_04_044
+        }
+        entry
+        {
+            orient = N
+            0,0 = walls_decoration_04_036
+        }
+    }
+    furniture
+    {
+        layer = WallFurniture
+        entry
+        {
+            orient = W
+            0,0 = walls_decoration_04_045
+        }
+        entry
+        {
+            orient = N
+            0,0 = walls_decoration_04_037
+        }
+    }
+    furniture
+    {
+        layer = WallFurniture
+        entry
+        {
+            orient = W
+            0,0 = walls_decoration_04_046
+        }
+        entry
+        {
+            orient = N
+            0,0 = walls_decoration_04_038
+        }
+    }
+    furniture
+    {
+        layer = WallFurniture
+        entry
+        {
+            orient = W
+            0,0 = walls_decoration_04_047
+        }
+        entry
+        {
+            orient = N
+            0,0 = walls_decoration_04_039
+        }
+    }
+    furniture
+    {
+        layer = WallFurniture
+        entry
+        {
+            orient = W
+            0,0 = walls_decoration_04_056
+        }
+        entry
+        {
+            orient = N
+            0,0 = walls_decoration_04_048
+        }
+    }
+    furniture
+    {
+        layer = WallFurniture
+        entry
+        {
+            orient = W
+            0,0 = walls_decoration_04_057
+        }
+        entry
+        {
+            orient = N
+            0,0 = walls_decoration_04_049
+        }
+    }
+    furniture
+    {
+        layer = WallFurniture
+        entry
+        {
+            orient = W
+            0,0 = walls_decoration_04_058
+        }
+        entry
+        {
+            orient = N
+            0,0 = walls_decoration_04_050
+        }
+    }
+    furniture
+    {
+        layer = WallFurniture
+        entry
+        {
+            orient = W
+            0,0 = walls_decoration_04_059
+        }
+        entry
+        {
+            orient = N
+            0,0 = walls_decoration_04_051
+        }
+    }
+    furniture
+    {
+        layer = WallFurniture
+        entry
+        {
+            orient = W
+            0,0 = walls_decoration_04_060
+        }
+        entry
+        {
+            orient = N
+            0,0 = walls_decoration_04_052
+        }
+    }
+    furniture
+    {
+        layer = WallFurniture
+        entry
+        {
+            orient = W
+            0,0 = walls_decoration_04_061
+        }
+        entry
+        {
+            orient = N
+            0,0 = walls_decoration_04_053
+        }
+    }
+    furniture
+    {
+        layer = WallFurniture
+        entry
+        {
+            orient = W
+            0,0 = walls_decoration_04_062
+        }
+        entry
+        {
+            orient = N
+            0,0 = walls_decoration_04_054
+        }
+    }
+    furniture
+    {
+        layer = WallFurniture
+        entry
+        {
+            orient = W
+            0,0 = walls_decoration_04_063
+        }
+        entry
+        {
+            orient = N
+            0,0 = walls_decoration_04_055
+        }
+    }
+    furniture
+    {
+        layer = WallFurniture
+        entry
+        {
+            orient = W
+            0,0 = walls_decoration_04_072
+        }
+        entry
+        {
+            orient = N
+            0,0 = walls_decoration_04_064
+        }
+    }
+    furniture
+    {
+        layer = WallFurniture
+        entry
+        {
+            orient = W
+            0,0 = walls_decoration_04_073
+        }
+        entry
+        {
+            orient = N
+            0,0 = walls_decoration_04_065
+        }
+    }
+    furniture
+    {
+        layer = WallFurniture
+        entry
+        {
+            orient = W
+            0,0 = walls_decoration_04_074
+        }
+        entry
+        {
+            orient = N
+            0,0 = walls_decoration_04_066
+        }
+    }
+    furniture
+    {
+        layer = WallFurniture
+        entry
+        {
+            orient = W
+            0,0 = walls_decoration_04_075
+        }
+        entry
+        {
+            orient = N
+            0,0 = walls_decoration_04_067
+        }
+    }
+    furniture
+    {
+        layer = WallFurniture
+        entry
+        {
+            orient = W
+            0,0 = walls_decoration_04_076
+        }
+        entry
+        {
+            orient = N
+            0,0 = walls_decoration_04_068
+        }
+    }
+    furniture
+    {
+        layer = WallFurniture
+        entry
+        {
+            orient = W
+            0,0 = walls_decoration_04_077
+        }
+        entry
+        {
+            orient = N
+            0,0 = walls_decoration_04_069
+        }
+    }
+    furniture
+    {
+        layer = WallFurniture
+        entry
+        {
+            orient = W
+            0,0 = walls_decoration_04_078
+        }
+        entry
+        {
+            orient = N
+            0,0 = walls_decoration_04_070
+        }
+    }
+    furniture
+    {
+        layer = WallFurniture
+        entry
+        {
+            orient = W
+            0,0 = walls_decoration_04_079
+        }
+        entry
+        {
+            orient = N
+            0,0 = walls_decoration_04_071
+        }
+    }
+    furniture
+    {
+        layer = WallFurniture
+        entry
+        {
+            orient = W
+            0,0 = walls_decoration_04_088
+        }
+        entry
+        {
+            orient = N
+            0,0 = walls_decoration_04_080
+        }
+    }
+    furniture
+    {
+        layer = WallFurniture
+        entry
+        {
+            orient = W
+            0,0 = walls_decoration_04_089
+        }
+        entry
+        {
+            orient = N
+            0,0 = walls_decoration_04_081
+        }
+    }
+    furniture
+    {
+        layer = WallFurniture
+        entry
+        {
+            orient = W
+            0,0 = walls_decoration_04_090
+        }
+        entry
+        {
+            orient = N
+            0,0 = walls_decoration_04_082
+        }
+    }
+    furniture
+    {
+        layer = WallFurniture
+        entry
+        {
+            orient = W
+            0,0 = walls_decoration_04_091
+        }
+        entry
+        {
+            orient = N
+            0,0 = walls_decoration_04_083
+        }
+    }
+    furniture
+    {
+        layer = WallFurniture
+        entry
+        {
+            orient = W
+            0,0 = walls_decoration_04_092
+        }
+        entry
+        {
+            orient = N
+            0,0 = walls_decoration_04_084
+        }
+    }
+    furniture
+    {
+        layer = WallFurniture
+        entry
+        {
+            orient = W
+            0,0 = walls_decoration_04_093
+        }
+        entry
+        {
+            orient = N
+            0,0 = walls_decoration_04_085
+        }
+    }
+    furniture
+    {
+        layer = WallFurniture
+        entry
+        {
+            orient = W
+            0,0 = walls_decoration_04_094
+        }
+        entry
+        {
+            orient = N
+            0,0 = walls_decoration_04_086
+        }
+    }
+    furniture
+    {
+        layer = WallFurniture
+        entry
+        {
+            orient = W
+            0,0 = walls_decoration_04_095
+        }
+        entry
+        {
+            orient = N
+            0,0 = walls_decoration_04_087
+        }
+    }
+    furniture
+    {
+        layer = WallFurniture
+        entry
+        {
+            orient = W
+            0,0 = walls_decoration_04_104
+        }
+        entry
+        {
+            orient = N
+            0,0 = walls_decoration_04_096
+        }
+    }
+    furniture
+    {
+        layer = WallFurniture
+        entry
+        {
+            orient = W
+            0,0 = walls_decoration_04_105
+        }
+        entry
+        {
+            orient = N
+            0,0 = walls_decoration_04_097
+        }
+    }
+    furniture
+    {
+        layer = WallFurniture
+        entry
+        {
+            orient = W
+            0,0 = walls_decoration_04_106
+        }
+        entry
+        {
+            orient = N
+            0,0 = walls_decoration_04_098
+        }
+    }
+    furniture
+    {
+        layer = WallFurniture
+        entry
+        {
+            orient = W
+            0,0 = walls_decoration_04_107
+        }
+        entry
+        {
+            orient = N
+            0,0 = walls_decoration_04_099
+        }
+    }
+    furniture
+    {
+        layer = WallFurniture
+        entry
+        {
+            orient = W
+            0,0 = walls_decoration_04_108
+        }
+        entry
+        {
+            orient = N
+            0,0 = walls_decoration_04_100
+        }
+    }
+    furniture
+    {
+        layer = WallFurniture
+        entry
+        {
+            orient = W
+            0,0 = walls_decoration_04_109
+        }
+        entry
+        {
+            orient = N
+            0,0 = walls_decoration_04_101
+        }
+    }
+    furniture
+    {
+        layer = WallFurniture
+        entry
+        {
+            orient = W
+            0,0 = walls_decoration_04_110
+        }
+        entry
+        {
+            orient = N
+            0,0 = walls_decoration_04_102
+        }
+    }
+    furniture
+    {
+        layer = WallFurniture
+        entry
+        {
+            orient = W
+            0,0 = walls_decoration_04_111
+        }
+        entry
+        {
+            orient = N
+            0,0 = walls_decoration_04_103
+        }
+    }
+}
+group
+{
+    label = Walls - Decoration - Posters - Music
+    furniture
+    {
+        layer = WallFurniture
+        entry
+        {
+            orient = W
+            0,0 = walls_decoration_06_008
+        }
+        entry
+        {
+            orient = N
+            0,0 = walls_decoration_06_000
+        }
+    }
+    furniture
+    {
+        layer = WallFurniture
+        entry
+        {
+            orient = W
+            0,0 = walls_decoration_06_009
+        }
+        entry
+        {
+            orient = N
+            0,0 = walls_decoration_06_001
+        }
+    }
+    furniture
+    {
+        layer = WallFurniture
+        entry
+        {
+            orient = W
+            0,0 = walls_decoration_06_010
+        }
+        entry
+        {
+            orient = N
+            0,0 = walls_decoration_06_002
+        }
+    }
+    furniture
+    {
+        layer = WallFurniture
+        entry
+        {
+            orient = W
+            0,0 = walls_decoration_06_011
+        }
+        entry
+        {
+            orient = N
+            0,0 = walls_decoration_06_003
+        }
+    }
+    furniture
+    {
+        layer = WallFurniture
+        entry
+        {
+            orient = W
+            0,0 = walls_decoration_06_012
+        }
+        entry
+        {
+            orient = N
+            0,0 = walls_decoration_06_004
+        }
+    }
+    furniture
+    {
+        layer = WallFurniture
+        entry
+        {
+            orient = W
+            0,0 = walls_decoration_06_013
+        }
+        entry
+        {
+            orient = N
+            0,0 = walls_decoration_06_005
+        }
+    }
+    furniture
+    {
+        layer = WallFurniture
+        entry
+        {
+            orient = W
+            0,0 = walls_decoration_06_014
+        }
+        entry
+        {
+            orient = N
+            0,0 = walls_decoration_06_006
+        }
+    }
+    furniture
+    {
+        layer = WallFurniture
+        entry
+        {
+            orient = W
+            0,0 = walls_decoration_06_015
+        }
+        entry
+        {
+            orient = N
+            0,0 = walls_decoration_06_007
+        }
+    }
+    furniture
+    {
+        layer = WallFurniture
+        entry
+        {
+            orient = W
+            0,0 = walls_decoration_06_024
+        }
+        entry
+        {
+            orient = N
+            0,0 = walls_decoration_06_016
+        }
+    }
+    furniture
+    {
+        layer = WallFurniture
+        entry
+        {
+            orient = W
+            0,0 = walls_decoration_06_025
+        }
+        entry
+        {
+            orient = N
+            0,0 = walls_decoration_06_017
+        }
+    }
+    furniture
+    {
+        layer = WallFurniture
+        entry
+        {
+            orient = W
+            0,0 = walls_decoration_06_026
+        }
+        entry
+        {
+            orient = N
+            0,0 = walls_decoration_06_018
+        }
+    }
+    furniture
+    {
+        layer = WallFurniture
+        entry
+        {
+            orient = W
+            0,0 = walls_decoration_06_027
+        }
+        entry
+        {
+            orient = N
+            0,0 = walls_decoration_06_019
+        }
+    }
+    furniture
+    {
+        layer = WallFurniture
+        entry
+        {
+            orient = W
+            0,0 = walls_decoration_06_028
+        }
+        entry
+        {
+            orient = N
+            0,0 = walls_decoration_06_020
+        }
+    }
+    furniture
+    {
+        layer = WallFurniture
+        entry
+        {
+            orient = W
+            0,0 = walls_decoration_06_029
+        }
+        entry
+        {
+            orient = N
+            0,0 = walls_decoration_06_021
+        }
+    }
+    furniture
+    {
+        layer = WallFurniture
+        entry
+        {
+            orient = W
+            0,0 = walls_decoration_06_030
+        }
+        entry
+        {
+            orient = N
+            0,0 = walls_decoration_06_022
+        }
+    }
+    furniture
+    {
+        layer = WallFurniture
+        entry
+        {
+            orient = W
+            0,0 = walls_decoration_06_031
+        }
+        entry
+        {
+            orient = N
+            0,0 = walls_decoration_06_023
+        }
+    }
+    furniture
+    {
+        layer = WallFurniture
+        entry
+        {
+            orient = W
+            0,0 = walls_decoration_06_040
+        }
+        entry
+        {
+            orient = N
+            0,0 = walls_decoration_06_032
+        }
+    }
+    furniture
+    {
+        layer = WallFurniture
+        entry
+        {
+            orient = W
+            0,0 = walls_decoration_06_041
+        }
+        entry
+        {
+            orient = N
+            0,0 = walls_decoration_06_033
+        }
+    }
+    furniture
+    {
+        layer = WallFurniture
+        entry
+        {
+            orient = W
+            0,0 = walls_decoration_06_042
+        }
+        entry
+        {
+            orient = N
+            0,0 = walls_decoration_06_034
+        }
+    }
+    furniture
+    {
+        layer = WallFurniture
+        entry
+        {
+            orient = W
+            0,0 = walls_decoration_06_043
+        }
+        entry
+        {
+            orient = N
+            0,0 = walls_decoration_06_035
+        }
+    }
+    furniture
+    {
+        layer = WallFurniture
+        entry
+        {
+            orient = W
+            0,0 = walls_decoration_06_044
+        }
+        entry
+        {
+            orient = N
+            0,0 = walls_decoration_06_036
+        }
+    }
+    furniture
+    {
+        layer = WallFurniture
+        entry
+        {
+            orient = W
+            0,0 = walls_decoration_06_045
+        }
+        entry
+        {
+            orient = N
+            0,0 = walls_decoration_06_037
+        }
+    }
+    furniture
+    {
+        layer = WallFurniture
+        entry
+        {
+            orient = W
+            0,0 = walls_decoration_06_046
+        }
+        entry
+        {
+            orient = N
+            0,0 = walls_decoration_06_038
+        }
+    }
+    furniture
+    {
+        layer = WallFurniture
+        entry
+        {
+            orient = W
+            0,0 = walls_decoration_06_047
+        }
+        entry
+        {
+            orient = N
+            0,0 = walls_decoration_06_039
+        }
+    }
+    furniture
+    {
+        layer = WallFurniture
+        entry
+        {
+            orient = W
+            0,0 = walls_decoration_06_056
+        }
+        entry
+        {
+            orient = N
+            0,0 = walls_decoration_06_048
+        }
+    }
+    furniture
+    {
+        layer = WallFurniture
+        entry
+        {
+            orient = W
+            0,0 = walls_decoration_06_057
+        }
+        entry
+        {
+            orient = N
+            0,0 = walls_decoration_06_049
+        }
+    }
+    furniture
+    {
+        layer = WallFurniture
+        entry
+        {
+            orient = W
+            0,0 = walls_decoration_06_058
+        }
+        entry
+        {
+            orient = N
+            0,0 = walls_decoration_06_050
+        }
+    }
+    furniture
+    {
+        layer = WallFurniture
+        entry
+        {
+            orient = W
+            0,0 = walls_decoration_06_059
+        }
+        entry
+        {
+            orient = N
+            0,0 = walls_decoration_06_051
+        }
+    }
+    furniture
+    {
+        layer = WallFurniture
+        entry
+        {
+            orient = W
+            0,0 = walls_decoration_06_060
+        }
+        entry
+        {
+            orient = N
+            0,0 = walls_decoration_06_052
+        }
+    }
+    furniture
+    {
+        layer = WallFurniture
+        entry
+        {
+            orient = W
+            0,0 = walls_decoration_06_061
+        }
+        entry
+        {
+            orient = N
+            0,0 = walls_decoration_06_053
+        }
+    }
+    furniture
+    {
+        layer = WallFurniture
+        entry
+        {
+            orient = W
+            0,0 = walls_decoration_06_062
+        }
+        entry
+        {
+            orient = N
+            0,0 = walls_decoration_06_054
+        }
+    }
+    furniture
+    {
+        layer = WallFurniture
+        entry
+        {
+            orient = W
+            0,0 = walls_decoration_06_063
+        }
+        entry
+        {
+            orient = N
+            0,0 = walls_decoration_06_055
+        }
+    }
+    furniture
+    {
+        layer = WallFurniture
+        entry
+        {
+            orient = W
+            0,0 = walls_decoration_06_072
+        }
+        entry
+        {
+            orient = N
+            0,0 = walls_decoration_06_064
+        }
+    }
+    furniture
+    {
+        layer = WallFurniture
+        entry
+        {
+            orient = W
+            0,0 = walls_decoration_06_073
+        }
+        entry
+        {
+            orient = N
+            0,0 = walls_decoration_06_065
+        }
+    }
+    furniture
+    {
+        layer = WallFurniture
+        entry
+        {
+            orient = W
+            0,0 = walls_decoration_06_074
+        }
+        entry
+        {
+            orient = N
+            0,0 = walls_decoration_06_066
+        }
+    }
+    furniture
+    {
+        layer = WallFurniture
+        entry
+        {
+            orient = W
+            0,0 = walls_decoration_06_075
+        }
+        entry
+        {
+            orient = N
+            0,0 = walls_decoration_06_067
+        }
+    }
+    furniture
+    {
+        layer = WallFurniture
+        entry
+        {
+            orient = W
+            0,0 = walls_decoration_06_076
+        }
+        entry
+        {
+            orient = N
+            0,0 = walls_decoration_06_068
+        }
+    }
+    furniture
+    {
+        layer = WallFurniture
+        entry
+        {
+            orient = W
+            0,0 = walls_decoration_06_077
+        }
+        entry
+        {
+            orient = N
+            0,0 = walls_decoration_06_069
+        }
+    }
+    furniture
+    {
+        layer = WallFurniture
+        entry
+        {
+            orient = W
+            0,0 = walls_decoration_06_078
+        }
+        entry
+        {
+            orient = N
+            0,0 = walls_decoration_06_070
+        }
+    }
+    furniture
+    {
+        layer = WallFurniture
+        entry
+        {
+            orient = W
+            0,0 = walls_decoration_06_079
+        }
+        entry
+        {
+            orient = N
+            0,0 = walls_decoration_06_071
+        }
+    }
+    furniture
+    {
+        layer = WallFurniture
+        entry
+        {
+            orient = W
+            0,0 = walls_decoration_06_088
+        }
+        entry
+        {
+            orient = N
+            0,0 = walls_decoration_06_080
+        }
+    }
+    furniture
+    {
+        layer = WallFurniture
+        entry
+        {
+            orient = W
+            0,0 = walls_decoration_06_089
+        }
+        entry
+        {
+            orient = N
+            0,0 = walls_decoration_06_081
+        }
+    }
+    furniture
+    {
+        layer = WallFurniture
+        entry
+        {
+            orient = W
+            0,0 = walls_decoration_06_090
+        }
+        entry
+        {
+            orient = N
+            0,0 = walls_decoration_06_082
+        }
+    }
+    furniture
+    {
+        layer = WallFurniture
+        entry
+        {
+            orient = W
+            0,0 = walls_decoration_06_091
+        }
+        entry
+        {
+            orient = N
+            0,0 = walls_decoration_06_083
+        }
+    }
+    furniture
+    {
+        layer = WallFurniture
+        entry
+        {
+            orient = W
+            0,0 = walls_decoration_06_092
+        }
+        entry
+        {
+            orient = N
+            0,0 = walls_decoration_06_084
+        }
+    }
+    furniture
+    {
+        layer = WallFurniture
+        entry
+        {
+            orient = W
+            0,0 = walls_decoration_06_093
+        }
+        entry
+        {
+            orient = N
+            0,0 = walls_decoration_06_085
+        }
+    }
+    furniture
+    {
+        layer = WallFurniture
+        entry
+        {
+            orient = W
+            0,0 = walls_decoration_06_094
+        }
+        entry
+        {
+            orient = N
+            0,0 = walls_decoration_06_086
+        }
+    }
+    furniture
+    {
+        layer = WallFurniture
+        entry
+        {
+            orient = W
+            0,0 = walls_decoration_06_095
+        }
+        entry
+        {
+            orient = N
+            0,0 = walls_decoration_06_087
+        }
+    }
+    furniture
+    {
+        layer = WallFurniture
+        entry
+        {
+            orient = W
+            0,0 = walls_decoration_06_104
+        }
+        entry
+        {
+            orient = N
+            0,0 = walls_decoration_06_096
+        }
+    }
+    furniture
+    {
+        layer = WallFurniture
+        entry
+        {
+            orient = W
+            0,0 = walls_decoration_06_105
+        }
+        entry
+        {
+            orient = N
+            0,0 = walls_decoration_06_097
+        }
+    }
+    furniture
+    {
+        layer = WallFurniture
+        entry
+        {
+            orient = W
+            0,0 = walls_decoration_06_106
+        }
+        entry
+        {
+            orient = N
+            0,0 = walls_decoration_06_098
+        }
+    }
+    furniture
+    {
+        layer = WallFurniture
+        entry
+        {
+            orient = W
+            0,0 = walls_decoration_06_107
+        }
+        entry
+        {
+            orient = N
+            0,0 = walls_decoration_06_099
+        }
+    }
+    furniture
+    {
+        layer = WallFurniture
+        entry
+        {
+            orient = W
+            0,0 = walls_decoration_06_108
+        }
+        entry
+        {
+            orient = N
+            0,0 = walls_decoration_06_100
+        }
+    }
+    furniture
+    {
+        layer = WallFurniture
+        entry
+        {
+            orient = W
+            0,0 = walls_decoration_06_109
+        }
+        entry
+        {
+            orient = N
+            0,0 = walls_decoration_06_101
+        }
+    }
+}
+group
+{
+    label = Walls - Decoration - Posters - Other
+    furniture
+    {
+        layer = WallFurniture
+        entry
+        {
+            orient = W
+            0,0 = walls_decoration_01_032
+        }
+        entry
+        {
+            orient = N
+            0,0 = walls_decoration_01_033
+        }
+    }
+    furniture
+    {
+        layer = WallFurniture
+        entry
+        {
+            orient = W
+            0,0 = walls_decoration_01_047
+        }
+        entry
+        {
+            orient = N
+            0,0 = walls_decoration_01_046
+        }
+    }
+    furniture
+    {
+        layer = WallFurniture
+        entry
+        {
+            orient = W
+            0,0 = walls_decoration_01_049
+        }
+        entry
+        {
+            orient = N
+            0,0 = walls_decoration_01_048
+        }
+    }
+    furniture
+    {
+        layer = WallFurniture
+        entry
+        {
+            orient = W
+            0,0 = walls_decoration_01_051
+        }
+        entry
+        {
+            orient = N
+            0,0 = walls_decoration_01_050
+        }
+    }
+    furniture
+    {
+        layer = WallFurniture
+        entry
+        {
+            orient = W
+            0,0 = location_military_generic_01_070
+        }
+        entry
+        {
+            orient = N
+            0,0 = location_military_generic_01_068
+        }
+    }
+    furniture
+    {
+        layer = WallFurniture
+        entry
+        {
+            orient = W
+            0,0 = location_military_generic_01_071
+        }
+        entry
+        {
+            orient = N
+            0,0 = location_military_generic_01_069
+        }
+    }
+    furniture
+    {
+        layer = WallFurniture
+        entry
+        {
+            orient = W
+            0,0 = trash_walls_01_004
+        }
+        entry
+        {
+            orient = N
+            0,0 = trash_walls_01_005
+        }
+    }
+    furniture
+    {
+        layer = WallFurniture
+        entry
+        {
+            orient = W
+            0,0 = trash_walls_01_008
+        }
+        entry
+        {
+            orient = N
+            0,0 = trash_walls_01_009
+        }
+    }
+    furniture
+    {
+        layer = WallFurniture
+        entry
+        {
+            orient = W
+            0,0 = location_community_medical_01_012
+        }
+        entry
+        {
+            orient = N
+            0,0 = location_community_medical_01_011
+        }
+    }
+    furniture
+    {
+        layer = WallFurniture
+        entry
+        {
+            orient = W
+            0,0 = location_shop_accessories_01_026
+        }
+        entry
+        {
+            orient = N
+            0,0 = location_shop_accessories_01_027
+        }
+    }
+}
+group
+{
+    label = Walls - Decoration - Posters - Sport
+    furniture
+    {
+        layer = WallFurniture
+        entry
+        {
+            orient = W
+            0,0 = walls_decoration_02_058
+        }
+        entry
+        {
+            orient = N
+            0,0 = walls_decoration_02_050
+        }
+        entry
+        {
+            orient = E
+            0,0 = walls_decoration_02_056
+        }
+        entry
+        {
+            orient = S
+            0,0 = walls_decoration_02_048
+        }
+    }
+    furniture
+    {
+        layer = WallFurniture
+        entry
+        {
+            orient = W
+            0,0 = walls_decoration_02_059
+        }
+        entry
+        {
+            orient = N
+            0,0 = walls_decoration_02_051
+        }
+        entry
+        {
+            orient = E
+            0,0 = walls_decoration_02_057
+        }
+        entry
+        {
+            orient = S
+            0,0 = walls_decoration_02_049
+        }
+    }
+    furniture
+    {
+        layer = WallFurniture
+        entry
+        {
+            orient = W
+            0,0 = walls_decoration_02_062
+        }
+        entry
+        {
+            orient = N
+            0,0 = walls_decoration_02_054
+        }
+        entry
+        {
+            orient = E
+            0,0 = walls_decoration_02_060
+        }
+        entry
+        {
+            orient = S
+            0,0 = walls_decoration_02_052
+        }
+    }
+    furniture
+    {
+        layer = WallFurniture
+        entry
+        {
+            orient = W
+            0,0 = walls_decoration_02_061
+        }
+        entry
+        {
+            orient = N
+            0,0 = walls_decoration_02_053
+        }
+        entry
+        {
+            orient = E
+            0,0 = walls_decoration_02_063
+        }
+        entry
+        {
+            orient = S
+            0,0 = walls_decoration_02_055
+        }
+    }
+    furniture
+    {
+        layer = WallFurniture
+        entry
+        {
+            orient = W
+            0,0 = walls_decoration_02_065
+        }
+        entry
+        {
+            orient = N
+            0,0 = walls_decoration_02_064
+        }
+    }
+    furniture
+    {
+        layer = WallFurniture
+        entry
+        {
+            orient = W
+            0,0 = walls_decoration_02_068
+        }
+        entry
+        {
+            orient = N
+            0,0 = walls_decoration_02_066
+        }
+    }
+    furniture
+    {
+        layer = WallFurniture
+        entry
+        {
+            orient = W
+            0,0 = walls_decoration_02_069
+        }
+        entry
+        {
+            orient = N
+            0,0 = walls_decoration_02_067
+        }
+        entry
+        {
+            orient = E
+            0,0 = walls_decoration_02_070
+        }
+        entry
+        {
+            orient = S
+            0,0 = walls_decoration_02_071
+        }
+    }
+    furniture
+    {
+        layer = WallFurniture
+        entry
+        {
+            orient = W
+            0,0 = walls_decoration_02_083
+        }
+        entry
+        {
+            orient = N
+            0,0 = walls_decoration_02_074
+        }
+        entry
+        {
+            orient = E
+            0,0 = walls_decoration_02_081
+        }
+        entry
+        {
+            orient = S
+            0,0 = walls_decoration_02_072
+        }
+    }
+    furniture
+    {
+        layer = WallFurniture
+        entry
+        {
+            orient = W
+            0,0 = walls_decoration_02_082
+        }
+        entry
+        {
+            orient = N
+            0,0 = walls_decoration_02_075
+        }
+        entry
+        {
+            orient = E
+            0,0 = walls_decoration_02_080
+        }
+        entry
+        {
+            orient = S
+            0,0 = walls_decoration_02_073
+        }
+    }
+    furniture
+    {
+        layer = WallFurniture
+        entry
+        {
+            orient = W
+            0,0 = walls_decoration_02_084
+        }
+        entry
+        {
+            orient = N
+            0,0 = walls_decoration_02_076
+        }
+        entry
+        {
+            orient = E
+            0,0 = walls_decoration_02_085
+        }
+        entry
+        {
+            orient = S
+            0,0 = walls_decoration_02_078
+        }
+    }
+    furniture
+    {
+        layer = WallFurniture
+        entry
+        {
+            orient = W
+            0,0 = walls_decoration_02_086
+        }
+        entry
+        {
+            orient = N
+            0,0 = walls_decoration_02_077
+        }
+        entry
+        {
+            orient = E
+            0,0 = walls_decoration_02_087
+        }
+        entry
+        {
+            orient = S
+            0,0 = walls_decoration_02_079
+        }
+    }
+    furniture
+    {
+        layer = WallFurniture
+        entry
+        {
+            orient = W
+            0,0 = walls_decoration_02_088
+        }
+        entry
+        {
+            orient = N
+            0,0 = walls_decoration_02_090
+        }
+    }
+    furniture
+    {
+        layer = WallFurniture
+        entry
+        {
+            orient = W
+            0,0 = walls_decoration_02_089
+        }
+        entry
+        {
+            orient = N
+            0,0 = walls_decoration_02_092
+        }
+    }
+    furniture
+    {
+        layer = WallFurniture
+        entry
+        {
+            orient = W
+            0,0 = walls_decoration_02_091
+        }
+        entry
+        {
+            orient = N
+            0,0 = walls_decoration_02_094
+        }
+    }
+    furniture
+    {
+        layer = WallFurniture
+        entry
+        {
+            orient = W
+            0,0 = walls_decoration_02_093
+        }
+        entry
+        {
+            orient = N
+            0,0 = walls_decoration_02_095
+        }
+    }
+    furniture
+    {
+        layer = WallFurniture
+        entry
+        {
+            orient = W
+            0,0 = walls_decoration_02_106
+        }
+        entry
+        {
+            orient = N
+            0,0 = walls_decoration_02_098
+        }
+        entry
+        {
+            orient = E
+            0,0 = walls_decoration_02_104
+        }
+        entry
+        {
+            orient = S
+            0,0 = walls_decoration_02_096
+        }
+    }
+    furniture
+    {
+        layer = WallFurniture
+        entry
+        {
+            orient = W
+            0,0 = walls_decoration_02_110
+        }
+        entry
+        {
+            orient = N
+            0,0 = walls_decoration_02_099
+        }
+        entry
+        {
+            orient = E
+            0,0 = walls_decoration_02_105
+        }
+        entry
+        {
+            orient = S
+            0,0 = walls_decoration_02_097
+        }
+    }
+    furniture
+    {
+        layer = WallFurniture
+        entry
+        {
+            orient = W
+            0,0 = walls_decoration_02_109
+        }
+        entry
+        {
+            orient = N
+            0,0 = walls_decoration_02_102
+        }
+        entry
+        {
+            orient = E
+            0,0 = walls_decoration_02_108
+        }
+        entry
+        {
+            orient = S
+            0,0 = walls_decoration_02_100
+        }
+    }
+    furniture
+    {
+        layer = WallFurniture
+        entry
+        {
+            orient = W
+            0,0 = walls_decoration_02_111
+        }
+        entry
+        {
+            orient = N
+            0,0 = walls_decoration_02_103
+        }
+        entry
+        {
+            orient = E
+            0,0 = walls_decoration_02_107
+        }
+        entry
+        {
+            orient = S
+            0,0 = walls_decoration_02_101
+        }
+    }
+    furniture
+    {
+        layer = WallFurniture
+        entry
+        {
+            orient = W
+            0,0 = walls_decoration_02_115
+        }
+        entry
+        {
+            orient = N
+            0,0 = walls_decoration_02_112
+        }
+        entry
+        {
+            orient = E
+            0,0 = walls_decoration_02_113
+        }
+        entry
+        {
+            orient = S
+            0,0 = walls_decoration_02_114
+        }
+    }
+    furniture
+    {
+        layer = WallFurniture
+        entry
+        {
+            orient = W
+            0,0 = walls_decoration_02_117
+        }
+        entry
+        {
+            orient = N
+            0,0 = walls_decoration_02_116
+        }
+    }
+    furniture
+    {
+        layer = WallFurniture
+        entry
+        {
+            orient = W
+            0,0 = walls_decoration_02_118
+        }
+        entry
+        {
+            orient = N
+            0,0 = walls_decoration_02_119
+        }
+    }
+    furniture
+    {
+        layer = WallFurniture
+        entry
+        {
+            orient = W
+            0,0 = walls_decoration_02_130
+        }
+        entry
+        {
+            orient = N
+            0,0 = walls_decoration_02_122
+        }
+        entry
+        {
+            orient = E
+            0,0 = walls_decoration_02_128
+        }
+        entry
+        {
+            orient = S
+            0,0 = walls_decoration_02_120
+        }
+    }
+    furniture
+    {
+        layer = WallFurniture
+        entry
+        {
+            orient = W
+            0,0 = walls_decoration_02_131
+        }
+        entry
+        {
+            orient = N
+            0,0 = walls_decoration_02_123
+        }
+        entry
+        {
+            orient = E
+            0,0 = walls_decoration_02_129
+        }
+        entry
+        {
+            orient = S
+            0,0 = walls_decoration_02_121
+        }
+    }
+    furniture
+    {
+        layer = WallFurniture
+        entry
+        {
+            orient = W
+            0,0 = walls_decoration_02_134
+        }
+        entry
+        {
+            orient = N
+            0,0 = walls_decoration_02_126
+        }
+        entry
+        {
+            orient = E
+            0,0 = walls_decoration_02_132
+        }
+        entry
+        {
+            orient = S
+            0,0 = walls_decoration_02_124
+        }
+    }
+    furniture
+    {
+        layer = WallFurniture
+        entry
+        {
+            orient = W
+            0,0 = walls_decoration_02_135
+        }
+        entry
+        {
+            orient = N
+            0,0 = walls_decoration_02_127
+        }
+        entry
+        {
+            orient = E
+            0,0 = walls_decoration_02_133
+        }
+        entry
+        {
+            orient = S
+            0,0 = walls_decoration_02_125
+        }
+    }
+    furniture
+    {
+        layer = WallFurniture
+        entry
+        {
+            orient = W
+            0,0 = walls_decoration_02_139
+        }
+        entry
+        {
+            orient = N
+            0,0 = walls_decoration_02_136
+        }
+        entry
+        {
+            orient = E
+            0,0 = walls_decoration_02_137
+        }
+        entry
+        {
+            orient = S
+            0,0 = walls_decoration_02_140
+        }
+    }
+    furniture
+    {
+        layer = WallFurniture
+        entry
+        {
+            orient = W
+            0,0 = walls_decoration_02_141
+        }
+        entry
+        {
+            orient = N
+            0,0 = walls_decoration_02_138
+        }
+    }
+    furniture
+    {
+        layer = WallFurniture
+        entry
+        {
+            orient = W
+            0,0 = walls_decoration_02_143
+        }
+        entry
+        {
+            orient = N
+            0,0 = walls_decoration_02_142
+        }
+    }
+    furniture
+    {
+        layer = WallFurniture
+        entry
+        {
+            orient = W
+            0,0 = walls_decoration_02_154
+        }
+        entry
+        {
+            orient = N
+            0,0 = walls_decoration_02_148
+        }
+        entry
+        {
+            orient = E
+            0,0 = walls_decoration_02_153
+        }
+        entry
+        {
+            orient = S
+            0,0 = walls_decoration_02_145
+        }
+    }
+    furniture
+    {
+        layer = WallFurniture
+        entry
+        {
+            orient = W
+            0,0 = walls_decoration_02_155
+        }
+        entry
+        {
+            orient = N
+            0,0 = walls_decoration_02_146
+        }
+        entry
+        {
+            orient = E
+            0,0 = walls_decoration_02_152
+        }
+        entry
+        {
+            orient = S
+            0,0 = walls_decoration_02_144
+        }
+    }
+    furniture
+    {
+        layer = WallFurniture
+        entry
+        {
+            orient = W
+            0,0 = walls_decoration_02_158
+        }
+        entry
+        {
+            orient = N
+            0,0 = walls_decoration_02_147
+        }
+        entry
+        {
+            orient = E
+            0,0 = walls_decoration_02_156
+        }
+        entry
+        {
+            orient = S
+            0,0 = walls_decoration_02_150
+        }
+    }
+    furniture
+    {
+        layer = WallFurniture
+        entry
+        {
+            orient = W
+            0,0 = walls_decoration_02_159
+        }
+        entry
+        {
+            orient = N
+            0,0 = walls_decoration_02_151
+        }
+        entry
+        {
+            orient = E
+            0,0 = walls_decoration_02_157
+        }
+        entry
+        {
+            orient = S
+            0,0 = walls_decoration_02_149
+        }
+    }
+    furniture
+    {
+        layer = WallFurniture
+        entry
+        {
+            orient = W
+            0,0 = walls_decoration_02_161
+        }
+        entry
+        {
+            orient = N
+            0,0 = walls_decoration_02_160
+        }
+    }
+    furniture
+    {
+        layer = WallFurniture
+        entry
+        {
+            orient = W
+            0,0 = walls_decoration_02_163
+        }
+        entry
+        {
+            orient = N
+            0,0 = walls_decoration_02_162
+        }
+    }
+    furniture
+    {
+        layer = WallFurniture
+        entry
+        {
+            orient = W
+            0,0 = walls_decoration_02_165
+        }
+        entry
+        {
+            orient = N
+            0,0 = walls_decoration_02_167
+        }
+    }
+    furniture
+    {
+        layer = WallFurniture
+        entry
+        {
+            orient = W
+            0,0 = walls_decoration_02_166
+        }
+        entry
+        {
+            orient = N
+            0,0 = walls_decoration_02_164
+        }
+    }
+    furniture
+    {
+        layer = WallFurniture
+        entry
+        {
+            orient = W
+            0,0 = walls_decoration_02_177
+        }
+        entry
+        {
+            orient = N
+            0,0 = walls_decoration_02_169
+        }
+        entry
+        {
+            orient = E
+            0,0 = walls_decoration_02_176
+        }
+        entry
+        {
+            orient = S
+            0,0 = walls_decoration_02_168
+        }
+    }
+    furniture
+    {
+        layer = WallFurniture
+        entry
+        {
+            orient = W
+            0,0 = walls_decoration_02_178
+        }
+        entry
+        {
+            orient = N
+            0,0 = walls_decoration_02_170
+        }
+        entry
+        {
+            orient = E
+            0,0 = walls_decoration_02_179
+        }
+        entry
+        {
+            orient = S
+            0,0 = walls_decoration_02_174
+        }
+    }
+    furniture
+    {
+        layer = WallFurniture
+        entry
+        {
+            orient = W
+            0,0 = walls_decoration_02_181
+        }
+        entry
+        {
+            orient = N
+            0,0 = walls_decoration_02_171
+        }
+        entry
+        {
+            orient = E
+            0,0 = walls_decoration_02_180
+        }
+        entry
+        {
+            orient = S
+            0,0 = walls_decoration_02_172
+        }
+    }
+    furniture
+    {
+        layer = WallFurniture
+        entry
+        {
+            orient = W
+            0,0 = walls_decoration_02_182
+        }
+        entry
+        {
+            orient = N
+            0,0 = walls_decoration_02_173
+        }
+        entry
+        {
+            orient = E
+            0,0 = walls_decoration_02_183
+        }
+        entry
+        {
+            orient = S
+            0,0 = walls_decoration_02_175
+        }
+    }
+    furniture
+    {
+        layer = WallFurniture
+        entry
+        {
+            orient = W
+            0,0 = walls_decoration_02_185
+        }
+        entry
+        {
+            orient = N
+            0,0 = walls_decoration_02_184
+        }
+    }
+    furniture
+    {
+        layer = WallFurniture
+        entry
+        {
+            orient = W
+            0,0 = walls_decoration_02_187
+        }
+        entry
+        {
+            orient = N
+            0,0 = walls_decoration_02_186
+        }
+    }
+    furniture
+    {
+        layer = WallFurniture
+        entry
+        {
+            orient = W
+            0,0 = walls_decoration_02_190
+        }
+        entry
+        {
+            orient = N
+            0,0 = walls_decoration_02_191
+        }
+    }
+    furniture
+    {
+        layer = WallFurniture
+        entry
+        {
+            orient = W
+            0,0 = walls_decoration_02_188
+        }
+        entry
+        {
+            orient = N
+            0,0 = walls_decoration_02_189
+        }
+    }
+    furniture
+    {
+        layer = WallFurniture
+        entry
+        {
+            orient = W
+            0,0 = walls_decoration_05_010
+        }
+        entry
+        {
+            orient = N
+            0,0 = walls_decoration_05_002
+        }
+        entry
+        {
+            orient = E
+            0,0 = walls_decoration_05_008
+        }
+        entry
+        {
+            orient = S
+            0,0 = walls_decoration_05_000
+        }
+    }
+    furniture
+    {
+        layer = WallFurniture
+        entry
+        {
+            orient = W
+            0,0 = walls_decoration_05_011
+        }
+        entry
+        {
+            orient = N
+            0,0 = walls_decoration_05_003
+        }
+        entry
+        {
+            orient = E
+            0,0 = walls_decoration_05_009
+        }
+        entry
+        {
+            orient = S
+            0,0 = walls_decoration_05_001
+        }
+    }
+    furniture
+    {
+        layer = WallFurniture
+        entry
+        {
+            orient = W
+            0,0 = walls_decoration_05_014
+        }
+        entry
+        {
+            orient = N
+            0,0 = walls_decoration_05_006
+        }
+        entry
+        {
+            orient = E
+            0,0 = walls_decoration_05_013
+        }
+        entry
+        {
+            orient = S
+            0,0 = walls_decoration_05_005
+        }
+    }
+    furniture
+    {
+        layer = WallFurniture
+        entry
+        {
+            orient = W
+            0,0 = walls_decoration_05_015
+        }
+        entry
+        {
+            orient = N
+            0,0 = walls_decoration_05_007
+        }
+        entry
+        {
+            orient = E
+            0,0 = walls_decoration_05_012
+        }
+        entry
+        {
+            orient = S
+            0,0 = walls_decoration_05_004
+        }
+    }
+    furniture
+    {
+        layer = WallFurniture
+        entry
+        {
+            orient = W
+            0,0 = walls_decoration_05_020
+        }
+        entry
+        {
+            orient = N
+            0,0 = walls_decoration_05_018
+        }
+    }
+    furniture
+    {
+        layer = WallFurniture
+        entry
+        {
+            orient = W
+            0,0 = walls_decoration_05_017
+        }
+        entry
+        {
+            orient = N
+            0,0 = walls_decoration_05_016
+        }
+    }
+    furniture
+    {
+        layer = WallFurniture
+        entry
+        {
+            orient = W
+            0,0 = walls_decoration_05_017
+        }
+        entry
+        {
+            orient = N
+            0,0 = walls_decoration_05_019
+        }
+    }
+    furniture
+    {
+        layer = WallFurniture
+        entry
+        {
+            orient = W
+            0,0 = walls_decoration_05_021
+        }
+        entry
+        {
+            orient = N
+            0,0 = walls_decoration_05_022
+        }
+    }
+    furniture
+    {
+        layer = WallFurniture
+        entry
+        {
+            orient = N
+            0,0 = walls_decoration_05_023
+        }
+    }
+    furniture
+    {
+        layer = WallFurniture
+        entry
+        {
+            orient = W
+            0,0 = walls_decoration_05_034
+        }
+        entry
+        {
+            orient = N
+            0,0 = walls_decoration_05_026
+        }
+        entry
+        {
+            orient = E
+            0,0 = walls_decoration_05_032
+        }
+        entry
+        {
+            orient = S
+            0,0 = walls_decoration_05_024
+        }
+    }
+    furniture
+    {
+        layer = WallFurniture
+        entry
+        {
+            orient = W
+            0,0 = walls_decoration_05_035
+        }
+        entry
+        {
+            orient = N
+            0,0 = walls_decoration_05_027
+        }
+        entry
+        {
+            orient = E
+            0,0 = walls_decoration_05_033
+        }
+        entry
+        {
+            orient = S
+            0,0 = walls_decoration_05_025
+        }
+    }
+    furniture
+    {
+        layer = WallFurniture
+        entry
+        {
+            orient = W
+            0,0 = walls_decoration_05_038
+        }
+        entry
+        {
+            orient = N
+            0,0 = walls_decoration_05_030
+        }
+        entry
+        {
+            orient = E
+            0,0 = walls_decoration_05_036
+        }
+        entry
+        {
+            orient = S
+            0,0 = walls_decoration_05_028
+        }
+    }
+    furniture
+    {
+        layer = WallFurniture
+        entry
+        {
+            orient = W
+            0,0 = walls_decoration_05_037
+        }
+        entry
+        {
+            orient = N
+            0,0 = walls_decoration_05_029
+        }
+    }
+    furniture
+    {
+        layer = WallFurniture
+        entry
+        {
+            orient = W
+            0,0 = walls_decoration_05_039
+        }
+        entry
+        {
+            orient = N
+            0,0 = walls_decoration_05_031
+        }
+    }
+    furniture
+    {
+        layer = WallFurniture
+        entry
+        {
+            orient = W
+            0,0 = walls_decoration_05_047
+        }
+        entry
+        {
+            orient = N
+            0,0 = walls_decoration_05_043
+        }
+        entry
+        {
+            orient = E
+            0,0 = walls_decoration_05_045
+        }
+        entry
+        {
+            orient = S
+            0,0 = walls_decoration_05_041
+        }
+    }
+    furniture
+    {
+        layer = WallFurniture
+        entry
+        {
+            orient = W
+            0,0 = walls_decoration_05_042
+        }
+        entry
+        {
+            orient = N
+            0,0 = walls_decoration_05_044
+        }
+        entry
+        {
+            orient = E
+            0,0 = walls_decoration_05_040
+        }
+        entry
+        {
+            orient = S
+            0,0 = walls_decoration_05_046
+        }
+    }
+    furniture
+    {
+        layer = WallFurniture
+        entry
+        {
+            orient = W
+            0,0 = walls_decoration_05_058
+        }
+        entry
+        {
+            orient = N
+            0,0 = walls_decoration_05_050
+        }
+        entry
+        {
+            orient = E
+            0,0 = walls_decoration_05_056
+        }
+        entry
+        {
+            orient = S
+            0,0 = walls_decoration_05_048
+        }
+    }
+    furniture
+    {
+        layer = WallFurniture
+        entry
+        {
+            orient = W
+            0,0 = walls_decoration_05_059
+        }
+        entry
+        {
+            orient = N
+            0,0 = walls_decoration_05_051
+        }
+        entry
+        {
+            orient = E
+            0,0 = walls_decoration_05_057
+        }
+        entry
+        {
+            orient = S
+            0,0 = walls_decoration_05_049
+        }
+    }
+    furniture
+    {
+        layer = WallFurniture
+        entry
+        {
+            orient = W
+            0,0 = walls_decoration_05_062
+        }
+        entry
+        {
+            orient = N
+            0,0 = walls_decoration_05_054
+        }
+        entry
+        {
+            orient = E
+            0,0 = walls_decoration_05_060
+        }
+        entry
+        {
+            orient = S
+            0,0 = walls_decoration_05_052
+        }
+    }
+    furniture
+    {
+        layer = WallFurniture
+        entry
+        {
+            orient = W
+            0,0 = walls_decoration_05_061
+        }
+        entry
+        {
+            orient = N
+            0,0 = walls_decoration_05_055
+        }
+    }
+    furniture
+    {
+        layer = WallFurniture
+        entry
+        {
+            orient = W
+            0,0 = walls_decoration_05_063
+        }
+        entry
+        {
+            orient = N
+            0,0 = walls_decoration_05_053
+        }
+    }
+    furniture
+    {
+        layer = WallFurniture
+        entry
+        {
+            orient = W
+            0,0 = walls_decoration_05_067
+        }
+        entry
+        {
+            orient = N
+            0,0 = walls_decoration_05_066
+        }
+        entry
+        {
+            orient = E
+            0,0 = walls_decoration_05_065
+        }
+        entry
+        {
+            orient = S
+            0,0 = walls_decoration_05_064
+        }
+    }
+    furniture
+    {
+        layer = WallFurniture
+        entry
+        {
+            orient = W
+            0,0 = walls_decoration_05_069
+        }
+        entry
+        {
+            orient = N
+            0,0 = walls_decoration_05_068
+        }
+    }
+    furniture
+    {
+        layer = WallFurniture
+        entry
+        {
+            orient = W
+            0,0 = walls_decoration_05_071
+        }
+        entry
+        {
+            orient = N
+            0,0 = walls_decoration_05_070
+        }
+    }
+    furniture
+    {
+        layer = WallFurniture
+        entry
+        {
+            orient = W
+            0,0 = walls_decoration_05_082
+        }
+        entry
+        {
+            orient = N
+            0,0 = walls_decoration_05_074
+        }
+        entry
+        {
+            orient = E
+            0,0 = walls_decoration_05_080
+        }
+        entry
+        {
+            orient = S
+            0,0 = walls_decoration_05_072
+        }
+    }
+    furniture
+    {
+        layer = WallFurniture
+        entry
+        {
+            orient = W
+            0,0 = walls_decoration_05_083
+        }
+        entry
+        {
+            orient = N
+            0,0 = walls_decoration_05_075
+        }
+        entry
+        {
+            orient = E
+            0,0 = walls_decoration_05_081
+        }
+        entry
+        {
+            orient = S
+            0,0 = walls_decoration_05_073
+        }
+    }
+    furniture
+    {
+        layer = WallFurniture
+        entry
+        {
+            orient = W
+            0,0 = walls_decoration_05_086
+        }
+        entry
+        {
+            orient = N
+            0,0 = walls_decoration_05_078
+        }
+        entry
+        {
+            orient = E
+            0,0 = walls_decoration_05_084
+        }
+        entry
+        {
+            orient = S
+            0,0 = walls_decoration_05_076
+        }
+    }
+    furniture
+    {
+        layer = WallFurniture
+        entry
+        {
+            orient = W
+            0,0 = walls_decoration_05_087
+        }
+        entry
+        {
+            orient = N
+            0,0 = walls_decoration_05_079
+        }
+        entry
+        {
+            orient = E
+            0,0 = walls_decoration_05_085
+        }
+        entry
+        {
+            orient = S
+            0,0 = walls_decoration_05_077
+        }
+    }
+    furniture
+    {
+        layer = WallFurniture
+        entry
+        {
+            orient = W
+            0,0 = walls_decoration_05_089
+        }
+        entry
+        {
+            orient = N
+            0,0 = walls_decoration_05_088
+        }
+    }
+    furniture
+    {
+        layer = WallFurniture
+        entry
+        {
+            orient = W
+            0,0 = walls_decoration_05_093
+        }
+        entry
+        {
+            orient = N
+            0,0 = walls_decoration_05_090
+        }
+    }
+    furniture
+    {
+        layer = WallFurniture
+        entry
+        {
+            orient = W
+            0,0 = walls_decoration_05_091
+        }
+        entry
+        {
+            orient = N
+            0,0 = walls_decoration_05_095
+        }
+        entry
+        {
+            orient = E
+            0,0 = walls_decoration_05_094
+        }
+        entry
+        {
+            orient = S
+            0,0 = walls_decoration_05_092
+        }
+    }
+    furniture
+    {
+        layer = WallFurniture
+        entry
+        {
+            orient = W
+            0,0 = walls_decoration_05_104
+        }
+        entry
+        {
+            orient = N
+            0,0 = walls_decoration_05_096
+        }
+        entry
+        {
+            orient = E
+            0,0 = walls_decoration_05_105
+        }
+        entry
+        {
+            orient = S
+            0,0 = walls_decoration_05_097
+        }
+    }
+    furniture
+    {
+        layer = WallFurniture
+        entry
+        {
+            orient = W
+            0,0 = walls_decoration_05_106
+        }
+        entry
+        {
+            orient = N
+            0,0 = walls_decoration_05_098
+        }
+        entry
+        {
+            orient = E
+            0,0 = walls_decoration_05_108
+        }
+        entry
+        {
+            orient = S
+            0,0 = walls_decoration_05_100
+        }
+    }
+    furniture
+    {
+        layer = WallFurniture
+        entry
+        {
+            orient = W
+            0,0 = walls_decoration_05_107
+        }
+        entry
+        {
+            orient = N
+            0,0 = walls_decoration_05_099
+        }
+        entry
+        {
+            orient = E
+            0,0 = walls_decoration_05_110
+        }
+        entry
+        {
+            orient = S
+            0,0 = walls_decoration_05_102
+        }
+    }
+    furniture
+    {
+        layer = WallFurniture
+        entry
+        {
+            orient = W
+            0,0 = walls_decoration_05_111
+        }
+        entry
+        {
+            orient = N
+            0,0 = walls_decoration_05_103
+        }
+        entry
+        {
+            orient = E
+            0,0 = walls_decoration_05_109
+        }
+        entry
+        {
+            orient = S
+            0,0 = walls_decoration_05_101
+        }
+    }
+    furniture
+    {
+        layer = WallFurniture
+        entry
+        {
+            orient = W
+            0,0 = walls_decoration_05_115
+        }
+        entry
+        {
+            orient = N
+            0,0 = walls_decoration_05_114
+        }
+        entry
+        {
+            orient = E
+            0,0 = walls_decoration_05_113
+        }
+        entry
+        {
+            orient = S
+            0,0 = walls_decoration_05_112
+        }
+    }
+    furniture
+    {
+        layer = WallFurniture
+        entry
+        {
+            orient = W
+            0,0 = walls_decoration_05_119
+        }
+        entry
+        {
+            orient = N
+            0,0 = walls_decoration_05_116
+        }
+    }
+    furniture
+    {
+        layer = WallFurniture
+        entry
+        {
+            orient = W
+            0,0 = walls_decoration_05_118
+        }
+        entry
+        {
+            orient = N
+            0,0 = walls_decoration_05_116
+        }
+    }
+    furniture
+    {
+        layer = WallFurniture
+        entry
+        {
+            orient = W
+            0,0 = walls_decoration_05_117
+        }
+        entry
+        {
+            orient = N
+            0,0 = walls_decoration_05_112
+        }
+    }
+    furniture
+    {
+        layer = WallFurniture
+        entry
+        {
+            orient = W
+            0,0 = walls_decoration_05_128
+        }
+        entry
+        {
+            orient = N
+            0,0 = walls_decoration_05_120
+        }
+        entry
+        {
+            orient = E
+            0,0 = walls_decoration_05_129
+        }
+        entry
+        {
+            orient = S
+            0,0 = walls_decoration_05_121
+        }
+    }
+    furniture
+    {
+        layer = WallFurniture
+        entry
+        {
+            orient = W
+            0,0 = walls_decoration_05_130
+        }
+        entry
+        {
+            orient = N
+            0,0 = walls_decoration_05_122
+        }
+        entry
+        {
+            orient = E
+            0,0 = walls_decoration_05_132
+        }
+        entry
+        {
+            orient = S
+            0,0 = walls_decoration_05_124
+        }
+    }
+    furniture
+    {
+        layer = WallFurniture
+        entry
+        {
+            orient = W
+            0,0 = walls_decoration_05_131
+        }
+        entry
+        {
+            orient = N
+            0,0 = walls_decoration_05_123
+        }
+        entry
+        {
+            orient = E
+            0,0 = walls_decoration_05_133
+        }
+        entry
+        {
+            orient = S
+            0,0 = walls_decoration_05_125
+        }
+    }
+    furniture
+    {
+        layer = WallFurniture
+        entry
+        {
+            orient = W
+            0,0 = walls_decoration_05_134
+        }
+        entry
+        {
+            orient = N
+            0,0 = walls_decoration_05_126
+        }
+        entry
+        {
+            orient = E
+            0,0 = walls_decoration_05_135
+        }
+        entry
+        {
+            orient = S
+            0,0 = walls_decoration_05_127
+        }
+    }
+    furniture
+    {
+        layer = WallFurniture
+        entry
+        {
+            orient = W
+            0,0 = walls_decoration_05_140
+        }
+        entry
+        {
+            orient = N
+            0,0 = walls_decoration_05_136
+        }
+    }
+    furniture
+    {
+        layer = WallFurniture
+        entry
+        {
+            orient = W
+            0,0 = walls_decoration_05_141
+        }
+        entry
+        {
+            orient = N
+            0,0 = walls_decoration_05_137
+        }
+    }
+    furniture
+    {
+        layer = WallFurniture
+        entry
+        {
+            orient = W
+            0,0 = walls_decoration_05_143
+        }
+        entry
+        {
+            orient = N
+            0,0 = walls_decoration_05_138
+        }
+    }
+    furniture
+    {
+        layer = WallFurniture
+        entry
+        {
+            orient = W
+            0,0 = walls_decoration_05_142
+        }
+        entry
+        {
+            orient = N
+            0,0 = walls_decoration_05_139
+        }
+    }
+    furniture
+    {
+        layer = WallFurniture
+        entry
+        {
+            orient = W
+            0,0 = walls_decoration_05_150
+        }
+        entry
+        {
+            orient = N
+            0,0 = walls_decoration_05_146
+        }
+        entry
+        {
+            orient = E
+            0,0 = walls_decoration_05_148
+        }
+        entry
+        {
+            orient = S
+            0,0 = walls_decoration_05_144
+        }
+    }
+    furniture
+    {
+        layer = WallFurniture
+        entry
+        {
+            orient = W
+            0,0 = walls_decoration_05_151
+        }
+        entry
+        {
+            orient = N
+            0,0 = walls_decoration_05_147
+        }
+        entry
+        {
+            orient = E
+            0,0 = walls_decoration_05_149
+        }
+        entry
+        {
+            orient = S
+            0,0 = walls_decoration_05_145
+        }
+    }
+    furniture
+    {
+        layer = WallFurniture
+        entry
+        {
+            orient = W
+            0,0 = walls_decoration_05_156
+        }
+        entry
+        {
+            orient = N
+            0,0 = walls_decoration_05_152
+        }
+    }
+    furniture
+    {
+        layer = WallFurniture
+        entry
+        {
+            orient = W
+            0,0 = walls_decoration_05_157
+        }
+        entry
+        {
+            orient = N
+            0,0 = walls_decoration_05_153
+        }
+    }
+    furniture
+    {
+        layer = WallFurniture
+        entry
+        {
+            orient = W
+            0,0 = walls_decoration_05_158
+        }
+        entry
+        {
+            orient = N
+            0,0 = walls_decoration_05_154
+        }
+    }
+    furniture
+    {
+        layer = WallFurniture
+        entry
+        {
+            orient = W
+            0,0 = walls_decoration_05_159
+        }
+        entry
+        {
+            orient = N
+            0,0 = walls_decoration_05_155
+        }
+    }
+    furniture
+    {
+        layer = WallFurniture
+        entry
+        {
+            orient = W
+            0,0 = walls_decoration_05_166
+        }
+        entry
+        {
+            orient = N
+            0,0 = walls_decoration_05_162
+        }
+        entry
+        {
+            orient = E
+            0,0 = walls_decoration_05_165
+        }
+        entry
+        {
+            orient = S
+            0,0 = walls_decoration_05_161
+        }
+    }
+    furniture
+    {
+        layer = WallFurniture
+        entry
+        {
+            orient = W
+            0,0 = walls_decoration_05_167
+        }
+        entry
+        {
+            orient = N
+            0,0 = walls_decoration_05_163
+        }
+        entry
+        {
+            orient = E
+            0,0 = walls_decoration_05_164
+        }
+        entry
+        {
+            orient = S
+            0,0 = walls_decoration_05_160
+        }
+    }
+    furniture
+    {
+        layer = WallFurniture
+        entry
+        {
+            orient = W
+            0,0 = walls_decoration_05_172
+        }
+        entry
+        {
+            orient = N
+            0,0 = walls_decoration_05_168
+        }
+    }
+    furniture
+    {
+        layer = WallFurniture
+        entry
+        {
+            orient = W
+            0,0 = walls_decoration_05_173
+        }
+        entry
+        {
+            orient = N
+            0,0 = walls_decoration_05_169
+        }
+    }
+    furniture
+    {
+        layer = WallFurniture
+        entry
+        {
+            orient = W
+            0,0 = walls_decoration_05_173
+        }
+        entry
+        {
+            orient = N
+            0,0 = walls_decoration_05_170
+        }
+    }
+    furniture
+    {
+        layer = WallFurniture
+        entry
+        {
+            orient = W
+            0,0 = walls_decoration_05_175
+        }
+        entry
+        {
+            orient = N
+            0,0 = walls_decoration_05_171
+        }
+    }
+    furniture
+    {
+        layer = WallFurniture
+        entry
+        {
+            orient = W
+            0,0 = walls_decoration_05_187
+        }
+        entry
+        {
+            orient = N
+            0,0 = walls_decoration_05_179
+        }
+        entry
+        {
+            orient = E
+            0,0 = walls_decoration_05_189
+        }
+        entry
+        {
+            orient = S
+            0,0 = walls_decoration_05_177
+        }
+    }
+    furniture
+    {
+        layer = WallFurniture
+        entry
+        {
+            orient = W
+            0,0 = walls_decoration_05_186
+        }
+        entry
+        {
+            orient = N
+            0,0 = walls_decoration_05_178
+        }
+        entry
+        {
+            orient = E
+            0,0 = walls_decoration_05_185
+        }
+        entry
+        {
+            orient = S
+            0,0 = walls_decoration_05_176
+        }
+    }
+    furniture
+    {
+        layer = WallFurniture
+        entry
+        {
+            orient = W
+            0,0 = walls_decoration_05_188
+        }
+        entry
+        {
+            orient = N
+            0,0 = walls_decoration_05_180
+        }
+        entry
+        {
+            orient = E
+            0,0 = walls_decoration_05_184
+        }
+        entry
+        {
+            orient = S
+            0,0 = walls_decoration_05_181
+        }
+    }
+    furniture
+    {
+        layer = WallFurniture
+        entry
+        {
+            orient = W
+            0,0 = walls_decoration_05_191
+        }
+        entry
+        {
+            orient = N
+            0,0 = walls_decoration_05_183
+        }
+        entry
+        {
+            orient = E
+            0,0 = walls_decoration_05_190
+        }
+        entry
+        {
+            orient = S
+            0,0 = walls_decoration_05_182
+        }
+    }
+    furniture
+    {
+        layer = WallFurniture
+        entry
+        {
+            orient = W
+            0,0 = walls_decoration_05_196
+        }
+        entry
+        {
+            orient = N
+            0,0 = walls_decoration_05_192
+        }
+        entry
+        {
+            orient = E
+            0,0 = walls_decoration_05_197
+        }
+        entry
+        {
+            orient = S
+            0,0 = walls_decoration_05_193
+        }
+    }
+    furniture
+    {
+        layer = WallFurniture
+        entry
+        {
+            orient = W
+            0,0 = walls_decoration_05_198
+        }
+        entry
+        {
+            orient = N
+            0,0 = walls_decoration_05_194
+        }
+    }
+    furniture
+    {
+        layer = WallFurniture
+        entry
+        {
+            orient = W
+            0,0 = walls_decoration_05_199
+        }
+        entry
+        {
+            orient = N
+            0,0 = walls_decoration_05_195
         }
     }
 }
@@ -61773,14 +63527,18 @@ group
             orient = N
             0,0 = trash_walls_01_001
         }
+    }
+    furniture
+    {
+        layer = WallFurniture
         entry
         {
-            orient = E
+            orient = W
             0,0 = trash_walls_01_002
         }
         entry
         {
-            orient = S
+            orient = N
             0,0 = trash_walls_01_003
         }
     }
@@ -61797,14 +63555,18 @@ group
             orient = N
             0,0 = trash_walls_01_005
         }
+    }
+    furniture
+    {
+        layer = WallFurniture
         entry
         {
-            orient = E
+            orient = W
             0,0 = trash_walls_01_006
         }
         entry
         {
-            orient = S
+            orient = N
             0,0 = trash_walls_01_007
         }
     }
@@ -61823,3 +63585,4 @@ group
         }
     }
 }
+
