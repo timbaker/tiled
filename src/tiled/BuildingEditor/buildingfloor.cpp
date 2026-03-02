@@ -801,13 +801,13 @@ void BuildingFloor::LayoutToSquares()
                     }
                     case FurnitureTiles::LayerWallOverlay:
                         ReplaceFurniture(x + j, y + i, squares, ftile->tile(j, i),
-                                         (ftile->isW() || ftile->isN()) ? Square::SectionWallOverlay : Square::SectionWallOverlay3,
-                                         (ftile->isW() || ftile->isN()) ? Square::SectionWallOverlay2 : Square::SectionWallOverlay4);
+                                         (ftile->isW() || ftile->isN() || ftile->isNW()) ? Square::SectionWallOverlay : Square::SectionWallOverlay3,
+                                         (ftile->isW() || ftile->isN() || ftile->isNW()) ? Square::SectionWallOverlay2 : Square::SectionWallOverlay4);
                         break;
                     case FurnitureTiles::LayerWallFurniture:
                         ReplaceFurniture(x + j, y + i, squares, ftile->tile(j, i),
-                                         (ftile->isW() || ftile->isN()) ? Square::SectionWallFurniture : Square::SectionWallFurniture3,
-                                         (ftile->isW() || ftile->isN()) ? Square::SectionWallFurniture2 : Square::SectionWallFurniture4);
+                                         (ftile->isW() || ftile->isN() || ftile->isNW()) ? Square::SectionWallFurniture : Square::SectionWallFurniture3,
+                                         (ftile->isW() || ftile->isN() || ftile->isNW()) ? Square::SectionWallFurniture2 : Square::SectionWallFurniture4);
                         break;
                     case FurnitureTiles::LayerFrames: {
                         int dx = 0, dy = 0;
@@ -1597,7 +1597,9 @@ void BuildingFloor::Square::ReplaceFurniture(BuildingTile *btile,
 
 void BuildingFloor::Square::ReplaceRoof(RoofObject *object, BuildingTileEntry *tile, int offset)
 {
-#if 0
+#if 1
+    Q_UNUSED(object)
+#else
     // XXX Reverted this since the non-30-degree dormers don't actually work where the InnerPt5/InnerOnePt5/InnerTwoPt5 overlap sloped roofs.
     // Placing a dormer onto a sloped roof should keep only the dormer tile.
     // FIXME: The reverse order doesn't work here, i.e. placing a sloped roof onto a dormer.
