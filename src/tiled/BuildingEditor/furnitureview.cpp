@@ -20,6 +20,7 @@
 #include "buildingtiles.h"
 #include "furnituregroups.h"
 
+#include "preferences.h"
 #include "tilemetainfomgr.h"
 #include "tilesetmanager.h"
 #include "zoomable.h"
@@ -478,6 +479,11 @@ void FurnitureView::tilesetRemoved(Tiled::Tileset *tileset)
     redisplay();
 }
 
+void FurnitureView::tilesetBackgroundColorChanged(const QColor &color)
+{
+    setStyleSheet(QStringLiteral("QTableView { alternate-background-color: %1; background-color: %1; }").arg(color.name()));
+}
+
 void FurnitureView::init()
 {
     setHorizontalScrollMode(QAbstractItemView::ScrollPerPixel);
@@ -521,6 +527,9 @@ void FurnitureView::init()
             this, &FurnitureView::tilesetAdded);
     connect(TileMetaInfoMgr::instance(), &TileMetaInfoMgr::tilesetRemoved,
             this, &FurnitureView::tilesetRemoved);
+
+    tilesetBackgroundColorChanged(Preferences::instance()->tilesetBackgroundColor());
+    connect(Preferences::instance(), &Preferences::tilesetBackgroundColorChanged, this, &FurnitureView::tilesetBackgroundColorChanged);
 }
 
 /////

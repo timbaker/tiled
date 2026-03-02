@@ -171,13 +171,14 @@ public:
     void setTiles(const QList<FurnitureTiles*> &tilesList);
     void redisplay();
 
-    typedef Tiled::Tileset Tileset;
 public slots:
     void scaleChanged(qreal scale);
 
-    void tilesetChanged(Tileset *tileset);
+    void tilesetChanged(Tiled::Tileset *tileset);
     void tilesetAdded(Tiled::Tileset *tileset);
     void tilesetRemoved(Tiled::Tileset *tileset);
+
+    void tilesetBackgroundColorChanged(const QColor& color);
 
 private:
     void init();
