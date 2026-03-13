@@ -2296,6 +2296,7 @@ void BuildingEditorWindow::initActionManager()
     actionManager->registerAction(ui->actionHighlightRoom, CONTEXT_MENU, CATEGORY_MENU_VIEW, QStringLiteral("Menu.View.HighlightRoom"));
     actionManager->registerAction(ui->actionShowLowerFloors, CONTEXT_MENU, CATEGORY_MENU_VIEW, QStringLiteral("Menu.View.ShowLowerFloors"));
     actionManager->registerAction(ui->actionShowOnlyFloors, CONTEXT_MENU, CATEGORY_MENU_VIEW, QStringLiteral("Menu.View.ShowOnlyFloors"));
+    actionManager->registerAction(ui->actionShowObjects, CONTEXT_MENU, CATEGORY_MENU_VIEW, QStringLiteral("Menu.View.ShowObjectShapes"));
     actionManager->registerAction(ui->actionHighlightUnlitRooms, CONTEXT_MENU, CATEGORY_MENU_VIEW, QStringLiteral("Menu.View.HighlightUnlitRooms"));
     actionManager->registerAction(ui->actionZoomIn, CONTEXT_MENU, CATEGORY_MENU_VIEW, QStringLiteral("Menu.View.ZoomIn"));
     actionManager->registerAction(ui->actionZoomOut, CONTEXT_MENU, CATEGORY_MENU_VIEW, QStringLiteral("Menu.View.ZoomOut"));
