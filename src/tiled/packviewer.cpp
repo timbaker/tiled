@@ -69,6 +69,7 @@ PackViewer::PackViewer(QWidget *parent) :
     connect(ui->listWidget, &QListWidget::itemSelectionChanged, this, &PackViewer::itemSelectionChanged);
     connect(ui->actionBackgroundColor, &QAction::triggered, this, &PackViewer::chooseBackgroundColor);
     connect(ui->actionExtractImages, &QAction::triggered, this, &PackViewer::extractImages);
+    connect(ui->actionSaveAllPages, &QAction::triggered, this, &PackViewer::saveAllPages);
     connect(ui->actionClose, &QAction::triggered, this, &QWidget::close);
 
     QSettings settings;
@@ -156,6 +157,18 @@ void PackViewer::extractImages()
 {
     PackExtractDialog d(mPackFile, this);
     d.exec();
+}
+
+void PackViewer::saveAllPages()
+{
+    QString path = QFileDialog::getExistingDirectory(this, tr("Extract All Pages"), QString());
+    if (path.isEmpty()) {
+        return;
+    }
+    QDir dir(path);
+    for (const PackPage& packPage : mPackFile.pages()) {
+        packPage.image.save(dir.filePath(packPage.name + QStringLiteral(".png")), "PNG", -1);
+    }
 }
 
 void PackViewer::readSettings()

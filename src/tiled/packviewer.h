@@ -59,6 +59,7 @@ private slots:
     void chooseBackgroundColor();
     void setBackgroundColor(const QColor &color);
     void extractImages();
+    void saveAllPages();
 
 private:
     void readSettings();
