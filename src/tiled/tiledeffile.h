@@ -753,8 +753,27 @@ public:
 
     void copy(const UIProperties &other)
     {
-        foreach (UIProperty *prop, mProperties)
+        for (UIProperty *prop : std::as_const(mProperties)) {
             prop->setValue(other.property(prop->mName)->value());
+        }
+    }
+
+    void copy(const UIProperties &other, const QStringList &propertyNames)
+    {
+        for (const QString& propertyName : std::as_const(propertyNames)) {
+            UIProperty *prop1 = property(propertyName);
+            UIProperty *prop2 = other.property(propertyName);
+            if (prop1 != nullptr && prop2 != nullptr) {
+                prop1->setValue(prop2->value());
+            }
+        }
+    }
+
+    UIProperties filtered(const QStringList &propertyNames) const
+    {
+        UIProperties copy;
+        copy.copy(*this, propertyNames);
+        return copy;
     }
 
     QMap<QString,UIProperty*> mProperties;

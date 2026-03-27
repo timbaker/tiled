@@ -110,6 +110,7 @@ private slots:
 
     void copyProperties();
     void pasteProperties();
+    void pasteFilteredProperties();
     void resetDefaults();
 
     void tileEntered(const QModelIndex &index);
@@ -164,6 +165,8 @@ private:
     void selectCurrentVisibleTileset();
 
     void applyPropertyFilters();
+    QStringList filteredPropertyNames() const;
+    bool propertyPassesFilter(const QString& propertyName, const QStringList& filters) const;
 
     QStringList recentFiles() const;
     void addRecentFile(const QString &fileName);

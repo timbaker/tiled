@@ -122,6 +122,9 @@
        <layout class="QVBoxLayout" name="propertiesLayout">
         <item>
          <widget class="QLineEdit" name="rightPropertyFilter">
+          <property name="toolTip">
+           <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Use a comma to enter multiple property names.&lt;/p&gt;&lt;p&gt;Use a ^ to match the beginning of a word.&lt;/p&gt;&lt;p&gt;Use a $ to match the end of a word.&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+          </property>
           <property name="placeholderText">
            <string>property name</string>
           </property>
@@ -141,7 +144,7 @@
              <x>0</x>
              <y>0</y>
              <width>253</width>
-             <height>1263</height>
+             <height>1248</height>
             </rect>
            </property>
            <layout class="QGridLayout" name="gridLayout_2">
@@ -745,6 +748,7 @@
     <addaction name="separator"/>
     <addaction name="actionCopyProperties"/>
     <addaction name="actionPasteProperties"/>
+    <addaction name="actionPasteFilteredProperties"/>
     <addaction name="actionReset"/>
    </widget>
    <widget class="QMenu" name="menuHelp">
@@ -924,6 +928,14 @@
   <action name="actionClearRecentFiles">
    <property name="text">
     <string>Clear</string>
+   </property>
+  </action>
+  <action name="actionPasteFilteredProperties">
+   <property name="text">
+    <string>Paste Filtered Properties</string>
+   </property>
+   <property name="shortcut">
+    <string>Ctrl+Shift+V</string>
    </property>
   </action>
  </widget>

@@ -92,7 +92,7 @@ public:
 
     void clear();
     void resize(int width, int height);
-    void setEntry(int x, int y, UIProperties &properties);
+    void setEntry(int x, int y, const UIProperties &properties);
     UIProperties *entry(int tx, int ty, int x, int y);
 
     int mWidth, mHeight;
@@ -126,7 +126,7 @@ void TilePropertyClipboard::resize(int width, int height)
     mValidRgn = QRegion();
 }
 
-void TilePropertyClipboard::setEntry(int x, int y, UIProperties &properties)
+void TilePropertyClipboard::setEntry(int x, int y, const UIProperties &properties)
 {
     mEntries[x + y * mWidth]->mProperties.copy(properties);
     mValidRgn |= QRect(x, y, 1, 1);
@@ -341,6 +341,7 @@ TileDefDialog::TileDefDialog(QWidget *parent) :
 
     connect(ui->actionCopyProperties, &QAction::triggered, this, &TileDefDialog::copyProperties);
     connect(ui->actionPasteProperties, &QAction::triggered, this, &TileDefDialog::pasteProperties);
+    connect(ui->actionPasteFilteredProperties, &QAction::triggered, this, &TileDefDialog::pasteFilteredProperties);
     connect(ui->actionReset, &QAction::triggered, this, qOverload<>(&TileDefDialog::resetDefaults));
 
     /////
@@ -994,7 +995,7 @@ void TileDefDialog::copyProperties()
 void TileDefDialog::pasteProperties()
 {
     QRegion selectedRgn;
-    foreach (TileDefTile *defTile, mSelectedTiles) {
+    for (TileDefTile *defTile : std::as_const(mSelectedTiles)) {
         int x = defTile->id() % defTile->tileset()->mColumns;
         int y = defTile->id() / defTile->tileset()->mColumns;
         selectedRgn |= QRect(x, y, 1, 1);
@@ -1006,12 +1007,13 @@ void TileDefDialog::pasteProperties()
     int clipX = selectedBounds.left(), clipY = selectedBounds.top();
     for (int y = selectedBounds.top(); y <= selectedBounds.bottom(); y++) {
         for (int x = selectedBounds.left(); x <= selectedBounds.right(); x++) {
-            if (!selectedRgn.contains(QPoint(x, y)))
+            if (!selectedRgn.contains(QPoint(x, y))) {
                 continue;
+            }
             if (UIProperties *props = mClipboard->entry(clipX, clipY, x, y)) {
                 int tileID = x + y * defTileset->mColumns;
                 TileDefTile *defTile = defTileset->mTiles[tileID];
-                foreach (UIProperties::UIProperty *src, props->mProperties) {
+                for (UIProperties::UIProperty *src : std::as_const(props->mProperties)) {
                     if (src->value() != defTile->property(src->mName)->value()) {
                         changed += defTile;
                         break;
@@ -1022,17 +1024,69 @@ void TileDefDialog::pasteProperties()
     }
 
     if (changed.size()) {
-        mUndoStack->beginMacro(tr("Paste Properties"));
-        foreach (TileDefTile *defTile, changed) {
+        mUndoStack->beginMacro(tr("Paste Filtered Properties"));
+        for (TileDefTile *defTile : std::as_const(changed)) {
             int x = defTile->id() % defTile->tileset()->mColumns;
             int y = defTile->id() / defTile->tileset()->mColumns;
             UIProperties *props = mClipboard->entry(selectedBounds.left(),
                                                     selectedBounds.top(), x, y);
-            foreach (UIProperties::UIProperty *src, props->mProperties) {
+            for (UIProperties::UIProperty *src : std::as_const(props->mProperties)) {
                 if (src->value() != defTile->property(src->mName)->value()) {
                     mUndoStack->push(new ChangePropertyValue(this, defTile,
                                                              defTile->property(src->mName),
                                                              src->value()));
+                }
+            }
+        }
+        mUndoStack->endMacro();
+    }
+}
+
+void TileDefDialog::pasteFilteredProperties()
+{
+    QRegion selectedRgn;
+    for (TileDefTile *defTile : std::as_const(mSelectedTiles)) {
+        int x = defTile->id() % defTile->tileset()->mColumns;
+        int y = defTile->id() / defTile->tileset()->mColumns;
+        selectedRgn |= QRect(x, y, 1, 1);
+    }
+    QRect selectedBounds = selectedRgn.boundingRect();
+
+    QStringList filteredPropertyNames = this->filteredPropertyNames();
+
+    QList<TileDefTile*> changed;
+    TileDefTileset *defTileset = mCurrentDefTileset;
+    int clipX = selectedBounds.left(), clipY = selectedBounds.top();
+    for (int y = selectedBounds.top(); y <= selectedBounds.bottom(); y++) {
+        for (int x = selectedBounds.left(); x <= selectedBounds.right(); x++) {
+            if (!selectedRgn.contains(QPoint(x, y))) {
+                continue;
+            }
+            if (UIProperties *props = mClipboard->entry(clipX, clipY, x, y)) {
+                int tileID = x + y * defTileset->mColumns;
+                TileDefTile *defTile = defTileset->mTiles[tileID];
+                for (const QString& propertyName : std::as_const(filteredPropertyNames)) {
+                    UIProperties::UIProperty *src = props->property(propertyName);
+                    if (src->value() != defTile->property(src->mName)->value()) {
+                        changed += defTile;
+                        break;
+                    }
+                }
+            }
+        }
+    }
+
+    if (changed.size()) {
+        mUndoStack->beginMacro(tr("Paste Filtered Properties"));
+        for (TileDefTile *defTile : std::as_const(changed)) {
+            int x = defTile->id() % defTile->tileset()->mColumns;
+            int y = defTile->id() / defTile->tileset()->mColumns;
+            UIProperties *props = mClipboard->entry(selectedBounds.left(), selectedBounds.top(), x, y);
+            for (const QString& propertyName : std::as_const(filteredPropertyNames)) {
+                UIProperties::UIProperty *src = props->property(propertyName);
+                UIProperties::UIProperty *dst = defTile->property(propertyName);
+                if (src->value() != dst->value()) {
+                    mUndoStack->push(new ChangePropertyValue(this, defTile, dst, src->value()));
                 }
             }
         }
@@ -1085,6 +1139,7 @@ void TileDefDialog::tilesetChanged(Tileset *tileset)
 
 void TileDefDialog::rightPropertyFilterEdited(const QString &text)
 {
+    QStringList filters = text.trimmed().split(QLatin1Char(','));
     QFormLayout *layout = mPropertySheetFormLayout;
     if (mPropertySheetWidgets.isEmpty()) {
         while (layout->rowCount() > 0) {
@@ -1099,11 +1154,11 @@ void TileDefDialog::rightPropertyFilterEdited(const QString &text)
         }
     }
     int visibleBeforeLine = 0;
-    for (const LabelField& lf : mPropertySheetWidgets) {
+    for (const LabelField& lf : std::as_const(mPropertySheetWidgets)) {
         QWidget *label = lf.label;
         QWidget *field = lf.field;
         if (label && field) {
-            bool visible = text.isEmpty() || field->objectName().contains(text, Qt::CaseInsensitive);
+            bool visible = text.isEmpty() || filters.isEmpty() || propertyPassesFilter(field->objectName(), filters);
             label->setVisible(visible);
             field->setVisible(visible);
             if (visible) {
@@ -1118,7 +1173,7 @@ void TileDefDialog::rightPropertyFilterEdited(const QString &text)
             }
             visibleBeforeLine = 0;
         } else {
-            bool visible = text.isEmpty() || field->objectName().contains(text, Qt::CaseInsensitive);
+            bool visible = text.isEmpty() || filters.isEmpty() || propertyPassesFilter(field->objectName(), filters);
             field->setVisible(visible);
             if (visible) {
                 layout->setWidget(layout->rowCount(), QFormLayout::ItemRole::SpanningRole, field);
@@ -1218,6 +1273,35 @@ void TileDefDialog::applyPropertyFilters()
     }
 }
 
+QStringList TileDefDialog::filteredPropertyNames() const
+{
+    QStringList result;
+    for (const LabelField& lf : std::as_const(mPropertySheetWidgets)) {
+        QWidget *field = lf.field;
+        if (field->isVisible() && field->objectName() != QStringLiteral("line")) {
+            result += field->objectName();
+        }
+    }
+    return result;
+}
+
+bool TileDefDialog::propertyPassesFilter(const QString &propertyName, const QStringList &filters) const
+{
+    for (const QString& filter : filters) {
+        if (filter.contains(QLatin1Char('^')) || filter.contains(QLatin1Char('$'))) {
+            QRegularExpression regexp(filter, QRegularExpression::CaseInsensitiveOption);
+            if (propertyName.contains(regexp)) {
+                return true;
+            }
+            continue;
+        }
+        if (!filter.isEmpty() && propertyName.contains(filter, Qt::CaseInsensitive)) {
+            return true;
+        }
+    }
+    return false;
+}
+
 void TileDefDialog::tilesetBackgroundColorChanged(const QColor &color)
 {
     Q_UNUSED(color)
@@ -1244,9 +1328,9 @@ void TileDefDialog::updateUI()
     ui->actionAddTileset->setEnabled(hasFile);
     ui->actionRemoveTileset->setEnabled(mCurrentTileset != 0);
 
-    ui->actionCopyProperties->setEnabled(mSelectedTiles.size());
-    ui->actionPasteProperties->setEnabled(!mClipboard->mValidRgn.isEmpty() &&
-                                          mSelectedTiles.size());
+    ui->actionCopyProperties->setEnabled(!mSelectedTiles.isEmpty());
+    ui->actionPasteProperties->setEnabled(!mClipboard->mValidRgn.isEmpty() && mSelectedTiles.size());
+    ui->actionPasteFilteredProperties->setEnabled(!mClipboard->mValidRgn.isEmpty() && mSelectedTiles.size());
     ui->actionReset->setEnabled(mSelectedTiles.size());
 
     updateWindowTitle();
