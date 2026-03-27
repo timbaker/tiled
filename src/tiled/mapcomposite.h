@@ -99,6 +99,7 @@ class CompositeLayerGroup : public Tiled::ZTileLayerGroup
 {
 public:
     CompositeLayerGroup(MapComposite *owner, int level);
+    ~CompositeLayerGroup();
 
     void addTileLayer(Tiled::TileLayer *layer, int index) override;
     void removeTileLayer(Tiled::TileLayer *layer) override;
@@ -125,6 +126,18 @@ public:
     bool orderedCellsAt2(const QPoint &pos, OrderedCellsTemporaries &vars, QVector<const Tiled::Cell*>& cells) const;
 private:
     void orderedCellsAt2(const QPoint &pos, QVector<OrderedCell>& cells) const;
+#ifdef WORLDED
+public:
+    void prepareDrawingNoBmpBlender(const Tiled::MapRenderer *renderer, const QRect &rect);
+
+    void prepareDrawing3(const Tiled::MapRenderer *renderer, const QRect &rect);
+private:
+    void prepareDrawing3(const Tiled::MapRenderer *renderer, const QRect &rect, CompositeLayerGroup *rootGroup);
+public:
+    bool orderedCellsAt3(const QPoint &pos, OrderedCellsTemporaries3 &vars, QVector<TilePlusLayer>& cells) const;
+private:
+    void orderedCellsAt3(const QPoint &pos, QVector<OrderedCell>& cells) const;
+#endif
 public:
 
     bool setLayerVisibility(const QString &layerName, bool visible);
@@ -134,6 +147,7 @@ public:
 
     bool setLayerOpacity(const QString &layerName, qreal opacity);
     bool setLayerOpacity(Tiled::TileLayer *tl, qreal opacity);
+    qreal layerOpacity(Tiled::TileLayer *tl) const;
     void synchSubMapLayerOpacity(const QString &layerName, qreal opacity);
 
     MapComposite *owner() const { return mOwner; }
@@ -279,6 +293,8 @@ public:
     void removeMap(MapComposite *subMap);
     void moveSubMap(MapComposite *subMap, const QPoint &pos);
 
+    void sortSubMaps(const QVector<MapComposite *> &order);
+
     Tiled::Map *map() const { return mMap; }
     MapInfo *mapInfo() const { return mMapInfo; }
 
@@ -414,6 +430,11 @@ public:
 
     MapComposite* cropToMinimum(QPoint& offset);
 
+    void incrChangeCount()
+    { ++mChangeCount; }
+    int changeCount() const
+    { return mChangeCount; }
+
 signals:
     void layerGroupAdded(int level);
     void layerAddedToGroup(int index);
@@ -493,6 +514,8 @@ public:
     int mKeepFloorLayerCount;
 
     QString mNoBlendLayer;
+
+    int mChangeCount = 0;
 };
 
 #endif // MAPCOMPOSITE_H
