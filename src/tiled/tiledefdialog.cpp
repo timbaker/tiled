@@ -2050,13 +2050,20 @@ void TileDefDialog::tilesDirChanged()
 
 void TileDefDialog::checkProperties()
 {
+    const QSet<QString> extraProperties = mTileDefProperties->extraPropertiesIfSet();
     QStringList warnings;
     for (TileDefTileset *tsDef : mTileDefFile->tilesets()) {
         for (TileDefTile *tdt : std::as_const(tsDef->mTiles)) {
             for (auto it = tdt->mProperties.cbegin(); it != tdt->mProperties.cend(); it++) {
                 QString propName = it.key();
                 QString propValue = it.value();
-                if (TileDefProperty *prop = mTileDefProperties->property(propName)) {
+                if (extraProperties.contains(propName)) {
+                    continue;
+                }
+                QString label = mTileDefProperties->shortNameToName(propName);
+                if (label.isEmpty()) {
+                    warnings += QStringLiteral("%1_%2 has unknown property %3").arg(tdt->tileset()->mName).arg(tdt->id()).arg(propName);
+                } else if (TileDefProperty *prop = mTileDefProperties->property(label)) {
                     if (EnumTileDefProperty *enumProp = prop->asEnum()) {
                         if (enumProp->mValueAsPropertyName == false && enumProp->mShortEnums.contains(propValue) == false) {
                             warnings += QStringLiteral("%1_%2 has undefined enum value %3=%4").arg(tdt->tileset()->mName).arg(tdt->id()).arg(propName).arg(propValue);

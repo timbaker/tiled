@@ -181,8 +181,16 @@ public:
         return 0;
     }
 
+    QString shortNameToName(const QString &shortName) const
+    {
+        return mShortNameToName.value(shortName, QString());
+    }
+
+    QSet<QString> extraPropertiesIfSet() const;
+
     QList<TileDefProperty*> mProperties;
     QMap<QString,TileDefProperty*> mPropertyByName;
+    QMap<QString,QString> mShortNameToName;
     QList<int> mSeparators;
 };
 

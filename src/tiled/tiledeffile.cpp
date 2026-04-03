@@ -235,6 +235,7 @@ void TileDefProperties::addBoolean(const QString &name, const QString &shortName
                                                        reverseLogic);
     mProperties += prop;
     mPropertyByName[name] = prop;
+    mShortNameToName[shortName] = name;
 }
 
 void TileDefProperties::addInteger(const QString &name, const QString &shortName,
@@ -244,6 +245,7 @@ void TileDefProperties::addInteger(const QString &name, const QString &shortName
                                                        min, max, defaultValue);
     mProperties += prop;
     mPropertyByName[name] = prop;
+    mShortNameToName[shortName] = name;
 }
 
 void TileDefProperties::addString(const QString &name, const QString &shortName,
@@ -253,6 +255,7 @@ void TileDefProperties::addString(const QString &name, const QString &shortName,
                                                       defaultValue);
     mProperties += prop;
     mPropertyByName[name] = prop;
+    mShortNameToName[shortName] = name;
 }
 
 void TileDefProperties::addEnum(const QString &name, const QString &shortName,
@@ -268,6 +271,26 @@ void TileDefProperties::addEnum(const QString &name, const QString &shortName,
                                                     extraPropertyIfSet);
     mProperties += prop;
     mPropertyByName[name] = prop;
+    if (valueAsPropertyName) {
+        for (const QString &shortName1 : shortEnums) {
+            mShortNameToName[shortName1] = name;
+        }
+    } else {
+        mShortNameToName[shortName] = name;
+    }
+}
+
+QSet<QString> TileDefProperties::extraPropertiesIfSet() const
+{
+    QSet<QString> result;
+    for (TileDefProperty *prop : std::as_const(mProperties)) {
+        if (EnumTileDefProperty * prop1 = prop->asEnum()) {
+            if (!prop1->mExtraPropertyIfSet.isEmpty()) {
+                result += prop1->mExtraPropertyIfSet;
+            }
+        }
+    }
+    return result;
 }
 
 /////
