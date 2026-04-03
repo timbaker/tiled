@@ -1809,6 +1809,8 @@ property
         17 =
         18 =
         19 =
+        20 =
+        21 =
     }
     Default = None
     ValueAsPropertyName = false
@@ -1879,6 +1881,10 @@ property
         2/4 = 2
         3/4 = 3
         4/4 = 4
+        Jumbo = 5
+        Jumbo L = 6
+        Jumbo XL = 7
+        Jumbo XXL = 8
     }
     Default = None
     ValueAsPropertyName = false
