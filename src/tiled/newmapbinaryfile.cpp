@@ -29,6 +29,8 @@ bool NewMapBinaryFile::write(MapComposite *mapComposite, const QVector<Tiled::Pr
 
     mStats = LotFile::Stats();
 
+    mapComposite->synch();
+
     MaxLevel = mapComposite->maxLevel();
 
     // Check for missing tilesets.
