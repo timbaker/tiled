@@ -37,6 +37,36 @@ property
     ToolTip = <p>Defines tile height.</p>
 }
 
+property
+{
+    Type = Boolean
+    Name = Countertop
+    ShortName =
+    Default = false
+    ReverseLogic = false
+    ToolTip = <p>If true, this tile is attached to the next lower tile with CountertopAttach=true.</p>
+}
+
+property
+{
+    Type = Boolean
+    Name = CountertopAttach
+    ShortName =
+    Default = false
+    ReverseLogic = false
+    ToolTip = <p>If true, a higher tile with Countertop=true is attached to this object.</p>
+}
+
+property
+{
+    Type = Boolean
+    Name = FitsBeneathCountertop
+    ShortName =
+    Default = false
+    ReverseLogic = false
+    ToolTip = <p>If true, this object may be placed beneath a stand-alone Countertop=true object.</p>
+}
+
 separator
 {
 }
@@ -605,16 +635,6 @@ property
 
 separator
 {
-}
-
-property
-{
-    Type = Boolean
-    Name = Countertop
-    ShortName = countertop
-    Default = false
-    ReverseLogic = false
-    ToolTip = <p>If true, tile is overlaid on the object below as a countertop.</p>
 }
 
 property
