@@ -216,6 +216,42 @@ QList<TileDefTileset *> TileDefFile::takeTilesets()
     return tilesets;
 }
 
+QSet<int> TileDefFile::usedTilesetIDs() const
+{
+    QSet<int> result;
+    for (const TileDefTileset* tileset : mTilesets) {
+        result += tileset->mID;
+    }
+    return result;
+}
+
+QMap<QString, int> TileDefFile::createReassignMap() const
+{
+    QMap<QString,int> result;
+    QStringList sorted;
+    for (const TileDefTileset* tileset : mTilesets) {
+        sorted += tileset->mName;
+    }
+    sorted.sort();
+    int nextID = 1;
+    for (const QString& tilesetName : std::as_const(sorted)) {
+        result[tilesetName] = nextID++;
+    }
+    return result;
+}
+
+QMap<QString, int> TileDefFile::assignTilesetIDs(const QMap<QString,int> &mapping)
+{
+    QMap<QString,int> result;
+    for (const TileDefTileset* tileset : std::as_const(mTilesets)) {
+        result[tileset->mName] = tileset->mID;
+    }
+    for (auto it = mapping.cbegin(); it != mapping.cend(); it++) {
+        tileset(it.key())->mID = it.value();
+    }
+    return result;
+}
+
 /////
 
 TileDefProperties::TileDefProperties()
@@ -544,7 +580,7 @@ bool TilePropertyMgr::readTxt()
     // directory if needed.
     if (!info.exists()) {
         QString source = Preferences::instance()->appConfigPath(txtName());
-        if (QFileInfo(source).exists()) {
+        if (QFileInfo::exists(source)) {
             if (!QFile::copy(source, txtPath())) {
                 mError = tr("Failed to copy file:\nFrom: %1\nTo: %2")
                         .arg(source).arg(txtPath());

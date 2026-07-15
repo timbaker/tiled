@@ -74,6 +74,8 @@ public:
 
     QVariant changePropertyValue(TileDefTile *defTile, const QString &name,
                                  const QVariant &value);
+
+    const QMap<QString,int> assignTilesetIDs(const QMap<QString,int>& mapping);
     //
 
 private slots:
@@ -125,6 +127,8 @@ private slots:
     void valueFilterEdited(const QString &text);
 
     void tilesetBackgroundColorChanged(const QColor& color);
+
+    void reassignTilesetIDs();
 
     void updateUI();
 

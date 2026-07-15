@@ -737,6 +737,7 @@
     <addaction name="actionSaveAs"/>
     <addaction name="separator"/>
     <addaction name="actionAddTileset"/>
+    <addaction name="actionReassignTilesetIDs"/>
     <addaction name="actionTilesDirectory"/>
     <addaction name="separator"/>
     <addaction name="actionClose"/>
@@ -936,6 +937,14 @@
    </property>
    <property name="shortcut">
     <string>Ctrl+Shift+V</string>
+   </property>
+  </action>
+  <action name="actionReassignTilesetIDs">
+   <property name="text">
+    <string>Reassign Tileset IDs...</string>
+   </property>
+   <property name="toolTip">
+    <string>Make tilesets IDs sequential, removing gaps</string>
    </property>
   </action>
  </widget>

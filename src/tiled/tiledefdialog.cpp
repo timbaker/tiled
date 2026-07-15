@@ -240,6 +240,29 @@ public:
     QVariant mValue;
 };
 
+class ReassignTilesetIDs : public QUndoCommand
+{
+public:
+    ReassignTilesetIDs(TileDefDialog *d, const QMap<QString,int>& mapping) :
+        QUndoCommand(QCoreApplication::translate("UndoCommands", "Reassign Tileset IDs")),
+        mDialog(d),
+        mIDs(mapping)
+    {
+
+    }
+
+    void undo() override { swap(); }
+    void redo() override { swap(); }
+
+    void swap()
+    {
+        mIDs = mDialog->assignTilesetIDs(mIDs);
+    }
+
+    TileDefDialog *mDialog;
+    QMap<QString,int> mIDs;
+};
+
 } // namespace
 
 using namespace TileDefUndoRedo;
@@ -407,6 +430,7 @@ TileDefDialog::TileDefDialog(QWidget *parent) :
     connect(ui->actionSave, &QAction::triggered, this, qOverload<>(&TileDefDialog::fileSave));
     connect(ui->actionSaveAs, &QAction::triggered, this, &TileDefDialog::fileSaveAs);
     connect(ui->actionAddTileset, &QAction::triggered, this, &TileDefDialog::addTileset);
+    connect(ui->actionReassignTilesetIDs, &QAction::triggered, this, &TileDefDialog::reassignTilesetIDs);
 #ifdef TDEF_TILES_DIR
     connect(ui->actionTilesDirectory, SIGNAL(triggered()), SLOT(chooseTilesDirectory()));
 #else
@@ -690,6 +714,13 @@ QVariant TileDefDialog::changePropertyValue(TileDefTile *defTile, const QString 
         updatePropertyPageLater();
     }
     return old;
+}
+
+const QMap<QString, int> TileDefDialog::assignTilesetIDs(const QMap<QString, int> &mapping)
+{
+    const QMap<QString,int> result = mTileDefFile->assignTilesetIDs(mapping);
+    setTilesetList();
+    return result;
 }
 
 void TileDefDialog::fileNew()
@@ -1313,11 +1344,20 @@ void TileDefDialog::tilesetBackgroundColorChanged(const QColor &color)
     }
 }
 
+void TileDefDialog::reassignTilesetIDs()
+{
+    QMessageBox::StandardButton result = QMessageBox::question(this, tr("Reassign Tileset IDs"), tr("This will assign new tileset IDs in alphabetical order.\nThis will break savefile compatibility.\nReassign tileset IDs now?"));
+    if (result == QMessageBox::StandardButton::No) {
+        return;
+    }
+    mUndoStack->push(new ReassignTilesetIDs(this, mTileDefFile->createReassignMap()));
+}
+
 void TileDefDialog::updateUI()
 {
     mSynching = true;
 
-    bool hasFile = mTileDefFile != 0;
+    bool hasFile = mTileDefFile != nullptr;
     ui->actionSave->setEnabled(hasFile);
     ui->actionSaveAs->setEnabled(hasFile);
 
@@ -1326,7 +1366,8 @@ void TileDefDialog::updateUI()
     ui->actionGoBack->setEnabled(mTilesetHistoryIndex > 0);
     ui->actionGoForward->setEnabled(mTilesetHistoryIndex < mTilesetHistory.size() - 1);
     ui->actionAddTileset->setEnabled(hasFile);
-    ui->actionRemoveTileset->setEnabled(mCurrentTileset != 0);
+    ui->actionRemoveTileset->setEnabled(mCurrentTileset != nullptr);
+    ui->actionReassignTilesetIDs->setEnabled(hasFile && !mTileDefFile->tilesets().isEmpty());
 
     ui->actionCopyProperties->setEnabled(!mSelectedTiles.isEmpty());
     ui->actionPasteProperties->setEnabled(!mClipboard->mValidRgn.isEmpty() && mSelectedTiles.size());
@@ -1601,8 +1642,9 @@ void TileDefDialog::setToolTipEtc(int tileID)
         return;
     TileDefTile *defTile = mCurrentDefTileset->mTiles[tileID];
     QStringList tooltip;
-    foreach (UIProperties::UIProperty *p, defTile->mPropertyUI.nonDefaultProperties())
+    for (UIProperties::UIProperty *p : defTile->mPropertyUI.nonDefaultProperties()) {
         tooltip += tr("%1 = %2").arg(p->mName).arg(p->valueAsString());
+    }
 
     MixedTilesetModel *m = ui->tiles->model();
 
@@ -1611,7 +1653,7 @@ void TileDefDialog::setToolTipEtc(int tileID)
     defTile->mPropertyUI.ToProperties(properties);
     if (properties.size()) {
         tooltip += QLatin1String("\nOutput:");
-        foreach (QString name, properties.keys()) {
+        for (const QString& name : properties.keys()) {
             tooltip += tr("%1 = %2").arg(name).arg(properties[name]);
         }
     }
@@ -1621,7 +1663,7 @@ void TileDefDialog::setToolTipEtc(int tileID)
     QStringList knownPropertyNames = defTile->mPropertyUI.knownPropertyNames();
     QSet<QString> known(knownPropertyNames.begin(), knownPropertyNames.end()); // FIXME: same for every tile
     QStringList unknown;
-    foreach (QString name, defTile->mProperties.keys()) {
+    for (const QString& name : defTile->mProperties.keys()) {
         if (!known.contains(name))
             unknown += tr("%1 = %2").arg(name).arg(defTile->mProperties[name]);
     }
@@ -1631,8 +1673,9 @@ void TileDefDialog::setToolTipEtc(int tileID)
         color = styleOption.palette.window().color(); // Qt::white;
     }
     if (unknown.size()) {
-        if (tooltip.size())
+        if (!tooltip.isEmpty()) {
             tooltip += QLatin1String("");
+        }
         tooltip += QLatin1String("Unknown:");
         tooltip += unknown;
         color = QColor(255, 128, 128);
@@ -1650,15 +1693,20 @@ void TileDefDialog::setToolTipEtc(int tileID)
         m->setData(m->index((void*)defTile), Surface + ItemHeight.value().toInt(), MixedTilesetModel::ItemHeightRole);
     }
 
-    if (tooltip.size())
+    if (!tooltip.isEmpty()) {
         tooltip += QLatin1String("");
-    tooltip += QString::fromLatin1("gid %1").arg(defTile->tileset()->mID * 1000 + defTile->id());
-
+    }
+    if (mTileDefFile->fileName().endsWith(QStringLiteral("newtiledefinitions.tiles"))) {
+        tooltip += QString::fromLatin1("gid %1").arg(defTile->tileset()->mID * 1024 + defTile->id());
+    } else {
+        tooltip += QString::fromLatin1("gid %1").arg(defTile->tileset()->mID * 512 + defTile->id());
+    }
     m->setToolTip(tileID, tooltip.join(QLatin1String("\n")));
 
     QRect r;
-    if (tooltip.size())
+    if (!tooltip.isEmpty()) {
         r = QRect(0,0,1,1);
+    }
     m->setCategoryBounds(tileID, r);
 }
 
@@ -2156,12 +2204,13 @@ void TileDefDialog::getTilesDirKeyValues(QMap<QString, QString> &map)
 
 int TileDefDialog::uniqueTilesetID()
 {
-    int id = 1;
-    foreach (TileDefTileset *tsDef, mTileDefFile->tilesets()) {
-        if (tsDef->mID >= id)
-            id = tsDef->mID + 1;
+    const QSet<int> usedIDs = mTileDefFile->usedTilesetIDs();
+    for (int i = 1; i <= TileDefFile::MAX_TILESET_ID_GAME; i++) {
+        if (!usedIDs.contains(i)) {
+            return i;
+        }
     }
-    return id;
+    return -1;
 }
 
 void TileDefDialog::saveSplitterSizes(QSplitter *splitter)

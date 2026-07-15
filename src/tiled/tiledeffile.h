@@ -865,6 +865,9 @@ class TileDefFile : public QObject
 {
     Q_OBJECT
 public:
+    static const int MAX_TILESET_ID_GAME = 1024;
+    static const int MAX_TILESET_ID_MODS = 512;
+
     TileDefFile();
     ~TileDefFile();
 
@@ -891,6 +894,10 @@ public:
 
     QStringList tilesetNames() const
     { return mTilesetByName.keys(); }
+
+    QSet<int> usedTilesetIDs() const;
+    QMap<QString,int> createReassignMap() const;
+    QMap<QString,int> assignTilesetIDs(const QMap<QString,int>& mapping);
 
     void setErrorString(const QString &error)
     { mError = error; }
