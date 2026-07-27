@@ -1,9 +1,9 @@
-QTVER=5.15.3
-QTDIR_LIB=/usr/lib/x86_64-linux-gnu
-QTDIR_PLUGINS=/usr/lib/x86_64-linux-gnu/qt5/plugins
-SRC=~/Programming/tiled
-BUILD=~/Programming/build-tiled-Desktop-Release
-DESTROOT=~/Programming/TileZed
+QTVER=5.15.2
+QTDIR_LIB=/opt/qt/$QTVER/gcc_64/lib
+QTDIR_PLUGINS=$(qtpaths --plugin-directory)
+SRC=$(pwd)/..
+BUILD=$SRC/../build-tiled-docker
+DESTROOT=$SRC/../dist-tiled-docker
 DEST=$DESTROOT/TileZed
 
 mkdir $DESTROOT
@@ -27,9 +27,9 @@ cp $QTDIR_LIB/libQt5Gui.so.$QTVER $DEST/lib/libQt5Gui.so.5
 cp $QTDIR_LIB/libQt5Network.so.$QTVER $DEST/lib/libQt5Network.so.5
 cp $QTDIR_LIB/libQt5OpenGL.so.$QTVER $DEST/lib/libQt5OpenGL.so.5
 cp $QTDIR_LIB/libQt5Widgets.so.$QTVER $DEST/lib/libQt5Widgets.so.5
-cp $QTDIR_LIB/libicudata.so.70.1 $DEST/lib/libicudata.so.70
-cp $QTDIR_LIB/libicui18n.so.70.1 $DEST/lib/libicui18n.so.70
-cp $QTDIR_LIB/libicuuc.so.70.1 $DEST/lib/libicuuc.so.70
+cp $QTDIR_LIB/libicudata.so.56.1 $DEST/lib/libicudata.so.56
+cp $QTDIR_LIB/libicui18n.so.56.1 $DEST/lib/libicui18n.so.56
+cp $QTDIR_LIB/libicuuc.so.56.1 $DEST/lib/libicuuc.so.56
 cp $QTDIR_LIB/libQt5XcbQpa.so.$QTVER $DEST/lib/libQt5XcbQpa.so.5
 
 #for file in $QTDIR/lib/libQt5Gui.so*; do cp -a "$file" "$DEST/lib/"; done
