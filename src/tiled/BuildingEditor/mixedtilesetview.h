@@ -176,6 +176,8 @@ private:
 
     int indexOf(Item *item) { return item->mIndex; }
 
+    bool hasMultipleTilesets(const QList<Tiled::Tile*>& tiles) const;
+
     QList<Item*> mItems;
     QList<Tiled::Tile*> mTiles;
     QList<void *> mUserData;
