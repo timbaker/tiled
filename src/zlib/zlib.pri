@@ -1,3 +1,8 @@
 INCLUDEPATH += $$PWD
 DEPENDPATH += $$PWD
-LIBS += -L$$top_builddir/lib -lzlib1
+macx {
+    LIBS += -L$$top_builddir/bin/TileZed.app/Contents/Frameworks -lzlib1
+}
+!macx {
+    LIBS += -L$$top_builddir/lib -lzlib1
+}
