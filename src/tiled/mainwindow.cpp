@@ -919,7 +919,7 @@ bool MainWindow::openFile(const QString &fileName,
 
 bool MainWindow::openFile(const QString &fileName)
 {
-    return openFile(fileName, 0);
+    return openFile(fileName, nullptr);
 }
 
 void MainWindow::openLastFiles()
@@ -951,7 +951,8 @@ void MainWindow::openLastFiles()
                 QLatin1String("selectedLayer")).toStringList();
 
 #ifdef ZOMBOID
-    PROGRESS *progress = lastOpenFiles.size() ? new PROGRESS(tr("Restoring session")) : 0;
+    MapManagerDeferral deferral;
+    PROGRESS *progress = lastOpenFiles.size() ? new PROGRESS(tr("Restoring session")) : nullptr;
 #endif
 
     for (int i = 0; i < lastOpenFiles.size(); i++) {
@@ -1054,6 +1055,8 @@ bool MainWindow::InitConfigFiles()
         }
     }
 
+    PROGRESS progress(tr("Reading Tilesets.txt"));
+
     // Read Tilesets.txt before TMXConfig.txt in case we are upgrading
     // TMXConfig.txt from VERSION0 to VERSION1.
     if (!TileMetaInfoMgr::instance()->readTxt()) {
@@ -1064,11 +1067,15 @@ bool MainWindow::InitConfigFiles()
         return false;
     }
 
+    progress.update(tr("Checking for new tilesets"));
+
     if (!TileMetaInfoMgr::instance()->addNewTilesets()) {
         QMessageBox::critical(this, tr("It's no good, Jim!"),
                               tr("%1\n(while adding new tilesets)"));
         return false;
     }
+
+    progress.update(tr("Reading BuildingTMX.txt"));
 
     if (!BuildingTMX::instance()->readTxt()) {
         QMessageBox::critical(this, tr("It's no good, Jim!"),
@@ -1078,6 +1085,8 @@ bool MainWindow::InitConfigFiles()
         return false;
     }
 
+    progress.update(tr("Reading BuildingTiles.txt"));
+
     if (!BuildingTilesMgr::instance()->readTxt()) {
         QMessageBox::critical(this, tr("It's no good, Jim!"),
                               tr("Error while reading %1\n%2")
@@ -1086,6 +1095,8 @@ bool MainWindow::InitConfigFiles()
         return false;
     }
 
+    progress.update(tr("Reading FurnitureGroups.txt"));
+
     if (!FurnitureGroups::instance()->readTxt()) {
         QMessageBox::critical(this, tr("It's no good, Jim!"),
                               tr("Error while reading %1\n%2")
@@ -1093,6 +1104,8 @@ bool MainWindow::InitConfigFiles()
                               .arg(FurnitureGroups::instance()->errorString()));
         return false;
     }
+
+    progress.update(tr("Reading BuildingTemplates.txt"));
 
     if (!BuildingTemplates::instance()->readTxt()) {
         QMessageBox::critical(this, tr("It's no good, Jim!"),
@@ -2887,8 +2900,10 @@ void MainWindow::LuaScript(const QString &filePath)
 void MainWindow::openRecentFile()
 {
     QAction *action = qobject_cast<QAction *>(sender());
-    if (action)
+    if (action) {
+        MapManagerDeferral deferral;
         openFile(action->data().toString());
+    }
 }
 
 QStringList MainWindow::recentFiles() const

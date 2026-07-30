@@ -137,6 +137,47 @@ static void __cdecl invalid_parameter_handler(
 
 #endif
 
+static CommandLineHandler commandLine;
+
+static void runStartupTask1()
+{
+    MainWindow& w = *MainWindow::instance();
+
+    if (!w.InitConfigFiles()) {
+        qApp->quit();
+        return;
+    }
+
+    for (const QString& f : Preferences::instance()->worldedFiles()) {
+        if (f.isEmpty())
+            continue;
+        if (QFileInfo::exists(f) == false) {
+            QMessageBox::warning(&w, QLatin1String("Missing PZW"), QLatin1String("WorldEd project not found:\n%1").arg(f));
+            continue;
+        }
+        PROGRESS progress(QStringLiteral("Reading %1").arg(QFileInfo(f).fileName()));
+        WorldEd::WorldEdMgr::instance()->addProject(f);
+    }
+
+    for (const QString &f : Preferences::instance()->tilePropertiesFiles()) {
+        if (f.isEmpty())
+            continue;
+        if (QFileInfo::exists(f) == false) {
+            QMessageBox::warning(&w, QLatin1String("File Not Found"), QLatin1String("Tile properties file not found.\nChange this in the Preferences.\n%1").arg(f));
+            continue;
+        }
+    }
+
+    if (!commandLine.filesToOpen().isEmpty()) {
+        gStartupBlockRendering = false;
+        for (const QString &fileName : commandLine.filesToOpen()) {
+            w.openFile(fileName);
+        }
+    } else {
+        w.openLastFiles();
+    }
+}
+
 int main(int argc, char *argv[])
 {
 #if !defined(QT_NO_DEBUG) && defined(ZOMBOID) && defined(_MSC_VER)
@@ -173,8 +214,6 @@ int main(int argc, char *argv[])
     LanguageManager *languageManager = LanguageManager::instance();
     languageManager->installTranslators();
 
-    CommandLineHandler commandLine;
-
     if (!commandLine.parse(QCoreApplication::arguments()))
         return 0;
     if (commandLine.quit)
@@ -182,7 +221,6 @@ int main(int argc, char *argv[])
     if (commandLine.disableOpenGL)
         Preferences::instance()->setUseOpenGL(false);
 
-#ifdef ZOMBOID
     Preferences::instance()->applyTheme();
     if (a.isRunning()) {
         if (!commandLine.filesToOpen().isEmpty()) {
@@ -191,53 +229,18 @@ int main(int argc, char *argv[])
             return 0;
         }
     }
-#endif
 
     MainWindow w;
-#ifdef ZOMBOID
     ZProgressManager::instance()->setMainWindow(&w);
-#endif
     w.show();
-#ifdef ZOMBOID
     a.setActivationWindow(&w);
     w.connect(&a, &QtSingleApplication::messageReceived, &w, qOverload<const QString&>(&MainWindow::openFile));
     w.readSettings();
 
-    if (!w.InitConfigFiles())
-        return 0;
-
-    foreach (QString f, Preferences::instance()->worldedFiles()) {
-        if (f.isEmpty())
-            continue;
-        if (QFileInfo::exists(f) == false) {
-            QMessageBox::warning(&w, QLatin1String("Missing PZW"), QLatin1String("WorldEd project not found:\n%1").arg(f));
-            continue;
-        }
-        WorldEd::WorldEdMgr::instance()->addProject(f);
-    }
-
-    for (const QString &f : Preferences::instance()->tilePropertiesFiles()) {
-        if (f.isEmpty())
-            continue;
-        if (QFileInfo::exists(f) == false) {
-            QMessageBox::warning(&w, QLatin1String("File Not Found"), QLatin1String("Tile properties file not found.\nChange this in the Preferences.\n%1").arg(f));
-            continue;
-        }
-    }
-#endif // ZOMBOID
-
     QObject::connect(&a, &TiledApplication::fileOpenRequest,
                      &w, qOverload<const QString&>(&MainWindow::openFile));
 
-    if (!commandLine.filesToOpen().isEmpty()) {
-#ifdef ZOMBOID
-        gStartupBlockRendering = false;
-#endif
-        foreach (const QString &fileName, commandLine.filesToOpen())
-            w.openFile(fileName);
-    } else {
-        w.openLastFiles();
-    }
+    QTimer::singleShot(10, &runStartupTask1);
 
     return a.exec();
 }

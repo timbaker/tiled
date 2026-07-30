@@ -177,6 +177,7 @@ void DocumentManager::addDocument(MapDocument *mapDocument)
     scene->setMapDocument(mapDocument);
 #ifdef ZOMBOID
     view->setMapScene(scene);
+    qApp->processEvents(QEventLoop::ExcludeUserInputEvents);
 #else
     view->setScene(scene);
 #endif
