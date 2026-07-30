@@ -9,7 +9,8 @@ set SRC C:/Programming/TileZed/tiled
 set DEST {C:\Programming\ProjectZomboid\Tools\TileZed}
 set SUFFIX "-64bit"
 set SUFFIX2 ""
-set REDIST vcredist.x64.exe
+# C:\Program Files\Microsoft Visual Studio\2022\Community\VC\Redist\MSVC\v143
+set REDIST vc_redist.x64.2015-2022.exe
 
 if {$argc > 0} {
     switch -- [lindex $argv 0] {
@@ -86,7 +87,7 @@ proc createFile {DEST name contents} {
 }
 
 puts ---Toplevel---
-copyFile {C:\Programming\TileZed} $DEST $REDIST
+copyFile {C:\Programming\TileZed} $DEST $REDIST vc_redist.x64.exe
 copyFile $BIN $DEST config.exe
 copyFile $BIN $DEST TileZed.exe
 copyFile $BIN $DEST tiled.dll
