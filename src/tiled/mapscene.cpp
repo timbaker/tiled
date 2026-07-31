@@ -88,7 +88,7 @@ MapScene::MapScene(QObject *parent):
     connect(prefs, &Preferences::objectTypesChanged, this, &MapScene::syncAllObjectItems);
     connect(prefs, &Preferences::highlightCurrentLayerChanged,
             this, &MapScene::setHighlightCurrentLayer);
-    connect(prefs, &Preferences::gridColorChanged, [this]{this->update();});
+    connect(prefs, &Preferences::gridColorChanged, this, [this]{this->update();});
 
     mDarkRectangle->setPen(Qt::NoPen);
     mDarkRectangle->setBrush(Qt::black);
