@@ -110,8 +110,10 @@ BuildingTilesetDock::BuildingTilesetDock(QWidget *parent) :
     connect(BuildingDocumentMgr::instance(), &BuildingDocumentMgr::currentDocumentChanged,
             this, &BuildingTilesetDock::currentDocumentChanged);
 
+#ifndef BUILDINGED_SA
     connect(TileMetaInfoMgr::instance(), &TileMetaInfoMgr::tilesetAdded,
             this, &BuildingTilesetDock::tilesetAdded);
+#endif
     connect(TileMetaInfoMgr::instance(), &TileMetaInfoMgr::tilesetAboutToBeRemoved,
             this, &BuildingTilesetDock::tilesetAboutToBeRemoved);
 
@@ -165,6 +167,14 @@ void BuildingTilesetDock::readSettings(QSettings &settings)
     settings.endGroup();
 #endif
 }
+
+#ifdef BUILDINGED_SA
+void BuildingTilesetDock::afterInitConfigFiles()
+{
+    connect(TileMetaInfoMgr::instance(), &TileMetaInfoMgr::tilesetAdded,
+            this, &BuildingTilesetDock::tilesetAdded);
+}
+#endif
 
 void BuildingTilesetDock::currentDocumentChanged(BuildingDocument *document)
 {

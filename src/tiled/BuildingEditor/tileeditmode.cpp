@@ -324,6 +324,13 @@ void TileEditMode::writeSettings(QSettings &settings)
     settings.endGroup();
 }
 
+#ifdef BUILDINGED_SA
+void TileEditMode::afterInitConfigFiles()
+{
+    mTilesetDock->afterInitConfigFiles();
+}
+#endif
+
 void TileEditMode::onActiveStateChanged(bool active)
 {
     QMenu *menu = BuildingEditorWindow::instance()->actionIface()->menuViews;

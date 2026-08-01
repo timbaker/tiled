@@ -180,7 +180,9 @@ public:
 
     void closeEvent(QCloseEvent *event);
 
+#ifndef BUILDINGED_SA
     bool openFile(const QString &fileName);
+#endif
     bool openAutoSave(const QString &fileName);
 
     bool confirmAllSave();
@@ -211,10 +213,16 @@ public:
     QAction *redoAction() const
     { return mRedoAction; }
 
+#ifdef BUILDINGED_SA
+    void readSettings();
+#endif
+
 private:
     BuildingDocumentMgr *docman() const;
 
+#ifndef BUILDINGED_SA
     void readSettings();
+#endif
     void writeSettings();
 
 public:
@@ -313,6 +321,9 @@ private slots:
     void keyboardShortcuts();
 
 public slots:
+#ifdef BUILDINGED_SA
+    bool openFile(const QString &fileName);
+#endif
     void floorsDialog();
     void roomsDialog();
     void tilesDialog();

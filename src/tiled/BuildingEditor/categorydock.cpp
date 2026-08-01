@@ -144,6 +144,7 @@ CategoryDock::CategoryDock(QWidget *parent) :
     connect(ToolManager::instance(), &ToolManager::currentToolChanged,
             this, &CategoryDock::currentToolChanged);
 
+#ifndef BUILDINGED_SA
     /////
 
     // Add tile categories to the gui
@@ -174,7 +175,44 @@ CategoryDock::CategoryDock(QWidget *parent) :
 
     connect(BuildingDocumentMgr::instance(), &BuildingDocumentMgr::currentDocumentChanged,
             this, &CategoryDock::currentDocumentChanged);
+#endif // !BUILDINGED_SA
 }
+
+#ifdef BUILDINGED_SA
+void CategoryDock::afterInitConfigFiles()
+{
+    /////
+
+    // Add tile categories to the gui
+    setCategoryList();
+
+    /////
+
+    QSettings &mSettings = BuildingPreferences::instance()->settings();
+    mSettings.beginGroup(QLatin1String("CategoryDock"));
+    QString categoryName = mSettings.value(QLatin1String("SelectedCategory")).toString();
+    if (!categoryName.isEmpty()) {
+        int index = BuildingTilesMgr::instance()->indexOf(categoryName);
+        if (index >= 0)
+            ui->categoryList->setCurrentRow(mRowOfFirstCategory + index);
+    }
+    QString fGroupName = mSettings.value(QLatin1String("SelectedFurnitureGroup")).toString();
+    if (!fGroupName.isEmpty()) {
+        int index = FurnitureGroups::instance()->indexOf(fGroupName);
+        if (index >= 0)
+            ui->categoryList->setCurrentRow(mRowOfFirstFurnitureGroup + index);
+    }
+    mSettings.endGroup();
+
+    // This will create the Tiles dialog.  It must come after reading all the
+    // config files.
+    connect(BuildingTilesDialog::instance(), SIGNAL(edited()),
+            SLOT(tilesDialogEdited()));
+
+    connect(BuildingDocumentMgr::instance(), SIGNAL(currentDocumentChanged(BuildingDocument*)),
+            SLOT(currentDocumentChanged(BuildingDocument*)));
+}
+#endif // BUILDINGED_SA
 
 void CategoryDock::currentDocumentChanged(BuildingDocument *doc)
 {

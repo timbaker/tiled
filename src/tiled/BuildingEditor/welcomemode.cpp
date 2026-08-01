@@ -26,8 +26,8 @@
 #include "buildingpreferences.h"
 #include "simplefile.h"
 
-#include "mainwindow.h"
 #include "mapmanager.h"
+#include "mainwindow.h"
 #include "mapimagemanager.h"
 #include "preferences.h"
 
@@ -340,7 +340,13 @@ void WelcomeMode::onActivated(const QModelIndex &index)
         prefs->setMapsDirectory(fileInfo.canonicalFilePath());
         return;
     }
+#ifdef BUILDINGED_SA
+    if (path.endsWith(QLatin1String(".tbx"))) {
+        BuildingEditorWindow::instance()->openFile(path);
+    }
+#else
     Tiled::Internal::MainWindow::instance()->openFile(path);
+#endif
 }
 
 void WelcomeMode::browse()

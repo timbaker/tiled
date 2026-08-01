@@ -30,12 +30,10 @@
 #include "buildingtools.h"
 
 #include "mapcomposite.h"
-#include "mapmanager.h"
 #include "tilemetainfomgr.h"
 #include "tilesetmanager.h"
 #include "zoomable.h"
 
-#include "isometricrenderer.h"
 #include "map.h"
 #include "maprenderer.h"
 #include "tilelayer.h"

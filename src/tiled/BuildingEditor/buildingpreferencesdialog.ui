@@ -73,7 +73,7 @@
           <item>
            <spacer name="horizontalSpacer">
             <property name="orientation">
-             <enum>Qt::Horizontal</enum>
+             <enum>Qt::Orientation::Horizontal</enum>
             </property>
             <property name="sizeHint" stdset="0">
              <size>
@@ -91,11 +91,11 @@
          <property name="title">
           <string>Interface</string>
          </property>
-         <layout class="QGridLayout" name="gridLayout" columnstretch="0,0">
-          <item row="0" column="0">
-           <layout class="QHBoxLayout" name="horizontalLayout">
+         <layout class="QGridLayout" name="gridLayout" columnstretch="0">
+          <item row="3" column="0">
+           <layout class="QHBoxLayout" name="gridColorLayout">
             <item>
-             <widget class="QLabel" name="label_4">
+             <widget class="QLabel" name="gridColorLabel">
               <property name="text">
                <string>Grid color:</string>
               </property>
@@ -105,9 +105,64 @@
              <widget class="Tiled::Internal::ColorButton" name="gridColor"/>
             </item>
             <item>
-             <spacer name="horizontalSpacer_2">
+             <spacer name="gridColorSpacer">
               <property name="orientation">
-               <enum>Qt::Horizontal</enum>
+               <enum>Qt::Orientation::Horizontal</enum>
+              </property>
+              <property name="sizeHint" stdset="0">
+               <size>
+                <width>40</width>
+                <height>20</height>
+               </size>
+              </property>
+             </spacer>
+            </item>
+           </layout>
+          </item>
+          <item row="7" column="0">
+           <widget class="QCheckBox" name="useOpenGL">
+            <property name="text">
+             <string>Use hardware-accelerated rendering (OpenGL)</string>
+            </property>
+           </widget>
+          </item>
+          <item row="0" column="0">
+           <layout class="QHBoxLayout" name="horizontalLayout_3">
+            <item>
+             <widget class="QLabel" name="themeLabel">
+              <property name="text">
+               <string>Theme:</string>
+              </property>
+             </widget>
+            </item>
+            <item>
+             <widget class="QComboBox" name="themeCombo">
+              <item>
+               <property name="text">
+                <string>Default</string>
+               </property>
+              </item>
+              <item>
+               <property name="text">
+                <string>Breeze (Dark)</string>
+               </property>
+              </item>
+              <item>
+               <property name="text">
+                <string>QDarkStyle (Dark)</string>
+               </property>
+              </item>
+              <item>
+               <property name="text">
+                <string>QDarkStyle (Light)</string>
+               </property>
+              </item>
+             </widget>
+            </item>
+            <item>
+             <spacer name="horizontalSpacer_3">
+              <property name="orientation">
+               <enum>Qt::Orientation::Horizontal</enum>
               </property>
               <property name="sizeHint" stdset="0">
                <size>
@@ -120,11 +175,60 @@
            </layout>
           </item>
           <item row="4" column="0">
-           <widget class="QCheckBox" name="useOpenGL">
-            <property name="text">
-             <string>Use hardware-accelerated rendering (OpenGL)</string>
-            </property>
-           </widget>
+           <layout class="QHBoxLayout" name="tilesetColorLayout">
+            <item>
+             <widget class="QLabel" name="label">
+              <property name="text">
+               <string>Tileset background:</string>
+              </property>
+             </widget>
+            </item>
+            <item>
+             <widget class="Tiled::Internal::ColorButton" name="tilesetColorButton"/>
+            </item>
+            <item>
+             <widget class="QToolButton" name="tilesetDefaultButton">
+              <property name="text">
+               <string>Default</string>
+              </property>
+             </widget>
+            </item>
+            <item>
+             <widget class="QListView" name="listView">
+              <property name="sizePolicy">
+               <sizepolicy hsizetype="Fixed" vsizetype="Fixed">
+                <horstretch>0</horstretch>
+                <verstretch>0</verstretch>
+               </sizepolicy>
+              </property>
+              <property name="maximumSize">
+               <size>
+                <width>32</width>
+                <height>32</height>
+               </size>
+              </property>
+              <property name="layoutDirection">
+               <enum>Qt::LayoutDirection::LeftToRight</enum>
+              </property>
+              <property name="autoFillBackground">
+               <bool>false</bool>
+              </property>
+             </widget>
+            </item>
+            <item>
+             <spacer name="tilesetColorSpacer">
+              <property name="orientation">
+               <enum>Qt::Orientation::Horizontal</enum>
+              </property>
+              <property name="sizeHint" stdset="0">
+               <size>
+                <width>40</width>
+                <height>20</height>
+               </size>
+              </property>
+             </spacer>
+            </item>
+           </layout>
           </item>
          </layout>
         </widget>
@@ -132,7 +236,7 @@
        <item>
         <spacer name="verticalSpacer">
          <property name="orientation">
-          <enum>Qt::Vertical</enum>
+          <enum>Qt::Orientation::Vertical</enum>
          </property>
          <property name="sizeHint" stdset="0">
           <size>
@@ -149,10 +253,10 @@
    <item>
     <widget class="QDialogButtonBox" name="buttonBox">
      <property name="orientation">
-      <enum>Qt::Horizontal</enum>
+      <enum>Qt::Orientation::Horizontal</enum>
      </property>
      <property name="standardButtons">
-      <set>QDialogButtonBox::Cancel|QDialogButtonBox::Ok</set>
+      <set>QDialogButtonBox::StandardButton::Cancel|QDialogButtonBox::StandardButton::Ok</set>
      </property>
     </widget>
    </item>

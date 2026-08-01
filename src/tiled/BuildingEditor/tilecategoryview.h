@@ -82,8 +82,8 @@ public:
     };
 
 signals:
-    void tileDropped(BuildingTileEntry *entry, int e, const QString &tileName);
-    void tilesDropped(BuildingTileEntry *entry, const QVector<GridDnD> &gridDnd);
+    void tileDropped(BuildingEditor::BuildingTileEntry *entry, int e, const QString &tileName);
+    void tilesDropped(BuildingEditor::BuildingTileEntry *entry, const QVector<BuildingEditor::TileCategoryModel::GridDnD> &gridDnd);
 
 private:
     BuildingTileCategory *mCategory;
@@ -127,6 +127,8 @@ public slots:
     void tilesetChanged(Tileset *tileset);
     void tilesetAdded(Tiled::Tileset *tileset);
     void tilesetRemoved(Tiled::Tileset *tileset);
+
+    void tilesetBackgroundColorChanged(const QColor& color);
 
 private:
     void init();

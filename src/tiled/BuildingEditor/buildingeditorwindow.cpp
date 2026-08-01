@@ -572,7 +572,9 @@ BuildingEditorWindow::BuildingEditorWindow(QWidget *parent) :
 
     initActionManager();
 
+#ifndef BUILDINGED_SA
     readSettings();
+#endif
 
     updateActions();
     updateWindowTitle();
@@ -684,6 +686,12 @@ bool BuildingEditorWindow::closeYerself()
 
 bool BuildingEditorWindow::Startup()
 {
+#ifdef BUILDINGED_SA
+    mIsoObjectEditMode->afterInitConfigFiles();
+    mOrthoObjectEditMode->afterInitConfigFiles();
+    mTileEditMode->afterInitConfigFiles();
+#endif
+
     // Refresh the ui before blocking while loading tilesets etc
     qApp->processEvents(QEventLoop::ExcludeUserInputEvents);
 

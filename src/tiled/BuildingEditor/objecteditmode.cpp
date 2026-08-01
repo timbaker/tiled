@@ -745,6 +745,13 @@ void ObjectEditMode::writeSettings(QSettings &settings)
     settings.endGroup();
 }
 
+#ifdef BUILDINGED_SA
+void ObjectEditMode::afterInitConfigFiles()
+{
+    mCategoryDock->afterInitConfigFiles();
+}
+#endif
+
 void ObjectEditMode::onActiveStateChanged(bool active)
 {
     QMenu *menu = BuildingEditorWindow::instance()->actionIface()->menuViews;

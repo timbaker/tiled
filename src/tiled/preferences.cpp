@@ -20,7 +20,9 @@
 
 #include "preferences.h"
 
+#ifndef BUILDINGED_SA
 #include "documentmanager.h"
+#endif
 #include "languagemanager.h"
 #include "tilesetmanager.h"
 #ifdef ZOMBOID
@@ -32,6 +34,7 @@
 #include <QDebug>
 #include <QDir>
 #include <QProcessEnvironment>
+#include <QListView>
 #include <QTextStream>
 #endif
 #include <QDesktopServices>
@@ -101,7 +104,14 @@ Preferences::Preferences()
                                                QColor(Qt::darkGray).name()).toString());
     mShowAdjacentMaps = mSettings->value(QLatin1String("ShowAdjacentMaps"), true).toBool();
     mHighlightRoomUnderPointer = mSettings->value(QLatin1String("HighlightRoomUnderPointer"), false).toBool();
-    mTilesetBackgroundColor = QColor(mSettings->value(QLatin1String("TilesetBackgroundColor"), QColor(Qt::white).name()).toString());
+
+    // This does *not* give the correct .qss theme color, only the system default.
+    // The .qss colors aren't applied until a widget is displayed for the first time.
+    QListView listView;
+    const QPalette& palette = qApp->palette(&listView);
+    const QColor listBgColor = palette.color(QPalette::ColorRole::Base);
+    mTilesetBackgroundColor = QColor(mSettings->value(QLatin1String("TilesetBackgroundColor"), listBgColor.name()).toString());
+
     mShowCellBorder = mSettings->value(QLatin1String("ShowCelLBorder"), true).toBool();
     mTheme = mSettings->value(QLatin1String("Theme"), QLatin1String("Default")).toString();
 #endif
@@ -393,6 +403,7 @@ static QString lastPathKey(Preferences::FileType fileType)
     return key;
 }
 
+#ifndef BUILDINGED_SA
 /**
  * Returns the last location of a file chooser for the given file type. As long
  * as it was set using setLastPath().
@@ -424,6 +435,7 @@ QString Preferences::lastPath(FileType fileType) const
 
     return path;
 }
+#endif // BUILDINGED_SA
 
 /**
  * \see lastPath()

@@ -20,11 +20,15 @@
 
 #include "buildingpreferences.h"
 
+#include "preferences.h"
+
 #include <QFileDialog>
 #include <QMessageBox>
 #include <QSettings>
+#include <QTableView>
 
 using namespace BuildingEditor;
+using namespace Tiled::Internal;
 
 BuildingPreferencesDialog::BuildingPreferencesDialog(QWidget *parent) :
     QDialog(parent),
@@ -37,12 +41,18 @@ BuildingPreferencesDialog::BuildingPreferencesDialog(QWidget *parent) :
 
     ui->gridColor->setColor(BuildingPreferences::instance()->gridColor());
 
+    ui->tilesetColorButton->setColor(Preferences::instance()->tilesetBackgroundColor());
+    connect(ui->tilesetDefaultButton, &QAbstractButton::clicked, this, &BuildingPreferencesDialog::setDefaultTilesetBackground);
+
     mUseOpenGL = prefs()->useOpenGL();
     ui->useOpenGL->setChecked(mUseOpenGL);
     connect(ui->useOpenGL, &QAbstractButton::toggled, this, &BuildingPreferencesDialog::setUseOpenGL);
 
     ui->isometric->setChecked(!prefs()->levelIsometric());
     ui->levelIsometric->setChecked(prefs()->levelIsometric());
+
+    ui->themeCombo->setCurrentText(Preferences::instance()->theme());
+    connect(ui->themeCombo, qOverload<int>(&QComboBox::currentIndexChanged), this, &BuildingPreferencesDialog::themeChanged);
 }
 
 BuildingPreferencesDialog::~BuildingPreferencesDialog()
@@ -60,9 +70,24 @@ void BuildingPreferencesDialog::setUseOpenGL(bool useOpenGL)
     mUseOpenGL = useOpenGL;
 }
 
+void BuildingPreferencesDialog::themeChanged(int index)
+{
+    Q_UNUSED(index)
+    QString text = ui->themeCombo->currentText();
+    Preferences::instance()->setTheme(text);
+}
+
+void BuildingPreferencesDialog::setDefaultTilesetBackground()
+{
+    const QPalette& palette = ui->listView->palette();
+    const QColor tableBgColor = palette.color(QPalette::Active, QPalette::Base);
+    ui->tilesetColorButton->setColor(tableBgColor);
+}
+
 void BuildingPreferencesDialog::accept()
 {
     prefs()->setGridColor(ui->gridColor->color());
+    Preferences::instance()->setTilesetBackgroundColor(ui->tilesetColorButton->color());
     prefs()->setUseOpenGL(mUseOpenGL);
     prefs()->setLevelIsometric(ui->levelIsometric->isChecked());
     QDialog::accept();

@@ -67,6 +67,10 @@ public:
     void readSettings(QSettings &settings);
     void writeSettings(QSettings &settings);
 
+#ifdef BUILDINGED_SA
+    void afterInitConfigFiles();
+#endif
+
 signals:
     void viewAddedForDocument(BuildingEditor::BuildingDocument *doc, BuildingEditor::BuildingIsoView *view);
     

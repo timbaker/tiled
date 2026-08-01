@@ -22,9 +22,8 @@
 #include "buildingtemplates.h"
 #include "buildingtiles.h"
 #include "furnituregroups.h"
-#include "roofhiding.h"
-
 #include "preferences.h"
+#include "roofhiding.h"
 
 #if defined(Q_OS_WIN) && (_MSC_VER >= 1600)
 // Hmmmm.  libtiled.dll defines the MapRands class as so:

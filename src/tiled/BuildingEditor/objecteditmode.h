@@ -53,6 +53,10 @@ public:
     void readSettings(QSettings &settings);
     void writeSettings(QSettings &settings);
 
+#ifdef BUILDINGED_SA
+    void afterInitConfigFiles();
+#endif
+
 protected slots:
     void onActiveStateChanged(bool active);
 

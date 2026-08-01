@@ -66,6 +66,10 @@ public:
     void writeSettings(QSettings& settings);
     void readSettings(QSettings& settings);
 
+#ifdef BUILDINGED_SA
+    void afterInitConfigFiles();
+#endif
+
 private:
     void changeEvent(QEvent *event);
     void retranslateUi();

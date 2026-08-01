@@ -57,6 +57,10 @@ class CategoryDock : public QDockWidget
 public:
     CategoryDock(QWidget *parent = 0);
     
+#ifdef BUILDINGED_SA
+    void afterInitConfigFiles();
+#endif
+
     Building *currentBuilding() const;
     Room *currentRoom() const;
 
