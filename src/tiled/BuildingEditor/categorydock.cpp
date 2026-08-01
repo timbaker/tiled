@@ -206,11 +206,11 @@ void CategoryDock::afterInitConfigFiles()
 
     // This will create the Tiles dialog.  It must come after reading all the
     // config files.
-    connect(BuildingTilesDialog::instance(), SIGNAL(edited()),
-            SLOT(tilesDialogEdited()));
+    connect(BuildingTilesDialog::instance(), &BuildingTilesDialog::edited,
+            this, &CategoryDock::tilesDialogEdited);
 
-    connect(BuildingDocumentMgr::instance(), SIGNAL(currentDocumentChanged(BuildingDocument*)),
-            SLOT(currentDocumentChanged(BuildingDocument*)));
+    connect(BuildingDocumentMgr::instance(), &BuildingDocumentMgr::currentDocumentChanged,
+            this, &CategoryDock::currentDocumentChanged);
 }
 #endif // BUILDINGED_SA
 

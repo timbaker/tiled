@@ -1032,8 +1032,9 @@ void MixedTilesetModel::redisplay()
 {
     int maxRow = rowCount() - 1;
     int maxColumn = columnCount() - 1;
-    if (maxRow >= 0 && maxColumn >= 0)
+    if (maxRow >= 0 && maxColumn >= 0) {
         emit dataChanged(index(0, 0), index(maxRow, maxColumn));
+    }
 }
 
 void MixedTilesetModel::setShowHeaders(bool show)

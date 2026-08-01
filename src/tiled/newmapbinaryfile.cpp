@@ -94,7 +94,7 @@ bool NewMapBinaryFile::write(MapComposite *mapComposite, const QVector<Tiled::Pr
                 LotFile::Square& square = mGridData[lx][ly][lg->level()];
                 cells.resize(0);
                 lg->orderedCellsAt2(QPoint(x, y), vars, cells);
-                for (const Tiled::Cell *cell : qAsConst(cells)) {
+                for (const Tiled::Cell *cell : std::as_const(cells)) {
                     if (cell->tile == missingTile) continue;
                     LotFile::Entry *e = new LotFile::Entry(cellToGid(cell));
                     square.Entries.append(e);
@@ -194,7 +194,7 @@ bool NewMapBinaryFile::generateHeader(MapComposite *mapComposite)
     mTilesetToFirstGid.clear();
     mTilesetNameToFirstGid.clear();
     uint firstGid = 1;
-    for (Tileset *tileset : qAsConst(tilesets)) {
+    for (Tileset *tileset : std::as_const(tilesets)) {
         if (!handleTileset(tileset, firstGid)) {
             return false;
         }
@@ -231,7 +231,7 @@ bool NewMapBinaryFile::generateHeader(MapComposite *mapComposite)
             }
             QList<LotFile::RoomRect*> rrList2;
             mRoomRectLookup.overlapping(QRect(rr->bounds().adjusted(-1, -1, 1, 1)), rrList2);
-            for (LotFile::RoomRect *comp : qAsConst(rrList2)) {
+            for (LotFile::RoomRect *comp : std::as_const(rrList2)) {
                 if (comp == rr)
                     continue;
                 if (comp->room == rr->room)
@@ -239,7 +239,7 @@ bool NewMapBinaryFile::generateHeader(MapComposite *mapComposite)
                 if (rr->inSameRoom(comp)) {
                     if (comp->room != nullptr) {
                         LotFile::Room *room = comp->room;
-                        for (LotFile::RoomRect *rr2 : qAsConst(room->rects)) {
+                        for (LotFile::RoomRect *rr2 : std::as_const(room->rects)) {
                             Q_ASSERT(rr2->room == room);
                             Q_ASSERT(!rr->room->rects.contains(rr2));
                             rr2->room = rr->room;
@@ -264,7 +264,7 @@ bool NewMapBinaryFile::generateHeader(MapComposite *mapComposite)
 
     LotFile::RectLookup<LotFile::Room> mRoomLookup;
     mRoomLookup.clear(NUM_CHUNKS_X, NUM_CHUNKS_Y, mSquaresPerChunk);
-     for (LotFile::Room *r : qAsConst(roomList)) {
+     for (LotFile::Room *r : std::as_const(roomList)) {
          r->mBounds = r->calculateBounds();
          mRoomLookup.add(r, r->bounds());
      }
@@ -272,7 +272,7 @@ bool NewMapBinaryFile::generateHeader(MapComposite *mapComposite)
     // Merge adjacent rooms into buildings.
     // Rooms on different levels that overlap in x/y are merged into the
     // same buliding.
-    for (LotFile::Room *r : qAsConst(roomList)) {
+    for (LotFile::Room *r : std::as_const(roomList)) {
         if (r->building == nullptr) {
             r->building = new LotFile::Building();
             buildingList += r->building;
@@ -280,7 +280,7 @@ bool NewMapBinaryFile::generateHeader(MapComposite *mapComposite)
         }
         QList<LotFile::Room*> roomList2;
         mRoomLookup.overlapping(r->bounds().adjusted(-1, -1, 1, 1), roomList2);
-        for (LotFile::Room *comp : qAsConst(roomList2)) {
+        for (LotFile::Room *comp : std::as_const(roomList2)) {
             if (comp == r)
                 continue;
             if (r->building == comp->building)
@@ -288,7 +288,7 @@ bool NewMapBinaryFile::generateHeader(MapComposite *mapComposite)
             if (r->inSameBuilding(comp)) {
                 if (comp->building != nullptr) {
                     LotFile::Building *b = comp->building;
-                    for (LotFile::Room *r2 : qAsConst(b->RoomList)) {
+                    for (LotFile::Room *r2 : std::as_const(b->RoomList)) {
                         Q_ASSERT(r2->building == b);
                         Q_ASSERT(!r->building->RoomList.contains(r2));
                         r2->building = r->building;
@@ -318,7 +318,7 @@ bool NewMapBinaryFile::generateHeaderAux(QDataStream &out, MapComposite *mapComp
     out << qint32(Version);
 
     int tilecount = 0;
-    for (LotFile::Tile *tile : qAsConst(mTileMap)) {
+    for (LotFile::Tile *tile : std::as_const(mTileMap)) {
         if (tile->used) {
             tile->id = tilecount;
             tilecount++;
@@ -326,7 +326,7 @@ bool NewMapBinaryFile::generateHeaderAux(QDataStream &out, MapComposite *mapComp
     }
     out << qint32(tilecount);
 
-    for (LotFile::Tile *tile : qAsConst(mTileMap)) {
+    for (LotFile::Tile *tile : std::as_const(mTileMap)) {
         if (tile->used) {
             SaveString(out, tile->name);
         }
@@ -341,12 +341,12 @@ bool NewMapBinaryFile::generateHeaderAux(QDataStream &out, MapComposite *mapComp
     out << qint32(MaxLevel);
 
     out << qint32(roomList.count());
-    for (LotFile::Room *room : qAsConst(roomList)) {
+    for (LotFile::Room *room : std::as_const(roomList)) {
         SaveString(out, room->name);
         out << qint32(room->floor);
 
         out << qint32(room->rects.size());
-        for (LotFile::RoomRect *rr : qAsConst(room->rects)) {
+        for (LotFile::RoomRect *rr : std::as_const(room->rects)) {
             out << qint32(rr->x);
             out << qint32(rr->y);
             out << qint32(rr->w);
@@ -354,7 +354,7 @@ bool NewMapBinaryFile::generateHeaderAux(QDataStream &out, MapComposite *mapComp
         }
 
         out << qint32(room->objects.size());
-        for (const LotFile::RoomObject &object : qAsConst(room->objects)) {
+        for (const LotFile::RoomObject &object : std::as_const(room->objects)) {
             out << qint32(object.metaEnum);
             out << qint32(object.x);
             out << qint32(object.y);
@@ -362,9 +362,9 @@ bool NewMapBinaryFile::generateHeaderAux(QDataStream &out, MapComposite *mapComp
     }
 
     out << qint32(buildingList.count());
-    for (LotFile::Building *building : qAsConst(buildingList)) {
+    for (LotFile::Building *building : std::as_const(buildingList)) {
         out << qint32(building->RoomList.count());
-        for (LotFile::Room *room : qAsConst(building->RoomList)) {
+        for (LotFile::Room *room : std::as_const(building->RoomList)) {
             out << qint32(room->ID);
         }
     }
@@ -441,8 +441,8 @@ bool NewMapBinaryFile::generateChunk(QDataStream &out, MapComposite *mapComposit
 
 void NewMapBinaryFile::generateBuildingObjects(int mapWidth, int mapHeight)
 {
-    for (LotFile::Room *room : qAsConst(roomList)) {
-        for (LotFile::RoomRect *rr : qAsConst(room->rects)) {
+    for (LotFile::Room *room : std::as_const(roomList)) {
+        for (LotFile::RoomRect *rr : std::as_const(room->rects)) {
             generateBuildingObjects(mapWidth, mapHeight, room, rr);
         }
     }
@@ -459,7 +459,7 @@ void NewMapBinaryFile::generateBuildingObjects(int mapWidth, int mapHeight,
 
             /* Examine every tile inside the room.  If the tile's metaEnum >= 0
                then create a new RoomObject for it. */
-            for (LotFile::Entry *entry : qAsConst(mGridData[x][y][room->floor].Entries)) {
+            for (LotFile::Entry *entry : std::as_const(mGridData[x][y][room->floor].Entries)) {
                 int metaEnum = mTileMap[entry->gid]->metaEnum;
                 if (metaEnum >= 0) {
                     LotFile::RoomObject object;
@@ -477,7 +477,7 @@ void NewMapBinaryFile::generateBuildingObjects(int mapWidth, int mapHeight,
     int y = rr->y + rr->h;
     if (y < mapHeight) {
         for (int x = rr->x; x < rr->x + rr->w; x++) {
-            for (LotFile::Entry *entry : qAsConst(mGridData[x][y][room->floor].Entries)) {
+            for (LotFile::Entry *entry : std::as_const(mGridData[x][y][room->floor].Entries)) {
                 int metaEnum = mTileMap[entry->gid]->metaEnum;
                 if (metaEnum >= 0 && TileMetaInfoMgr::instance()->isEnumNorth(metaEnum)) {
                     LotFile::RoomObject object;
@@ -495,7 +495,7 @@ void NewMapBinaryFile::generateBuildingObjects(int mapWidth, int mapHeight,
     int x = rr->x + rr->w;
     if (x < mapWidth) {
         for (int y = rr->y; y < rr->y + rr->h; y++) {
-            for (LotFile::Entry *entry : qAsConst(mGridData[x][y][room->floor].Entries)) {
+            for (LotFile::Entry *entry : std::as_const(mGridData[x][y][room->floor].Entries)) {
                 int metaEnum = mTileMap[entry->gid]->metaEnum;
                 if (metaEnum >= 0 && TileMetaInfoMgr::instance()->isEnumWest(metaEnum)) {
                     LotFile::RoomObject object;

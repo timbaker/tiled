@@ -1401,7 +1401,7 @@ void BuildingEditorWindow::exportNewBinary()
     getTopStaircaseTiles(northStairTiles, westStairTiles);
 
     QString luaCode;
-    for (const QString& fileName : qAsConst(fileNames)) {
+    for (const QString& fileName : std::as_const(fileNames)) {
         exportNewBinaryFile(&dialog, fileName, northStairTiles, westStairTiles, luaCode);
     }
 
@@ -1983,9 +1983,9 @@ void BuildingEditorWindow::getTopStaircaseTiles(QSet<QString> &northStairTiles, 
 {
     TileDefWatcher *tileDefWatcher = getTileDefWatcher();
     tileDefWatcher->check();
-    for (TileDefWatcherFile *watcherFile : qAsConst(tileDefWatcher->mFiles)) {
+    for (TileDefWatcherFile *watcherFile : std::as_const(tileDefWatcher->mFiles)) {
         for (TileDefTileset* tdts : watcherFile->mTileDefFile->tilesets()) {
-            for (TileDefTile* tdt : qAsConst(tdts->mTiles)) {
+            for (TileDefTile* tdt : std::as_const(tdts->mTiles)) {
                 if (tdt->mProperties.contains(QStringLiteral("stairsTN"))) {
                     northStairTiles += BuildingTilesMgr::nameForTile(tdt->tileset()->mName, tdt->id());
                 }

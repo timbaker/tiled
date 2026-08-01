@@ -257,7 +257,7 @@ WorldCellLotModel::Item *WorldCellLotModel::toItem(WorldCellLevel *level) const
 {
     if (!mRoot)
         return nullptr;
-    for (Item *item : qAsConst(mRoot->children)) {
+    for (Item *item : std::as_const(mRoot->children)) {
         if (item->level == level) {
             return item;
         }
@@ -270,7 +270,7 @@ WorldCellLotModel::Item *WorldCellLotModel::toItem(WorldCellLot *lot) const
     if (!mRoot)
         return nullptr;
     Item *parent = toItem(mCell->levelForZ(lot->level()));
-    for (Item *item : qAsConst(parent->children)) {
+    for (Item *item : std::as_const(parent->children)) {
         if (item->lot == lot) {
             return item;
         }

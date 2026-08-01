@@ -1170,7 +1170,7 @@ void MapDocument::initAdjacentMaps()
                     mMapComposite->setAdjacentMap(x, y, mapInfo);
                 }
                 MapComposite *adjacentMap = mMapComposite->adjacentMap(x, y);
-                for (WorldCellLot *lot : qAsConst(cell2->lots())) {
+                for (WorldCellLot *lot : std::as_const(cell2->lots())) {
                     if (lot->mapName().isEmpty())
                         continue;
                     MapInfo *subMapInfo = MapManager::instance()->loadMap(

@@ -93,7 +93,7 @@ void ZLotManager::setMapDocument(MapDocument *mapDoc)
                     }
                 }
                 mOverlappingLots = WorldEd::WorldEdMgr::instance()->getOverlappingLots(cell, !Preferences::instance()->showAdjacentMaps());
-                for (WorldCellLot *lot : qAsConst(mOverlappingLots)) {
+                for (WorldCellLot *lot : std::as_const(mOverlappingLots)) {
                     MapInfo *mapInfo = MapManager::instance()->loadMap(lot->mapName(), QString(),
                                                                        true, MapManager::PriorityLow);
                     if (mapInfo) {
@@ -465,7 +465,7 @@ void ZLotManager::afterWorldChanged()
             }
         }
         mOverlappingLots = WorldEd::WorldEdMgr::instance()->getOverlappingLots(cell, !Preferences::instance()->showAdjacentMaps());
-        for (WorldCellLot *lot : qAsConst(mOverlappingLots)) {
+        for (WorldCellLot *lot : std::as_const(mOverlappingLots)) {
             MapInfo *mapInfo = MapManager::instance()->loadMap(lot->mapName(), QString(),
                                                                true, MapManager::PriorityLow);
             if (mapInfo) {

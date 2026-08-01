@@ -27,7 +27,9 @@
 #include "simplefile.h"
 
 #include "mapmanager.h"
+#ifndef BUILDINGED_SA
 #include "mainwindow.h"
+#endif
 #include "mapimagemanager.h"
 #include "preferences.h"
 
