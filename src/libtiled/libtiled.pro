@@ -16,6 +16,15 @@ macx {
 }
 DLLDESTDIR = ../..
 
+# Make sure the libtiled.so can find libzlib.so
+!win32:!macx {
+    QMAKE_RPATHDIR += \$\$ORIGIN/../lib
+
+    # It is not possible to use ORIGIN in QMAKE_RPATHDIR, so a bit manually
+    QMAKE_LFLAGS += -Wl,-z,origin \'-Wl,-rpath,$$join(QMAKE_RPATHDIR, ":")\'
+    QMAKE_RPATHDIR =
+}
+
 DEFINES += QT_NO_CAST_FROM_ASCII \
     QT_NO_CAST_TO_ASCII
 DEFINES += TILED_LIBRARY

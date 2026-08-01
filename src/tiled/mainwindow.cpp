@@ -1957,13 +1957,21 @@ void MainWindow::snowEditor()
 
 void MainWindow::launchWorldEd()
 {
-    QString path = QApplication::applicationDirPath();
+    QString path = Preferences::instance()->appDirPath();
 #ifdef Q_OS_WIN
     path += QLatin1String("/../WorldEd/PZWorldEd.exe");
 #elif defined(Q_OS_MACOS)
     path += QLatin1String("/../WorldEd/PZWorldEd"); // FIXME: .app ?
 #else
-    path += QLatin1String("/../../WorldEd/PZWorldEd.sh");
+    QString path1 = path + QLatin1String("/../../WorldEd/PZWorldEd.sh");
+    QString path2 = path + QLatin1String("/../WorldEd/PZWorldEd-x86_64.AppImage.sh");
+    if (QFileInfo::exists(path1)) {
+        path = path1;
+    } else if (QFileInfo::exists(path2)) {
+        path = path2;
+    } else {
+        path = path1;
+    }
 #endif
     path = QDir::cleanPath(path);
     path = QDir::toNativeSeparators(path);

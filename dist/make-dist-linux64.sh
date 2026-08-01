@@ -1,6 +1,6 @@
 SRC=$(pwd)/..
 BUILD=$SRC/../build-tiled-docker
-APPIMAGE=$SRC/../linuxdeploy/TileZed-x86_64.AppImage
+APPIMAGE=$SRC/../linuxdeploy-tiled/TileZed-x86_64.AppImage
 DESTROOT=$SRC/../dist-tiled-docker
 DEST=$DESTROOT/TileZed
 

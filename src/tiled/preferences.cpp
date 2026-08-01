@@ -29,7 +29,9 @@
 
 #ifdef ZOMBOID
 #include <QApplication>
+#include <QDebug>
 #include <QDir>
+#include <QProcessEnvironment>
 #include <QTextStream>
 #endif
 #include <QDesktopServices>
@@ -58,6 +60,9 @@ void Preferences::deleteInstance()
 Preferences::Preferences()
     : mSettings(new QSettings)
 {
+    mAppDirPath = initAppDirPath();
+    mShareDirPath = initShareDirPath();
+
     // Retrieve storage settings
     mSettings->beginGroup(QLatin1String("Storage"));
     mLayerDataFormat = (MapWriter::LayerDataFormat)
@@ -127,10 +132,10 @@ Preferences::Preferences()
     QString KEY_TILES_DIR = QLatin1String("TilesDirectory");
     QString tilesDirectory = settings.value(KEY_TILES_DIR).toString();
     if (tilesDirectory.isEmpty() || !QDir(tilesDirectory).exists()) {
-        tilesDirectory = QCoreApplication::applicationDirPath() +
+        tilesDirectory = appDirPath() +
                 QLatin1Char('/') + QLatin1String("../Tiles");
         if (!QDir(tilesDirectory).exists())
-            tilesDirectory = QCoreApplication::applicationDirPath() +
+            tilesDirectory = appDirPath() +
                     QLatin1Char('/') + QLatin1String("../../Tiles");
     }
     if (tilesDirectory.length())
@@ -182,6 +187,45 @@ Preferences::Preferences()
 Preferences::~Preferences()
 {
     delete mSettings;
+}
+
+QString Preferences::initAppDirPath() {
+#ifdef Q_OS_WIN
+    return QCoreApplication::applicationDirPath();
+#elif defined(Q_OS_MAC)
+    return QCoreApplication::applicationDirPath();
+#elif defined(Q_OS_UNIX)
+    QProcessEnvironment env = QProcessEnvironment::systemEnvironment();
+    if (env.contains(QStringLiteral("APPIMAGE"))) {
+        qDebug() << "Running as a compressed AppImage file!";
+        qDebug() << "Original AppImage location:" << env.value(QStringLiteral("APPIMAGE"));
+        qDebug() << "Virtual Mount folder:" << env.value(QStringLiteral("APPDIR"));
+        mLinuxAppImage = true;
+        const QString appImage = env.value(QStringLiteral("APPIMAGE"));
+        return QFileInfo(appImage).absolutePath();
+    }
+    qDebug() << "Running as a standard unpacked binary or local AppDir.";
+    // ../src is where the .o files etc are built, not the source-code directory
+    mInBuildDirectory = QFileInfo::exists(QCoreApplication::applicationDirPath() + QStringLiteral("/../src"));
+    return QCoreApplication::applicationDirPath();
+#else
+#error "wtf system is this???"
+#endif
+}
+
+QString Preferences::initShareDirPath()
+{
+#if defined(Q_OS_UNIX)
+    if (mLinuxAppImage) {
+        return appDirPath() + QStringLiteral("/share/tilezed");
+    }
+    if (mInBuildDirectory) {
+        return appDirPath() + QStringLiteral("/../share/tilezed");
+    }
+    return appDirPath() + QStringLiteral("/../share/tilezed");
+#else
+    return QString();
+#endif
 }
 
 void Preferences::setShowGrid(bool showGrid)
@@ -396,6 +440,11 @@ void Preferences::setAutomappingDrawing(bool enabled)
 }
 
 #ifdef ZOMBOID
+QString Preferences::appDirPath() const
+{
+    return mAppDirPath;
+}
+
 QString Preferences::userPath() const
 {
     QString userPath = QDir::homePath() + QLatin1Char('/') + QLatin1String(".TileZed");
@@ -420,11 +469,11 @@ QString Preferences::configPath(const QString &fileName) const
 QString Preferences::appConfigPath() const
 {
 #ifdef Q_OS_WIN
-    return QCoreApplication::applicationDirPath();
+    return appDirPath();
 #elif defined(Q_OS_MACOS)
-    return QCoreApplication::applicationDirPath() + QLatin1String("/../Config");
+    return appDirPath() + QLatin1String("/../Config");
 #elif defined(Q_OS_UNIX)
-    return QCoreApplication::applicationDirPath() + QLatin1String("/../share/tilezed/config");
+    return mShareDirPath + QLatin1String("/config");
 #else
 #error "wtf system is this???"
 #endif
@@ -438,11 +487,11 @@ QString Preferences::appConfigPath(const QString &fileName) const
 QString Preferences::docsPath() const
 {
 #ifdef Q_OS_WIN
-    return QCoreApplication::applicationDirPath() + QLatin1String("/docs");
+    return appDirPath() + QLatin1String("/docs");
 #elif defined(Q_OS_MACOS)
-    return QCoreApplication::applicationDirPath() + QLatin1String("/../Docs");
+    return appDirPath() + QLatin1String("/../Docs");
 #elif defined(Q_OS_UNIX)
-    return QCoreApplication::applicationDirPath() + QLatin1String("/../share/tilezed/docs");
+    return mShareDirPath + QLatin1String("/docs");
 #else
 #error "wtf system is this???"
 #endif
@@ -456,11 +505,11 @@ QString Preferences::docsPath(const QString &fileName) const
 QString Preferences::luaPath() const
 {
 #ifdef Q_OS_WIN
-    return QCoreApplication::applicationDirPath() + QLatin1String("/lua");
+    return appDirPath() + QLatin1String("/lua");
 #elif defined(Q_OS_MACOS)
-    return QCoreApplication::applicationDirPath() + QLatin1String("/../Lua");
+    return appDirPath() + QLatin1String("/../Lua");
 #elif defined(Q_OS_UNIX)
-    return QCoreApplication::applicationDirPath() + QLatin1String("/../share/tilezed/lua");
+    return mShareDirPath + QLatin1String("/lua");
 #else
 #error "wtf system is this???"
 #endif

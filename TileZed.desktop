@@ -1,0 +1,12 @@
+[Desktop Entry]
+Type=Application
+Version=1.0
+Name=TileZed
+Comment=Official map editor for Project Zomboid
+Exec=TileZed
+Icon=tiled-icon
+Terminal=false
+Categories=Utility;Development;
+Keywords=Qt;Wayland;App;
+StartupWMClass=TileZed
+

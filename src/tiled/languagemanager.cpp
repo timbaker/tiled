@@ -50,7 +50,7 @@ LanguageManager::LanguageManager()
     : mQtTranslator(0)
     , mAppTranslator(0)
 {
-    mTranslationsDir = QCoreApplication::applicationDirPath();
+    mTranslationsDir = Preferences::instance()->appDirPath();
 #ifdef Q_OS_WIN32
     mTranslationsDir += QLatin1String("/translations");
 #elif defined(Q_OS_MACOS)
