@@ -653,11 +653,11 @@ isEmpty(INSTALL_ONLY_BUILD) {
 
     win32:DOCS_PREFIX = $${top_builddir}/docs
     unix:DOCS_PREFIX = $${top_builddir}/share/tilezed/docs
-    macx:DOCS_PREFIX = $${top_builddir}/TileZed.app/Contents/Docs
+    macx:DOCS_PREFIX = $${top_builddir}/bin/TileZed.app/Contents/Docs
 
     win32:LUA_PREFIX = $${top_builddir}/lua
     unix:LUA_PREFIX = $${top_builddir}/share/tilezed/lua
-    macx:LUA_PREFIX = $${top_builddir}/TileZed.app/Contents/Lua
+    macx:LUA_PREFIX = $${top_builddir}/bin/TileZed.app/Contents/Lua
 }
 
 configTxtFiles.path = $${CONFIG_PREFIX}
