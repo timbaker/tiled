@@ -43,7 +43,11 @@ LuaConsole::LuaConsole(QWidget *parent) :
     QMainWindow(parent),
     ui(new Ui::LuaConsole)
 {
+#ifdef Q_OS_MACOS
+    // Using the Qt::Tool flag prevents the menu bar working.
+#else
     setWindowFlags(windowFlags() | Qt::Tool);
+#endif
 
     ui->setupUi(this);
 
