@@ -22,6 +22,7 @@
 
 #include "addtilesetsdialog.h"
 #include "preferences.h"
+#include "removetilesetsdialog.h"
 #include "tiledeffile.h"
 #include "tiledeftextfile.h"
 #include "tilesetmanager.h"
@@ -376,11 +377,13 @@ TileDefDialog::TileDefDialog(QWidget *parent) :
     toolBar->addSeparator();
     toolBar->addAction(ui->actionAddTileset);
     toolBar->addAction(ui->actionRemoveTileset);
+    toolBar->addAction(ui->actionRemoveTilesets);
     ui->toolBarLayout->insertWidget(0, toolBar);
 
     connect(ui->actionGoBack, &QAction::triggered, this, &TileDefDialog::goBack);
     connect(ui->actionGoForward, &QAction::triggered, this, &TileDefDialog::goForward);
     connect(ui->actionRemoveTileset, &QAction::triggered, this, qOverload<>(&TileDefDialog::removeTileset));
+    connect(ui->actionRemoveTilesets, &QAction::triggered, this, qOverload<>(&TileDefDialog::removeTilesets));
 
     /////
 
@@ -634,6 +637,26 @@ void TileDefDialog::removeTileset()
             return;
         mUndoStack->push(new RemoveTileset(this, mTilesets.indexOf(tileset)));
     }
+}
+
+void TileDefDialog::removeTilesets()
+{
+    RemoveTilesetsDialog dialog;
+    dialog.setTilesets(mTilesetByName.keys());
+    if (dialog.exec() != QDialog::Accepted) {
+        return;
+    }
+    const QStringList tilesets = dialog.tilesetsToRemove();
+    if (tilesets.isEmpty()) {
+        return;
+    }
+    mUndoStack->beginMacro(tr("Remove Tilesets"));
+    for (const QString& tilesetName : tilesets) {
+        const Tileset* tileset = mTilesetByName[tilesetName];
+        mUndoStack->push(new RemoveTileset(this, mTilesets.indexOf(tileset)));
+    }
+    mUndoStack->endMacro();
+    QMessageBox::information(this, tr("Remove Tilesets"), tr("Removed %1 tilesets.").arg(tilesets.size()));
 }
 
 #ifdef TDEF_TILES_DIR
@@ -1367,6 +1390,7 @@ void TileDefDialog::updateUI()
     ui->actionGoForward->setEnabled(mTilesetHistoryIndex < mTilesetHistory.size() - 1);
     ui->actionAddTileset->setEnabled(hasFile);
     ui->actionRemoveTileset->setEnabled(mCurrentTileset != nullptr);
+    ui->actionRemoveTilesets->setEnabled(hasFile && !mTilesets.isEmpty());
     ui->actionReassignTilesetIDs->setEnabled(hasFile && !mTileDefFile->tilesets().isEmpty());
 
     ui->actionCopyProperties->setEnabled(!mSelectedTiles.isEmpty());

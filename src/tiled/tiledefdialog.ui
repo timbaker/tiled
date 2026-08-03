@@ -18,7 +18,7 @@
     <item row="0" column="0">
      <widget class="QSplitter" name="splitter">
       <property name="orientation">
-       <enum>Qt::Horizontal</enum>
+       <enum>Qt::Orientation::Horizontal</enum>
       </property>
       <property name="childrenCollapsible">
        <bool>false</bool>
@@ -95,7 +95,7 @@
             <item>
              <spacer name="horizontalSpacer_2">
               <property name="orientation">
-               <enum>Qt::Horizontal</enum>
+               <enum>Qt::Orientation::Horizontal</enum>
               </property>
               <property name="sizeHint" stdset="0">
                <size>
@@ -164,7 +164,7 @@
              <widget class="QWidget" name="propertySheet" native="true">
               <layout class="QFormLayout" name="formLayout_4">
                <property name="fieldGrowthPolicy">
-                <enum>QFormLayout::AllNonFixedFieldsGrow</enum>
+                <enum>QFormLayout::FieldGrowthPolicy::AllNonFixedFieldsGrow</enum>
                </property>
                <item row="1" column="0">
                 <widget class="QGroupBox" name="groupBox">
@@ -299,7 +299,7 @@
                  </property>
                  <layout class="QFormLayout" name="formLayout_8">
                   <property name="fieldGrowthPolicy">
-                   <enum>QFormLayout::AllNonFixedFieldsGrow</enum>
+                   <enum>QFormLayout::FieldGrowthPolicy::AllNonFixedFieldsGrow</enum>
                   </property>
                   <item row="0" column="0">
                    <widget class="QCheckBox" name="ClimbSheetN">
@@ -325,7 +325,7 @@
                  </property>
                  <layout class="QFormLayout" name="formLayout_5">
                   <property name="fieldGrowthPolicy">
-                   <enum>QFormLayout::AllNonFixedFieldsGrow</enum>
+                   <enum>QFormLayout::FieldGrowthPolicy::AllNonFixedFieldsGrow</enum>
                   </property>
                   <item row="0" column="0">
                    <widget class="QCheckBox" name="HoppableN">
@@ -445,7 +445,7 @@
                  </property>
                  <layout class="QFormLayout" name="formLayout_11">
                   <property name="fieldGrowthPolicy">
-                   <enum>QFormLayout::AllNonFixedFieldsGrow</enum>
+                   <enum>QFormLayout::FieldGrowthPolicy::AllNonFixedFieldsGrow</enum>
                   </property>
                   <item row="0" column="0">
                    <widget class="QCheckBox" name="PreSeen">
@@ -464,7 +464,7 @@
                  </property>
                  <layout class="QFormLayout" name="formLayout_12">
                   <property name="fieldGrowthPolicy">
-                   <enum>QFormLayout::AllNonFixedFieldsGrow</enum>
+                   <enum>QFormLayout::FieldGrowthPolicy::AllNonFixedFieldsGrow</enum>
                   </property>
                   <item row="2" column="0">
                    <widget class="QCheckBox" name="WaterPiped">
@@ -517,7 +517,7 @@
                  </property>
                  <layout class="QFormLayout" name="formLayout_13">
                   <property name="fieldGrowthPolicy">
-                   <enum>QFormLayout::AllNonFixedFieldsGrow</enum>
+                   <enum>QFormLayout::FieldGrowthPolicy::AllNonFixedFieldsGrow</enum>
                   </property>
                   <item row="3" column="0">
                    <widget class="QCheckBox" name="WindowLocked">
@@ -587,7 +587,7 @@
                  </property>
                  <layout class="QFormLayout" name="formLayout_14">
                   <property name="fieldGrowthPolicy">
-                   <enum>QFormLayout::AllNonFixedFieldsGrow</enum>
+                   <enum>QFormLayout::FieldGrowthPolicy::AllNonFixedFieldsGrow</enum>
                   </property>
                   <item row="1" column="0">
                    <widget class="QCheckBox" name="WheelieBin">
@@ -686,7 +686,7 @@
       <item>
        <spacer name="horizontalSpacer">
         <property name="orientation">
-         <enum>Qt::Horizontal</enum>
+         <enum>Qt::Orientation::Horizontal</enum>
         </property>
         <property name="sizeHint" stdset="0">
          <size>
@@ -701,7 +701,7 @@
     <item row="1" column="0">
      <widget class="Line" name="line">
       <property name="orientation">
-       <enum>Qt::Horizontal</enum>
+       <enum>Qt::Orientation::Horizontal</enum>
       </property>
      </widget>
     </item>
@@ -782,6 +782,7 @@
    <addaction name="actionGoForward"/>
    <addaction name="actionAddTileset"/>
    <addaction name="actionRemoveTileset"/>
+   <addaction name="actionRemoveTilesets"/>
    <addaction name="separator"/>
    <addaction name="actionCopyProperties"/>
    <addaction name="actionPasteProperties"/>
@@ -945,6 +946,21 @@
    </property>
    <property name="toolTip">
     <string>Make tilesets IDs sequential, removing gaps</string>
+   </property>
+  </action>
+  <action name="actionRemoveTilesets">
+   <property name="icon">
+    <iconset resource="tiled.qrc">
+     <normaloff>:/images/16x16/edit-delete.png</normaloff>:/images/16x16/edit-delete.png</iconset>
+   </property>
+   <property name="text">
+    <string>RemoveTilesets</string>
+   </property>
+   <property name="toolTip">
+    <string>Remove multiple tilesets</string>
+   </property>
+   <property name="menuRole">
+    <enum>QAction::MenuRole::NoRole</enum>
    </property>
   </action>
  </widget>

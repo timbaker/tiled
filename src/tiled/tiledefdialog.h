@@ -88,6 +88,7 @@ private slots:
 
     void addTileset();
     void removeTileset();
+    void removeTilesets();
 
 #ifdef TDEF_TILES_DIR
     void chooseTilesDirectory();
