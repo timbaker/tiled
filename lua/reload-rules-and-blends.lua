@@ -1,0 +1,3 @@
+map:reloadRules()
+map:reloadBlends()
+

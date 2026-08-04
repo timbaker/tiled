@@ -1,5 +1,5 @@
 version = 5
-revision = 6
+revision = 7
 TileEntry
 {
     category = ceiling
@@ -186,6 +186,12 @@ TileEntry
     NorthWindow15 = 
     WestWindow16 = 
     NorthWindow16 = 
+    WestWindow17 = 
+    NorthWindow17 = 
+    WestWindow18 = 
+    NorthWindow18 = 
+    WestWindow19 = 
+    NorthWindow19 = 
 }
 TileEntry
 {
@@ -230,6 +236,12 @@ TileEntry
     NorthWindow15 = 
     WestWindow16 = 
     NorthWindow16 = 
+    WestWindow17 = 
+    NorthWindow17 = 
+    WestWindow18 = 
+    NorthWindow18 = 
+    WestWindow19 = 
+    NorthWindow19 = 
 }
 TileEntry
 {
@@ -274,6 +286,12 @@ TileEntry
     NorthWindow15 = 
     WestWindow16 = 
     NorthWindow16 = 
+    WestWindow17 = 
+    NorthWindow17 = 
+    WestWindow18 = 
+    NorthWindow18 = 
+    WestWindow19 = 
+    NorthWindow19 = 
 }
 TileEntry
 {
@@ -318,6 +336,12 @@ TileEntry
     NorthWindow15 = 
     WestWindow16 = 
     NorthWindow16 = 
+    WestWindow17 = 
+    NorthWindow17 = 
+    WestWindow18 = 
+    NorthWindow18 = 
+    WestWindow19 = 
+    NorthWindow19 = 
 }
 TileEntry
 {
@@ -362,6 +386,12 @@ TileEntry
     NorthWindow15 = walls_exterior_house_12_093
     WestWindow16 = walls_exterior_house_12_094
     NorthWindow16 = walls_exterior_house_12_095
+    WestWindow17 = 
+    NorthWindow17 = 
+    WestWindow18 = 
+    NorthWindow18 = 
+    WestWindow19 = 
+    NorthWindow19 = 
 }
 TileEntry
 {
@@ -406,6 +436,12 @@ TileEntry
     NorthWindow15 = 
     WestWindow16 = 
     NorthWindow16 = 
+    WestWindow17 = 
+    NorthWindow17 = 
+    WestWindow18 = 
+    NorthWindow18 = 
+    WestWindow19 = 
+    NorthWindow19 = 
 }
 TileEntry
 {
@@ -450,6 +486,12 @@ TileEntry
     NorthWindow15 = 
     WestWindow16 = 
     NorthWindow16 = 
+    WestWindow17 = 
+    NorthWindow17 = 
+    WestWindow18 = 
+    NorthWindow18 = 
+    WestWindow19 = 
+    NorthWindow19 = 
 }
 TileEntry
 {
@@ -494,6 +536,12 @@ TileEntry
     NorthWindow15 = walls_exterior_house_11_061
     WestWindow16 = walls_exterior_house_11_062
     NorthWindow16 = walls_exterior_house_11_063
+    WestWindow17 = 
+    NorthWindow17 = 
+    WestWindow18 = 
+    NorthWindow18 = 
+    WestWindow19 = 
+    NorthWindow19 = 
 }
 TileEntry
 {
@@ -538,6 +586,12 @@ TileEntry
     NorthWindow15 = 
     WestWindow16 = 
     NorthWindow16 = 
+    WestWindow17 = 
+    NorthWindow17 = 
+    WestWindow18 = 
+    NorthWindow18 = 
+    WestWindow19 = 
+    NorthWindow19 = 
 }
 TileEntry
 {
@@ -582,6 +636,12 @@ TileEntry
     NorthWindow15 = 
     WestWindow16 = 
     NorthWindow16 = 
+    WestWindow17 = 
+    NorthWindow17 = 
+    WestWindow18 = 
+    NorthWindow18 = 
+    WestWindow19 = 
+    NorthWindow19 = 
 }
 TileEntry
 {
@@ -626,6 +686,12 @@ TileEntry
     NorthWindow15 = 
     WestWindow16 = 
     NorthWindow16 = 
+    WestWindow17 = 
+    NorthWindow17 = 
+    WestWindow18 = 
+    NorthWindow18 = 
+    WestWindow19 = 
+    NorthWindow19 = 
 }
 TileEntry
 {
@@ -670,6 +736,12 @@ TileEntry
     NorthWindow15 = 
     WestWindow16 = 
     NorthWindow16 = 
+    WestWindow17 = 
+    NorthWindow17 = 
+    WestWindow18 = 
+    NorthWindow18 = 
+    WestWindow19 = 
+    NorthWindow19 = 
 }
 TileEntry
 {
@@ -714,6 +786,12 @@ TileEntry
     NorthWindow15 = 
     WestWindow16 = 
     NorthWindow16 = 
+    WestWindow17 = 
+    NorthWindow17 = 
+    WestWindow18 = 
+    NorthWindow18 = 
+    WestWindow19 = 
+    NorthWindow19 = 
 }
 TileEntry
 {
@@ -758,6 +836,12 @@ TileEntry
     NorthWindow15 = 
     WestWindow16 = 
     NorthWindow16 = 
+    WestWindow17 = 
+    NorthWindow17 = 
+    WestWindow18 = 
+    NorthWindow18 = 
+    WestWindow19 = 
+    NorthWindow19 = 
 }
 TileEntry
 {
@@ -802,6 +886,12 @@ TileEntry
     NorthWindow15 = 
     WestWindow16 = 
     NorthWindow16 = 
+    WestWindow17 = 
+    NorthWindow17 = 
+    WestWindow18 = 
+    NorthWindow18 = 
+    WestWindow19 = 
+    NorthWindow19 = 
 }
 TileEntry
 {
@@ -846,6 +936,12 @@ TileEntry
     NorthWindow15 = walls_exterior_house_12_061
     WestWindow16 = walls_exterior_house_12_062
     NorthWindow16 = walls_exterior_house_12_063
+    WestWindow17 = 
+    NorthWindow17 = 
+    WestWindow18 = 
+    NorthWindow18 = 
+    WestWindow19 = 
+    NorthWindow19 = 
 }
 TileEntry
 {
@@ -890,6 +986,12 @@ TileEntry
     NorthWindow15 = 
     WestWindow16 = 
     NorthWindow16 = 
+    WestWindow17 = 
+    NorthWindow17 = 
+    WestWindow18 = 
+    NorthWindow18 = 
+    WestWindow19 = 
+    NorthWindow19 = 
 }
 TileEntry
 {
@@ -934,6 +1036,12 @@ TileEntry
     NorthWindow15 = walls_exterior_house_10_029
     WestWindow16 = walls_exterior_house_10_030
     NorthWindow16 = walls_exterior_house_10_031
+    WestWindow17 = 
+    NorthWindow17 = 
+    WestWindow18 = 
+    NorthWindow18 = 
+    WestWindow19 = 
+    NorthWindow19 = 
 }
 TileEntry
 {
@@ -978,6 +1086,12 @@ TileEntry
     NorthWindow15 = walls_exterior_house_05_093
     WestWindow16 = walls_exterior_house_05_094
     NorthWindow16 = walls_exterior_house_05_095
+    WestWindow17 = 
+    NorthWindow17 = 
+    WestWindow18 = 
+    NorthWindow18 = 
+    WestWindow19 = 
+    NorthWindow19 = 
 }
 TileEntry
 {
@@ -1022,6 +1136,12 @@ TileEntry
     NorthWindow15 = walls_exterior_house_06_029
     WestWindow16 = walls_exterior_house_06_030
     NorthWindow16 = walls_exterior_house_06_031
+    WestWindow17 = 
+    NorthWindow17 = 
+    WestWindow18 = 
+    NorthWindow18 = 
+    WestWindow19 = 
+    NorthWindow19 = 
 }
 TileEntry
 {
@@ -1066,6 +1186,12 @@ TileEntry
     NorthWindow15 = walls_exterior_house_06_093
     WestWindow16 = walls_exterior_house_06_094
     NorthWindow16 = walls_exterior_house_06_095
+    WestWindow17 = 
+    NorthWindow17 = 
+    WestWindow18 = 
+    NorthWindow18 = 
+    WestWindow19 = 
+    NorthWindow19 = 
 }
 TileEntry
 {
@@ -1110,6 +1236,12 @@ TileEntry
     NorthWindow15 = walls_exterior_house_07_029
     WestWindow16 = walls_exterior_house_07_030
     NorthWindow16 = walls_exterior_house_07_031
+    WestWindow17 = 
+    NorthWindow17 = 
+    WestWindow18 = 
+    NorthWindow18 = 
+    WestWindow19 = 
+    NorthWindow19 = 
 }
 TileEntry
 {
@@ -1154,6 +1286,12 @@ TileEntry
     NorthWindow15 = walls_exterior_house_07_061
     WestWindow16 = walls_exterior_house_07_062
     NorthWindow16 = walls_exterior_house_07_063
+    WestWindow17 = 
+    NorthWindow17 = 
+    WestWindow18 = 
+    NorthWindow18 = 
+    WestWindow19 = 
+    NorthWindow19 = 
 }
 TileEntry
 {
@@ -1198,6 +1336,12 @@ TileEntry
     NorthWindow15 = walls_exterior_house_08_125
     WestWindow16 = walls_exterior_house_08_126
     NorthWindow16 = walls_exterior_house_08_127
+    WestWindow17 = 
+    NorthWindow17 = 
+    WestWindow18 = 
+    NorthWindow18 = 
+    WestWindow19 = 
+    NorthWindow19 = 
 }
 TileEntry
 {
@@ -1242,6 +1386,12 @@ TileEntry
     NorthWindow15 = walls_exterior_house_13_061
     WestWindow16 = walls_exterior_house_13_062
     NorthWindow16 = walls_exterior_house_13_063
+    WestWindow17 = 
+    NorthWindow17 = 
+    WestWindow18 = 
+    NorthWindow18 = 
+    WestWindow19 = 
+    NorthWindow19 = 
 }
 TileEntry
 {
@@ -1286,6 +1436,12 @@ TileEntry
     NorthWindow15 = 
     WestWindow16 = 
     NorthWindow16 = 
+    WestWindow17 = 
+    NorthWindow17 = 
+    WestWindow18 = 
+    NorthWindow18 = 
+    WestWindow19 = 
+    NorthWindow19 = 
 }
 TileEntry
 {
@@ -1330,6 +1486,12 @@ TileEntry
     NorthWindow15 = 
     WestWindow16 = 
     NorthWindow16 = 
+    WestWindow17 = 
+    NorthWindow17 = 
+    WestWindow18 = 
+    NorthWindow18 = 
+    WestWindow19 = 
+    NorthWindow19 = 
 }
 TileEntry
 {
@@ -1374,6 +1536,12 @@ TileEntry
     NorthWindow15 = 
     WestWindow16 = 
     NorthWindow16 = 
+    WestWindow17 = 
+    NorthWindow17 = 
+    WestWindow18 = 
+    NorthWindow18 = 
+    WestWindow19 = 
+    NorthWindow19 = 
 }
 TileEntry
 {
@@ -1652,6 +1820,12 @@ TileEntry
     NorthWindow15 = 
     WestWindow16 = 
     NorthWindow16 = 
+    WestWindow17 = 
+    NorthWindow17 = 
+    WestWindow18 = 
+    NorthWindow18 = 
+    WestWindow19 = 
+    NorthWindow19 = 
 }
 TileEntry
 {
@@ -1696,6 +1870,12 @@ TileEntry
     NorthWindow15 = 
     WestWindow16 = 
     NorthWindow16 = 
+    WestWindow17 = 
+    NorthWindow17 = 
+    WestWindow18 = 
+    NorthWindow18 = 
+    WestWindow19 = 
+    NorthWindow19 = 
 }
 TileEntry
 {
@@ -1740,6 +1920,12 @@ TileEntry
     NorthWindow15 = 
     WestWindow16 = 
     NorthWindow16 = 
+    WestWindow17 = 
+    NorthWindow17 = 
+    WestWindow18 = 
+    NorthWindow18 = 
+    WestWindow19 = 
+    NorthWindow19 = 
 }
 TileEntry
 {
@@ -1784,6 +1970,12 @@ TileEntry
     NorthWindow15 = 
     WestWindow16 = 
     NorthWindow16 = 
+    WestWindow17 = 
+    NorthWindow17 = 
+    WestWindow18 = 
+    NorthWindow18 = 
+    WestWindow19 = 
+    NorthWindow19 = 
 }
 TileEntry
 {
@@ -1828,6 +2020,12 @@ TileEntry
     NorthWindow15 = 
     WestWindow16 = 
     NorthWindow16 = 
+    WestWindow17 = 
+    NorthWindow17 = 
+    WestWindow18 = 
+    NorthWindow18 = 
+    WestWindow19 = 
+    NorthWindow19 = 
 }
 TileEntry
 {
@@ -1872,6 +2070,12 @@ TileEntry
     NorthWindow15 = 
     WestWindow16 = 
     NorthWindow16 = 
+    WestWindow17 = 
+    NorthWindow17 = 
+    WestWindow18 = 
+    NorthWindow18 = 
+    WestWindow19 = 
+    NorthWindow19 = 
 }
 TileEntry
 {
@@ -1916,6 +2120,12 @@ TileEntry
     NorthWindow15 = 
     WestWindow16 = 
     NorthWindow16 = 
+    WestWindow17 = 
+    NorthWindow17 = 
+    WestWindow18 = 
+    NorthWindow18 = 
+    WestWindow19 = 
+    NorthWindow19 = 
 }
 TileEntry
 {
@@ -1960,6 +2170,12 @@ TileEntry
     NorthWindow15 = 
     WestWindow16 = 
     NorthWindow16 = 
+    WestWindow17 = 
+    NorthWindow17 = 
+    WestWindow18 = 
+    NorthWindow18 = 
+    WestWindow19 = 
+    NorthWindow19 = 
 }
 TileEntry
 {
@@ -2004,6 +2220,12 @@ TileEntry
     NorthWindow15 = 
     WestWindow16 = 
     NorthWindow16 = 
+    WestWindow17 = 
+    NorthWindow17 = 
+    WestWindow18 = 
+    NorthWindow18 = 
+    WestWindow19 = 
+    NorthWindow19 = 
 }
 TileEntry
 {
@@ -2048,6 +2270,12 @@ TileEntry
     NorthWindow15 = 
     WestWindow16 = 
     NorthWindow16 = 
+    WestWindow17 = 
+    NorthWindow17 = 
+    WestWindow18 = 
+    NorthWindow18 = 
+    WestWindow19 = 
+    NorthWindow19 = 
 }
 TileEntry
 {
@@ -2092,6 +2320,12 @@ TileEntry
     NorthWindow15 = 
     WestWindow16 = 
     NorthWindow16 = 
+    WestWindow17 = 
+    NorthWindow17 = 
+    WestWindow18 = 
+    NorthWindow18 = 
+    WestWindow19 = 
+    NorthWindow19 = 
 }
 TileEntry
 {
@@ -2136,6 +2370,12 @@ TileEntry
     NorthWindow15 = 
     WestWindow16 = 
     NorthWindow16 = 
+    WestWindow17 = 
+    NorthWindow17 = 
+    WestWindow18 = 
+    NorthWindow18 = 
+    WestWindow19 = 
+    NorthWindow19 = 
 }
 TileEntry
 {
@@ -2180,50 +2420,12 @@ TileEntry
     NorthWindow15 = 
     WestWindow16 = 
     NorthWindow16 = 
-}
-TileEntry
-{
-    category = interior_walls
-    West = location_community_school_01_000
-    North = location_community_school_01_001
-    NorthWest = location_community_school_01_002
-    SouthEast = location_community_school_01_003
-    WestWindow = location_community_school_01_008
-    NorthWindow = location_community_school_01_009
-    WestDoor = location_community_school_01_010
-    NorthDoor = location_community_school_01_011
-    WestWindow1 = 
-    NorthWindow1 = 
-    WestWindow2 = 
-    NorthWindow2 = 
-    WestWindow3 = 
-    NorthWindow3 = 
-    WestWindow4 = 
-    NorthWindow4 = 
-    WestWindow5 = 
-    NorthWindow5 = 
-    WestWindow6 = 
-    NorthWindow6 = 
-    WestWindow7 = 
-    NorthWindow7 = 
-    WestWindow8 = 
-    NorthWindow8 = 
-    WestWindow9 = 
-    NorthWindow9 = 
-    WestWindow10 = 
-    NorthWindow10 = 
-    WestWindow11 = 
-    NorthWindow11 = 
-    WestWindow12 = 
-    NorthWindow12 = 
-    WestWindow13 = 
-    NorthWindow13 = 
-    WestWindow14 = 
-    NorthWindow14 = 
-    WestWindow15 = 
-    NorthWindow15 = 
-    WestWindow16 = 
-    NorthWindow16 = 
+    WestWindow17 = 
+    NorthWindow17 = 
+    WestWindow18 = 
+    NorthWindow18 = 
+    WestWindow19 = 
+    NorthWindow19 = 
 }
 TileEntry
 {
@@ -2268,6 +2470,12 @@ TileEntry
     NorthWindow15 = 
     WestWindow16 = 
     NorthWindow16 = 
+    WestWindow17 = 
+    NorthWindow17 = 
+    WestWindow18 = 
+    NorthWindow18 = 
+    WestWindow19 = 
+    NorthWindow19 = 
 }
 TileEntry
 {
@@ -2312,6 +2520,12 @@ TileEntry
     NorthWindow15 = 
     WestWindow16 = 
     NorthWindow16 = 
+    WestWindow17 = 
+    NorthWindow17 = 
+    WestWindow18 = 
+    NorthWindow18 = 
+    WestWindow19 = 
+    NorthWindow19 = 
 }
 TileEntry
 {
@@ -2356,6 +2570,12 @@ TileEntry
     NorthWindow15 = 
     WestWindow16 = 
     NorthWindow16 = 
+    WestWindow17 = 
+    NorthWindow17 = 
+    WestWindow18 = 
+    NorthWindow18 = 
+    WestWindow19 = 
+    NorthWindow19 = 
 }
 TileEntry
 {
@@ -2400,6 +2620,12 @@ TileEntry
     NorthWindow15 = 
     WestWindow16 = 
     NorthWindow16 = 
+    WestWindow17 = 
+    NorthWindow17 = 
+    WestWindow18 = 
+    NorthWindow18 = 
+    WestWindow19 = 
+    NorthWindow19 = 
 }
 TileEntry
 {
@@ -2444,6 +2670,12 @@ TileEntry
     NorthWindow15 = 
     WestWindow16 = 
     NorthWindow16 = 
+    WestWindow17 = 
+    NorthWindow17 = 
+    WestWindow18 = 
+    NorthWindow18 = 
+    WestWindow19 = 
+    NorthWindow19 = 
 }
 TileEntry
 {
@@ -2488,6 +2720,12 @@ TileEntry
     NorthWindow15 = 
     WestWindow16 = 
     NorthWindow16 = 
+    WestWindow17 = 
+    NorthWindow17 = 
+    WestWindow18 = 
+    NorthWindow18 = 
+    WestWindow19 = 
+    NorthWindow19 = 
 }
 TileEntry
 {
@@ -2532,6 +2770,12 @@ TileEntry
     NorthWindow15 = 
     WestWindow16 = 
     NorthWindow16 = 
+    WestWindow17 = 
+    NorthWindow17 = 
+    WestWindow18 = 
+    NorthWindow18 = 
+    WestWindow19 = 
+    NorthWindow19 = 
 }
 TileEntry
 {
@@ -2576,6 +2820,12 @@ TileEntry
     NorthWindow15 = 
     WestWindow16 = 
     NorthWindow16 = 
+    WestWindow17 = 
+    NorthWindow17 = 
+    WestWindow18 = 
+    NorthWindow18 = 
+    WestWindow19 = 
+    NorthWindow19 = 
 }
 TileEntry
 {
@@ -2620,6 +2870,12 @@ TileEntry
     NorthWindow15 = 
     WestWindow16 = 
     NorthWindow16 = 
+    WestWindow17 = 
+    NorthWindow17 = 
+    WestWindow18 = 
+    NorthWindow18 = 
+    WestWindow19 = 
+    NorthWindow19 = 
 }
 TileEntry
 {
@@ -2664,6 +2920,12 @@ TileEntry
     NorthWindow15 = 
     WestWindow16 = 
     NorthWindow16 = 
+    WestWindow17 = 
+    NorthWindow17 = 
+    WestWindow18 = 
+    NorthWindow18 = 
+    WestWindow19 = 
+    NorthWindow19 = 
 }
 TileEntry
 {
@@ -2708,6 +2970,12 @@ TileEntry
     NorthWindow15 = 
     WestWindow16 = 
     NorthWindow16 = 
+    WestWindow17 = 
+    NorthWindow17 = 
+    WestWindow18 = 
+    NorthWindow18 = 
+    WestWindow19 = 
+    NorthWindow19 = 
 }
 TileEntry
 {
@@ -2752,6 +3020,12 @@ TileEntry
     NorthWindow15 = 
     WestWindow16 = 
     NorthWindow16 = 
+    WestWindow17 = 
+    NorthWindow17 = 
+    WestWindow18 = 
+    NorthWindow18 = 
+    WestWindow19 = 
+    NorthWindow19 = 
 }
 TileEntry
 {
@@ -2796,6 +3070,12 @@ TileEntry
     NorthWindow15 = 
     WestWindow16 = 
     NorthWindow16 = 
+    WestWindow17 = 
+    NorthWindow17 = 
+    WestWindow18 = 
+    NorthWindow18 = 
+    WestWindow19 = 
+    NorthWindow19 = 
 }
 TileEntry
 {
@@ -2840,6 +3120,12 @@ TileEntry
     NorthWindow15 = 
     WestWindow16 = 
     NorthWindow16 = 
+    WestWindow17 = 
+    NorthWindow17 = 
+    WestWindow18 = 
+    NorthWindow18 = 
+    WestWindow19 = 
+    NorthWindow19 = 
 }
 TileEntry
 {
@@ -2884,6 +3170,12 @@ TileEntry
     NorthWindow15 = 
     WestWindow16 = 
     NorthWindow16 = 
+    WestWindow17 = 
+    NorthWindow17 = 
+    WestWindow18 = 
+    NorthWindow18 = 
+    WestWindow19 = 
+    NorthWindow19 = 
 }
 TileEntry
 {
@@ -2928,6 +3220,12 @@ TileEntry
     NorthWindow15 = 
     WestWindow16 = 
     NorthWindow16 = 
+    WestWindow17 = 
+    NorthWindow17 = 
+    WestWindow18 = 
+    NorthWindow18 = 
+    WestWindow19 = 
+    NorthWindow19 = 
 }
 TileEntry
 {
@@ -2972,6 +3270,12 @@ TileEntry
     NorthWindow15 = 
     WestWindow16 = 
     NorthWindow16 = 
+    WestWindow17 = 
+    NorthWindow17 = 
+    WestWindow18 = 
+    NorthWindow18 = 
+    WestWindow19 = 
+    NorthWindow19 = 
 }
 TileEntry
 {
@@ -3016,6 +3320,12 @@ TileEntry
     NorthWindow15 = 
     WestWindow16 = 
     NorthWindow16 = 
+    WestWindow17 = 
+    NorthWindow17 = 
+    WestWindow18 = 
+    NorthWindow18 = 
+    WestWindow19 = 
+    NorthWindow19 = 
 }
 TileEntry
 {
@@ -3060,6 +3370,12 @@ TileEntry
     NorthWindow15 = 
     WestWindow16 = 
     NorthWindow16 = 
+    WestWindow17 = 
+    NorthWindow17 = 
+    WestWindow18 = 
+    NorthWindow18 = 
+    WestWindow19 = 
+    NorthWindow19 = 
 }
 TileEntry
 {
@@ -3104,6 +3420,12 @@ TileEntry
     NorthWindow15 = 
     WestWindow16 = 
     NorthWindow16 = 
+    WestWindow17 = 
+    NorthWindow17 = 
+    WestWindow18 = 
+    NorthWindow18 = 
+    WestWindow19 = 
+    NorthWindow19 = 
 }
 TileEntry
 {
@@ -3148,6 +3470,12 @@ TileEntry
     NorthWindow15 = 
     WestWindow16 = 
     NorthWindow16 = 
+    WestWindow17 = 
+    NorthWindow17 = 
+    WestWindow18 = 
+    NorthWindow18 = 
+    WestWindow19 = 
+    NorthWindow19 = 
 }
 TileEntry
 {
@@ -3192,6 +3520,12 @@ TileEntry
     NorthWindow15 = 
     WestWindow16 = 
     NorthWindow16 = 
+    WestWindow17 = 
+    NorthWindow17 = 
+    WestWindow18 = 
+    NorthWindow18 = 
+    WestWindow19 = 
+    NorthWindow19 = 
 }
 TileEntry
 {
@@ -3236,6 +3570,12 @@ TileEntry
     NorthWindow15 = 
     WestWindow16 = 
     NorthWindow16 = 
+    WestWindow17 = 
+    NorthWindow17 = 
+    WestWindow18 = 
+    NorthWindow18 = 
+    WestWindow19 = 
+    NorthWindow19 = 
 }
 TileEntry
 {
@@ -3280,6 +3620,12 @@ TileEntry
     NorthWindow15 = 
     WestWindow16 = 
     NorthWindow16 = 
+    WestWindow17 = 
+    NorthWindow17 = 
+    WestWindow18 = 
+    NorthWindow18 = 
+    WestWindow19 = 
+    NorthWindow19 = 
 }
 TileEntry
 {
@@ -3324,6 +3670,12 @@ TileEntry
     NorthWindow15 = 
     WestWindow16 = 
     NorthWindow16 = 
+    WestWindow17 = 
+    NorthWindow17 = 
+    WestWindow18 = 
+    NorthWindow18 = 
+    WestWindow19 = 
+    NorthWindow19 = 
 }
 TileEntry
 {
@@ -3368,6 +3720,12 @@ TileEntry
     NorthWindow15 = 
     WestWindow16 = 
     NorthWindow16 = 
+    WestWindow17 = 
+    NorthWindow17 = 
+    WestWindow18 = 
+    NorthWindow18 = 
+    WestWindow19 = 
+    NorthWindow19 = 
 }
 TileEntry
 {
@@ -3412,6 +3770,12 @@ TileEntry
     NorthWindow15 = 
     WestWindow16 = 
     NorthWindow16 = 
+    WestWindow17 = 
+    NorthWindow17 = 
+    WestWindow18 = 
+    NorthWindow18 = 
+    WestWindow19 = 
+    NorthWindow19 = 
 }
 TileEntry
 {
@@ -3456,6 +3820,12 @@ TileEntry
     NorthWindow15 = 
     WestWindow16 = 
     NorthWindow16 = 
+    WestWindow17 = 
+    NorthWindow17 = 
+    WestWindow18 = 
+    NorthWindow18 = 
+    WestWindow19 = 
+    NorthWindow19 = 
 }
 TileEntry
 {
@@ -3500,6 +3870,12 @@ TileEntry
     NorthWindow15 = 
     WestWindow16 = 
     NorthWindow16 = 
+    WestWindow17 = 
+    NorthWindow17 = 
+    WestWindow18 = 
+    NorthWindow18 = 
+    WestWindow19 = 
+    NorthWindow19 = 
 }
 TileEntry
 {
@@ -3536,6 +3912,42 @@ TileEntry
     CapShallowRiseE2 = 
     CapShallowFallE1 = 
     CapShallowFallE2 = 
+    CapSlope30RiseE1 = 
+    CapSlope30RiseE2 = 
+    CapSlope30RiseE3 = 
+    CapSlope30RiseE4 = 
+    CapSlope30RiseE5 = 
+    CapSlope30RiseE6 = 
+    CapSlope30FallE1 = 
+    CapSlope30FallE2 = 
+    CapSlope30FallE3 = 
+    CapSlope30FallE4 = 
+    CapSlope30FallE5 = 
+    CapSlope30FallE6 = 
+    CapSlope30RiseS1 = 
+    CapSlope30RiseS2 = 
+    CapSlope30RiseS3 = 
+    CapSlope30RiseS4 = 
+    CapSlope30RiseS5 = 
+    CapSlope30RiseS6 = 
+    CapSlope30FallS1 = 
+    CapSlope30FallS2 = 
+    CapSlope30FallS3 = 
+    CapSlope30FallS4 = 
+    CapSlope30FallS5 = 
+    CapSlope30FallS6 = 
+    CapPeak30E1 = 
+    CapPeak30E2 = 
+    CapPeak30E3 = 
+    CapPeak30E4 = 
+    CapPeak30E5 = 
+    CapPeak30E6 = 
+    CapPeak30S1 = 
+    CapPeak30S2 = 
+    CapPeak30S3 = 
+    CapPeak30S4 = 
+    CapPeak30S5 = 
+    CapPeak30S6 = 
 }
 TileEntry
 {
@@ -3572,6 +3984,42 @@ TileEntry
     CapShallowRiseE2 = 
     CapShallowFallE1 = 
     CapShallowFallE2 = 
+    CapSlope30RiseE1 = 
+    CapSlope30RiseE2 = 
+    CapSlope30RiseE3 = 
+    CapSlope30RiseE4 = 
+    CapSlope30RiseE5 = 
+    CapSlope30RiseE6 = 
+    CapSlope30FallE1 = 
+    CapSlope30FallE2 = 
+    CapSlope30FallE3 = 
+    CapSlope30FallE4 = 
+    CapSlope30FallE5 = 
+    CapSlope30FallE6 = 
+    CapSlope30RiseS1 = 
+    CapSlope30RiseS2 = 
+    CapSlope30RiseS3 = 
+    CapSlope30RiseS4 = 
+    CapSlope30RiseS5 = 
+    CapSlope30RiseS6 = 
+    CapSlope30FallS1 = 
+    CapSlope30FallS2 = 
+    CapSlope30FallS3 = 
+    CapSlope30FallS4 = 
+    CapSlope30FallS5 = 
+    CapSlope30FallS6 = 
+    CapPeak30E1 = 
+    CapPeak30E2 = 
+    CapPeak30E3 = 
+    CapPeak30E4 = 
+    CapPeak30E5 = 
+    CapPeak30E6 = 
+    CapPeak30S1 = 
+    CapPeak30S2 = 
+    CapPeak30S3 = 
+    CapPeak30S4 = 
+    CapPeak30S5 = 
+    CapPeak30S6 = 
 }
 TileEntry
 {
@@ -3608,6 +4056,42 @@ TileEntry
     CapShallowRiseE2 = walls_burnt_roofs_01_049
     CapShallowFallE1 = walls_burnt_roofs_01_053
     CapShallowFallE2 = walls_burnt_roofs_01_052
+    CapSlope30RiseE1 = 
+    CapSlope30RiseE2 = 
+    CapSlope30RiseE3 = 
+    CapSlope30RiseE4 = 
+    CapSlope30RiseE5 = 
+    CapSlope30RiseE6 = 
+    CapSlope30FallE1 = 
+    CapSlope30FallE2 = 
+    CapSlope30FallE3 = 
+    CapSlope30FallE4 = 
+    CapSlope30FallE5 = 
+    CapSlope30FallE6 = 
+    CapSlope30RiseS1 = 
+    CapSlope30RiseS2 = 
+    CapSlope30RiseS3 = 
+    CapSlope30RiseS4 = 
+    CapSlope30RiseS5 = 
+    CapSlope30RiseS6 = 
+    CapSlope30FallS1 = 
+    CapSlope30FallS2 = 
+    CapSlope30FallS3 = 
+    CapSlope30FallS4 = 
+    CapSlope30FallS5 = 
+    CapSlope30FallS6 = 
+    CapPeak30E1 = 
+    CapPeak30E2 = 
+    CapPeak30E3 = 
+    CapPeak30E4 = 
+    CapPeak30E5 = 
+    CapPeak30E6 = 
+    CapPeak30S1 = 
+    CapPeak30S2 = 
+    CapPeak30S3 = 
+    CapPeak30S4 = 
+    CapPeak30S5 = 
+    CapPeak30S6 = 
 }
 TileEntry
 {
@@ -3644,6 +4128,42 @@ TileEntry
     CapShallowRiseE2 = walls_exterior_roofs_01_121
     CapShallowFallE1 = walls_exterior_roofs_01_125
     CapShallowFallE2 = walls_exterior_roofs_01_124
+    CapSlope30RiseE1 = 
+    CapSlope30RiseE2 = 
+    CapSlope30RiseE3 = 
+    CapSlope30RiseE4 = 
+    CapSlope30RiseE5 = 
+    CapSlope30RiseE6 = 
+    CapSlope30FallE1 = 
+    CapSlope30FallE2 = 
+    CapSlope30FallE3 = 
+    CapSlope30FallE4 = 
+    CapSlope30FallE5 = 
+    CapSlope30FallE6 = 
+    CapSlope30RiseS1 = 
+    CapSlope30RiseS2 = 
+    CapSlope30RiseS3 = 
+    CapSlope30RiseS4 = 
+    CapSlope30RiseS5 = 
+    CapSlope30RiseS6 = 
+    CapSlope30FallS1 = 
+    CapSlope30FallS2 = 
+    CapSlope30FallS3 = 
+    CapSlope30FallS4 = 
+    CapSlope30FallS5 = 
+    CapSlope30FallS6 = 
+    CapPeak30E1 = 
+    CapPeak30E2 = 
+    CapPeak30E3 = 
+    CapPeak30E4 = 
+    CapPeak30E5 = 
+    CapPeak30E6 = 
+    CapPeak30S1 = 
+    CapPeak30S2 = 
+    CapPeak30S3 = 
+    CapPeak30S4 = 
+    CapPeak30S5 = 
+    CapPeak30S6 = 
 }
 TileEntry
 {
@@ -3680,6 +4200,42 @@ TileEntry
     CapShallowRiseE2 = walls_exterior_roofs_02_065
     CapShallowFallE1 = walls_exterior_roofs_02_069
     CapShallowFallE2 = walls_exterior_roofs_02_068
+    CapSlope30RiseE1 = 
+    CapSlope30RiseE2 = 
+    CapSlope30RiseE3 = 
+    CapSlope30RiseE4 = 
+    CapSlope30RiseE5 = 
+    CapSlope30RiseE6 = 
+    CapSlope30FallE1 = 
+    CapSlope30FallE2 = 
+    CapSlope30FallE3 = 
+    CapSlope30FallE4 = 
+    CapSlope30FallE5 = 
+    CapSlope30FallE6 = 
+    CapSlope30RiseS1 = 
+    CapSlope30RiseS2 = 
+    CapSlope30RiseS3 = 
+    CapSlope30RiseS4 = 
+    CapSlope30RiseS5 = 
+    CapSlope30RiseS6 = 
+    CapSlope30FallS1 = 
+    CapSlope30FallS2 = 
+    CapSlope30FallS3 = 
+    CapSlope30FallS4 = 
+    CapSlope30FallS5 = 
+    CapSlope30FallS6 = 
+    CapPeak30E1 = 
+    CapPeak30E2 = 
+    CapPeak30E3 = 
+    CapPeak30E4 = 
+    CapPeak30E5 = 
+    CapPeak30E6 = 
+    CapPeak30S1 = 
+    CapPeak30S2 = 
+    CapPeak30S3 = 
+    CapPeak30S4 = 
+    CapPeak30S5 = 
+    CapPeak30S6 = 
 }
 TileEntry
 {
@@ -3716,6 +4272,42 @@ TileEntry
     CapShallowRiseE2 = walls_exterior_roofs_02_097
     CapShallowFallE1 = walls_exterior_roofs_02_101
     CapShallowFallE2 = walls_exterior_roofs_02_100
+    CapSlope30RiseE1 = 
+    CapSlope30RiseE2 = 
+    CapSlope30RiseE3 = 
+    CapSlope30RiseE4 = 
+    CapSlope30RiseE5 = 
+    CapSlope30RiseE6 = 
+    CapSlope30FallE1 = 
+    CapSlope30FallE2 = 
+    CapSlope30FallE3 = 
+    CapSlope30FallE4 = 
+    CapSlope30FallE5 = 
+    CapSlope30FallE6 = 
+    CapSlope30RiseS1 = 
+    CapSlope30RiseS2 = 
+    CapSlope30RiseS3 = 
+    CapSlope30RiseS4 = 
+    CapSlope30RiseS5 = 
+    CapSlope30RiseS6 = 
+    CapSlope30FallS1 = 
+    CapSlope30FallS2 = 
+    CapSlope30FallS3 = 
+    CapSlope30FallS4 = 
+    CapSlope30FallS5 = 
+    CapSlope30FallS6 = 
+    CapPeak30E1 = 
+    CapPeak30E2 = 
+    CapPeak30E3 = 
+    CapPeak30E4 = 
+    CapPeak30E5 = 
+    CapPeak30E6 = 
+    CapPeak30S1 = 
+    CapPeak30S2 = 
+    CapPeak30S3 = 
+    CapPeak30S4 = 
+    CapPeak30S5 = 
+    CapPeak30S6 = 
 }
 TileEntry
 {
@@ -3752,6 +4344,42 @@ TileEntry
     CapShallowRiseE2 = walls_exterior_roofs_03_065
     CapShallowFallE1 = walls_exterior_roofs_03_069
     CapShallowFallE2 = walls_exterior_roofs_03_068
+    CapSlope30RiseE1 = 
+    CapSlope30RiseE2 = 
+    CapSlope30RiseE3 = 
+    CapSlope30RiseE4 = 
+    CapSlope30RiseE5 = 
+    CapSlope30RiseE6 = 
+    CapSlope30FallE1 = 
+    CapSlope30FallE2 = 
+    CapSlope30FallE3 = 
+    CapSlope30FallE4 = 
+    CapSlope30FallE5 = 
+    CapSlope30FallE6 = 
+    CapSlope30RiseS1 = 
+    CapSlope30RiseS2 = 
+    CapSlope30RiseS3 = 
+    CapSlope30RiseS4 = 
+    CapSlope30RiseS5 = 
+    CapSlope30RiseS6 = 
+    CapSlope30FallS1 = 
+    CapSlope30FallS2 = 
+    CapSlope30FallS3 = 
+    CapSlope30FallS4 = 
+    CapSlope30FallS5 = 
+    CapSlope30FallS6 = 
+    CapPeak30E1 = 
+    CapPeak30E2 = 
+    CapPeak30E3 = 
+    CapPeak30E4 = 
+    CapPeak30E5 = 
+    CapPeak30E6 = 
+    CapPeak30S1 = 
+    CapPeak30S2 = 
+    CapPeak30S3 = 
+    CapPeak30S4 = 
+    CapPeak30S5 = 
+    CapPeak30S6 = 
 }
 TileEntry
 {
@@ -3788,6 +4416,42 @@ TileEntry
     CapShallowRiseE2 = walls_exterior_roofs_04_049
     CapShallowFallE1 = walls_exterior_roofs_04_053
     CapShallowFallE2 = walls_exterior_roofs_04_052
+    CapSlope30RiseE1 = 
+    CapSlope30RiseE2 = 
+    CapSlope30RiseE3 = 
+    CapSlope30RiseE4 = 
+    CapSlope30RiseE5 = 
+    CapSlope30RiseE6 = 
+    CapSlope30FallE1 = 
+    CapSlope30FallE2 = 
+    CapSlope30FallE3 = 
+    CapSlope30FallE4 = 
+    CapSlope30FallE5 = 
+    CapSlope30FallE6 = 
+    CapSlope30RiseS1 = 
+    CapSlope30RiseS2 = 
+    CapSlope30RiseS3 = 
+    CapSlope30RiseS4 = 
+    CapSlope30RiseS5 = 
+    CapSlope30RiseS6 = 
+    CapSlope30FallS1 = 
+    CapSlope30FallS2 = 
+    CapSlope30FallS3 = 
+    CapSlope30FallS4 = 
+    CapSlope30FallS5 = 
+    CapSlope30FallS6 = 
+    CapPeak30E1 = 
+    CapPeak30E2 = 
+    CapPeak30E3 = 
+    CapPeak30E4 = 
+    CapPeak30E5 = 
+    CapPeak30E6 = 
+    CapPeak30S1 = 
+    CapPeak30S2 = 
+    CapPeak30S3 = 
+    CapPeak30S4 = 
+    CapPeak30S5 = 
+    CapPeak30S6 = 
 }
 TileEntry
 {
@@ -3824,6 +4488,42 @@ TileEntry
     CapShallowRiseE2 = walls_exterior_roofs_04_073
     CapShallowFallE1 = walls_exterior_roofs_04_077
     CapShallowFallE2 = walls_exterior_roofs_04_076
+    CapSlope30RiseE1 = 
+    CapSlope30RiseE2 = 
+    CapSlope30RiseE3 = 
+    CapSlope30RiseE4 = 
+    CapSlope30RiseE5 = 
+    CapSlope30RiseE6 = 
+    CapSlope30FallE1 = 
+    CapSlope30FallE2 = 
+    CapSlope30FallE3 = 
+    CapSlope30FallE4 = 
+    CapSlope30FallE5 = 
+    CapSlope30FallE6 = 
+    CapSlope30RiseS1 = 
+    CapSlope30RiseS2 = 
+    CapSlope30RiseS3 = 
+    CapSlope30RiseS4 = 
+    CapSlope30RiseS5 = 
+    CapSlope30RiseS6 = 
+    CapSlope30FallS1 = 
+    CapSlope30FallS2 = 
+    CapSlope30FallS3 = 
+    CapSlope30FallS4 = 
+    CapSlope30FallS5 = 
+    CapSlope30FallS6 = 
+    CapPeak30E1 = 
+    CapPeak30E2 = 
+    CapPeak30E3 = 
+    CapPeak30E4 = 
+    CapPeak30E5 = 
+    CapPeak30E6 = 
+    CapPeak30S1 = 
+    CapPeak30S2 = 
+    CapPeak30S3 = 
+    CapPeak30S4 = 
+    CapPeak30S5 = 
+    CapPeak30S6 = 
 }
 TileEntry
 {
@@ -3860,6 +4560,42 @@ TileEntry
     CapShallowRiseE2 = walls_exterior_roofs_06_049
     CapShallowFallE1 = walls_exterior_roofs_06_053
     CapShallowFallE2 = walls_exterior_roofs_06_052
+    CapSlope30RiseE1 = 
+    CapSlope30RiseE2 = 
+    CapSlope30RiseE3 = 
+    CapSlope30RiseE4 = 
+    CapSlope30RiseE5 = 
+    CapSlope30RiseE6 = 
+    CapSlope30FallE1 = 
+    CapSlope30FallE2 = 
+    CapSlope30FallE3 = 
+    CapSlope30FallE4 = 
+    CapSlope30FallE5 = 
+    CapSlope30FallE6 = 
+    CapSlope30RiseS1 = 
+    CapSlope30RiseS2 = 
+    CapSlope30RiseS3 = 
+    CapSlope30RiseS4 = 
+    CapSlope30RiseS5 = 
+    CapSlope30RiseS6 = 
+    CapSlope30FallS1 = 
+    CapSlope30FallS2 = 
+    CapSlope30FallS3 = 
+    CapSlope30FallS4 = 
+    CapSlope30FallS5 = 
+    CapSlope30FallS6 = 
+    CapPeak30E1 = 
+    CapPeak30E2 = 
+    CapPeak30E3 = 
+    CapPeak30E4 = 
+    CapPeak30E5 = 
+    CapPeak30E6 = 
+    CapPeak30S1 = 
+    CapPeak30S2 = 
+    CapPeak30S3 = 
+    CapPeak30S4 = 
+    CapPeak30S5 = 
+    CapPeak30S6 = 
 }
 TileEntry
 {
@@ -3896,6 +4632,42 @@ TileEntry
     CapShallowRiseE2 = walls_exterior_roofs_08_073
     CapShallowFallE1 = walls_exterior_roofs_08_077
     CapShallowFallE2 = walls_exterior_roofs_08_076
+    CapSlope30RiseE1 = 
+    CapSlope30RiseE2 = 
+    CapSlope30RiseE3 = 
+    CapSlope30RiseE4 = 
+    CapSlope30RiseE5 = 
+    CapSlope30RiseE6 = 
+    CapSlope30FallE1 = 
+    CapSlope30FallE2 = 
+    CapSlope30FallE3 = 
+    CapSlope30FallE4 = 
+    CapSlope30FallE5 = 
+    CapSlope30FallE6 = 
+    CapSlope30RiseS1 = 
+    CapSlope30RiseS2 = 
+    CapSlope30RiseS3 = 
+    CapSlope30RiseS4 = 
+    CapSlope30RiseS5 = 
+    CapSlope30RiseS6 = 
+    CapSlope30FallS1 = 
+    CapSlope30FallS2 = 
+    CapSlope30FallS3 = 
+    CapSlope30FallS4 = 
+    CapSlope30FallS5 = 
+    CapSlope30FallS6 = 
+    CapPeak30E1 = 
+    CapPeak30E2 = 
+    CapPeak30E3 = 
+    CapPeak30E4 = 
+    CapPeak30E5 = 
+    CapPeak30E6 = 
+    CapPeak30S1 = 
+    CapPeak30S2 = 
+    CapPeak30S3 = 
+    CapPeak30S4 = 
+    CapPeak30S5 = 
+    CapPeak30S6 = 
 }
 TileEntry
 {
@@ -3932,6 +4704,42 @@ TileEntry
     CapShallowRiseE2 = 
     CapShallowFallE1 = 
     CapShallowFallE2 = 
+    CapSlope30RiseE1 = 
+    CapSlope30RiseE2 = 
+    CapSlope30RiseE3 = 
+    CapSlope30RiseE4 = 
+    CapSlope30RiseE5 = 
+    CapSlope30RiseE6 = 
+    CapSlope30FallE1 = 
+    CapSlope30FallE2 = 
+    CapSlope30FallE3 = 
+    CapSlope30FallE4 = 
+    CapSlope30FallE5 = 
+    CapSlope30FallE6 = 
+    CapSlope30RiseS1 = 
+    CapSlope30RiseS2 = 
+    CapSlope30RiseS3 = 
+    CapSlope30RiseS4 = 
+    CapSlope30RiseS5 = 
+    CapSlope30RiseS6 = 
+    CapSlope30FallS1 = 
+    CapSlope30FallS2 = 
+    CapSlope30FallS3 = 
+    CapSlope30FallS4 = 
+    CapSlope30FallS5 = 
+    CapSlope30FallS6 = 
+    CapPeak30E1 = 
+    CapPeak30E2 = 
+    CapPeak30E3 = 
+    CapPeak30E4 = 
+    CapPeak30E5 = 
+    CapPeak30E6 = 
+    CapPeak30S1 = 
+    CapPeak30S2 = 
+    CapPeak30S3 = 
+    CapPeak30S4 = 
+    CapPeak30S5 = 
+    CapPeak30S6 = 
 }
 TileEntry
 {
@@ -3968,6 +4776,42 @@ TileEntry
     CapShallowRiseE2 = walls_exterior_roofs_10_057
     CapShallowFallE1 = walls_exterior_roofs_10_061
     CapShallowFallE2 = walls_exterior_roofs_10_060
+    CapSlope30RiseE1 = 
+    CapSlope30RiseE2 = 
+    CapSlope30RiseE3 = 
+    CapSlope30RiseE4 = 
+    CapSlope30RiseE5 = 
+    CapSlope30RiseE6 = 
+    CapSlope30FallE1 = 
+    CapSlope30FallE2 = 
+    CapSlope30FallE3 = 
+    CapSlope30FallE4 = 
+    CapSlope30FallE5 = 
+    CapSlope30FallE6 = 
+    CapSlope30RiseS1 = 
+    CapSlope30RiseS2 = 
+    CapSlope30RiseS3 = 
+    CapSlope30RiseS4 = 
+    CapSlope30RiseS5 = 
+    CapSlope30RiseS6 = 
+    CapSlope30FallS1 = 
+    CapSlope30FallS2 = 
+    CapSlope30FallS3 = 
+    CapSlope30FallS4 = 
+    CapSlope30FallS5 = 
+    CapSlope30FallS6 = 
+    CapPeak30E1 = 
+    CapPeak30E2 = 
+    CapPeak30E3 = 
+    CapPeak30E4 = 
+    CapPeak30E5 = 
+    CapPeak30E6 = 
+    CapPeak30S1 = 
+    CapPeak30S2 = 
+    CapPeak30S3 = 
+    CapPeak30S4 = 
+    CapPeak30S5 = 
+    CapPeak30S6 = 
 }
 TileEntry
 {
@@ -4004,6 +4848,42 @@ TileEntry
     CapShallowRiseE2 = walls_exterior_roofs_10_249
     CapShallowFallE1 = walls_exterior_roofs_10_253
     CapShallowFallE2 = walls_exterior_roofs_10_252
+    CapSlope30RiseE1 = 
+    CapSlope30RiseE2 = 
+    CapSlope30RiseE3 = 
+    CapSlope30RiseE4 = 
+    CapSlope30RiseE5 = 
+    CapSlope30RiseE6 = 
+    CapSlope30FallE1 = 
+    CapSlope30FallE2 = 
+    CapSlope30FallE3 = 
+    CapSlope30FallE4 = 
+    CapSlope30FallE5 = 
+    CapSlope30FallE6 = 
+    CapSlope30RiseS1 = 
+    CapSlope30RiseS2 = 
+    CapSlope30RiseS3 = 
+    CapSlope30RiseS4 = 
+    CapSlope30RiseS5 = 
+    CapSlope30RiseS6 = 
+    CapSlope30FallS1 = 
+    CapSlope30FallS2 = 
+    CapSlope30FallS3 = 
+    CapSlope30FallS4 = 
+    CapSlope30FallS5 = 
+    CapSlope30FallS6 = 
+    CapPeak30E1 = 
+    CapPeak30E2 = 
+    CapPeak30E3 = 
+    CapPeak30E4 = 
+    CapPeak30E5 = 
+    CapPeak30E6 = 
+    CapPeak30S1 = 
+    CapPeak30S2 = 
+    CapPeak30S3 = 
+    CapPeak30S4 = 
+    CapPeak30S5 = 
+    CapPeak30S6 = 
 }
 TileEntry
 {
@@ -4040,6 +4920,42 @@ TileEntry
     CapShallowRiseE2 = 
     CapShallowFallE1 = 
     CapShallowFallE2 = 
+    CapSlope30RiseE1 = 
+    CapSlope30RiseE2 = 
+    CapSlope30RiseE3 = 
+    CapSlope30RiseE4 = 
+    CapSlope30RiseE5 = 
+    CapSlope30RiseE6 = 
+    CapSlope30FallE1 = 
+    CapSlope30FallE2 = 
+    CapSlope30FallE3 = 
+    CapSlope30FallE4 = 
+    CapSlope30FallE5 = 
+    CapSlope30FallE6 = 
+    CapSlope30RiseS1 = 
+    CapSlope30RiseS2 = 
+    CapSlope30RiseS3 = 
+    CapSlope30RiseS4 = 
+    CapSlope30RiseS5 = 
+    CapSlope30RiseS6 = 
+    CapSlope30FallS1 = 
+    CapSlope30FallS2 = 
+    CapSlope30FallS3 = 
+    CapSlope30FallS4 = 
+    CapSlope30FallS5 = 
+    CapSlope30FallS6 = 
+    CapPeak30E1 = 
+    CapPeak30E2 = 
+    CapPeak30E3 = 
+    CapPeak30E4 = 
+    CapPeak30E5 = 
+    CapPeak30E6 = 
+    CapPeak30S1 = 
+    CapPeak30S2 = 
+    CapPeak30S3 = 
+    CapPeak30S4 = 
+    CapPeak30S5 = 
+    CapPeak30S6 = 
 }
 TileEntry
 {
@@ -4064,6 +4980,48 @@ TileEntry
     ShallowSlopeN2 = roofs_01_085
     ShallowSlopeS1 = roofs_01_087
     ShallowSlopeS2 = roofs_01_086
+    Slope30S1 = 
+    Slope30S2 = 
+    Slope30S3 = 
+    Slope30S4 = 
+    Slope30S5 = 
+    Slope30S6 = 
+    Slope30E1 = 
+    Slope30E2 = 
+    Slope30E3 = 
+    Slope30E4 = 
+    Slope30E5 = 
+    Slope30E6 = 
+    Slope30W1 = 
+    Slope30W2 = 
+    Slope30W3 = 
+    Slope30W4 = 
+    Slope30W5 = 
+    Slope30W6 = 
+    Slope30N1 = 
+    Slope30N2 = 
+    Slope30N3 = 
+    Slope30N4 = 
+    Slope30N5 = 
+    Slope30N6 = 
+    Peak30NS1 = 
+    Peak30NS2 = 
+    Peak30NS3 = 
+    Peak30NS4 = 
+    Peak30NS5 = 
+    Peak30NS6 = 
+    Peak30WE1 = 
+    Peak30WE2 = 
+    Peak30WE3 = 
+    Peak30WE4 = 
+    Peak30WE5 = 
+    Peak30WE6 = 
+    Peak30Quad1 = 
+    Peak30Quad2 = 
+    Peak30Quad3 = 
+    Peak30Quad4 = 
+    Peak30Quad5 = 
+    Peak30Quad6 = 
     Inner1 = roofs_01_011
     Inner2 = roofs_01_012
     Inner3 = roofs_01_013
@@ -4082,6 +5040,54 @@ TileEntry
     CornerNE1 = roofs_01_029
     CornerNE2 = roofs_01_028
     CornerNE3 = roofs_01_027
+    InnerSlope30SE1 = 
+    InnerSlope30SE2 = 
+    InnerSlope30SE3 = 
+    InnerSlope30SE4 = 
+    InnerSlope30SE5 = 
+    InnerSlope30SE6 = 
+    InnerSlope30NE1 = 
+    InnerSlope30NE2 = 
+    InnerSlope30NE3 = 
+    InnerSlope30NE4 = 
+    InnerSlope30NE5 = 
+    InnerSlope30NE6 = 
+    InnerSlope30NW1 = 
+    InnerSlope30NW2 = 
+    InnerSlope30NW3 = 
+    InnerSlope30NW4 = 
+    InnerSlope30NW5 = 
+    InnerSlope30NW6 = 
+    InnerSlope30SW1 = 
+    InnerSlope30SW2 = 
+    InnerSlope30SW3 = 
+    InnerSlope30SW4 = 
+    InnerSlope30SW5 = 
+    InnerSlope30SW6 = 
+    OuterSlope30SE1 = 
+    OuterSlope30SE2 = 
+    OuterSlope30SE3 = 
+    OuterSlope30SE4 = 
+    OuterSlope30SE5 = 
+    OuterSlope30SE6 = 
+    OuterSlope30NE1 = 
+    OuterSlope30NE2 = 
+    OuterSlope30NE3 = 
+    OuterSlope30NE4 = 
+    OuterSlope30NE5 = 
+    OuterSlope30NE6 = 
+    OuterSlope30NW1 = 
+    OuterSlope30NW2 = 
+    OuterSlope30NW3 = 
+    OuterSlope30NW4 = 
+    OuterSlope30NW5 = 
+    OuterSlope30NW6 = 
+    OuterSlope30SW1 = 
+    OuterSlope30SW2 = 
+    OuterSlope30SW3 = 
+    OuterSlope30SW4 = 
+    OuterSlope30SW5 = 
+    OuterSlope30SW6 = 
     offset = SlopePt5S 1 1
     offset = SlopePt5E 1 1
 }
@@ -4108,6 +5114,48 @@ TileEntry
     ShallowSlopeN2 = roofs_shallow_01_125
     ShallowSlopeS1 = roofs_shallow_01_127
     ShallowSlopeS2 = roofs_shallow_01_126
+    Slope30S1 = 
+    Slope30S2 = 
+    Slope30S3 = 
+    Slope30S4 = 
+    Slope30S5 = 
+    Slope30S6 = 
+    Slope30E1 = 
+    Slope30E2 = 
+    Slope30E3 = 
+    Slope30E4 = 
+    Slope30E5 = 
+    Slope30E6 = 
+    Slope30W1 = 
+    Slope30W2 = 
+    Slope30W3 = 
+    Slope30W4 = 
+    Slope30W5 = 
+    Slope30W6 = 
+    Slope30N1 = 
+    Slope30N2 = 
+    Slope30N3 = 
+    Slope30N4 = 
+    Slope30N5 = 
+    Slope30N6 = 
+    Peak30NS1 = 
+    Peak30NS2 = 
+    Peak30NS3 = 
+    Peak30NS4 = 
+    Peak30NS5 = 
+    Peak30NS6 = 
+    Peak30WE1 = 
+    Peak30WE2 = 
+    Peak30WE3 = 
+    Peak30WE4 = 
+    Peak30WE5 = 
+    Peak30WE6 = 
+    Peak30Quad1 = 
+    Peak30Quad2 = 
+    Peak30Quad3 = 
+    Peak30Quad4 = 
+    Peak30Quad5 = 
+    Peak30Quad6 = 
     Inner1 = roofs_01_043
     Inner2 = roofs_01_044
     Inner3 = roofs_01_045
@@ -4126,6 +5174,54 @@ TileEntry
     CornerNE1 = roofs_01_061
     CornerNE2 = roofs_01_060
     CornerNE3 = roofs_01_059
+    InnerSlope30SE1 = 
+    InnerSlope30SE2 = 
+    InnerSlope30SE3 = 
+    InnerSlope30SE4 = 
+    InnerSlope30SE5 = 
+    InnerSlope30SE6 = 
+    InnerSlope30NE1 = 
+    InnerSlope30NE2 = 
+    InnerSlope30NE3 = 
+    InnerSlope30NE4 = 
+    InnerSlope30NE5 = 
+    InnerSlope30NE6 = 
+    InnerSlope30NW1 = 
+    InnerSlope30NW2 = 
+    InnerSlope30NW3 = 
+    InnerSlope30NW4 = 
+    InnerSlope30NW5 = 
+    InnerSlope30NW6 = 
+    InnerSlope30SW1 = 
+    InnerSlope30SW2 = 
+    InnerSlope30SW3 = 
+    InnerSlope30SW4 = 
+    InnerSlope30SW5 = 
+    InnerSlope30SW6 = 
+    OuterSlope30SE1 = 
+    OuterSlope30SE2 = 
+    OuterSlope30SE3 = 
+    OuterSlope30SE4 = 
+    OuterSlope30SE5 = 
+    OuterSlope30SE6 = 
+    OuterSlope30NE1 = 
+    OuterSlope30NE2 = 
+    OuterSlope30NE3 = 
+    OuterSlope30NE4 = 
+    OuterSlope30NE5 = 
+    OuterSlope30NE6 = 
+    OuterSlope30NW1 = 
+    OuterSlope30NW2 = 
+    OuterSlope30NW3 = 
+    OuterSlope30NW4 = 
+    OuterSlope30NW5 = 
+    OuterSlope30NW6 = 
+    OuterSlope30SW1 = 
+    OuterSlope30SW2 = 
+    OuterSlope30SW3 = 
+    OuterSlope30SW4 = 
+    OuterSlope30SW5 = 
+    OuterSlope30SW6 = 
     offset = SlopePt5S 1 1
     offset = SlopePt5E 1 1
 }
@@ -4152,6 +5248,48 @@ TileEntry
     ShallowSlopeN2 = roofs_02_085
     ShallowSlopeS1 = roofs_02_087
     ShallowSlopeS2 = roofs_02_086
+    Slope30S1 = 
+    Slope30S2 = 
+    Slope30S3 = 
+    Slope30S4 = 
+    Slope30S5 = 
+    Slope30S6 = 
+    Slope30E1 = 
+    Slope30E2 = 
+    Slope30E3 = 
+    Slope30E4 = 
+    Slope30E5 = 
+    Slope30E6 = 
+    Slope30W1 = 
+    Slope30W2 = 
+    Slope30W3 = 
+    Slope30W4 = 
+    Slope30W5 = 
+    Slope30W6 = 
+    Slope30N1 = 
+    Slope30N2 = 
+    Slope30N3 = 
+    Slope30N4 = 
+    Slope30N5 = 
+    Slope30N6 = 
+    Peak30NS1 = 
+    Peak30NS2 = 
+    Peak30NS3 = 
+    Peak30NS4 = 
+    Peak30NS5 = 
+    Peak30NS6 = 
+    Peak30WE1 = 
+    Peak30WE2 = 
+    Peak30WE3 = 
+    Peak30WE4 = 
+    Peak30WE5 = 
+    Peak30WE6 = 
+    Peak30Quad1 = 
+    Peak30Quad2 = 
+    Peak30Quad3 = 
+    Peak30Quad4 = 
+    Peak30Quad5 = 
+    Peak30Quad6 = 
     Inner1 = roofs_02_011
     Inner2 = roofs_02_012
     Inner3 = roofs_02_013
@@ -4170,6 +5308,54 @@ TileEntry
     CornerNE1 = roofs_02_029
     CornerNE2 = roofs_02_028
     CornerNE3 = roofs_02_027
+    InnerSlope30SE1 = 
+    InnerSlope30SE2 = 
+    InnerSlope30SE3 = 
+    InnerSlope30SE4 = 
+    InnerSlope30SE5 = 
+    InnerSlope30SE6 = 
+    InnerSlope30NE1 = 
+    InnerSlope30NE2 = 
+    InnerSlope30NE3 = 
+    InnerSlope30NE4 = 
+    InnerSlope30NE5 = 
+    InnerSlope30NE6 = 
+    InnerSlope30NW1 = 
+    InnerSlope30NW2 = 
+    InnerSlope30NW3 = 
+    InnerSlope30NW4 = 
+    InnerSlope30NW5 = 
+    InnerSlope30NW6 = 
+    InnerSlope30SW1 = 
+    InnerSlope30SW2 = 
+    InnerSlope30SW3 = 
+    InnerSlope30SW4 = 
+    InnerSlope30SW5 = 
+    InnerSlope30SW6 = 
+    OuterSlope30SE1 = 
+    OuterSlope30SE2 = 
+    OuterSlope30SE3 = 
+    OuterSlope30SE4 = 
+    OuterSlope30SE5 = 
+    OuterSlope30SE6 = 
+    OuterSlope30NE1 = 
+    OuterSlope30NE2 = 
+    OuterSlope30NE3 = 
+    OuterSlope30NE4 = 
+    OuterSlope30NE5 = 
+    OuterSlope30NE6 = 
+    OuterSlope30NW1 = 
+    OuterSlope30NW2 = 
+    OuterSlope30NW3 = 
+    OuterSlope30NW4 = 
+    OuterSlope30NW5 = 
+    OuterSlope30NW6 = 
+    OuterSlope30SW1 = 
+    OuterSlope30SW2 = 
+    OuterSlope30SW3 = 
+    OuterSlope30SW4 = 
+    OuterSlope30SW5 = 
+    OuterSlope30SW6 = 
     offset = SlopePt5S 1 1
     offset = SlopePt5E 1 1
 }
@@ -4196,6 +5382,48 @@ TileEntry
     ShallowSlopeN2 = roofs_shallow_01_005
     ShallowSlopeS1 = roofs_shallow_01_007
     ShallowSlopeS2 = roofs_shallow_01_006
+    Slope30S1 = 
+    Slope30S2 = 
+    Slope30S3 = 
+    Slope30S4 = 
+    Slope30S5 = 
+    Slope30S6 = 
+    Slope30E1 = 
+    Slope30E2 = 
+    Slope30E3 = 
+    Slope30E4 = 
+    Slope30E5 = 
+    Slope30E6 = 
+    Slope30W1 = 
+    Slope30W2 = 
+    Slope30W3 = 
+    Slope30W4 = 
+    Slope30W5 = 
+    Slope30W6 = 
+    Slope30N1 = 
+    Slope30N2 = 
+    Slope30N3 = 
+    Slope30N4 = 
+    Slope30N5 = 
+    Slope30N6 = 
+    Peak30NS1 = 
+    Peak30NS2 = 
+    Peak30NS3 = 
+    Peak30NS4 = 
+    Peak30NS5 = 
+    Peak30NS6 = 
+    Peak30WE1 = 
+    Peak30WE2 = 
+    Peak30WE3 = 
+    Peak30WE4 = 
+    Peak30WE5 = 
+    Peak30WE6 = 
+    Peak30Quad1 = 
+    Peak30Quad2 = 
+    Peak30Quad3 = 
+    Peak30Quad4 = 
+    Peak30Quad5 = 
+    Peak30Quad6 = 
     Inner1 = roofs_03_011
     Inner2 = roofs_03_012
     Inner3 = roofs_03_013
@@ -4214,6 +5442,54 @@ TileEntry
     CornerNE1 = roofs_03_029
     CornerNE2 = roofs_03_028
     CornerNE3 = roofs_03_027
+    InnerSlope30SE1 = 
+    InnerSlope30SE2 = 
+    InnerSlope30SE3 = 
+    InnerSlope30SE4 = 
+    InnerSlope30SE5 = 
+    InnerSlope30SE6 = 
+    InnerSlope30NE1 = 
+    InnerSlope30NE2 = 
+    InnerSlope30NE3 = 
+    InnerSlope30NE4 = 
+    InnerSlope30NE5 = 
+    InnerSlope30NE6 = 
+    InnerSlope30NW1 = 
+    InnerSlope30NW2 = 
+    InnerSlope30NW3 = 
+    InnerSlope30NW4 = 
+    InnerSlope30NW5 = 
+    InnerSlope30NW6 = 
+    InnerSlope30SW1 = 
+    InnerSlope30SW2 = 
+    InnerSlope30SW3 = 
+    InnerSlope30SW4 = 
+    InnerSlope30SW5 = 
+    InnerSlope30SW6 = 
+    OuterSlope30SE1 = 
+    OuterSlope30SE2 = 
+    OuterSlope30SE3 = 
+    OuterSlope30SE4 = 
+    OuterSlope30SE5 = 
+    OuterSlope30SE6 = 
+    OuterSlope30NE1 = 
+    OuterSlope30NE2 = 
+    OuterSlope30NE3 = 
+    OuterSlope30NE4 = 
+    OuterSlope30NE5 = 
+    OuterSlope30NE6 = 
+    OuterSlope30NW1 = 
+    OuterSlope30NW2 = 
+    OuterSlope30NW3 = 
+    OuterSlope30NW4 = 
+    OuterSlope30NW5 = 
+    OuterSlope30NW6 = 
+    OuterSlope30SW1 = 
+    OuterSlope30SW2 = 
+    OuterSlope30SW3 = 
+    OuterSlope30SW4 = 
+    OuterSlope30SW5 = 
+    OuterSlope30SW6 = 
     offset = SlopePt5S 1 1
     offset = SlopePt5E 1 1
 }
@@ -4240,6 +5516,48 @@ TileEntry
     ShallowSlopeN2 = roofs_shallow_01_029
     ShallowSlopeS1 = roofs_shallow_01_031
     ShallowSlopeS2 = roofs_shallow_01_030
+    Slope30S1 = 
+    Slope30S2 = 
+    Slope30S3 = 
+    Slope30S4 = 
+    Slope30S5 = 
+    Slope30S6 = 
+    Slope30E1 = 
+    Slope30E2 = 
+    Slope30E3 = 
+    Slope30E4 = 
+    Slope30E5 = 
+    Slope30E6 = 
+    Slope30W1 = 
+    Slope30W2 = 
+    Slope30W3 = 
+    Slope30W4 = 
+    Slope30W5 = 
+    Slope30W6 = 
+    Slope30N1 = 
+    Slope30N2 = 
+    Slope30N3 = 
+    Slope30N4 = 
+    Slope30N5 = 
+    Slope30N6 = 
+    Peak30NS1 = 
+    Peak30NS2 = 
+    Peak30NS3 = 
+    Peak30NS4 = 
+    Peak30NS5 = 
+    Peak30NS6 = 
+    Peak30WE1 = 
+    Peak30WE2 = 
+    Peak30WE3 = 
+    Peak30WE4 = 
+    Peak30WE5 = 
+    Peak30WE6 = 
+    Peak30Quad1 = 
+    Peak30Quad2 = 
+    Peak30Quad3 = 
+    Peak30Quad4 = 
+    Peak30Quad5 = 
+    Peak30Quad6 = 
     Inner1 = roofs_03_043
     Inner2 = roofs_03_044
     Inner3 = roofs_03_045
@@ -4258,6 +5576,54 @@ TileEntry
     CornerNE1 = roofs_03_061
     CornerNE2 = roofs_03_060
     CornerNE3 = roofs_03_059
+    InnerSlope30SE1 = 
+    InnerSlope30SE2 = 
+    InnerSlope30SE3 = 
+    InnerSlope30SE4 = 
+    InnerSlope30SE5 = 
+    InnerSlope30SE6 = 
+    InnerSlope30NE1 = 
+    InnerSlope30NE2 = 
+    InnerSlope30NE3 = 
+    InnerSlope30NE4 = 
+    InnerSlope30NE5 = 
+    InnerSlope30NE6 = 
+    InnerSlope30NW1 = 
+    InnerSlope30NW2 = 
+    InnerSlope30NW3 = 
+    InnerSlope30NW4 = 
+    InnerSlope30NW5 = 
+    InnerSlope30NW6 = 
+    InnerSlope30SW1 = 
+    InnerSlope30SW2 = 
+    InnerSlope30SW3 = 
+    InnerSlope30SW4 = 
+    InnerSlope30SW5 = 
+    InnerSlope30SW6 = 
+    OuterSlope30SE1 = 
+    OuterSlope30SE2 = 
+    OuterSlope30SE3 = 
+    OuterSlope30SE4 = 
+    OuterSlope30SE5 = 
+    OuterSlope30SE6 = 
+    OuterSlope30NE1 = 
+    OuterSlope30NE2 = 
+    OuterSlope30NE3 = 
+    OuterSlope30NE4 = 
+    OuterSlope30NE5 = 
+    OuterSlope30NE6 = 
+    OuterSlope30NW1 = 
+    OuterSlope30NW2 = 
+    OuterSlope30NW3 = 
+    OuterSlope30NW4 = 
+    OuterSlope30NW5 = 
+    OuterSlope30NW6 = 
+    OuterSlope30SW1 = 
+    OuterSlope30SW2 = 
+    OuterSlope30SW3 = 
+    OuterSlope30SW4 = 
+    OuterSlope30SW5 = 
+    OuterSlope30SW6 = 
     offset = SlopePt5S 1 1
     offset = SlopePt5E 1 1
 }
@@ -4284,6 +5650,48 @@ TileEntry
     ShallowSlopeN2 = roofs_shallow_01_053
     ShallowSlopeS1 = roofs_shallow_01_055
     ShallowSlopeS2 = roofs_shallow_01_054
+    Slope30S1 = 
+    Slope30S2 = 
+    Slope30S3 = 
+    Slope30S4 = 
+    Slope30S5 = 
+    Slope30S6 = 
+    Slope30E1 = 
+    Slope30E2 = 
+    Slope30E3 = 
+    Slope30E4 = 
+    Slope30E5 = 
+    Slope30E6 = 
+    Slope30W1 = 
+    Slope30W2 = 
+    Slope30W3 = 
+    Slope30W4 = 
+    Slope30W5 = 
+    Slope30W6 = 
+    Slope30N1 = 
+    Slope30N2 = 
+    Slope30N3 = 
+    Slope30N4 = 
+    Slope30N5 = 
+    Slope30N6 = 
+    Peak30NS1 = 
+    Peak30NS2 = 
+    Peak30NS3 = 
+    Peak30NS4 = 
+    Peak30NS5 = 
+    Peak30NS6 = 
+    Peak30WE1 = 
+    Peak30WE2 = 
+    Peak30WE3 = 
+    Peak30WE4 = 
+    Peak30WE5 = 
+    Peak30WE6 = 
+    Peak30Quad1 = 
+    Peak30Quad2 = 
+    Peak30Quad3 = 
+    Peak30Quad4 = 
+    Peak30Quad5 = 
+    Peak30Quad6 = 
     Inner1 = roofs_04_011
     Inner2 = roofs_04_012
     Inner3 = roofs_04_013
@@ -4302,6 +5710,54 @@ TileEntry
     CornerNE1 = roofs_04_029
     CornerNE2 = roofs_04_028
     CornerNE3 = roofs_04_027
+    InnerSlope30SE1 = 
+    InnerSlope30SE2 = 
+    InnerSlope30SE3 = 
+    InnerSlope30SE4 = 
+    InnerSlope30SE5 = 
+    InnerSlope30SE6 = 
+    InnerSlope30NE1 = 
+    InnerSlope30NE2 = 
+    InnerSlope30NE3 = 
+    InnerSlope30NE4 = 
+    InnerSlope30NE5 = 
+    InnerSlope30NE6 = 
+    InnerSlope30NW1 = 
+    InnerSlope30NW2 = 
+    InnerSlope30NW3 = 
+    InnerSlope30NW4 = 
+    InnerSlope30NW5 = 
+    InnerSlope30NW6 = 
+    InnerSlope30SW1 = 
+    InnerSlope30SW2 = 
+    InnerSlope30SW3 = 
+    InnerSlope30SW4 = 
+    InnerSlope30SW5 = 
+    InnerSlope30SW6 = 
+    OuterSlope30SE1 = 
+    OuterSlope30SE2 = 
+    OuterSlope30SE3 = 
+    OuterSlope30SE4 = 
+    OuterSlope30SE5 = 
+    OuterSlope30SE6 = 
+    OuterSlope30NE1 = 
+    OuterSlope30NE2 = 
+    OuterSlope30NE3 = 
+    OuterSlope30NE4 = 
+    OuterSlope30NE5 = 
+    OuterSlope30NE6 = 
+    OuterSlope30NW1 = 
+    OuterSlope30NW2 = 
+    OuterSlope30NW3 = 
+    OuterSlope30NW4 = 
+    OuterSlope30NW5 = 
+    OuterSlope30NW6 = 
+    OuterSlope30SW1 = 
+    OuterSlope30SW2 = 
+    OuterSlope30SW3 = 
+    OuterSlope30SW4 = 
+    OuterSlope30SW5 = 
+    OuterSlope30SW6 = 
     offset = SlopePt5S 1 1
     offset = SlopePt5E 1 1
     offset = SlopeTwoPt5S -1 -1
@@ -4330,6 +5786,48 @@ TileEntry
     ShallowSlopeN2 = roofs_shallow_01_077
     ShallowSlopeS1 = roofs_shallow_01_079
     ShallowSlopeS2 = roofs_shallow_01_078
+    Slope30S1 = 
+    Slope30S2 = 
+    Slope30S3 = 
+    Slope30S4 = 
+    Slope30S5 = 
+    Slope30S6 = 
+    Slope30E1 = 
+    Slope30E2 = 
+    Slope30E3 = 
+    Slope30E4 = 
+    Slope30E5 = 
+    Slope30E6 = 
+    Slope30W1 = 
+    Slope30W2 = 
+    Slope30W3 = 
+    Slope30W4 = 
+    Slope30W5 = 
+    Slope30W6 = 
+    Slope30N1 = 
+    Slope30N2 = 
+    Slope30N3 = 
+    Slope30N4 = 
+    Slope30N5 = 
+    Slope30N6 = 
+    Peak30NS1 = 
+    Peak30NS2 = 
+    Peak30NS3 = 
+    Peak30NS4 = 
+    Peak30NS5 = 
+    Peak30NS6 = 
+    Peak30WE1 = 
+    Peak30WE2 = 
+    Peak30WE3 = 
+    Peak30WE4 = 
+    Peak30WE5 = 
+    Peak30WE6 = 
+    Peak30Quad1 = 
+    Peak30Quad2 = 
+    Peak30Quad3 = 
+    Peak30Quad4 = 
+    Peak30Quad5 = 
+    Peak30Quad6 = 
     Inner1 = roofs_04_043
     Inner2 = roofs_04_044
     Inner3 = roofs_04_045
@@ -4348,6 +5846,54 @@ TileEntry
     CornerNE1 = roofs_04_061
     CornerNE2 = roofs_04_060
     CornerNE3 = roofs_04_059
+    InnerSlope30SE1 = 
+    InnerSlope30SE2 = 
+    InnerSlope30SE3 = 
+    InnerSlope30SE4 = 
+    InnerSlope30SE5 = 
+    InnerSlope30SE6 = 
+    InnerSlope30NE1 = 
+    InnerSlope30NE2 = 
+    InnerSlope30NE3 = 
+    InnerSlope30NE4 = 
+    InnerSlope30NE5 = 
+    InnerSlope30NE6 = 
+    InnerSlope30NW1 = 
+    InnerSlope30NW2 = 
+    InnerSlope30NW3 = 
+    InnerSlope30NW4 = 
+    InnerSlope30NW5 = 
+    InnerSlope30NW6 = 
+    InnerSlope30SW1 = 
+    InnerSlope30SW2 = 
+    InnerSlope30SW3 = 
+    InnerSlope30SW4 = 
+    InnerSlope30SW5 = 
+    InnerSlope30SW6 = 
+    OuterSlope30SE1 = 
+    OuterSlope30SE2 = 
+    OuterSlope30SE3 = 
+    OuterSlope30SE4 = 
+    OuterSlope30SE5 = 
+    OuterSlope30SE6 = 
+    OuterSlope30NE1 = 
+    OuterSlope30NE2 = 
+    OuterSlope30NE3 = 
+    OuterSlope30NE4 = 
+    OuterSlope30NE5 = 
+    OuterSlope30NE6 = 
+    OuterSlope30NW1 = 
+    OuterSlope30NW2 = 
+    OuterSlope30NW3 = 
+    OuterSlope30NW4 = 
+    OuterSlope30NW5 = 
+    OuterSlope30NW6 = 
+    OuterSlope30SW1 = 
+    OuterSlope30SW2 = 
+    OuterSlope30SW3 = 
+    OuterSlope30SW4 = 
+    OuterSlope30SW5 = 
+    OuterSlope30SW6 = 
     offset = SlopePt5S 1 1
     offset = SlopePt5E 1 1
     offset = SlopeTwoPt5S -1 -1
@@ -4376,6 +5922,48 @@ TileEntry
     ShallowSlopeN2 = roofs_burnt_01_085
     ShallowSlopeS1 = roofs_burnt_01_087
     ShallowSlopeS2 = roofs_burnt_01_086
+    Slope30S1 = 
+    Slope30S2 = 
+    Slope30S3 = 
+    Slope30S4 = 
+    Slope30S5 = 
+    Slope30S6 = 
+    Slope30E1 = 
+    Slope30E2 = 
+    Slope30E3 = 
+    Slope30E4 = 
+    Slope30E5 = 
+    Slope30E6 = 
+    Slope30W1 = 
+    Slope30W2 = 
+    Slope30W3 = 
+    Slope30W4 = 
+    Slope30W5 = 
+    Slope30W6 = 
+    Slope30N1 = 
+    Slope30N2 = 
+    Slope30N3 = 
+    Slope30N4 = 
+    Slope30N5 = 
+    Slope30N6 = 
+    Peak30NS1 = 
+    Peak30NS2 = 
+    Peak30NS3 = 
+    Peak30NS4 = 
+    Peak30NS5 = 
+    Peak30NS6 = 
+    Peak30WE1 = 
+    Peak30WE2 = 
+    Peak30WE3 = 
+    Peak30WE4 = 
+    Peak30WE5 = 
+    Peak30WE6 = 
+    Peak30Quad1 = 
+    Peak30Quad2 = 
+    Peak30Quad3 = 
+    Peak30Quad4 = 
+    Peak30Quad5 = 
+    Peak30Quad6 = 
     Inner1 = roofs_burnt_01_011
     Inner2 = roofs_burnt_01_012
     Inner3 = roofs_burnt_01_013
@@ -4394,6 +5982,54 @@ TileEntry
     CornerNE1 = roofs_burnt_01_029
     CornerNE2 = roofs_burnt_01_028
     CornerNE3 = roofs_burnt_01_027
+    InnerSlope30SE1 = 
+    InnerSlope30SE2 = 
+    InnerSlope30SE3 = 
+    InnerSlope30SE4 = 
+    InnerSlope30SE5 = 
+    InnerSlope30SE6 = 
+    InnerSlope30NE1 = 
+    InnerSlope30NE2 = 
+    InnerSlope30NE3 = 
+    InnerSlope30NE4 = 
+    InnerSlope30NE5 = 
+    InnerSlope30NE6 = 
+    InnerSlope30NW1 = 
+    InnerSlope30NW2 = 
+    InnerSlope30NW3 = 
+    InnerSlope30NW4 = 
+    InnerSlope30NW5 = 
+    InnerSlope30NW6 = 
+    InnerSlope30SW1 = 
+    InnerSlope30SW2 = 
+    InnerSlope30SW3 = 
+    InnerSlope30SW4 = 
+    InnerSlope30SW5 = 
+    InnerSlope30SW6 = 
+    OuterSlope30SE1 = 
+    OuterSlope30SE2 = 
+    OuterSlope30SE3 = 
+    OuterSlope30SE4 = 
+    OuterSlope30SE5 = 
+    OuterSlope30SE6 = 
+    OuterSlope30NE1 = 
+    OuterSlope30NE2 = 
+    OuterSlope30NE3 = 
+    OuterSlope30NE4 = 
+    OuterSlope30NE5 = 
+    OuterSlope30NE6 = 
+    OuterSlope30NW1 = 
+    OuterSlope30NW2 = 
+    OuterSlope30NW3 = 
+    OuterSlope30NW4 = 
+    OuterSlope30NW5 = 
+    OuterSlope30NW6 = 
+    OuterSlope30SW1 = 
+    OuterSlope30SW2 = 
+    OuterSlope30SW3 = 
+    OuterSlope30SW4 = 
+    OuterSlope30SW5 = 
+    OuterSlope30SW6 = 
     offset = SlopePt5S 1 1
     offset = SlopePt5E 1 1
     offset = SlopeTwoPt5S -1 -1
@@ -5028,13 +6664,13 @@ Template
     ExteriorWallTrim = 0
     Door = 8
     DoorFrame = 5
-    Window = 167
+    Window = 166
     Curtains = 0
     Shutters = 0
-    Stairs = 163
-    RoofCap = 132
-    RoofSlope = 141
-    RoofTop = 153
+    Stairs = 162
+    RoofCap = 131
+    RoofSlope = 140
+    RoofTop = 152
     GrimeWall = 82
     UsedTiles = 
     UsedFurniture = 
@@ -5043,7 +6679,7 @@ Template
         Name = hall
         Color = 86 76 5
         InternalName = hall
-        InteriorWall = 122
+        InteriorWall = 121
         InteriorWallTrim = 89
         Floor = 71
         GrimeFloor = 0
@@ -5055,7 +6691,7 @@ Template
         Name = kitchen
         Color = 205 145 160
         InternalName = kitchen
-        InteriorWall = 122
+        InteriorWall = 121
         InteriorWallTrim = 89
         Floor = 71
         GrimeFloor = 0
@@ -5067,7 +6703,7 @@ Template
         Name = diningroom
         Color = 251 86 144
         InternalName = diningroom
-        InteriorWall = 122
+        InteriorWall = 121
         InteriorWallTrim = 89
         Floor = 71
         GrimeFloor = 0
@@ -5079,7 +6715,7 @@ Template
         Name = livingroom
         Color = 112 68 22
         InternalName = livingroom
-        InteriorWall = 122
+        InteriorWall = 121
         InteriorWallTrim = 89
         Floor = 71
         GrimeFloor = 0
@@ -5091,7 +6727,7 @@ Template
         Name = closet
         Color = 36 18 234
         InternalName = closet
-        InteriorWall = 122
+        InteriorWall = 121
         InteriorWallTrim = 89
         Floor = 71
         GrimeFloor = 79
@@ -5103,7 +6739,7 @@ Template
         Name = bedroom
         Color = 26 26 52
         InternalName = bedroom
-        InteriorWall = 122
+        InteriorWall = 121
         InteriorWallTrim = 89
         Floor = 53
         GrimeFloor = 0
@@ -5113,9 +6749,9 @@ Template
     Room
     {
         Name = kidsbedroom
-        Color = 9 53 135
-        InternalName = bedroom
-        InteriorWall = 122
+        Color = 171 48 2
+        InternalName = kidsbedroom
+        InteriorWall = 121
         InteriorWallTrim = 89
         Floor = 53
         GrimeFloor = 0
@@ -5127,7 +6763,7 @@ Template
         Name = bathroom
         Color = 95 191 146
         InternalName = bathroom
-        InteriorWall = 115
+        InteriorWall = 114
         InteriorWallTrim = 0
         Floor = 60
         GrimeFloor = 0
@@ -5139,7 +6775,7 @@ Template
         Name = laundry
         Color = 50 109 111
         InternalName = laundry
-        InteriorWall = 122
+        InteriorWall = 121
         InteriorWallTrim = 89
         Floor = 60
         GrimeFloor = 0
@@ -5149,9 +6785,9 @@ Template
     Room
     {
         Name = garagestorage
-        Color = 52 32 169
-        InternalName = bedroom
-        InteriorWall = 114
+        Color = 93 75 137
+        InternalName = garagestorage
+        InteriorWall = 113
         InteriorWallTrim = 0
         Floor = 51
         GrimeFloor = 79
@@ -5163,7 +6799,7 @@ Template
         Name = shed
         Color = 95 115 162
         InternalName = shed
-        InteriorWall = 111
+        InteriorWall = 110
         InteriorWallTrim = 0
         Floor = 70
         GrimeFloor = 79
@@ -5193,9 +6829,9 @@ Template
     Window = 0
     Curtains = 0
     Shutters = 0
-    Stairs = 161
-    RoofCap = 126
-    RoofSlope = 141
+    Stairs = 160
+    RoofCap = 125
+    RoofSlope = 140
     RoofTop = 0
     GrimeWall = 0
     UsedTiles = 
@@ -5208,22 +6844,22 @@ Template
     ExteriorWallTrim = 0
     Door = 11
     DoorFrame = 6
-    Window = 169
+    Window = 168
     Curtains = 0
     Shutters = 0
-    Stairs = 160
-    RoofCap = 133
-    RoofSlope = 143
-    RoofTop = 150
+    Stairs = 159
+    RoofCap = 132
+    RoofSlope = 142
+    RoofTop = 149
     GrimeWall = 82
-    UsedTiles = 38 120 90 69 1 91 56 116 66 54 122 86 68 79 100 62 82 51 88 65 58 67 59
+    UsedTiles = 38 119 90 69 1 91 56 115 66 54 121 86 68 79 99 62 82 51 88 65 58 67 59
     UsedFurniture = 
     Room
     {
-        Name = bank_brown
+        Name = bank
         Color = 189 175 129
         InternalName = bank
-        InteriorWall = 120
+        InteriorWall = 119
         InteriorWallTrim = 90
         Floor = 69
         GrimeFloor = 0
@@ -5232,84 +6868,12 @@ Template
     }
     Room
     {
-        Name = bank_blue
-        Color = 5 115 155
-        InternalName = bank
-        InteriorWall = 116
-        InteriorWallTrim = 90
-        Floor = 66
-        GrimeFloor = 0
-        GrimeWall = 0
-        Ceiling = 1
-    }
-    Room
-    {
-        Name = bank_black
-        Color = 133 50 121
-        InternalName = bank
-        InteriorWall = 122
-        InteriorWallTrim = 88
-        Floor = 65
-        GrimeFloor = 0
-        GrimeWall = 0
-        Ceiling = 1
-    }
-    Room
-    {
-        Name = bank_beige
-        Color = 20 249 48
-        InternalName = bank
-        InteriorWall = 120
-        InteriorWallTrim = 90
-        Floor = 67
-        GrimeFloor = 0
-        GrimeWall = 0
-        Ceiling = 1
-    }
-    Room
-    {
-        Name = office_brown
+        Name = office
         Color = 7 183 9
         InternalName = office
-        InteriorWall = 120
+        InteriorWall = 119
         InteriorWallTrim = 91
         Floor = 56
-        GrimeFloor = 0
-        GrimeWall = 0
-        Ceiling = 1
-    }
-    Room
-    {
-        Name = office_blue
-        Color = 7 183 9
-        InternalName = office
-        InteriorWall = 116
-        InteriorWallTrim = 91
-        Floor = 54
-        GrimeFloor = 0
-        GrimeWall = 0
-        Ceiling = 1
-    }
-    Room
-    {
-        Name = office_black
-        Color = 47 29 81
-        InternalName = office
-        InteriorWall = 122
-        InteriorWallTrim = 88
-        Floor = 58
-        GrimeFloor = 0
-        GrimeWall = 0
-        Ceiling = 1
-    }
-    Room
-    {
-        Name = office_beige
-        Color = 213 72 114
-        InternalName = office
-        InteriorWall = 120
-        InteriorWallTrim = 91
-        Floor = 59
         GrimeFloor = 0
         GrimeWall = 0
         Ceiling = 1
@@ -5319,7 +6883,7 @@ Template
         Name = bathroom
         Color = 95 191 146
         InternalName = bathroom
-        InteriorWall = 122
+        InteriorWall = 121
         InteriorWallTrim = 86
         Floor = 68
         GrimeFloor = 79
@@ -5331,7 +6895,7 @@ Template
         Name = janitor
         Color = 20 79 5
         InternalName = janitor
-        InteriorWall = 122
+        InteriorWall = 121
         InteriorWallTrim = 88
         Floor = 51
         GrimeFloor = 79
@@ -5343,7 +6907,7 @@ Template
         Name = security
         Color = 228 102 97
         InternalName = security
-        InteriorWall = 122
+        InteriorWall = 121
         InteriorWallTrim = 88
         Floor = 51
         GrimeFloor = 79
@@ -5355,7 +6919,7 @@ Template
         Name = bankstorage
         Color = 249 152 48
         InternalName = bankstorage
-        InteriorWall = 122
+        InteriorWall = 121
         InteriorWallTrim = 88
         Floor = 51
         GrimeFloor = 79
@@ -5367,7 +6931,7 @@ Template
         Name = depositboxes
         Color = 170 83 57
         InternalName = depositboxes
-        InteriorWall = 110
+        InteriorWall = 109
         InteriorWallTrim = 0
         Floor = 51
         GrimeFloor = 79
@@ -5379,7 +6943,7 @@ Template
         Name = vault
         Color = 204 187 168
         InternalName = vault
-        InteriorWall = 110
+        InteriorWall = 109
         InteriorWallTrim = 0
         Floor = 51
         GrimeFloor = 79
@@ -5394,13 +6958,13 @@ Template
     ExteriorWallTrim = 0
     Door = 0
     DoorFrame = 0
-    Window = 166
+    Window = 165
     Curtains = 0
     Shutters = 0
-    Stairs = 165
-    RoofCap = 127
-    RoofSlope = 142
-    RoofTop = 154
+    Stairs = 164
+    RoofCap = 126
+    RoofSlope = 141
+    RoofTop = 153
     GrimeWall = 82
     UsedTiles = 
     UsedFurniture = 
@@ -5409,7 +6973,7 @@ Template
         Name = barn
         Color = 197 96 125
         InternalName = barn
-        InteriorWall = 112
+        InteriorWall = 111
         InteriorWallTrim = 0
         Floor = 70
         GrimeFloor = 78
@@ -5421,19 +6985,7 @@ Template
         Name = farmstorage
         Color = 165 101 30
         InternalName = farmstorage
-        InteriorWall = 112
-        InteriorWallTrim = 0
-        Floor = 70
-        GrimeFloor = 78
-        GrimeWall = 81
-        Ceiling = 0
-    }
-    Room
-    {
-        Name = haystorage
-        Color = 21 234 160
-        InternalName = haystorage
-        InteriorWall = 112
+        InteriorWall = 111
         InteriorWallTrim = 0
         Floor = 70
         GrimeFloor = 78
@@ -5448,12 +7000,12 @@ Template
     ExteriorWallTrim = 0
     Door = 13
     DoorFrame = 0
-    Window = 169
+    Window = 168
     Curtains = 0
     Shutters = 0
-    Stairs = 165
-    RoofCap = 126
-    RoofSlope = 143
+    Stairs = 164
+    RoofCap = 125
+    RoofSlope = 142
     RoofTop = 0
     GrimeWall = 81
     UsedTiles = 
@@ -5463,7 +7015,7 @@ Template
         Name = storage
         Color = 85 51 61
         InternalName = storage
-        InteriorWall = 105
+        InteriorWall = 104
         InteriorWallTrim = 0
         Floor = 51
         GrimeFloor = 79
@@ -5481,10 +7033,10 @@ Template
     Window = 0
     Curtains = 0
     Shutters = 0
-    Stairs = 158
-    RoofCap = 128
-    RoofSlope = 148
-    RoofTop = 157
+    Stairs = 157
+    RoofCap = 127
+    RoofSlope = 147
+    RoofTop = 156
     GrimeWall = 0
     UsedTiles = 
     UsedFurniture = 
@@ -5493,7 +7045,7 @@ Template
         Name = derelict
         Color = 133 178 194
         InternalName = derelict
-        InteriorWall = 109
+        InteriorWall = 108
         InteriorWallTrim = 0
         Floor = 49
         GrimeFloor = 0
@@ -5508,13 +7060,13 @@ Template
     ExteriorWallTrim = 0
     Door = 9
     DoorFrame = 0
-    Window = 166
+    Window = 165
     Curtains = 0
     Shutters = 0
-    Stairs = 158
-    RoofCap = 130
-    RoofSlope = 142
-    RoofTop = 149
+    Stairs = 157
+    RoofCap = 129
+    RoofSlope = 141
+    RoofTop = 148
     GrimeWall = 81
     UsedTiles = 
     UsedFurniture = 
@@ -5535,7 +7087,7 @@ Template
         Name = construction
         Color = 192 78 27
         InternalName = construction
-        InteriorWall = 111
+        InteriorWall = 110
         InteriorWallTrim = 0
         Floor = 48
         GrimeFloor = 79
@@ -5550,13 +7102,13 @@ Template
     ExteriorWallTrim = 0
     Door = 8
     DoorFrame = 5
-    Window = 166
+    Window = 165
     Curtains = 0
     Shutters = 0
-    Stairs = 163
-    RoofCap = 132
-    RoofSlope = 141
-    RoofTop = 153
+    Stairs = 162
+    RoofCap = 131
+    RoofSlope = 140
+    RoofTop = 152
     GrimeWall = 82
     UsedTiles = 
     UsedFurniture = 
@@ -5574,9 +7126,9 @@ Template
     }
     Room
     {
-        Name = hallway
-        Color = 180 101 18
-        InternalName = hallway
+        Name = hall
+        Color = 86 76 5
+        InternalName = hall
         InteriorWall = 95
         InteriorWallTrim = 0
         Floor = 72
@@ -5652,13 +7204,13 @@ Template
     ExteriorWallTrim = 0
     Door = 11
     DoorFrame = 6
-    Window = 169
+    Window = 168
     Curtains = 0
     Shutters = 0
-    Stairs = 161
-    RoofCap = 136
-    RoofSlope = 146
-    RoofTop = 151
+    Stairs = 160
+    RoofCap = 135
+    RoofSlope = 145
+    RoofTop = 150
     GrimeWall = 82
     UsedTiles = 
     UsedFurniture = 
@@ -5667,7 +7219,7 @@ Template
         Name = diner
         Color = 91 181 81
         InternalName = diner
-        InteriorWall = 99
+        InteriorWall = 98
         InteriorWallTrim = 0
         Floor = 73
         GrimeFloor = 0
@@ -5679,7 +7231,7 @@ Template
         Name = dinerkitchen
         Color = 94 126 166
         InternalName = dinerkitchen
-        InteriorWall = 99
+        InteriorWall = 98
         InteriorWallTrim = 0
         Floor = 73
         GrimeFloor = 0
@@ -5691,7 +7243,7 @@ Template
         Name = bathroom
         Color = 95 191 146
         InternalName = bathroom
-        InteriorWall = 118
+        InteriorWall = 117
         InteriorWallTrim = 0
         Floor = 62
         GrimeFloor = 0
@@ -5703,7 +7255,7 @@ Template
         Name = janitor
         Color = 20 79 5
         InternalName = janitor
-        InteriorWall = 118
+        InteriorWall = 117
         InteriorWallTrim = 0
         Floor = 62
         GrimeFloor = 79
@@ -5718,13 +7270,13 @@ Template
     ExteriorWallTrim = 0
     Door = 17
     DoorFrame = 0
-    Window = 169
+    Window = 168
     Curtains = 0
     Shutters = 0
-    Stairs = 160
-    RoofCap = 136
-    RoofSlope = 147
-    RoofTop = 156
+    Stairs = 159
+    RoofCap = 135
+    RoofSlope = 146
+    RoofTop = 155
     GrimeWall = 82
     UsedTiles = 
     UsedFurniture = 
@@ -5733,7 +7285,7 @@ Template
         Name = fossoil
         Color = 2 188 211
         InternalName = fossoil
-        InteriorWall = 106
+        InteriorWall = 105
         InteriorWallTrim = 0
         Floor = 77
         GrimeFloor = 79
@@ -5745,7 +7297,7 @@ Template
         Name = empty
         Color = 24 157 19
         InternalName = empty
-        InteriorWall = 106
+        InteriorWall = 105
         InteriorWallTrim = 0
         Floor = 77
         GrimeFloor = 79
@@ -5757,7 +7309,7 @@ Template
         Name = janitor
         Color = 20 79 5
         InternalName = janitor
-        InteriorWall = 114
+        InteriorWall = 113
         InteriorWallTrim = 0
         Floor = 51
         GrimeFloor = 79
@@ -5769,7 +7321,7 @@ Template
         Name = gasstorage
         Color = 179 201 191
         InternalName = gasstorage
-        InteriorWall = 114
+        InteriorWall = 113
         InteriorWallTrim = 0
         Floor = 51
         GrimeFloor = 79
@@ -5781,7 +7333,7 @@ Template
         Name = bathroom
         Color = 95 191 146
         InternalName = bathroom
-        InteriorWall = 122
+        InteriorWall = 121
         InteriorWallTrim = 0
         Floor = 62
         GrimeFloor = 79
@@ -5796,12 +7348,12 @@ Template
     ExteriorWallTrim = 0
     Door = 18
     DoorFrame = 0
-    Window = 169
+    Window = 168
     Curtains = 0
     Shutters = 0
-    Stairs = 160
-    RoofCap = 136
-    RoofSlope = 146
+    Stairs = 159
+    RoofCap = 135
+    RoofSlope = 145
     RoofTop = 0
     GrimeWall = 82
     UsedTiles = 
@@ -5811,7 +7363,7 @@ Template
         Name = gas2go
         Color = 186 102 96
         InternalName = gas2go
-        InteriorWall = 107
+        InteriorWall = 106
         InteriorWallTrim = 0
         Floor = 77
         GrimeFloor = 79
@@ -5823,7 +7375,7 @@ Template
         Name = empty
         Color = 24 157 19
         InternalName = empty
-        InteriorWall = 107
+        InteriorWall = 106
         InteriorWallTrim = 0
         Floor = 77
         GrimeFloor = 79
@@ -5835,7 +7387,7 @@ Template
         Name = janitor
         Color = 20 79 5
         InternalName = janitor
-        InteriorWall = 114
+        InteriorWall = 113
         InteriorWallTrim = 0
         Floor = 51
         GrimeFloor = 79
@@ -5847,7 +7399,7 @@ Template
         Name = gasstorage
         Color = 179 201 191
         InternalName = gasstorage
-        InteriorWall = 114
+        InteriorWall = 113
         InteriorWallTrim = 0
         Floor = 51
         GrimeFloor = 79
@@ -5859,7 +7411,7 @@ Template
         Name = bathroom
         Color = 95 191 146
         InternalName = bathroom
-        InteriorWall = 122
+        InteriorWall = 121
         InteriorWallTrim = 0
         Floor = 62
         GrimeFloor = 79
@@ -5874,13 +7426,13 @@ Template
     ExteriorWallTrim = 0
     Door = 12
     DoorFrame = 0
-    Window = 169
+    Window = 168
     Curtains = 0
     Shutters = 0
-    Stairs = 161
-    RoofCap = 138
-    RoofSlope = 147
-    RoofTop = 156
+    Stairs = 160
+    RoofCap = 137
+    RoofSlope = 146
+    RoofTop = 155
     GrimeWall = 82
     UsedTiles = 
     UsedFurniture = 
@@ -5889,7 +7441,7 @@ Template
         Name = gigamart
         Color = 57 116 99
         InternalName = gigamart
-        InteriorWall = 122
+        InteriorWall = 121
         InteriorWallTrim = 0
         Floor = 63
         GrimeFloor = 79
@@ -5901,7 +7453,7 @@ Template
         Name = gigamartkitchen
         Color = 26 88 164
         InternalName = gigamartkitchen
-        InteriorWall = 122
+        InteriorWall = 121
         InteriorWallTrim = 0
         Floor = 63
         GrimeFloor = 79
@@ -5913,7 +7465,7 @@ Template
         Name = grocerystorage
         Color = 95 4 144
         InternalName = grocerystorage
-        InteriorWall = 114
+        InteriorWall = 113
         InteriorWallTrim = 0
         Floor = 52
         GrimeFloor = 79
@@ -5925,7 +7477,7 @@ Template
         Name = bathroom
         Color = 95 191 146
         InternalName = bathroom
-        InteriorWall = 114
+        InteriorWall = 113
         InteriorWallTrim = 0
         Floor = 52
         GrimeFloor = 79
@@ -5937,7 +7489,7 @@ Template
         Name = office
         Color = 7 183 9
         InternalName = office
-        InteriorWall = 122
+        InteriorWall = 121
         InteriorWallTrim = 0
         Floor = 55
         GrimeFloor = 79
@@ -5952,12 +7504,12 @@ Template
     ExteriorWallTrim = 0
     Door = 19
     DoorFrame = 0
-    Window = 166
+    Window = 165
     Curtains = 0
     Shutters = 0
-    Stairs = 159
-    RoofCap = 140
-    RoofSlope = 142
+    Stairs = 158
+    RoofCap = 139
+    RoofSlope = 141
     RoofTop = 0
     GrimeWall = 0
     UsedTiles = 
@@ -5967,7 +7519,7 @@ Template
         Name = empty
         Color = 24 157 19
         InternalName = empty
-        InteriorWall = 125
+        InteriorWall = 124
         InteriorWallTrim = 0
         Floor = 70
         GrimeFloor = 79
@@ -5982,13 +7534,13 @@ Template
     ExteriorWallTrim = 0
     Door = 12
     DoorFrame = 0
-    Window = 169
+    Window = 168
     Curtains = 0
     Shutters = 0
-    Stairs = 161
-    RoofCap = 139
-    RoofSlope = 144
-    RoofTop = 150
+    Stairs = 160
+    RoofCap = 138
+    RoofSlope = 143
+    RoofTop = 149
     GrimeWall = 81
     UsedTiles = 
     UsedFurniture = 
@@ -5997,7 +7549,7 @@ Template
         Name = mechanic
         Color = 129 112 193
         InternalName = mechanic
-        InteriorWall = 114
+        InteriorWall = 113
         InteriorWallTrim = 0
         Floor = 52
         GrimeFloor = 78
@@ -6009,7 +7561,7 @@ Template
         Name = office
         Color = 7 183 9
         InternalName = office
-        InteriorWall = 122
+        InteriorWall = 121
         InteriorWallTrim = 0
         Floor = 63
         GrimeFloor = 79
@@ -6021,7 +7573,7 @@ Template
         Name = factorystorage
         Color = 101 209 204
         InternalName = factorystorage
-        InteriorWall = 122
+        InteriorWall = 121
         InteriorWallTrim = 0
         Floor = 63
         GrimeFloor = 79
@@ -6033,7 +7585,7 @@ Template
         Name = bathroom
         Color = 95 191 146
         InternalName = bathroom
-        InteriorWall = 122
+        InteriorWall = 121
         InteriorWallTrim = 0
         Floor = 63
         GrimeFloor = 79
@@ -6045,7 +7597,7 @@ Template
         Name = janitor
         Color = 20 79 5
         InternalName = janitor
-        InteriorWall = 122
+        InteriorWall = 121
         InteriorWallTrim = 0
         Floor = 63
         GrimeFloor = 79
@@ -6063,19 +7615,19 @@ Template
     Window = 0
     Curtains = 3
     Shutters = 0
-    Stairs = 161
-    RoofCap = 126
-    RoofSlope = 145
-    RoofTop = 150
+    Stairs = 160
+    RoofCap = 125
+    RoofSlope = 144
+    RoofTop = 149
     GrimeWall = 0
-    UsedTiles = 38 120 90 69 1 91 56 116 66 54 122 86 68 79 100 62 82 51 88 65 58 67 59 97 28 3 161 126 145
+    UsedTiles = 38 119 90 69 1 91 56 115 66 54 121 86 68 79 99 62 82 51 88 65 58 67 59 96 28 3 160 125 144
     UsedFurniture = 
     Room
     {
         Name = armytent
         Color = 132 9 123
         InternalName = armytent
-        InteriorWall = 97
+        InteriorWall = 96
         InteriorWallTrim = 0
         Floor = 51
         GrimeFloor = 79
@@ -6087,7 +7639,7 @@ Template
         Name = armystorage
         Color = 66 148 182
         InternalName = armystorage
-        InteriorWall = 97
+        InteriorWall = 96
         InteriorWallTrim = 0
         Floor = 51
         GrimeFloor = 79
@@ -6099,7 +7651,7 @@ Template
         Name = office
         Color = 7 183 9
         InternalName = office
-        InteriorWall = 97
+        InteriorWall = 96
         InteriorWallTrim = 0
         Floor = 51
         GrimeFloor = 79
@@ -6111,7 +7663,7 @@ Template
         Name = security
         Color = 228 102 97
         InternalName = security
-        InteriorWall = 97
+        InteriorWall = 96
         InteriorWallTrim = 0
         Floor = 51
         GrimeFloor = 79
@@ -6123,7 +7675,7 @@ Template
         Name = medical
         Color = 9 184 97
         InternalName = medical
-        InteriorWall = 97
+        InteriorWall = 96
         InteriorWallTrim = 0
         Floor = 51
         GrimeFloor = 79
@@ -6135,7 +7687,7 @@ Template
         Name = restaurantkitchen
         Color = 105 200 96
         InternalName = restaurantkitchen
-        InteriorWall = 97
+        InteriorWall = 96
         InteriorWallTrim = 0
         Floor = 51
         GrimeFloor = 79
@@ -6147,7 +7699,7 @@ Template
         Name = restaurantdining
         Color = 60 133 139
         InternalName = restaurantdining
-        InteriorWall = 97
+        InteriorWall = 96
         InteriorWallTrim = 0
         Floor = 51
         GrimeFloor = 79
@@ -6165,19 +7717,19 @@ Template
     Window = 0
     Curtains = 4
     Shutters = 0
-    Stairs = 161
-    RoofCap = 126
-    RoofSlope = 144
-    RoofTop = 150
+    Stairs = 160
+    RoofCap = 125
+    RoofSlope = 143
+    RoofTop = 149
     GrimeWall = 0
-    UsedTiles = 38 120 90 69 1 91 56 116 66 54 122 86 68 79 100 62 82 51 88 65 58 67 59 97 28 3 161 126 145
+    UsedTiles = 38 119 90 69 1 91 56 115 66 54 121 86 68 79 99 62 82 51 88 65 58 67 59 96 28 3 160 125 144
     UsedFurniture = 
     Room
     {
         Name = armytent
         Color = 132 9 123
         InternalName = armytent
-        InteriorWall = 98
+        InteriorWall = 97
         InteriorWallTrim = 0
         Floor = 51
         GrimeFloor = 79
@@ -6189,7 +7741,7 @@ Template
         Name = armystorage
         Color = 66 148 182
         InternalName = armystorage
-        InteriorWall = 98
+        InteriorWall = 97
         InteriorWallTrim = 0
         Floor = 51
         GrimeFloor = 79
@@ -6201,7 +7753,7 @@ Template
         Name = office
         Color = 7 183 9
         InternalName = office
-        InteriorWall = 98
+        InteriorWall = 97
         InteriorWallTrim = 0
         Floor = 51
         GrimeFloor = 79
@@ -6213,7 +7765,7 @@ Template
         Name = security
         Color = 228 102 97
         InternalName = security
-        InteriorWall = 98
+        InteriorWall = 97
         InteriorWallTrim = 0
         Floor = 51
         GrimeFloor = 79
@@ -6225,7 +7777,7 @@ Template
         Name = medical
         Color = 9 184 97
         InternalName = medical
-        InteriorWall = 98
+        InteriorWall = 97
         InteriorWallTrim = 0
         Floor = 51
         GrimeFloor = 79
@@ -6237,7 +7789,7 @@ Template
         Name = restaurantkitchen
         Color = 105 200 96
         InternalName = restaurantkitchen
-        InteriorWall = 98
+        InteriorWall = 97
         InteriorWallTrim = 0
         Floor = 51
         GrimeFloor = 79
@@ -6249,7 +7801,7 @@ Template
         Name = restaurantdining
         Color = 60 133 139
         InternalName = restaurantdining
-        InteriorWall = 98
+        InteriorWall = 97
         InteriorWallTrim = 0
         Floor = 51
         GrimeFloor = 79
@@ -6264,13 +7816,13 @@ Template
     ExteriorWallTrim = 0
     Door = 14
     DoorFrame = 5
-    Window = 167
+    Window = 166
     Curtains = 0
     Shutters = 0
-    Stairs = 162
-    RoofCap = 129
-    RoofSlope = 143
-    RoofTop = 150
+    Stairs = 161
+    RoofCap = 128
+    RoofSlope = 142
+    RoofTop = 149
     GrimeWall = 82
     UsedTiles = 
     UsedFurniture = 
@@ -6279,7 +7831,7 @@ Template
         Name = dining_crepe
         Color = 191 146 148
         InternalName = room1
-        InteriorWall = 113
+        InteriorWall = 112
         InteriorWallTrim = 0
         Floor = 74
         GrimeFloor = 79
@@ -6291,7 +7843,7 @@ Template
         Name = kitchen_crepe
         Color = 42 109 254
         InternalName = room1
-        InteriorWall = 117
+        InteriorWall = 116
         InteriorWallTrim = 0
         Floor = 61
         GrimeFloor = 79
@@ -6303,7 +7855,7 @@ Template
         Name = bathroom
         Color = 95 191 146
         InternalName = bathroom
-        InteriorWall = 117
+        InteriorWall = 116
         InteriorWallTrim = 0
         Floor = 61
         GrimeFloor = 79
@@ -6315,7 +7867,7 @@ Template
         Name = janitor
         Color = 20 79 5
         InternalName = janitor
-        InteriorWall = 122
+        InteriorWall = 121
         InteriorWallTrim = 0
         Floor = 51
         GrimeFloor = 79
@@ -6327,7 +7879,7 @@ Template
         Name = office
         Color = 7 183 9
         InternalName = office
-        InteriorWall = 122
+        InteriorWall = 121
         InteriorWallTrim = 89
         Floor = 55
         GrimeFloor = 79
@@ -6342,12 +7894,12 @@ Template
     ExteriorWallTrim = 21
     Door = 15
     DoorFrame = 6
-    Window = 169
+    Window = 168
     Curtains = 0
     Shutters = 0
-    Stairs = 160
-    RoofCap = 137
-    RoofSlope = 143
+    Stairs = 159
+    RoofCap = 136
+    RoofSlope = 142
     RoofTop = 0
     GrimeWall = 82
     UsedTiles = 
@@ -6357,7 +7909,7 @@ Template
         Name = pizzawhirled
         Color = 214 110 42
         InternalName = pizzawhirled
-        InteriorWall = 100
+        InteriorWall = 99
         InteriorWallTrim = 84
         Floor = 75
         GrimeFloor = 0
@@ -6369,7 +7921,7 @@ Template
         Name = pizzawhirledcounter
         Color = 84 228 171
         InternalName = pizzawhirledcounter
-        InteriorWall = 100
+        InteriorWall = 99
         InteriorWallTrim = 84
         Floor = 75
         GrimeFloor = 0
@@ -6381,7 +7933,7 @@ Template
         Name = pizzakitchen
         Color = 241 135 141
         InternalName = pizzakitchen
-        InteriorWall = 122
+        InteriorWall = 121
         InteriorWallTrim = 0
         Floor = 62
         GrimeFloor = 79
@@ -6393,7 +7945,7 @@ Template
         Name = bathroom
         Color = 95 191 146
         InternalName = bathroom
-        InteriorWall = 100
+        InteriorWall = 99
         InteriorWallTrim = 0
         Floor = 62
         GrimeFloor = 79
@@ -6405,7 +7957,7 @@ Template
         Name = janitor
         Color = 20 79 5
         InternalName = janitor
-        InteriorWall = 100
+        InteriorWall = 99
         InteriorWallTrim = 0
         Floor = 62
         GrimeFloor = 79
@@ -6420,34 +7972,22 @@ Template
     ExteriorWallTrim = 0
     Door = 11
     DoorFrame = 6
-    Window = 169
+    Window = 168
     Curtains = 0
     Shutters = 0
-    Stairs = 164
-    RoofCap = 135
-    RoofSlope = 143
-    RoofTop = 150
+    Stairs = 163
+    RoofCap = 134
+    RoofSlope = 142
+    RoofTop = 149
     GrimeWall = 82
     UsedTiles = 
     UsedFurniture = 
     Room
     {
-        Name = policehall
-        Color = 171 217 174
-        InternalName = policehall
-        InteriorWall = 110
-        InteriorWallTrim = 0
-        Floor = 51
-        GrimeFloor = 79
-        GrimeWall = 0
-        Ceiling = 1
-    }
-    Room
-    {
-        Name = corridor
-        Color = 197 169 91
-        InternalName = corridor
-        InteriorWall = 96
+        Name = hall
+        Color = 86 76 5
+        InternalName = hall
+        InteriorWall = 109
         InteriorWallTrim = 0
         Floor = 51
         GrimeFloor = 79
@@ -6459,7 +7999,7 @@ Template
         Name = policeoffice
         Color = 111 145 228
         InternalName = policeoffice
-        InteriorWall = 122
+        InteriorWall = 121
         InteriorWallTrim = 90
         Floor = 55
         GrimeFloor = 79
@@ -6471,7 +8011,7 @@ Template
         Name = detectiveoffice
         Color = 167 154 154
         InternalName = detectiveoffice
-        InteriorWall = 122
+        InteriorWall = 121
         InteriorWallTrim = 90
         Floor = 54
         GrimeFloor = 79
@@ -6483,7 +8023,7 @@ Template
         Name = captainoffice
         Color = 7 183 9
         InternalName = captainoffice
-        InteriorWall = 122
+        InteriorWall = 121
         InteriorWallTrim = 90
         Floor = 54
         GrimeFloor = 79
@@ -6495,7 +8035,7 @@ Template
         Name = security
         Color = 228 102 97
         InternalName = security
-        InteriorWall = 110
+        InteriorWall = 109
         InteriorWallTrim = 0
         Floor = 51
         GrimeFloor = 79
@@ -6507,7 +8047,7 @@ Template
         Name = prisonlocker
         Color = 167 37 46
         InternalName = prisoncells
-        InteriorWall = 110
+        InteriorWall = 109
         InteriorWallTrim = 0
         Floor = 51
         GrimeFloor = 79
@@ -6519,7 +8059,7 @@ Template
         Name = prisoncells
         Color = 141 215 71
         InternalName = prisoncells
-        InteriorWall = 110
+        InteriorWall = 109
         InteriorWallTrim = 0
         Floor = 51
         GrimeFloor = 79
@@ -6531,7 +8071,7 @@ Template
         Name = interrogationroom
         Color = 218 41 17
         InternalName = interrogationroom
-        InteriorWall = 110
+        InteriorWall = 109
         InteriorWallTrim = 0
         Floor = 51
         GrimeFloor = 79
@@ -6543,7 +8083,7 @@ Template
         Name = policearchive
         Color = 138 108 71
         InternalName = policearchive
-        InteriorWall = 110
+        InteriorWall = 109
         InteriorWallTrim = 0
         Floor = 51
         GrimeFloor = 79
@@ -6555,7 +8095,7 @@ Template
         Name = policegunstorage
         Color = 10 198 66
         InternalName = policegunstorage
-        InteriorWall = 110
+        InteriorWall = 109
         InteriorWallTrim = 0
         Floor = 51
         GrimeFloor = 79
@@ -6567,7 +8107,7 @@ Template
         Name = policegarage
         Color = 188 112 175
         InternalName = policegarage
-        InteriorWall = 110
+        InteriorWall = 109
         InteriorWallTrim = 0
         Floor = 51
         GrimeFloor = 79
@@ -6579,7 +8119,7 @@ Template
         Name = evidenceroom
         Color = 241 114 167
         InternalName = evidenceroom
-        InteriorWall = 110
+        InteriorWall = 109
         InteriorWallTrim = 0
         Floor = 51
         GrimeFloor = 79
@@ -6591,7 +8131,7 @@ Template
         Name = policearchive
         Color = 138 108 71
         InternalName = policearchive
-        InteriorWall = 110
+        InteriorWall = 109
         InteriorWallTrim = 0
         Floor = 51
         GrimeFloor = 79
@@ -6603,7 +8143,7 @@ Template
         Name = coroneroffice
         Color = 99 107 253
         InternalName = coroneroffice
-        InteriorWall = 110
+        InteriorWall = 109
         InteriorWallTrim = 0
         Floor = 62
         GrimeFloor = 79
@@ -6615,7 +8155,7 @@ Template
         Name = morgue
         Color = 155 159 214
         InternalName = morgue
-        InteriorWall = 114
+        InteriorWall = 113
         InteriorWallTrim = 0
         Floor = 62
         GrimeFloor = 79
@@ -6630,12 +8170,12 @@ Template
     ExteriorWallTrim = 0
     Door = 11
     DoorFrame = 6
-    Window = 169
+    Window = 168
     Curtains = 0
     Shutters = 0
-    Stairs = 160
-    RoofCap = 137
-    RoofSlope = 143
+    Stairs = 159
+    RoofCap = 136
+    RoofSlope = 142
     RoofTop = 0
     GrimeWall = 82
     UsedTiles = 
@@ -6645,7 +8185,7 @@ Template
         Name = cafe
         Color = 38 164 232
         InternalName = cafe
-        InteriorWall = 101
+        InteriorWall = 100
         InteriorWallTrim = 0
         Floor = 71
         GrimeFloor = 79
@@ -6657,7 +8197,7 @@ Template
         Name = cafekitchen
         Color = 151 153 128
         InternalName = cafekitchen
-        InteriorWall = 101
+        InteriorWall = 100
         InteriorWallTrim = 0
         Floor = 71
         GrimeFloor = 79
@@ -6669,7 +8209,7 @@ Template
         Name = bathroom
         Color = 95 191 146
         InternalName = bathroom
-        InteriorWall = 102
+        InteriorWall = 101
         InteriorWallTrim = 0
         Floor = 61
         GrimeFloor = 79
@@ -6681,7 +8221,7 @@ Template
         Name = janitor
         Color = 20 79 5
         InternalName = janitor
-        InteriorWall = 122
+        InteriorWall = 121
         InteriorWallTrim = 0
         Floor = 51
         GrimeFloor = 79
@@ -6696,82 +8236,34 @@ Template
     ExteriorWallTrim = 0
     Door = 9
     DoorFrame = 7
-    Window = 166
+    Window = 165
     Curtains = 0
     Shutters = 0
-    Stairs = 158
-    RoofCap = 130
-    RoofSlope = 142
-    RoofTop = 155
+    Stairs = 157
+    RoofCap = 129
+    RoofSlope = 141
+    RoofTop = 154
     GrimeWall = 82
     UsedTiles = 
     UsedFurniture = 
     Room
     {
-        Name = hall
-        Color = 67 251 18
-        InternalName = hall
-        InteriorWall = 111
-        InteriorWallTrim = 0
-        Floor = 70
-        GrimeFloor = 79
-        GrimeWall = 82
-        Ceiling = 1
-    }
-    Room
-    {
-        Name = livingroom
-        Color = 112 68 22
-        InternalName = livingroom
-        InteriorWall = 111
-        InteriorWallTrim = 0
-        Floor = 70
-        GrimeFloor = 79
-        GrimeWall = 82
-        Ceiling = 1
-    }
-    Room
-    {
-        Name = kitchen
-        Color = 205 145 160
-        InternalName = kitchen
-        InteriorWall = 111
-        InteriorWallTrim = 0
-        Floor = 70
-        GrimeFloor = 79
-        GrimeWall = 82
-        Ceiling = 1
-    }
-    Room
-    {
-        Name = bathroom
-        Color = 95 191 146
-        InternalName = bathroom
-        InteriorWall = 111
-        InteriorWallTrim = 0
-        Floor = 70
-        GrimeFloor = 79
-        GrimeWall = 82
-        Ceiling = 1
-    }
-    Room
-    {
-        Name = bedroom
-        Color = 26 26 52
-        InternalName = bedroom
-        InteriorWall = 111
-        InteriorWallTrim = 0
-        Floor = 70
-        GrimeFloor = 79
-        GrimeWall = 82
-        Ceiling = 1
-    }
-    Room
-    {
         Name = garagestorage
         Color = 93 75 137
         InternalName = garagestorage
-        InteriorWall = 111
+        InteriorWall = 110
+        InteriorWallTrim = 0
+        Floor = 70
+        GrimeFloor = 79
+        GrimeWall = 82
+        Ceiling = 1
+    }
+    Room
+    {
+        Name = farmstorage
+        Color = 165 101 30
+        InternalName = farmstorage
+        InteriorWall = 110
         InteriorWallTrim = 0
         Floor = 70
         GrimeFloor = 79
@@ -6783,7 +8275,7 @@ Template
         Name = shed
         Color = 95 115 162
         InternalName = shed
-        InteriorWall = 111
+        InteriorWall = 110
         InteriorWallTrim = 0
         Floor = 70
         GrimeFloor = 79
@@ -6810,12 +8302,12 @@ Template
     ExteriorWallTrim = 0
     Door = 16
     DoorFrame = 0
-    Window = 169
+    Window = 168
     Curtains = 0
     Shutters = 0
-    Stairs = 160
-    RoofCap = 138
-    RoofSlope = 142
+    Stairs = 159
+    RoofCap = 137
+    RoofSlope = 141
     RoofTop = 0
     GrimeWall = 82
     UsedTiles = 
@@ -6825,7 +8317,7 @@ Template
         Name = spiffoservice
         Color = 232 183 92
         InternalName = spiffoservice
-        InteriorWall = 103
+        InteriorWall = 102
         InteriorWallTrim = 0
         Floor = 76
         GrimeFloor = 0
@@ -6834,10 +8326,10 @@ Template
     }
     Room
     {
-        Name = spifforestaurant
-        Color = 170 175 3
-        InternalName = spifforestaurant
-        InteriorWall = 103
+        Name = spiffo_dining
+        Color = 80 101 12
+        InternalName = spiffo_dining
+        InteriorWall = 102
         InteriorWallTrim = 0
         Floor = 76
         GrimeFloor = 0
@@ -6849,7 +8341,7 @@ Template
         Name = spiffoskitchen
         Color = 247 143 218
         InternalName = spiffoskitchen
-        InteriorWall = 103
+        InteriorWall = 102
         InteriorWallTrim = 0
         Floor = 62
         GrimeFloor = 0
@@ -6861,7 +8353,7 @@ Template
         Name = bathroom
         Color = 95 191 146
         InternalName = bathroom
-        InteriorWall = 104
+        InteriorWall = 103
         InteriorWallTrim = 0
         Floor = 76
         GrimeFloor = 0
@@ -6873,7 +8365,7 @@ Template
         Name = janitor
         Color = 20 79 5
         InternalName = janitor
-        InteriorWall = 123
+        InteriorWall = 122
         InteriorWallTrim = 0
         Floor = 51
         GrimeFloor = 79
@@ -6888,13 +8380,13 @@ Template
     ExteriorWallTrim = 0
     Door = 11
     DoorFrame = 6
-    Window = 169
+    Window = 168
     Curtains = 0
     Shutters = 0
-    Stairs = 160
-    RoofCap = 136
-    RoofSlope = 141
-    RoofTop = 150
+    Stairs = 159
+    RoofCap = 135
+    RoofSlope = 140
+    RoofTop = 149
     GrimeWall = 82
     UsedTiles = 
     UsedFurniture = 
@@ -6903,7 +8395,7 @@ Template
         Name = theatrelobby
         Color = 159 77 127
         InternalName = theatre
-        InteriorWall = 119
+        InteriorWall = 118
         InteriorWallTrim = 83
         Floor = 54
         GrimeFloor = 79
@@ -6915,7 +8407,7 @@ Template
         Name = theatrekitchenfront
         Color = 164 17 164
         InternalName = theatrekitchen
-        InteriorWall = 119
+        InteriorWall = 118
         InteriorWallTrim = 0
         Floor = 66
         GrimeFloor = 79
@@ -6927,7 +8419,7 @@ Template
         Name = theatrekitchenback
         Color = 165 218 216
         InternalName = theatrekitchen
-        InteriorWall = 117
+        InteriorWall = 116
         InteriorWallTrim = 0
         Floor = 66
         GrimeFloor = 79
@@ -6939,7 +8431,7 @@ Template
         Name = ticketoffice
         Color = 83 71 80
         InternalName = office
-        InteriorWall = 121
+        InteriorWall = 120
         InteriorWallTrim = 0
         Floor = 64
         GrimeFloor = 79
@@ -6951,7 +8443,7 @@ Template
         Name = theatre
         Color = 127 229 156
         InternalName = theatre
-        InteriorWall = 124
+        InteriorWall = 123
         InteriorWallTrim = 0
         Floor = 54
         GrimeFloor = 79
@@ -6963,7 +8455,7 @@ Template
         Name = bathroom
         Color = 95 191 146
         InternalName = bathroom
-        InteriorWall = 124
+        InteriorWall = 123
         InteriorWallTrim = 0
         Floor = 66
         GrimeFloor = 79
@@ -6975,7 +8467,7 @@ Template
         Name = office
         Color = 7 183 9
         InternalName = office
-        InteriorWall = 120
+        InteriorWall = 119
         InteriorWallTrim = 0
         Floor = 64
         GrimeFloor = 79
@@ -6987,7 +8479,7 @@ Template
         Name = theatrestorage
         Color = 54 231 160
         InternalName = theatrestorage
-        InteriorWall = 120
+        InteriorWall = 119
         InteriorWallTrim = 0
         Floor = 64
         GrimeFloor = 79
@@ -6999,7 +8491,7 @@ Template
         Name = breakroom
         Color = 211 65 176
         InternalName = breakroom
-        InteriorWall = 120
+        InteriorWall = 119
         InteriorWallTrim = 0
         Floor = 64
         GrimeFloor = 79
@@ -7011,7 +8503,7 @@ Template
         Name = janitor
         Color = 20 79 5
         InternalName = janitor
-        InteriorWall = 120
+        InteriorWall = 119
         InteriorWallTrim = 0
         Floor = 64
         GrimeFloor = 79
@@ -7026,22 +8518,22 @@ Template
     ExteriorWallTrim = 23
     Door = 10
     DoorFrame = 0
-    Window = 169
+    Window = 168
     Curtains = 0
     Shutters = 0
-    Stairs = 160
-    RoofCap = 131
-    RoofSlope = 144
-    RoofTop = 152
+    Stairs = 159
+    RoofCap = 130
+    RoofSlope = 143
+    RoofTop = 151
     GrimeWall = 82
-    UsedTiles = 168 10 2 108 63 78 80
+    UsedTiles = 167 10 2 107 63 78 80
     UsedFurniture = 1 2 3 4 5 6 7 8 9 10 11 12 13 14 15 16 17
     Room
     {
         Name = livingroom
         Color = 200 200 200
         InternalName = livingroom
-        InteriorWall = 108
+        InteriorWall = 107
         InteriorWallTrim = 0
         Floor = 63
         GrimeFloor = 0
@@ -7053,7 +8545,7 @@ Template
         Name = kitchen
         Color = 205 145 160
         InternalName = kitchen
-        InteriorWall = 108
+        InteriorWall = 107
         InteriorWallTrim = 0
         Floor = 63
         GrimeFloor = 0
@@ -7065,7 +8557,7 @@ Template
         Name = bathroom
         Color = 128 128 128
         InternalName = bathroom
-        InteriorWall = 108
+        InteriorWall = 107
         InteriorWallTrim = 0
         Floor = 63
         GrimeFloor = 0
@@ -7077,7 +8569,7 @@ Template
         Name = bedroom
         Color = 255 0 0
         InternalName = bedroom
-        InteriorWall = 108
+        InteriorWall = 107
         InteriorWallTrim = 0
         Floor = 63
         GrimeFloor = 0
@@ -7095,10 +8587,10 @@ Template
     Window = 0
     Curtains = 0
     Shutters = 0
-    Stairs = 161
-    RoofCap = 126
-    RoofSlope = 147
-    RoofTop = 150
+    Stairs = 160
+    RoofCap = 125
+    RoofSlope = 146
+    RoofTop = 149
     GrimeWall = 82
     UsedTiles = 
     UsedFurniture = 
@@ -7182,13 +8674,13 @@ Template
     ExteriorWallTrim = 22
     Door = 11
     DoorFrame = 6
-    Window = 169
+    Window = 168
     Curtains = 0
     Shutters = 0
-    Stairs = 160
-    RoofCap = 134
-    RoofSlope = 143
-    RoofTop = 150
+    Stairs = 159
+    RoofCap = 133
+    RoofSlope = 142
+    RoofTop = 149
     GrimeWall = 82
     UsedTiles = 
     UsedFurniture = 
@@ -7197,7 +8689,7 @@ Template
         Name = zippeestore
         Color = 8 50 112
         InternalName = zippeestore
-        InteriorWall = 122
+        InteriorWall = 121
         InteriorWallTrim = 87
         Floor = 77
         GrimeFloor = 79
@@ -7209,7 +8701,7 @@ Template
         Name = zippeestorage
         Color = 70 6 102
         InternalName = zippeestorage
-        InteriorWall = 114
+        InteriorWall = 113
         InteriorWallTrim = 0
         Floor = 51
         GrimeFloor = 79
@@ -7221,7 +8713,7 @@ Template
         Name = janitor
         Color = 20 79 5
         InternalName = janitor
-        InteriorWall = 114
+        InteriorWall = 113
         InteriorWallTrim = 0
         Floor = 51
         GrimeFloor = 79
@@ -7233,7 +8725,7 @@ Template
         Name = bathroom
         Color = 95 191 146
         InternalName = bathroom
-        InteriorWall = 122
+        InteriorWall = 121
         InteriorWallTrim = 0
         Floor = 62
         GrimeFloor = 79

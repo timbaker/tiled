@@ -1,5 +1,5 @@
 edges {
-    label = 'Floor Grime (Lighter)',
+    label = 'Floor Grime (Light)',
     layer = nil,
     w = 'overlay_grime_floor_01_28',
     n = 'overlay_grime_floor_01_29',
@@ -20,7 +20,7 @@ edges {
 }
 
 edges {
-    label = 'Floor Grime (Darker)',
+    label = 'Floor Grime (Dark)',
     layer = nil,
     w = 'overlay_grime_floor_01_0',
     n = 'overlay_grime_floor_01_1',
@@ -56,7 +56,7 @@ edges {
 }
 
 edges {
-    label = 'Traffic Lines (Faded White)',
+    label = 'Traffic Lines (White Faded)',
     layer = nil,
     w = 'street_trafficlines_01_0',
     n = 'street_trafficlines_01_2',
@@ -71,7 +71,7 @@ edges {
 }
 
 edges {
-    label = 'Traffic Lines (Dark White)',
+    label = 'Traffic Lines (White Full)',
     layer = nil,
     w = 'street_trafficlines_01_8',
     n = 'street_trafficlines_01_10',
@@ -86,7 +86,7 @@ edges {
 }
 
 edges {
-    label = 'Traffic Lines (Faded Yellow)',
+    label = 'Traffic Lines (Yellow Faded)',
     layer = nil,
     w = 'street_trafficlines_01_16',
     n = 'street_trafficlines_01_18',
@@ -101,7 +101,7 @@ edges {
 }
 
 edges {
-    label = 'Traffic Lines (Dark Yellow)',
+    label = 'Traffic Lines (Yellow Full)',
     layer = nil,
     w = 'street_trafficlines_01_24',
     n = 'street_trafficlines_01_26',
