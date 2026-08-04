@@ -62,6 +62,13 @@ inline QDebug noise() { return QDebug(QtDebugMsg); }
 using namespace Tiled;
 using namespace Tiled::Internal;
 
+static const int TILESETS_PER_FILE_1 = 1024;
+static const int TILES_PER_TILESET_1 = 1024;
+static const int TILES_PER_FILE_1 = TILESETS_PER_FILE_1 * TILES_PER_TILESET_1;
+static const int TILESETS_PER_FILE_OTHER = 512;
+static const int TILES_PER_TILESET_OTHER = 512;
+static const int TILES_PER_FILE_OTHER = TILESETS_PER_FILE_OTHER * TILES_PER_TILESET_OTHER;
+
 class MyProxyStyle : public QProxyStyle
 {
 public:
@@ -1666,6 +1673,10 @@ void TileDefDialog::setToolTipEtc(int tileID)
         return;
     TileDefTile *defTile = mCurrentDefTileset->mTiles[tileID];
     QStringList tooltip;
+
+    tooltip += QStringLiteral("%1_%2").arg(defTile->tileset()->mName).arg(defTile->id());
+    tooltip += QStringLiteral("");
+
     for (UIProperties::UIProperty *p : defTile->mPropertyUI.nonDefaultProperties()) {
         tooltip += tr("%1 = %2").arg(p->mName).arg(p->valueAsString());
     }
@@ -1721,9 +1732,9 @@ void TileDefDialog::setToolTipEtc(int tileID)
         tooltip += QLatin1String("");
     }
     if (mTileDefFile->fileName().endsWith(QStringLiteral("newtiledefinitions.tiles"))) {
-        tooltip += QString::fromLatin1("gid %1").arg(defTile->tileset()->mID * 1024 + defTile->id());
+        tooltip += QString::fromLatin1("gid %1").arg((defTile->tileset()->mID - 1) * TILES_PER_TILESET_1 + defTile->id());
     } else {
-        tooltip += QString::fromLatin1("gid %1").arg(defTile->tileset()->mID * 512 + defTile->id());
+        tooltip += QString::fromLatin1("gid %1").arg(TILES_PER_FILE_1 + (defTile->tileset()->mID - 1) * TILES_PER_TILESET_OTHER + defTile->id());
     }
     m->setToolTip(tileID, tooltip.join(QLatin1String("\n")));
 
