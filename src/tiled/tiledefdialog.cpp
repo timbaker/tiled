@@ -659,7 +659,7 @@ void TileDefDialog::removeTilesets()
     }
     mUndoStack->beginMacro(tr("Remove Tilesets"));
     for (const QString& tilesetName : tilesets) {
-        const Tileset* tileset = mTilesetByName[tilesetName];
+        Tileset *const tileset = mTilesetByName[tilesetName];
         mUndoStack->push(new RemoveTileset(this, mTilesets.indexOf(tileset)));
     }
     mUndoStack->endMacro();
