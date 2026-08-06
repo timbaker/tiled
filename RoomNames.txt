@@ -16,23 +16,9 @@ room
 
 room
 {
-    internal = aircraftgarage
-    label = aircraftgarage
-    color = #952E5F
-}
-
-room
-{
-    internal = antique
-    label = antique
-    color = #28DC03
-}
-
-room
-{
-    internal = archive
-    label = archive
-    color = #D1266A
+    internal = agriworkerdorm
+    label = agriworkerdorm
+    color = #b1056e
 }
 
 room
@@ -86,13 +72,6 @@ room
 
 room
 {
-    internal = auctionstorage
-    label = auctionstorage
-    color = #98A515
-}
-
-room
-{
     internal = backstage
     label = backstage
     color = #33412A
@@ -100,16 +79,16 @@ room
 
 room
 {
-    internal = baggageroom
-    label = baggageroom
-    color = #2ECBD8
+    internal = bagstore
+    label = bagstore
+    color = #00ef79
 }
 
 room
 {
-    internal = baggagesearch
-    label = baggagesearch
-    color = #892267
+    internal = bagworkshop
+    label = bagworkshop
+    color = #03409b
 }
 
 room
@@ -121,44 +100,9 @@ room
 
 room
 {
-    internal = bakeryfactorykitchen
-    label = bakeryfactorykitchen
-    color = #EB1FB3
-}
-
-room
-{
-    internal = bakeryfactoryshipping
-    label = bakeryfactoryshipping
-    color = #3C70F3
-}
-
-room
-{
-    internal = bakeryfactorystorage
-    label = bakeryfactorystorage
-    color = #65D1CC
-}
-
-room
-{
     internal = bakerykitchen
     label = bakerykitchen
     color = #172AC6
-}
-
-room
-{
-    internal = balcony
-    label = balcony
-    color = #183D35
-}
-
-room
-{
-    internal = ballroom
-    label = ballroom
-    color = #210E3E
 }
 
 room
@@ -205,8 +149,8 @@ room
 
 room
 {
-    internal = barbequestore
-    label = barbequestore
+    internal = barbecuestore
+    label = barbecuestore
     color = #39BDDD
 }
 
@@ -215,13 +159,6 @@ room
     internal = barcountertwiggy
     label = barcountertwiggy
     color = #07723A
-}
-
-room
-{
-    internal = barg_bathroom
-    label = barg_bathroom
-    color = #5FBF92
 }
 
 room
@@ -243,13 +180,6 @@ room
     internal = barstorage
     label = barstorage
     color = #07099E
-}
-
-room
-{
-    internal = baseballchangeroom
-    label = baseballchangeroom
-    color = #A4755F
 }
 
 room
@@ -331,20 +261,6 @@ room
 
 room
 {
-    internal = bedroom1
-    label = bedroom1
-    color = #CF711A
-}
-
-room
-{
-    internal = bedroom4
-    label = bedroom4
-    color = #BD8ECC
-}
-
-room
-{
     internal = beergarden
     label = beergarden
     color = #CFE1E4
@@ -352,16 +268,9 @@ room
 
 room
 {
-    internal = boathouse
-    label = boathouse
-    color = #364494
-}
-
-room
-{
-    internal = bookstorage
-    label = bookstorage
-    color = #DC0CEB
+    internal = blacksmith
+    label = blacksmith
+    color = #ae1047
 }
 
 room
@@ -369,20 +278,6 @@ room
     internal = bookstore
     label = bookstore
     color = #29CCF0
-}
-
-room
-{
-    internal = bookstorestorage
-    label = bookstorestorage
-    color = #079ABD
-}
-
-room
-{
-    internal = bottlestorage
-    label = bottlestorage
-    color = #B390C5
 }
 
 room
@@ -422,20 +317,6 @@ room
 
 room
 {
-    internal = broadcasting
-    label = broadcasting
-    color = #D12687
-}
-
-room
-{
-    internal = bunker
-    label = bunker
-    color = #A66540
-}
-
-room
-{
     internal = burgerdining
     label = burgerdining
     color = #561D83
@@ -450,23 +331,9 @@ room
 
 room
 {
-    internal = burgerstorage
-    label = burgerstorage
-    color = #4CC539
-}
-
-room
-{
     internal = butcher
     label = butcher
     color = #5C18E3
-}
-
-room
-{
-    internal = butchery
-    label = butchery
-    color = #C4FA43
 }
 
 room
@@ -534,6 +401,14 @@ room
 
 room
 {
+    internal = campworkerdorm
+    label = campworkerdorm
+    color = #d8a86b
+}
+
+
+room
+{
     internal = candystorage
     label = candystorage
     color = #10D005
@@ -544,13 +419,6 @@ room
     internal = candystore
     label = candystore
     color = #C09C25
-}
-
-room
-{
-    internal = cannedstorage
-    label = cannedstorage
-    color = #8A2102
 }
 
 room
@@ -569,9 +437,9 @@ room
 
 room
 {
-    internal = cardfactory
-    label = cardfactory
-    color = #74F2A3
+    internal = carpentryworkshop
+    label = carpentryworkshop
+    color = #8cc743
 }
 
 room
@@ -604,13 +472,6 @@ room
 
 room
 {
-    internal = cattleauction
-    label = cattleauction
-    color = #54DF66
-}
-
-room
-{
     internal = catwalk
     label = catwalk
     color = #9486A2
@@ -618,9 +479,9 @@ room
 
 room
 {
-    internal = cave
-    label = cave
-    color = #55542F
+    internal = cdstore
+    label = cdstore
+    color = #8791f3
 }
 
 room
@@ -635,27 +496,6 @@ room
     internal = changeroomjockey
     label = changeroomjockey
     color = #2384EB
-}
-
-room
-{
-    internal = chickencoop
-    label = chickencoop
-    color = #B344F7
-}
-
-room
-{
-    internal = chili_dining
-    label = chili_dining
-    color = #5943FD
-}
-
-room
-{
-    internal = chilikitchen
-    label = chilikitchen
-    color = #23B83D
 }
 
 room
@@ -695,23 +535,9 @@ room
 
 room
 {
-    internal = classroom_maths
-    label = classroom_maths
-    color = #CE01BC
-}
-
-room
-{
     internal = classroom_medieval
     label = classroom_medieval
     color = #8077A3
-}
-
-room
-{
-    internal = classroom_physics
-    label = classroom_physics
-    color = #BAA932
 }
 
 room
@@ -730,9 +556,16 @@ room
 
 room
 {
-    internal = clinic
-    label = clinic
-    color = #9DFCDB
+    internal = clockrepair
+    label = clockrepair
+    color = #03c15d
+}
+
+room
+{
+    internal = clockrepairworkshop
+    label = clockrepairworkshop
+    color = #d1c199
 }
 
 room
@@ -744,34 +577,6 @@ room
 
 room
 {
-    internal = clothesestorage
-    label = clothesestorage
-    color = #495C6F
-}
-
-room
-{
-    internal = clothesstorage
-    label = clothesstorage
-    color = #1B2A4B
-}
-
-room
-{
-    internal = clothesstore
-    label = clothesstore
-    color = #D6311E
-}
-
-room
-{
-    internal = clothesstorestorage
-    label = clothesstorestorage
-    color = #46417B
-}
-
-room
-{
     internal = clothingstorage
     label = clothingstorage
     color = #85D05C
@@ -779,9 +584,16 @@ room
 
 room
 {
-    internal = coldroom
-    label = coldroom
-    color = #5A39E2
+    internal = clothingstore
+    label = clothingstore
+    color = #3b6755
+}
+
+room
+{
+    internal = cobbler
+    label = cobbler
+    color = #d623c2
 }
 
 room
@@ -800,23 +612,9 @@ room
 
 room
 {
-    internal = communications
-    label = communications
-    color = #335ED7
-}
-
-room
-{
     internal = construction
     label = construction
     color = #94267F
-}
-
-room
-{
-    internal = contraband
-    label = contraband
-    color = #DAB004
 }
 
 room
@@ -863,23 +661,9 @@ room
 
 room
 {
-    internal = corridor
-    label = corridor
-    color = #C5A95B
-}
-
-room
-{
     internal = cybercafe
     label = cybercafe
     color = #F98E62
-}
-
-room
-{
-    internal = darkroom
-    label = darkroom
-    color = #6E9205
 }
 
 room
@@ -894,13 +678,6 @@ room
     internal = daycare
     label = daycare
     color = #7F3A62
-}
-
-room
-{
-    internal = deepfry_dining
-    label = deepfry_dining
-    color = #C75157
 }
 
 room
@@ -940,13 +717,6 @@ room
 
 room
 {
-    internal = depositboxes
-    label = depositboxes
-    color = #AA5339
-}
-
-room
-{
     internal = derelict
     label = derelict
     color = #85B2C2
@@ -954,16 +724,16 @@ room
 
 room
 {
-    internal = detectiveoffice
-    label = detectiveoffice
-    color = #A79A9A
+    internal = derelict_steelfactory
+    label = derelict_steelfactory
+    color = #b13570
 }
 
 room
 {
-    internal = diner
-    label = diner
-    color = #5BB551
+    internal = detectiveoffice
+    label = detectiveoffice
+    color = #A79A9A
 }
 
 room
@@ -1010,20 +780,6 @@ room
 
 room
 {
-    internal = distillerystorage
-    label = distillerystorage
-    color = #D6A4A2
-}
-
-room
-{
-    internal = distilleryworkshop
-    label = distilleryworkshop
-    color = #572B41
-}
-
-room
-{
     internal = dogfoodfactory
     label = dogfoodfactory
     color = #A81557
@@ -1066,13 +822,6 @@ room
 
 room
 {
-    internal = dressingrooms
-    label = dressingrooms
-    color = #918F01
-}
-
-room
-{
     internal = druglab
     label = druglab
     color = #AC355F
@@ -1108,7 +857,7 @@ room
 
 room
 {
-    internal = electronicsstore
+    internal = electronicstore
     label = electronicsstore
     color = #55EAE8
 }
@@ -1122,9 +871,9 @@ room
 
 room
 {
-    internal = elementaryhall
-    label = elementaryhall
-    color = #564C05
+    internal = elementaryschool
+    label = elementaryschool
+    color = #74ae2e
 }
 
 room
@@ -1139,20 +888,6 @@ room
     internal = empty
     label = empty
     color = #189D13
-}
-
-room
-{
-    internal = emptycommercial
-    label = emptycommercial
-    color = #2D5156
-}
-
-room
-{
-    internal = emptykitchen
-    label = emptykitchen
-    color = #FA658A
 }
 
 room
@@ -1192,20 +927,6 @@ room
 
 room
 {
-    internal = firearmtraining
-    label = firearmtraining
-    color = #8B009D
-}
-
-room
-{
-    internal = firedisplay
-    label = firedisplay
-    color = #C06D2C
-}
-
-room
-{
     internal = firegarage
     label = firegarage
     color = #6691BC
@@ -1227,13 +948,6 @@ room
 
 room
 {
-    internal = fishing
-    label = fishing
-    color = #DFAC63
-}
-
-room
-{
     internal = fishingstorage
     label = fishingstorage
     color = #880766
@@ -1241,16 +955,9 @@ room
 
 room
 {
-    internal = fitness
-    label = fitness
-    color = #7F18D4
-}
-
-room
-{
-    internal = foodcourt
-    label = foodcourt
-    color = #B86F74
+    internal = florist
+    label = florist
+    color = #0f56dd
 }
 
 room
@@ -1262,30 +969,9 @@ room
 
 room
 {
-    internal = foyer
-    label = foyer
-    color = #92416A
-}
-
-room
-{
     internal = fryshipping
     label = fryshipping
     color = #90F554
-}
-
-room
-{
-    internal = furnitureshowroom
-    label = furnitureshowroom
-    color = #C8AAAD
-}
-
-room
-{
-    internal = furniturestorage
-    label = furniturestorage
-    color = #7763DE
 }
 
 room
@@ -1297,51 +983,9 @@ room
 
 room
 {
-    internal = furniturestorestorage
-    label = furniturestorestorage
-    color = #1701A3
-}
-
-room
-{
-    internal = Gallery
-    label = Gallery
-    color = #A754F3
-}
-
-room
-{
-    internal = gameroom
-    label = gameroom
-    color = #8C5250
-}
-
-room
-{
-    internal = garage
-    label = garage
-    color = #14B367
-}
-
-room
-{
     internal = garagestorage
     label = garagestorage
     color = #5D4B89
-}
-
-room
-{
-    internal = garbage
-    label = garbage
-    color = #460019
-}
-
-room
-{
-    internal = gardeningstorage
-    label = gardeningstorage
-    color = #AC7B8F
 }
 
 room
@@ -1430,9 +1074,9 @@ room
 
 room
 {
-    internal = golf
-    label = golf
-    color = #844F5C
+    internal = glassmakingworkshop
+    label = glassmakingworkshop
+    color = #6ecfe7
 }
 
 room
@@ -1479,27 +1123,6 @@ room
 
 room
 {
-    internal = guitarfactory
-    label = guitarfactory
-    color = #AFAD53
-}
-
-room
-{
-    internal = guitarshipping
-    label = guitarshipping
-    color = #A4539E
-}
-
-room
-{
-    internal = gunstorage
-    label = gunstorage
-    color = #EFEDEE
-}
-
-room
-{
     internal = gunstore
     label = gunstore
     color = #C024D7
@@ -1528,13 +1151,6 @@ room
 
 room
 {
-    internal = hairdresser
-    label = hairdresser
-    color = #F18B9E
-}
-
-room
-{
     internal = hall
     label = hall
     color = #25E4E4
@@ -1542,72 +1158,27 @@ room
 
 room
 {
-    internal = hall2
-    label = hall2
-    color = #8D7784
+    internal = hoarder
+    label = hoarder
+    color = #751462
 }
-
 room
 {
-    internal = hall_herald
-    label = hall_herald
-    color = #C2D864
+    internal = hoarderbedroom
+    label = hoarderbedroom
+    color = #4a6103
 }
-
 room
 {
-    internal = hallstorage
-    label = hallstorage
-    color = #549E04
+    internal = hoarderkitchen
+    label = hoarderkitchen
+    color = #880ab3
 }
-
 room
 {
-    internal = hallway
-    label = hallway
-    color = #B46512
-}
-
-room
-{
-    internal = hallway2
-    label = hallway2
-    color = #65E47B
-}
-
-room
-{
-    internal = handlefactory
-    label = handlefactory
-    color = #A8DAC0
-}
-
-room
-{
-    internal = haystorage
-    label = haystorage
-    color = #15EAA0
-}
-
-room
-{
-    internal = hingefactory
-    label = hingefactory
-    color = #AC6D9B
-}
-
-room
-{
-    internal = hingeshipping
-    label = hingeshipping
-    color = #675E6E
-}
-
-room
-{
-    internal = hingestorage
-    label = hingestorage
-    color = #498239
+    internal = hoarderoffice
+    label = hoarderoffice
+    color = #64518d
 }
 
 room
@@ -1629,13 +1200,6 @@ room
     internal = horsebox
     label = horsebox
     color = #7C6D19
-}
-
-room
-{
-    internal = horsewashingstation
-    label = horsewashingstation
-    color = #9C7CFE
 }
 
 room
@@ -1689,6 +1253,13 @@ room
 
 room
 {
+    internal = hunterstorage
+    label = hunterstorage
+    color = #0485e4
+}
+
+room
+{
     internal = icecream
     label = icecream
     color = #4506C0
@@ -1706,13 +1277,6 @@ room
     internal = icecreamstand
     label = icecreamstand
     color = #C8B2D0
-}
-
-room
-{
-    internal = industry
-    label = industry
-    color = #EF3C83
 }
 
 room
@@ -1829,13 +1393,6 @@ room
 
 room
 {
-    internal = judgematthasssetdressing
-    label = judgematthasssetdressing
-    color = #999AC4
-}
-
-room
-{
     internal = kennels
     label = kennels
     color = #5F6C3B
@@ -1843,16 +1400,16 @@ room
 
 room
 {
-    internal = kidsbedroom
-    label = kidsbedroom
-    color = #AB3002
+    internal = juicestand
+    label = juicestand
+    color = #14f6b6
 }
 
 room
 {
-    internal = killbox
-    label = killbox
-    color = #5ABF0E
+    internal = kidsbedroom
+    label = kidsbedroom
+    color = #AB3002
 }
 
 room
@@ -1878,6 +1435,13 @@ room
 
 room
 {
+    internal = knappingworkshop
+    label = knappingworkshop
+    color = #579715
+}
+
+room
+{
     internal = knifefactory
     label = knifefactory
     color = #9712A9
@@ -1899,30 +1463,9 @@ room
 
 room
 {
-    internal = knoxbutcher
-    label = knoxbutcher
-    color = #2A6CF7
-}
-
-room
-{
-    internal = lab
-    label = lab
-    color = #70C762
-}
-
-room
-{
     internal = laboratory
     label = laboratory
     color = #B7B1BD
-}
-
-room
-{
-    internal = lapdancecabin
-    label = lapdancecabin
-    color = #5989CF
 }
 
 room
@@ -1941,6 +1484,20 @@ room
 
 room
 {
+    internal = laundryshirts
+    label = laundryshirts
+    color = #ee9ed2
+}
+
+room
+{
+    internal = laundrysuits
+    label = laundrysuits
+    color = #229bb7
+}
+
+room
+{
     internal = leatherclothesstore
     label = leatherclothesstore
     color = #39B792
@@ -1948,23 +1505,16 @@ room
 
 room
 {
+    internal = leatherworkshop
+    label = leatherworkshop
+    color = #6a7c15
+}
+
+room
+{
     internal = library
     label = library
     color = #B11CED
-}
-
-room
-{
-    internal = lightingstorage
-    label = lightingstorage
-    color = #A6AC3E
-}
-
-room
-{
-    internal = lightingstore
-    label = lightingstore
-    color = #8963F1
 }
 
 room
@@ -1986,27 +1536,6 @@ room
     internal = lobby
     label = lobby
     color = #167E66
-}
-
-room
-{
-    internal = lobbychurch
-    label = lobbychurch
-    color = #84B836
-}
-
-room
-{
-    internal = lockerroom
-    label = lockerroom
-    color = #8C0C2E
-}
-
-room
-{
-    internal = lockerroomstripper
-    label = lockerroomstripper
-    color = #2F9401
 }
 
 room
@@ -2039,27 +1568,6 @@ room
 
 room
 {
-    internal = machinery
-    label = machinery
-    color = #E016A3
-}
-
-room
-{
-    internal = main
-    label = main
-    color = #615D70
-}
-
-room
-{
-    internal = maintenance
-    label = maintenance
-    color = #0423A7
-}
-
-room
-{
     internal = mannequinfactory
     label = mannequinfactory
     color = #45EC33
@@ -2081,6 +1589,13 @@ room
 
 room
 {
+    internal = masonrystore
+    label = masonrystore
+    color = #8fc7bf
+}
+
+room
+{
     internal = mayorwestpointoffice
     label = mayorwestpointoffice
     color = #42FE97
@@ -2091,13 +1606,6 @@ room
     internal = mechanic
     label = mechanic
     color = #8170C1
-}
-
-room
-{
-    internal = medclinic
-    label = medclinic
-    color = #0666C9
 }
 
 room
@@ -2116,13 +1624,6 @@ room
 
 room
 {
-    internal = medicalroom
-    label = medicalroom
-    color = #935631
-}
-
-room
-{
     internal = medicalstorage
     label = medicalstorage
     color = #D3A6A5
@@ -2130,16 +1631,16 @@ room
 
 room
 {
-    internal = meetingroom
-    label = meetingroom
-    color = #4DFEE5
+    internal = metalfabrication
+    label = metalfabrication
+    color = #cb159d
 }
 
 room
 {
-    internal = metalclassroom
-    label = metalclassroom
-    color = #53908B
+    internal = metalfabricationstorage
+    label = metalfabricationstorage
+    color = #9e2eb8
 }
 
 room
@@ -2158,37 +1659,9 @@ room
 
 room
 {
-    internal = mexicandining
-    label = mexicandining
-    color = #25F720
-}
-
-room
-{
-    internal = mexicankitchen
-    label = mexicankitchen
-    color = #E23981
-}
-
-room
-{
-    internal = miscstorage
-    label = miscstorage
-    color = #C1156C
-}
-
-room
-{
     internal = morgue
     label = morgue
     color = #9B9FD6
-}
-
-room
-{
-    internal = motelreception
-    label = motelreception
-    color = #1B5468
 }
 
 room
@@ -2207,58 +1680,17 @@ room
 
 room
 {
-    internal = motelstorage
-    label = motelstorage
-    color = #74A4A5
-}
-
-room
-{
     internal = movierental
     label = movierental
     color = #6B01FE
 }
 
-room
-{
-    internal = movierentalxxx
-    label = movierentalxxx
-    color = #C245D1
-}
 
 room
 {
-    internal = museumstorage
-    label = museumstorage
-    color = #1607A0
-}
-
-room
-{
-    internal = music
-    label = music
-    color = #D0BEBB
-}
-
-room
-{
-    internal = musicroom
-    label = musicroom
-    color = #667B91
-}
-
-room
-{
-    internal = musicstage
-    label = musicstage
-    color = #EB1376
-}
-
-room
-{
-    internal = musicstorage
-    label = musicstorage
-    color = #9F18F0
+    internal = musicschool
+    label = musicschool
+    color = #6929be
 }
 
 room
@@ -2291,20 +1723,6 @@ room
 
 room
 {
-    internal = newsroom
-    label = newsroom
-    color = #1283EE
-}
-
-room
-{
-    internal = nogo
-    label = nogo
-    color = #EDC8DC
-}
-
-room
-{
     internal = nolansoffice
     label = nolansoffice
     color = #176979
@@ -2312,37 +1730,9 @@ room
 
 room
 {
-    internal = nursery
-    label = nursery
-    color = #FBC5BB
-}
-
-room
-{
     internal = office
     label = office
     color = #A7EDCA
-}
-
-room
-{
-    internal = office2
-    label = office2
-    color = #4D33F4
-}
-
-room
-{
-    internal = office3
-    label = office3
-    color = #BFF14D
-}
-
-room
-{
-    internal = office_herald
-    label = office_herald
-    color = #BDEF32
 }
 
 room
@@ -2375,23 +1765,16 @@ room
 
 room
 {
-    internal = optometrist
-    label = optometrist
-    color = #303B58
+    internal = outdoorsupply
+    label = outdoorsupply
+    color = #ee7ff2
 }
 
 room
 {
-    internal = optometriststorage
-    label = optometriststorage
-    color = #69EDDC
-}
-
-room
-{
-    internal = outside
-    label = outside
-    color = #ACB94F
+    internal = outdoorsupply_storage
+    label = outdoorsupply_storage
+    color = #0e8e1e
 }
 
 room
@@ -2399,27 +1782,6 @@ room
     internal = paintershop
     label = paintershop
     color = #AB6CEB
-}
-
-room
-{
-    internal = pantry
-    label = pantry
-    color = #A6A313
-}
-
-room
-{
-    internal = partyhallstorage
-    label = partyhallstorage
-    color = #F6A89E
-}
-
-room
-{
-    internal = patio
-    label = patio
-    color = #EE4425
 }
 
 room
@@ -2480,20 +1842,6 @@ room
 
 room
 {
-    internal = picnic
-    label = picnic
-    color = #2160BA
-}
-
-room
-{
-    internal = pigsty
-    label = pigsty
-    color = #426CED
-}
-
-room
-{
     internal = pizzakitchen
     label = pizzakitchen
     color = #F1878D
@@ -2522,13 +1870,6 @@ room
 
 room
 {
-    internal = plumber
-    label = plumber
-    color = #A13327
-}
-
-room
-{
     internal = policearchive
     label = policearchive
     color = #8A6C47
@@ -2550,9 +1891,9 @@ room
 
 room
 {
-    internal = policehall
-    label = policehall
-    color = #ABD9AE
+    internal = policelibrary
+    label = policelibrary
+    color = #8ee5b2
 }
 
 room
@@ -2599,13 +1940,6 @@ room
 
 room
 {
-    internal = porkshipping
-    label = porkshipping
-    color = #CBCC55
-}
-
-room
-{
     internal = post
     label = post
     color = #8D87A0
@@ -2627,9 +1961,9 @@ room
 
 room
 {
-    internal = power
-    label = power
-    color = #29CCDA
+    internal = potteryworkshop
+    label = potteryworkshop
+    color = #5a7503
 }
 
 room
@@ -2637,6 +1971,20 @@ room
     internal = prisoncells
     label = prisoncells
     color = #8DD747
+}
+
+room
+{
+    internal = prisonerbelongings
+    label = prisonerbelongings
+    color = #0cf8c7
+}
+
+room
+{
+    internal = prisonlaundry
+    label = prisonlaundry
+    color = #5356c9
 }
 
 room
@@ -2662,27 +2010,6 @@ room
 
 room
 {
-    internal = pumps
-    label = pumps
-    color = #8ECE6D
-}
-
-room
-{
-    internal = racetrackgarage
-    label = racetrackgarage
-    color = #760D30
-}
-
-room
-{
-    internal = racetrackmechanic
-    label = racetrackmechanic
-    color = #369D53
-}
-
-room
-{
     internal = radiofactory
     label = radiofactory
     color = #6F7E81
@@ -2704,13 +2031,6 @@ room
 
 room
 {
-    internal = railroad
-    label = railroad
-    color = #F7004B
-}
-
-room
-{
     internal = railroadrepair
     label = railroadrepair
     color = #9D1959
@@ -2725,6 +2045,34 @@ room
 
 room
 {
+    internal = rangerhall
+    label = rangerhall
+    color = #9370dc
+}
+
+room
+{
+    internal = rangerlocker
+    label = rangerlocker
+    color = #b5f363
+}
+
+room
+{
+    internal = rangeroffice
+    label = rangeroffice
+    color = #cb0913
+}
+
+room
+{
+    internal = rangerstorage
+    label = rangerstorage
+    color = #1bf876
+}
+
+room
+{
     internal = recreation
     label = recreation
     color = #0D9024
@@ -2732,30 +2080,9 @@ room
 
 room
 {
-    internal = recreational
-    label = recreational
-    color = #24CE09
-}
-
-room
-{
-    internal = restaurant
-    label = restaurant
-    color = #F1DE76
-}
-
-room
-{
     internal = restaurantdining
     label = restaurantdining
     color = #3C858B
-}
-
-room
-{
-    internal = restaurantdining_fancy
-    label = restaurantdining_fancy
-    color = #5DFEBB
 }
 
 room
@@ -2774,114 +2101,9 @@ room
 
 room
 {
-    internal = restaurantstorage
-    label = restaurantstorage
-    color = #AB6684
-}
-
-room
-{
-    internal = reverendpeterwattsbathroom
-    label = reverendpeterwattsbathroom
-    color = #1B3265
-}
-
-room
-{
-    internal = revpeterwattsbathroom
-    label = revpeterwattsbathroom
-    color = #03B1F2
-}
-
-room
-{
     internal = ringtossgame
     label = ringtossgame
     color = #73A063
-}
-
-room
-{
-    internal = rollerrink
-    label = rollerrink
-    color = #FAA9AD
-}
-
-room
-{
-    internal = roofaccess
-    label = roofaccess
-    color = #8664CC
-}
-
-room
-{
-    internal = roofstairs
-    label = roofstairs
-    color = #DEC75C
-}
-
-room
-{
-    internal = room1
-    label = room1
-    color = #959595
-}
-
-room
-{
-    internal = room13
-    label = room13
-    color = #83F9F9
-}
-
-room
-{
-    internal = room2
-    label = room2
-    color = #81DCF1
-}
-
-room
-{
-    internal = room3
-    label = room3
-    color = #A90C3F
-}
-
-room
-{
-    internal = room4
-    label = room4
-    color = #404761
-}
-
-room
-{
-    internal = room5
-    label = room5
-    color = #E8051E
-}
-
-room
-{
-    internal = room6
-    label = room6
-    color = #6FE312
-}
-
-room
-{
-    internal = sas
-    label = sas
-    color = #3DCFDF
-}
-
-room
-{
-    internal = school
-    label = school
-    color = #3877ED
 }
 
 room
@@ -2903,13 +2125,6 @@ room
     internal = schoolstorage
     label = schoolstorage
     color = #060626
-}
-
-room
-{
-    internal = seafooddining
-    label = seafooddining
-    color = #4F111B
 }
 
 room
@@ -2942,34 +2157,6 @@ room
 
 room
 {
-    internal = serverroom
-    label = serverroom
-    color = #0E9521
-}
-
-room
-{
-    internal = sewingroom
-    label = sewingroom
-    color = #6BB9BA
-}
-
-room
-{
-    internal = sewingstorage
-    label = sewingstorage
-    color = #46A52F
-}
-
-room
-{
-    internal = sewingstore
-    label = sewingstore
-    color = #117022
-}
-
-room
-{
     internal = shed
     label = shed
     color = #5F73A2
@@ -2977,30 +2164,9 @@ room
 
 room
 {
-    internal = shoestorage
-    label = shoestorage
-    color = #524E63
-}
-
-room
-{
     internal = shoestore
     label = shoestore
     color = #614663
-}
-
-room
-{
-    internal = showers
-    label = showers
-    color = #1DAC51
-}
-
-room
-{
-    internal = slaughterhousepork
-    label = slaughterhousepork
-    color = #819AAE
 }
 
 room
@@ -3015,20 +2181,6 @@ room
     internal = sodabottling
     label = sodabottling
     color = #E6FA83
-}
-
-room
-{
-    internal = sodashipping
-    label = sodashipping
-    color = #452257
-}
-
-room
-{
-    internal = sodastorage
-    label = sodastorage
-    color = #5034C4
 }
 
 room
@@ -3054,20 +2206,6 @@ room
 
 room
 {
-    internal = spifforestaurant
-    label = spifforestaurant
-    color = #AAAF03
-}
-
-room
-{
-    internal = spiffosaesthetic
-    label = spiffosaesthetic
-    color = #B81743
-}
-
-room
-{
     internal = spiffoservice
     label = spiffoservice
     color = #E8B75C
@@ -3089,27 +2227,6 @@ room
 
 room
 {
-    internal = sport
-    label = sport
-    color = #845F04
-}
-
-room
-{
-    internal = sportroom
-    label = sportroom
-    color = #A25205
-}
-
-room
-{
-    internal = sports
-    label = sports
-    color = #4D5E13
-}
-
-room
-{
     internal = sportstorage
     label = sportstorage
     color = #E10AEB
@@ -3124,44 +2241,9 @@ room
 
 room
 {
-    internal = stable
-    label = stable
-    color = #027133
-}
-
-room
-{
-    internal = stage
-    label = stage
-    color = #18DB07
-}
-
-room
-{
-    internal = stairwell
-    label = stairwell
-    color = #DE325E
-}
-
-room
-{
     internal = storage
-    label = storage
-    color = #FEEC3C
-}
-
-room
-{
-    internal = storagechurch
-    label = storagechurch
-    color = #6ACF10
-}
-
-room
-{
-    internal = storagehall
-    label = storagehall
-    color = #AB3656
+    label = storageunit
+    color = #DB6022
 }
 
 room
@@ -3180,23 +2262,9 @@ room
 
 room
 {
-    internal = stripcluboffice
-    label = stripcluboffice
-    color = #12A58A
-}
-
-room
-{
     internal = stripclubvip
     label = stripclubvip
     color = #B5AEFC
-}
-
-room
-{
-    internal = sttorage
-    label = sttorage
-    color = #966141
 }
 
 room
@@ -3208,9 +2276,9 @@ room
 
 room
 {
-    internal = studiostorage
-    label = studiostorage
-    color = #467E0B
+    internal = sunroom
+    label = sunroom
+    color = #4efa7e
 }
 
 room
@@ -3229,30 +2297,23 @@ room
 
 room
 {
-    internal = swatstorage
-    label = swatstorage
+    internal = swatlocker
+    label = swatlocker
     color = #E1A30A
 }
 
 room
 {
-    internal = tablefactory
-    label = tablefactory
-    color = #001AB5
+    internal = tailoringstore
+    label = tailoringstore
+    color = #2d8546
 }
 
 room
 {
-    internal = tableshipping
-    label = tableshipping
-    color = #DAE979
-}
-
-room
-{
-    internal = tacokitchen
-    label = tacokitchen
-    color = #2249C1
+    internal = tailoringworkshop
+    label = tailoringworkshop
+    color = #d20bcc
 }
 
 room
@@ -3292,13 +2353,6 @@ room
 
 room
 {
-    internal = ticketoffice
-    label = ticketoffice
-    color = #B98FDF
-}
-
-room
-{
     internal = tobaccostorage
     label = tobaccostorage
     color = #5D63FE
@@ -3313,34 +2367,6 @@ room
 
 room
 {
-    internal = tofufactory
-    label = tofufactory
-    color = #A7B9C1
-}
-
-room
-{
-    internal = tofushipping
-    label = tofushipping
-    color = #7A2EEA
-}
-
-room
-{
-    internal = tofustorage
-    label = tofustorage
-    color = #AC9AA4
-}
-
-room
-{
-    internal = toolstorage
-    label = toolstorage
-    color = #2DA7A3
-}
-
-room
-{
     internal = toolstore
     label = toolstore
     color = #95CE25
@@ -3351,13 +2377,6 @@ room
     internal = toolstorestorage
     label = toolstorestorage
     color = #BD720D
-}
-
-room
-{
-    internal = toystorage
-    label = toystorage
-    color = #DF286E
 }
 
 room
@@ -3383,30 +2402,9 @@ room
 
 room
 {
-    internal = trash
-    label = trash
-    color = #062E4E
-}
-
-room
-{
-    internal = universityclassroom
-    label = universityclassroom
-    color = #D489E0
-}
-
-room
-{
     internal = universitylibrary
     label = universitylibrary
     color = #9E12E5
-}
-
-room
-{
-    internal = universityoffice
-    label = universityoffice
-    color = #A57DE0
 }
 
 room
@@ -3418,23 +2416,16 @@ room
 
 room
 {
+    internal = upholsteryworkshop
+    label = upholsteryworkshop
+    color = #0e142e
+}
+
+room
+{
     internal = vacated
     label = vacated
     color = #2D6BEF
-}
-
-room
-{
-    internal = vault
-    label = vault
-    color = #CCBBA8
-}
-
-room
-{
-    internal = vet
-    label = vet
-    color = #E83BDC
 }
 
 room
@@ -3467,6 +2458,13 @@ room
 
 room
 {
+    internal = waterstorage
+    label = waterstorage
+    color = #43df8a
+}
+
+room
+{
     internal = weddingstoredress
     label = weddingstoredress
     color = #43B51F
@@ -3484,13 +2482,6 @@ room
     internal = weddingstoresuit
     label = weddingstoresuit
     color = #67F3D5
-}
-
-room
-{
-    internal = weldingbooth
-    label = weldingbooth
-    color = #3135B0
 }
 
 room
@@ -3530,23 +2521,9 @@ room
 
 room
 {
-    internal = whiskeyshipping
-    label = whiskeyshipping
-    color = #16871F
-}
-
-room
-{
-    internal = whiskystorage
-    label = whiskystorage
-    color = #F6050F
-}
-
-room
-{
-    internal = windowsstore
-    label = windowsstore
-    color = #34BDE3
+    internal = whittlerworkshop
+    label = whittlerworkshop
+    color = #2fc975
 }
 
 room
@@ -3561,20 +2538,6 @@ room
     internal = woodcraftset
     label = woodcraftset
     color = #422834
-}
-
-room
-{
-    internal = woodshed
-    label = woodshed
-    color = #CB2D44
-}
-
-room
-{
-    internal = workshop
-    label = workshop
-    color = #A5192C
 }
 
 room
@@ -3635,13 +2598,6 @@ room
 
 room
 {
-    internal = ww_shed
-    label = ww_shed
-    color = #1DC994
-}
-
-room
-{
     internal = ww_sherrif
     label = ww_sherrif
     color = #34616A
@@ -3667,8 +2623,3 @@ room
     label = zippeestore
     color = #083270
 }
-
-
-
-
-
