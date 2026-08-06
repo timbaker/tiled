@@ -9,7 +9,7 @@ set SRC C:/Programming/TileZed/tiled
 set DEST {C:\Programming\ProjectZomboid\Tools\TileZed}
 set SUFFIX "-64bit"
 set SUFFIX2 ""
-set REDIST vcredist.x64.exe
+set REDIST vcredist.x64.2015-2019.exe
 
 if {$argc > 0} {
     switch -- [lindex $argv 0] {
