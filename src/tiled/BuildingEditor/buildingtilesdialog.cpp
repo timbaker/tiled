@@ -645,6 +645,8 @@ BuildingTilesDialog::BuildingTilesDialog(QWidget *parent) :
     connect(ui->categoryTilesView, &QAbstractItemView::activated,
             this, &BuildingTilesDialog::tileActivated);
 
+    connect(ui->categoryFilter, &QLineEdit::textEdited, this, &BuildingTilesDialog::categoryFilterEdited);
+
     ui->categoryView->setZoomable(mZoomable);
     ui->categoryView->setAcceptDrops(true);
     ui->categoryView->setSelectionMode(QAbstractItemView::ExtendedSelection);
@@ -1434,6 +1436,52 @@ void BuildingTilesDialog::synchUI()
     ui->actionMoveTileDown->setEnabled(moveDown);
 
     ui->actionRemoveTileset->setEnabled(ui->tilesetList->currentRow() >= 0);
+}
+
+void BuildingTilesDialog::categoryFilterEdited(const QString &text)
+{
+    QListWidget* listWidget = ui->categoryList;
+
+    const bool empty = text.trimmed().isEmpty();
+    for (int row = 0; row < listWidget->count(); row++) {
+        QListWidgetItem* item = listWidget->item(row);
+        item->setHidden(empty ? false : !item->text().contains(text, Qt::CaseInsensitive));
+    }
+
+    QListWidgetItem* current = listWidget->currentItem();
+    if (current != nullptr && current->isHidden()) {
+        // Select previous visible row.
+        int row = listWidget->row(current) - 1;
+        while (row >= 0 && listWidget->item(row)->isHidden()) {
+            row--;
+        }
+        if (row >= 0) {
+            current = listWidget->item(row);
+            listWidget->setCurrentItem(current);
+            listWidget->scrollToItem(current);
+            return;
+        }
+
+        // Select next visible row.
+        row = listWidget->row(current) + 1;
+        while (row < listWidget->count() && listWidget->item(row)->isHidden()) {
+            row++;
+        }
+        if (row < listWidget->count()) {
+            current = listWidget->item(row);
+            listWidget->setCurrentItem(current);
+            listWidget->scrollToItem(current);
+            return;
+        }
+
+        // All items hidden
+        listWidget->setCurrentItem(nullptr);
+    }
+
+    current = listWidget->currentItem();
+    if (current != nullptr) {
+        listWidget->scrollToItem(current);
+    }
 }
 
 void BuildingTilesDialog::categoryChanged(int index)

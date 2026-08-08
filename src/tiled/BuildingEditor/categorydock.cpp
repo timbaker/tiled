@@ -40,6 +40,7 @@
 #include <QComboBox>
 #include <QDebug>
 #include <QHBoxLayout>
+#include <QLineEdit>
 #include <QListWidget>
 #include <QMenu>
 #include <QSettings>
@@ -68,8 +69,24 @@ CategoryDock::CategoryDock(QWidget *parent) :
     setObjectName(QLatin1String("CategoryDock"));
     setWindowTitle(tr("Tiles and Furniture"));
 
+    ui->categoryFilter = new QLineEdit(this);
+    ui->categoryFilter->setObjectName(QLatin1String("CategoryDock.categoryFilter"));
+    ui->categoryFilter->setPlaceholderText(tr("category"));
+    ui->categoryFilter->setClearButtonEnabled(true);
+
     ui->categoryList = new QListWidget;
     ui->categoryList->setObjectName(QLatin1String("CategoryDock.categoryList"));
+
+    QVBoxLayout *categoryLayout = new QVBoxLayout;
+    categoryLayout->setObjectName(QLatin1String("CategoryDock.categoryLayout"));
+    categoryLayout->setContentsMargins(0, 0, 0, 0);
+    categoryLayout->addWidget(ui->categoryFilter);
+    categoryLayout->addWidget(ui->categoryList);
+
+    QWidget *categoryLayoutContainer = new QWidget(this);
+    categoryLayoutContainer->setSizePolicy(QSizePolicy::Minimum, QSizePolicy::Preferred);
+    categoryLayoutContainer->setAutoFillBackground(false);
+    categoryLayoutContainer->setLayout(categoryLayout);
 
     ui->tilesetView = new BuildingTileEntryView;
     ui->tilesetView->setObjectName(QLatin1String("CategoryDock.tilesetView"));
@@ -89,7 +106,7 @@ CategoryDock::CategoryDock(QWidget *parent) :
     ui->categorySplitter->setObjectName(QLatin1String("CategoryDock.splitter"));
     ui->categorySplitter->setOrientation(Qt::Vertical);
     ui->categorySplitter->setChildrenCollapsible(false);
-    ui->categorySplitter->addWidget(ui->categoryList);
+    ui->categorySplitter->addWidget(categoryLayoutContainer);
     ui->categorySplitter->addWidget(ui->categoryStack);
     ui->categorySplitter->setSizes(QList<int>() << 128 << 256);
 
@@ -112,6 +129,8 @@ CategoryDock::CategoryDock(QWidget *parent) :
     mCategoryZoomable->setScale(BuildingPreferences::instance()->tileScale());
 
     BuildingPreferences *prefs = BuildingPreferences::instance();
+
+    connect(ui->categoryFilter, &QLineEdit::textEdited, this, &CategoryDock::categoryFilterEdited);
 
     mCategoryZoomable->connectToComboBox(ui->scaleComboBox);
     connect(mCategoryZoomable, &Tiled::Internal::Zoomable::scaleChanged,
@@ -236,6 +255,52 @@ void CategoryDock::currentDocumentChanged(BuildingDocument *doc)
 
     if (ui->categoryList->currentRow() < 2)
         categorySelectionChanged();
+}
+
+void CategoryDock::categoryFilterEdited(const QString &text)
+{
+    QListWidget* listWidget = ui->categoryList;
+
+    const bool empty = text.trimmed().isEmpty();
+    for (int row = 0; row < listWidget->count(); row++) {
+        QListWidgetItem* item = listWidget->item(row);
+        item->setHidden(empty ? false : !item->text().contains(text, Qt::CaseInsensitive));
+    }
+
+    QListWidgetItem* current = listWidget->currentItem();
+    if (current != nullptr && current->isHidden()) {
+        // Select previous visible row.
+        int row = listWidget->row(current) - 1;
+        while (row >= 0 && listWidget->item(row)->isHidden()) {
+            row--;
+        }
+        if (row >= 0) {
+            current = listWidget->item(row);
+            listWidget->setCurrentItem(current);
+            listWidget->scrollToItem(current);
+            return;
+        }
+
+        // Select next visible row.
+        row = listWidget->row(current) + 1;
+        while (row < listWidget->count() && listWidget->item(row)->isHidden()) {
+            row++;
+        }
+        if (row < listWidget->count()) {
+            current = listWidget->item(row);
+            listWidget->setCurrentItem(current);
+            listWidget->scrollToItem(current);
+            return;
+        }
+
+        // All items hidden
+        listWidget->setCurrentItem(nullptr);
+    }
+
+    current = listWidget->currentItem();
+    if (current != nullptr) {
+        listWidget->scrollToItem(current);
+    }
 }
 
 Building *CategoryDock::currentBuilding() const

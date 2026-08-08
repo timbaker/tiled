@@ -125,6 +125,7 @@ private:
     typedef Tiled::Tileset Tileset;
 
 private slots:
+    void categoryFilterEdited(const QString &text);
     void categoryChanged(int index);
     void tilesetFilterEdited(const QString &text);
     void tilesetSelectionChanged();

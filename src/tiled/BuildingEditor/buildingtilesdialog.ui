@@ -19,10 +19,10 @@
      <item>
       <widget class="QDialogButtonBox" name="buttonBox">
        <property name="orientation">
-        <enum>Qt::Horizontal</enum>
+        <enum>Qt::Orientation::Horizontal</enum>
        </property>
        <property name="standardButtons">
-        <set>QDialogButtonBox::Ok</set>
+        <set>QDialogButtonBox::StandardButton::Ok</set>
        </property>
       </widget>
      </item>
@@ -31,20 +31,30 @@
    <item row="0" column="0">
     <widget class="QSplitter" name="overallSplitter">
      <property name="orientation">
-      <enum>Qt::Horizontal</enum>
+      <enum>Qt::Orientation::Horizontal</enum>
      </property>
      <property name="childrenCollapsible">
       <bool>false</bool>
      </property>
      <widget class="QSplitter" name="categorySplitter">
       <property name="orientation">
-       <enum>Qt::Vertical</enum>
+       <enum>Qt::Orientation::Vertical</enum>
       </property>
       <property name="childrenCollapsible">
        <bool>false</bool>
       </property>
       <widget class="QWidget" name="layoutWidget">
        <layout class="QVBoxLayout" name="verticalLayout_6">
+        <item>
+         <widget class="QLineEdit" name="categoryFilter">
+          <property name="placeholderText">
+           <string>category</string>
+          </property>
+          <property name="clearButtonEnabled">
+           <bool>true</bool>
+          </property>
+         </widget>
+        </item>
         <item>
          <widget class="QListWidget" name="categoryList"/>
         </item>
@@ -119,7 +129,7 @@
         <item>
          <layout class="QHBoxLayout" name="categoryToolbarLayout">
           <property name="sizeConstraint">
-           <enum>QLayout::SetDefaultConstraint</enum>
+           <enum>QLayout::SizeConstraint::SetDefaultConstraint</enum>
           </property>
          </layout>
         </item>
@@ -169,7 +179,7 @@
    <item row="1" column="0">
     <widget class="Line" name="line">
      <property name="orientation">
-      <enum>Qt::Horizontal</enum>
+      <enum>Qt::Orientation::Horizontal</enum>
      </property>
     </widget>
    </item>
@@ -363,8 +373,8 @@
   </customwidget>
  </customwidgets>
  <resources>
-  <include location="../tiled.qrc"/>
   <include location="buildingeditor.qrc"/>
+  <include location="../tiled.qrc"/>
  </resources>
  <connections>
   <connection>
