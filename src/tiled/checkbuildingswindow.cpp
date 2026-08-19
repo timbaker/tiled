@@ -4,7 +4,6 @@
 #include "mainwindow.h"
 #include "mapcomposite.h"
 #include "mapmanager.h"
-#include "preferences.h"
 #include "rearrangetiles.h"
 #include "tilesetmanager.h"
 #include "tilemetainfomgr.h"
@@ -57,6 +56,7 @@ CheckBuildingsWindow::CheckBuildingsWindow(QWidget *parent) :
     connect(ui->check2x, &QAbstractButton::clicked, this, qOverload<>(&CheckBuildingsWindow::syncList));
     connect(ui->checkRearrangeGrid, &QCheckBox::clicked, this, qOverload<>(&CheckBuildingsWindow::syncList));
     connect(ui->checkKidsBedroom, &QAbstractButton::clicked, this, qOverload<>(&CheckBuildingsWindow::syncList));
+    connect(ui->checkReplaceRoom, &QCheckBox::clicked, this, qOverload<>(&CheckBuildingsWindow::syncList));
 
     ui->dirEdit->setText(BuildingPreferences::instance()->mapsDirectory());
 //    ui->dirEdit->setText(QLatin1String("C:/Users/Tim/Desktop/ProjectZomboid/Buildings"));
@@ -75,6 +75,19 @@ CheckBuildingsWindow::CheckBuildingsWindow(QWidget *parent) :
     connect(&mChangedFilesTimer, &QTimer::timeout, this, &CheckBuildingsWindow::fileChangedTimeout);
 
     ui->buttonFixSelected->setEnabled(false);
+    ui->buttonPause->setEnabled(false);
+    ui->buttonStop->setEnabled(false);
+
+    connect(ui->buttonPause, &QAbstractButton::clicked, this, &CheckBuildingsWindow::pause);
+    connect(ui->buttonStop, &QAbstractButton::clicked, this, &CheckBuildingsWindow::stop);
+
+    mCheckNextFileTimer.setSingleShot(true);
+    connect(&mCheckNextFileTimer, &QTimer::timeout, this, &CheckBuildingsWindow::checkNextFile);
+
+    connect(ui->buttonSelectAll, &QPushButton::clicked, this, &CheckBuildingsWindow::selectAll);
+    connect(ui->buttonSelectNone, &QPushButton::clicked, this, &CheckBuildingsWindow::selectNone);
+
+    ui->labelCurrentFile->clear();
 
     mKidsBedroomTiles.clear();
     mKidsBedroomTiles += QStringLiteral("furniture_bedding_01_36");
@@ -114,28 +127,47 @@ void CheckBuildingsWindow::browse()
 
 void CheckBuildingsWindow::check()
 {
-    QDir dir(ui->dirEdit->text());
+    mDirectory = QDir(ui->dirEdit->text());
 
-    PROGRESS progress(tr("Checking"), this);
     ui->treeWidget->clear();
     qDeleteAll(mFiles);
     mFiles.clear();
 
-    foreach (QString path, mWatchedFiles)
+    for (const QString &path : std::as_const(mWatchedFiles)) {
         mFileSystemWatcher->removePath(path);
+    }
     mWatchedFiles.clear();
+
+    ui->checkNow->setEnabled(false);
+    ui->buttonPause->setEnabled(true);
+    ui->buttonStop->setEnabled(true);
 
     QStringList filters;
     filters << QLatin1String("*.tbx");
-    dir.setNameFilters(filters);
-    dir.setFilter(QDir::Files | QDir::Readable | QDir::Writable);
+    mDirectory.setNameFilters(filters);
+    mDirectory.setFilter(QDir::Files | QDir::Readable | QDir::Writable);
+    mFileNames = mDirectory.entryList();
 
-    for (const QString &fileName : dir.entryList()) {
-        progress.update(tr("Checking %1").arg(fileName));
-        QString filePath = dir.filePath(fileName);
-        check(filePath);
-        mFileSystemWatcher->addPath(filePath);
-        mWatchedFiles += filePath;
+    mCheckNextFileTimer.start();
+}
+
+void CheckBuildingsWindow::checkNextFile()
+{
+    if (mPaused) {
+        return;
+    }
+    const QString fileName = mFileNames.takeFirst();
+    ui->labelCurrentFile->setText(tr("Checking %1").arg(fileName));
+    QString filePath = mDirectory.filePath(fileName);
+    check(filePath);
+    mFileSystemWatcher->addPath(filePath);
+    mWatchedFiles += filePath;
+    if (mFileNames.isEmpty()) {
+        stop();
+        return;
+    }
+    if (!mPaused) {
+        mCheckNextFileTimer.start();
     }
 }
 
@@ -149,24 +181,27 @@ void CheckBuildingsWindow::fixSelected()
         if (item->parent() == nullptr) {
             int rowFile = ui->treeWidget->indexOfTopLevelItem(item);
             IssueFile *file = mFiles[rowFile];
-            for (const Issue &issue : file->issues) {
-                fixList += FixSelected(file->path, issue);
+            for (const Issue &issue : std::as_const(file->issues)) {
+                fixList += FixSelected(issue);
             }
             continue;
         }
         int rowFile = ui->treeWidget->indexOfTopLevelItem(item->parent());
         int rowIssue = item->parent()->indexOfChild(item);
         const Issue &issue = mFiles[rowFile]->issues[rowIssue];
-        fixList += FixSelected(mFiles[rowFile]->path, issue);
+        fixList += FixSelected(issue);
     }
     QMap<QString, QVector<int>> rearrangeGrid;
-    for (const FixSelected& fix : fixList) {
+    for (const FixSelected& fix : std::as_const(fixList)) {
         switch (fix.issue.type) {
         case Issue::Type::RearrangeGrid:
-            rearrangeGrid[fix.path] << fix.issue.x << fix.issue.y << fix.issue.z;
+            rearrangeGrid[fix.issue.file->path] << fix.issue.x << fix.issue.y << fix.issue.z;
             break;
         case Issue::Type::KidsBedroom:
-            fixKidsBedroom(fix.path, fix.issue.roomRegion, fix.issue.z);
+            fixKidsBedroom(fix.issue.file->path, fix.issue.roomRegion, fix.issue.z);
+            break;
+        case Issue::Type::ReplaceRoomInternalName:
+            fixRoomInternalName(fix.issue);
             break;
         default:
             break;
@@ -192,6 +227,7 @@ void CheckBuildingsWindow::selectionChanged(const QItemSelection &selected, cons
                 switch (issue.type) {
                 case Issue::Type::RearrangeGrid:
                 case Issue::Type::KidsBedroom:
+                case Issue::Type::ReplaceRoomInternalName:
                     ui->buttonFixSelected->setEnabled(true);
                     break;
                 default:
@@ -208,13 +244,15 @@ void CheckBuildingsWindow::selectionChanged(const QItemSelection &selected, cons
         switch (issue.type) {
         case Issue::Type::RearrangeGrid:
         case Issue::Type::KidsBedroom:
+        case Issue::Type::ReplaceRoomInternalName:
             ui->buttonFixSelected->setEnabled(true);
             break;
         default:
             break;
         }
-        if (ui->buttonFixSelected->isEnabled())
+        if (ui->buttonFixSelected->isEnabled()) {
             break;
+        }
     }
 }
 
@@ -231,15 +269,17 @@ void CheckBuildingsWindow::itemActivated(QTreeWidgetItem *item, int column)
 
 void CheckBuildingsWindow::syncList()
 {
-    foreach (IssueFile *file, mFiles)
+    for (const IssueFile *file : std::as_const(mFiles)) {
         syncList(file);
+    }
 }
 
-void CheckBuildingsWindow::syncList(IssueFile *file)
+void CheckBuildingsWindow::syncList(const IssueFile *file)
 {
     int rowMin = 0, rowMax = mFiles.size() - 1;
-    if (file != nullptr)
-        rowMin = rowMax = mFiles.indexOf(file);
+    if (file != nullptr) {
+        rowMin = rowMax = mFiles.indexOf(const_cast<IssueFile*>(file));
+    }
     for (int row = rowMin; row <= rowMax; row++) {
         QTreeWidgetItem *fileItem = ui->treeWidget->topLevelItem(row);
         bool anyVisible = false;
@@ -282,7 +322,7 @@ void CheckBuildingsWindow::checkKidsBedroom(BuildingEditor::BuildingFloor *floor
     rd.defecate();
     if (rd.mRegions.isEmpty())
         return;
-    for (const QRegion& roomRegion : rd.mRegions) {
+    for (const QRegion& roomRegion : std::as_const(rd.mRegions)) {
         if (isKidsBedroomRegion(layers, roomRegion)) {
             issue(Issue::KidsBedroom, roomRegion, floor->level());
         }
@@ -379,6 +419,51 @@ Room *CheckBuildingsWindow::findExistingKidsBedroom(Building *building, Building
 QString CheckBuildingsWindow::kidsBedroomName(Room *roomOld)
 {
     return QStringLiteral("Kids %1").arg(roomOld->Name);
+}
+
+void CheckBuildingsWindow::checkRoomInternalName(BuildingEditor::BuildingFloor *floor, BuildingEditor::Room *room)
+{
+    const QString roomNameOld = ui->editRoomOld->text().trimmed();
+    if (room->internalName != roomNameOld) {
+        return;
+    }
+    BuildingRoomDefecator rd(floor, room);
+    rd.defecate();
+    if (rd.mRegions.isEmpty()) {
+        return;
+    }
+    const QString roomNameNew = ui->editRoomNew->text().trimmed();
+    for (const QRegion& roomRegion : std::as_const(rd.mRegions)) {
+        issue(Issue::ReplaceRoomInternalName, roomNameOld, roomNameNew, roomRegion, floor->level());
+    }
+}
+
+void CheckBuildingsWindow::fixRoomInternalName(const Issue &issue)
+{
+    BuildingReader reader;
+    Building *building = reader.read(issue.file->path);
+    if (building == nullptr) {
+        QString error = reader.errorString();
+        QMessageBox::warning(this, tr("Error reading building"), error);
+        return;
+    }
+    reader.fix(building);
+
+    BuildingFloor *floor = building->floor(issue.z);
+    Room *room = floor->GetRoomAt(issue.roomRegion.cbegin()->topLeft());
+    if (room == nullptr || room->internalName != issue.roomNameOld) {
+        QMessageBox::warning(this, tr("Rename Room"), tr("Room '%1' not found").arg(issue.roomNameOld));
+        delete building;
+        return;
+    }
+    room->internalName = issue.roomNameNew;
+
+    BuildingWriter w;
+    if (!w.write(building, issue.file->path)) {
+        QString error = w.errorString();
+        QMessageBox::warning(this, tr("Error saving building"), error);
+    }
+    delete building;
 }
 
 void CheckBuildingsWindow::check(const QString &filePath)
@@ -637,8 +722,10 @@ void CheckBuildingsWindow::check(BuildingMap *bmap, Building *building, Map *map
 
         for (Room *room : building->rooms()) {
             checkKidsBedroom(floor, layers, room);
+            checkRoomInternalName(floor, room);
         }
     }
+
     delete mapInfo;
 
     updateList(mCurrentIssueFile);
@@ -664,6 +751,11 @@ void CheckBuildingsWindow::issue(Issue::Type type, const char *detail, BuildingO
 void CheckBuildingsWindow::issue(Issue::Type type, const QRegion &roomRegion, int z)
 {
     mCurrentIssueFile->issues += Issue(mCurrentIssueFile, type, roomRegion, z);
+}
+
+void CheckBuildingsWindow::issue(Issue::Type type, const QString &roomNameOld, const QString &roomNameNew, const QRegion &roomRegion, int z)
+{
+    mCurrentIssueFile->issues += Issue(mCurrentIssueFile, type, roomNameOld, roomNameNew, roomRegion, z);
 }
 
 void CheckBuildingsWindow::updateList(CheckBuildingsWindow::IssueFile *file)
@@ -710,6 +802,37 @@ void CheckBuildingsWindow::fileChangedTimeout()
     }
 
     mChangedFiles.clear();
+}
+
+void CheckBuildingsWindow::pause()
+{
+    if (mPaused) {
+        mCheckNextFileTimer.start();
+    }
+    mPaused = !mPaused;
+    ui->buttonPause->setText(mPaused ? tr("Continue") : tr("Pause"));
+    ui->labelCurrentFile->setText(tr("Paused. Click Continue or Stop."));
+}
+
+void CheckBuildingsWindow::stop()
+{
+    mFileNames.clear();
+    mPaused = false;
+    ui->checkNow->setEnabled(true);
+    ui->buttonPause->setText(tr("Pause"));
+    ui->buttonPause->setEnabled(false);
+    ui->buttonStop->setEnabled(false);
+    ui->labelCurrentFile->clear();
+}
+
+void CheckBuildingsWindow::selectAll()
+{
+    ui->treeWidget->selectAll();
+}
+
+void CheckBuildingsWindow::selectNone()
+{
+    ui->treeWidget->clearSelection();
 }
 
 CheckBuildingsWindow::Issue::Issue(IssueFile *file, Type type, const QString &detail, BuildingObject *object) :

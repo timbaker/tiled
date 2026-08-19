@@ -6,8 +6,8 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>782</width>
-    <height>600</height>
+    <width>746</width>
+    <height>525</height>
    </rect>
   </property>
   <property name="windowTitle">
@@ -15,81 +15,65 @@
   </property>
   <widget class="QWidget" name="centralwidget">
    <layout class="QGridLayout" name="gridLayout">
-    <item row="6" column="0">
-     <layout class="QGridLayout" name="gridLayout_2">
-      <item row="2" column="0">
-       <widget class="QCheckBox" name="checkRoomLight">
+    <item row="0" column="0">
+     <widget class="QLabel" name="label">
+      <property name="text">
+       <string>Choose a directory containing TBX files here:</string>
+      </property>
+     </widget>
+    </item>
+    <item row="3" column="0">
+     <layout class="QGridLayout" name="gridLayout_3">
+      <item row="0" column="0">
+       <widget class="QPushButton" name="checkNow">
+        <property name="maximumSize">
+         <size>
+          <width>120</width>
+          <height>16777215</height>
+         </size>
+        </property>
         <property name="text">
-         <string>Room lights</string>
+         <string>Check now</string>
         </property>
        </widget>
       </item>
-      <item row="2" column="1">
-       <widget class="QCheckBox" name="checkGrime">
+      <item row="0" column="4">
+       <spacer name="horizontalSpacer">
+        <property name="orientation">
+         <enum>Qt::Horizontal</enum>
+        </property>
+        <property name="sizeHint" stdset="0">
+         <size>
+          <width>40</width>
+          <height>20</height>
+         </size>
+        </property>
+       </spacer>
+      </item>
+      <item row="0" column="1">
+       <widget class="QPushButton" name="buttonFixSelected">
         <property name="text">
-         <string>Grime</string>
+         <string>Fix Selected</string>
         </property>
        </widget>
       </item>
-      <item row="5" column="1">
-       <widget class="QCheckBox" name="checkDoorInWall">
+      <item row="0" column="6">
+       <widget class="QPushButton" name="buttonStop">
         <property name="text">
-         <string>Door In Wall</string>
+         <string>Stop</string>
         </property>
        </widget>
       </item>
-      <item row="3" column="1">
-       <widget class="QCheckBox" name="check2x">
+      <item row="0" column="5">
+       <widget class="QPushButton" name="buttonPause">
         <property name="text">
-         <string>Rearrange.txt</string>
-        </property>
-       </widget>
-      </item>
-      <item row="1" column="0">
-       <widget class="QCheckBox" name="checkSwitches">
-        <property name="text">
-         <string>Light switches</string>
-        </property>
-       </widget>
-      </item>
-      <item row="1" column="1">
-       <widget class="QCheckBox" name="checkInteriorOutside">
-        <property name="text">
-         <string>Exterior/Interior</string>
-        </property>
-       </widget>
-      </item>
-      <item row="3" column="0">
-       <widget class="QCheckBox" name="checkSink">
-        <property name="text">
-         <string>Sinks</string>
-        </property>
-       </widget>
-      </item>
-      <item row="5" column="0">
-       <widget class="QCheckBox" name="checkContainers">
-        <property name="text">
-         <string>Containers</string>
-        </property>
-       </widget>
-      </item>
-      <item row="4" column="1">
-       <widget class="QCheckBox" name="checkRearrangeGrid">
-        <property name="text">
-         <string>RearrangeGrid.txt</string>
-        </property>
-       </widget>
-      </item>
-      <item row="4" column="0">
-       <widget class="QCheckBox" name="checkKidsBedroom">
-        <property name="text">
-         <string>Kids Bedroom</string>
+         <string>Pause</string>
         </property>
        </widget>
       </item>
      </layout>
     </item>
-    <item row="7" column="0">
+    <item row="8" column="0">
      <widget class="QTreeWidget" name="treeWidget">
       <property name="selectionMode">
        <enum>QAbstractItemView::MultiSelection</enum>
@@ -103,6 +87,50 @@
        </property>
       </column>
      </widget>
+    </item>
+    <item row="10" column="0">
+     <layout class="QHBoxLayout" name="bottomLayout">
+      <item>
+       <spacer name="horizontalSpacer_2">
+        <property name="orientation">
+         <enum>Qt::Horizontal</enum>
+        </property>
+        <property name="sizeHint" stdset="0">
+         <size>
+          <width>40</width>
+          <height>20</height>
+         </size>
+        </property>
+       </spacer>
+      </item>
+      <item>
+       <widget class="QPushButton" name="buttonSelectAll">
+        <property name="text">
+         <string>Select All</string>
+        </property>
+       </widget>
+      </item>
+      <item>
+       <widget class="QPushButton" name="buttonSelectNone">
+        <property name="text">
+         <string>Select None</string>
+        </property>
+       </widget>
+      </item>
+      <item>
+       <spacer name="horizontalSpacer_3">
+        <property name="orientation">
+         <enum>Qt::Horizontal</enum>
+        </property>
+        <property name="sizeHint" stdset="0">
+         <size>
+          <width>40</width>
+          <height>20</height>
+         </size>
+        </property>
+       </spacer>
+      </item>
+     </layout>
     </item>
     <item row="1" column="0">
      <layout class="QHBoxLayout" name="horizontalLayout">
@@ -122,47 +150,109 @@
       </item>
      </layout>
     </item>
-    <item row="3" column="0">
-     <layout class="QGridLayout" name="gridLayout_3">
-      <item row="0" column="1">
-       <widget class="QPushButton" name="buttonFixSelected">
+    <item row="6" column="0">
+     <layout class="QGridLayout" name="gridLayout_2">
+      <item row="4" column="0">
+       <widget class="QCheckBox" name="checkKidsBedroom">
         <property name="text">
-         <string>Fix Selected</string>
+         <string>Kids Bedroom</string>
         </property>
        </widget>
       </item>
-      <item row="0" column="0">
-       <widget class="QPushButton" name="checkNow">
-        <property name="maximumSize">
-         <size>
-          <width>120</width>
-          <height>16777215</height>
-         </size>
-        </property>
+      <item row="3" column="1">
+       <widget class="QCheckBox" name="check2x">
         <property name="text">
-         <string>Check now</string>
+         <string>Rearrange.txt</string>
         </property>
        </widget>
       </item>
-      <item row="0" column="2">
-       <spacer name="horizontalSpacer">
-        <property name="orientation">
-         <enum>Qt::Horizontal</enum>
+      <item row="3" column="0">
+       <widget class="QCheckBox" name="checkSink">
+        <property name="text">
+         <string>Sinks</string>
         </property>
-        <property name="sizeHint" stdset="0">
-         <size>
-          <width>40</width>
-          <height>20</height>
-         </size>
+       </widget>
+      </item>
+      <item row="5" column="1">
+       <widget class="QCheckBox" name="checkDoorInWall">
+        <property name="text">
+         <string>Door In Wall</string>
         </property>
-       </spacer>
+       </widget>
+      </item>
+      <item row="1" column="1">
+       <widget class="QCheckBox" name="checkInteriorOutside">
+        <property name="text">
+         <string>Exterior/Interior</string>
+        </property>
+       </widget>
+      </item>
+      <item row="5" column="0">
+       <widget class="QCheckBox" name="checkContainers">
+        <property name="text">
+         <string>Overlapping Containers</string>
+        </property>
+       </widget>
+      </item>
+      <item row="2" column="1">
+       <widget class="QCheckBox" name="checkGrime">
+        <property name="text">
+         <string>Grime</string>
+        </property>
+       </widget>
+      </item>
+      <item row="4" column="1">
+       <widget class="QCheckBox" name="checkRearrangeGrid">
+        <property name="text">
+         <string>RearrangeGrid.txt</string>
+        </property>
+       </widget>
+      </item>
+      <item row="1" column="0">
+       <widget class="QCheckBox" name="checkSwitches">
+        <property name="text">
+         <string>Light switches</string>
+        </property>
+       </widget>
+      </item>
+      <item row="2" column="0">
+       <widget class="QCheckBox" name="checkRoomLight">
+        <property name="text">
+         <string>Room lights</string>
+        </property>
+       </widget>
+      </item>
+      <item row="6" column="0" colspan="2">
+       <layout class="QHBoxLayout" name="replaceRoomDefLayout">
+        <item>
+         <widget class="QCheckBox" name="checkReplaceRoom">
+          <property name="text">
+           <string>Replace Room</string>
+          </property>
+         </widget>
+        </item>
+        <item>
+         <widget class="QLineEdit" name="editRoomOld">
+          <property name="placeholderText">
+           <string>old room internal name</string>
+          </property>
+         </widget>
+        </item>
+        <item>
+         <widget class="QLineEdit" name="editRoomNew">
+          <property name="placeholderText">
+           <string>new room internal name</string>
+          </property>
+         </widget>
+        </item>
+       </layout>
       </item>
      </layout>
     </item>
-    <item row="0" column="0">
-     <widget class="QLabel" name="label">
+    <item row="7" column="0">
+     <widget class="QLabel" name="labelCurrentFile">
       <property name="text">
-       <string>Choose a directory containing TBX files here:</string>
+       <string>Checking XYZ.tbx</string>
       </property>
      </widget>
     </item>
