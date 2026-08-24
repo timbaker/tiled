@@ -12,7 +12,7 @@ cp -ar $BUILD/share/ $DEST
 cp -a $SRC/dist/TileZed-x86_64.AppImage.sh $DEST
 chmod +x $DEST/TileZed-x86_64.AppImage.sh
 
-cp -a $SRC/LICENSE.AUTHORS $DEST
+cp -a $SRC/AUTHORS $DEST
 cp -a $SRC/COPYING $DEST
 cp -a $SRC/LICENSE.APACHE $DEST
 cp -a $SRC/LICENSE.BSD $DEST
