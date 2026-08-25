@@ -175,7 +175,7 @@ Preferences::Preferences()
     mTilePropertiesFiles = mSettings->value(QLatin1String("TilePropertiesFiles")).toStringList();
 
     bool bHasNewTileDefinitions = false;
-    for (const QString &f : mTilePropertiesFiles) {
+    for (const QString &f : std::as_const(mTilePropertiesFiles)) {
         if (f.isEmpty())
             continue;
         if (f.contains(QLatin1String("newtiledefinitions.tiles"), Qt::CaseInsensitive)) {

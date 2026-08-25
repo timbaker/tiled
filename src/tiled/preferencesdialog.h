@@ -67,6 +67,7 @@ private slots:
 #ifdef ZOMBOID
     void defaultGridColor();
     void defaultBackgroundColor();
+    void setDefaultTilesetBackground();
     void browseThumbnailDirectory();
     void browseWorlded();
     void removePZW();

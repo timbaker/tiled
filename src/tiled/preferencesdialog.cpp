@@ -137,6 +137,7 @@ PreferencesDialog::PreferencesDialog(QWidget *parent) :
 #ifdef ZOMBOID
     mUi->tabWidget->setCurrentIndex(0);
     mUi->themeCombo->setCurrentText(Preferences::instance()->theme());
+    mUi->tilesetBgColor->setColor(Preferences::instance()->tilesetBackgroundColor());
 #endif
 
     fromPreferences();
@@ -158,6 +159,8 @@ PreferencesDialog::PreferencesDialog(QWidget *parent) :
             Preferences::instance(), &Preferences::setBackgroundColor);
     connect(mUi->bgColorReset, &QAbstractButton::clicked,
             this, &PreferencesDialog::defaultBackgroundColor);
+    connect(mUi->tilesetBgColor, &ColorButton::colorChanged, Preferences::instance(), &Preferences::setTilesetBackgroundColor);
+    connect(mUi->tilesetBgReset, &QAbstractButton::clicked, this, &PreferencesDialog::setDefaultTilesetBackground);
     connect(mUi->showAdjacent, &QAbstractButton::toggled,
             Preferences::instance(), &Preferences::setShowAdjacentMaps);
     connect(mUi->thumbnailButton, &QAbstractButton::clicked, this, &PreferencesDialog::browseThumbnailDirectory);
@@ -172,7 +175,7 @@ PreferencesDialog::PreferencesDialog(QWidget *parent) :
     connect(mUi->raisePZPropertiesFile, &QAbstractButton::clicked, this, &PreferencesDialog::raisePropertiesFile);
     connect(mUi->lowerPZPropertiesFile, &QAbstractButton::clicked, this, &PreferencesDialog::lowerPropertiesFile);
     connect(mUi->themeCombo, qOverload<int>(&QComboBox::currentIndexChanged), this, &PreferencesDialog::themeChanged);
-#endif // ZOMBOID
+    #endif // ZOMBOID
 
     connect(mUi->objectTypesTable->selectionModel(),
             &QItemSelectionModel::selectionChanged,
@@ -335,6 +338,13 @@ void PreferencesDialog::defaultBackgroundColor()
 {
     Preferences::instance()->setBackgroundColor(Qt::darkGray);
     mUi->bgColor->setColor(Preferences::instance()->backgroundColor());
+}
+
+void PreferencesDialog::setDefaultTilesetBackground()
+{
+    const QPalette& palette = mUi->tilesetBgList->palette();
+    const QColor tableBgColor = palette.color(QPalette::Active, QPalette::Base);
+    mUi->tilesetBgColor->setColor(tableBgColor);
 }
 
 void PreferencesDialog::browseThumbnailDirectory()
