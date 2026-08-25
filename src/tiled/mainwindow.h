@@ -291,6 +291,7 @@ private:
 #ifdef ZOMBOID
 public:
     void readSettings();
+    bool initConfigFilesInternal();
 private:
 #else
     void readSettings();

@@ -1016,9 +1016,19 @@ void MainWindow::openLastFiles()
 #ifdef ZOMBOID
 bool MainWindow::InitConfigFiles()
 {
-    // Refresh the ui before blocking while loading tilesets etc
-    qApp->processEvents(QEventLoop::ExcludeUserInputEvents);
+    setEnabled(false);
 
+    // Refresh the ui before blocking while loading tilesets etc
+    qApp->processEvents(QEventLoop::AllEvents);
+
+    bool result = initConfigFilesInternal();
+
+    setEnabled(true);
+    return result;
+}
+
+bool MainWindow::initConfigFilesInternal()
+{
     // Create ~/.TileZed if needed.
     QString configPath = Preferences::instance()->configPath();
     QDir dir(configPath);
@@ -1784,6 +1794,7 @@ void MainWindow::tilesetMetaInfoDialog()
 {
     TileMetaInfoMgr *mgr = TileMetaInfoMgr::instance();
 #if 1
+    setEnabled(false);
     foreach (Tileset *ts, mgr->tilesets()) {
         if (ts->isMissing()) {
             PROGRESS progress(tr("Loading Tilesets.txt tilesets"), this);
@@ -1792,6 +1803,7 @@ void MainWindow::tilesetMetaInfoDialog()
             break;
         }
     }
+    setEnabled(true);
 #else
     if (!mgr->hasReadTxt()) {
         if (!mgr->readTxt()) {
@@ -1884,6 +1896,8 @@ void MainWindow::containerOverlayDialog()
     mContainerOverlayDialog->raise();
     mContainerOverlayDialog->activateWindow();
 
+    setEnabled(false);
+
     TileMetaInfoMgr *mgr = TileMetaInfoMgr::instance();
     const QList<Tileset*> tilesets = mgr->tilesets();
     for (Tileset *ts : tilesets) {
@@ -1894,6 +1908,8 @@ void MainWindow::containerOverlayDialog()
             break;
         }
     }
+
+    setEnabled(true);
 }
 
 void MainWindow::tileOverlayDialog()
@@ -1903,6 +1919,8 @@ void MainWindow::tileOverlayDialog()
     }
     mTileOverlayDialog->show();
     mTileOverlayDialog->raise();
+
+    setEnabled(false);
 
     TileMetaInfoMgr *mgr = TileMetaInfoMgr::instance();
     const QList<Tileset*> tilesets = mgr->tilesets();
@@ -1914,6 +1932,8 @@ void MainWindow::tileOverlayDialog()
             break;
         }
     }
+
+    setEnabled(true);
 }
 
 #include "enflatulatordialog.h"
@@ -1943,6 +1963,8 @@ void MainWindow::snowEditor()
     mSnowEditor->raise();
     mSnowEditor->activateWindow();
 
+    setEnabled(false);
+
     TileMetaInfoMgr *mgr = TileMetaInfoMgr::instance();
     const QList<Tileset*> tilesets = mgr->tilesets();
     for (Tileset *ts : tilesets) {
@@ -1953,6 +1975,8 @@ void MainWindow::snowEditor()
             break;
         }
     }
+
+    setEnabled(true);
 }
 
 void MainWindow::launchWorldEd()

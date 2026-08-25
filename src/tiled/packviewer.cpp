@@ -113,7 +113,9 @@ void PackViewer::openPack()
     ui->label->setText(QString::fromLatin1("%1 images").arg(numImages));
 
     delete progress;
-    qApp->processEvents(QEventLoop::ExcludeUserInputEvents);
+    setEnabled(false);
+    qApp->processEvents(QEventLoop::AllEvents);
+    setEnabled(true);
     raise();
     activateWindow();
 }

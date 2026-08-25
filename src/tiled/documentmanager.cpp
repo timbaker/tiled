@@ -22,6 +22,7 @@
 #include "documentmanager.h"
 
 #ifdef ZOMBOID
+#include "mainwindow.h"
 #include "tilelayerspanel.h"
 #include "ZomboidScene.h"
 #include <QHBoxLayout>
@@ -177,7 +178,9 @@ void DocumentManager::addDocument(MapDocument *mapDocument)
     scene->setMapDocument(mapDocument);
 #ifdef ZOMBOID
     view->setMapScene(scene);
-    qApp->processEvents(QEventLoop::ExcludeUserInputEvents);
+    MainWindow::instance()->setEnabled(false);
+    qApp->processEvents(QEventLoop::AllEvents);
+    MainWindow::instance()->setEnabled(true);
 #else
     view->setScene(scene);
 #endif

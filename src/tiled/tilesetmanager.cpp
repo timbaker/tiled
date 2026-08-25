@@ -517,9 +517,9 @@ void TilesetManager::waitForTilesets(const QList<Tileset *> &tilesets)
         if (!busy)
             break;
         Sleep::msleep(10);
-        qApp->processEvents(QEventLoop::ExcludeUserInputEvents);
+        qApp->processEvents(QEventLoop::AllEvents);
     }
-    qApp->processEvents(QEventLoop::ExcludeUserInputEvents);
+    qApp->processEvents(QEventLoop::AllEvents);
 
     foreach (Tileset *ts, tilesets) {
         if (ts->isLoaded())

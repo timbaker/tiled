@@ -62,14 +62,14 @@ void ZProgressManager::begin(const QString &text)
     mLabel->setText(text);
     if (mDepth++ == 0)
         mDialog->show();
-    qApp->processEvents(QEventLoop::ExcludeUserInputEvents);
+    qApp->processEvents(QEventLoop::AllEvents);
 }
 
 void ZProgressManager::update(const QString &text)
 {
     Q_ASSERT(mDepth > 0);
     mLabel->setText(text);
-    qApp->processEvents(QEventLoop::ExcludeUserInputEvents);
+    qApp->processEvents(QEventLoop::AllEvents);
 }
 
 void ZProgressManager::end()
@@ -78,6 +78,6 @@ void ZProgressManager::end()
 //    mDialog->setValue(mDialog->maximum()); // hides dialog!
     if (--mDepth == 0)
         mDialog->hide();
-    qApp->processEvents(QEventLoop::ExcludeUserInputEvents);
+    qApp->processEvents(QEventLoop::AllEvents);
 }
 

@@ -686,14 +686,16 @@ bool BuildingEditorWindow::closeYerself()
 
 bool BuildingEditorWindow::Startup()
 {
+    setEnabled(false);
+
+    // Refresh the ui before blocking while loading tilesets etc
+    qApp->processEvents(QEventLoop::AllEvents);
+
 #ifdef BUILDINGED_SA
     mIsoObjectEditMode->afterInitConfigFiles();
     mOrthoObjectEditMode->afterInitConfigFiles();
     mTileEditMode->afterInitConfigFiles();
 #endif
-
-    // Refresh the ui before blocking while loading tilesets etc
-    qApp->processEvents(QEventLoop::ExcludeUserInputEvents);
 
     foreach (Tileset *ts, TileMetaInfoMgr::instance()->tilesets()) {
         if (ts->isMissing()) {
@@ -715,6 +717,8 @@ bool BuildingEditorWindow::Startup()
 
     connect(TilesetManager::instance(), &TilesetManager::tilesetChanged,
             this, &BuildingEditorWindow::tilesetChanged);
+
+    setEnabled(true);
 
     return true;
 }
