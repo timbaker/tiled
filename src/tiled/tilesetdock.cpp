@@ -1574,6 +1574,7 @@ void TilesetDock::filterEdited(const QString &text)
 void TilesetDock::tilesetBackgroundColorChanged(const QColor &color)
 {
     mTilesetView->setStyleSheet(QStringLiteral("QTableView { alternate-background-color: %1; background-color: %1; }").arg(color.name()));
+    mBackgroundColorButton->setColor(color);
 }
 
 void TilesetDock::setTilesetNamesList()
