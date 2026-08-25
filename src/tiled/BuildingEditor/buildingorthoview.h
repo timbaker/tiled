@@ -560,15 +560,15 @@ public slots:
 
     void mapResized();
 
-    void floorAdded(BuildingFloor *floor);
-    void floorRemoved(BuildingFloor *floor);
-    void floorEdited(BuildingFloor *floor);
+    void floorAdded(BuildingEditor::BuildingFloor *floor);
+    void floorRemoved(BuildingEditor::BuildingFloor *floor);
+    void floorEdited(BuildingEditor::BuildingFloor *floor);
 
-    void objectAdded(BuildingObject *object);
-    void objectAboutToBeRemoved(BuildingObject *object);
-    void objectMoved(BuildingObject *object);
-    void objectTileChanged(BuildingObject *object);
-    void objectChanged(BuildingObject *object);
+    void objectAdded(BuildingEditor::BuildingObject *object);
+    void objectAboutToBeRemoved(BuildingEditor::BuildingObject *object);
+    void objectMoved(BuildingEditor::BuildingObject *object);
+    void objectTileChanged(BuildingEditor::BuildingObject *object);
+    void objectChanged(BuildingEditor::BuildingObject *object);
 
     void selectedObjectsChanged();
 
@@ -617,14 +617,14 @@ public:
                            int level = 0) const;
 
 private slots:
-    void currentToolChanged(BaseTool *tool);
+    void currentToolChanged(BuildingEditor::BaseTool *tool);
 
     void currentFloorChanged();
-    void roomAtPositionChanged(BuildingFloor *floor, const QPoint &pos);
+    void roomAtPositionChanged(BuildingEditor::BuildingFloor *floor, const QPoint &pos);
 
-    void roomChanged(Room *room);
-    void roomAdded(Room *room);
-    void roomRemoved(Room *room);
+    void roomChanged(BuildingEditor::Room *room);
+    void roomAdded(BuildingEditor::Room *room);
+    void roomRemoved(BuildingEditor::Room *room);
     void roomsReordered();
 
     void buildingResized();

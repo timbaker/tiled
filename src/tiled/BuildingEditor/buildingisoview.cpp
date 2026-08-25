@@ -422,7 +422,9 @@ void BuildingIsoScene::setDocument(BuildingDocument *doc)
     if (!mDocument)
         return;
 
+    mLoading = true;
     BuildingToMap();
+    mLoading = false;
 
     foreach (BuildingFloor *floor, mDocument->building()->floors())
         BuildingBaseScene::floorAdded(floor);
@@ -1205,6 +1207,9 @@ void BuildingIsoScene::tilesetAdded(Tileset *tileset)
 {
     if (!mDocument)
         return;
+    if (mLoading) {
+        return;
+    }
     mBuildingMap->tilesetAdded(tileset);
 }
 
@@ -1213,6 +1218,9 @@ void BuildingIsoScene::tilesetAboutToBeRemoved(Tileset *tileset)
     if (!mDocument)
         return;
     clearToolTiles();
+    if (mLoading) {
+        return;
+    }
     mBuildingMap->tilesetAboutToBeRemoved(tileset);
 }
 
@@ -1220,6 +1228,9 @@ void BuildingIsoScene::tilesetRemoved(Tileset *tileset)
 {
     if (!mDocument)
         return;
+    if (mLoading) {
+        return;
+    }
     mBuildingMap->tilesetRemoved(tileset);
 }
 
@@ -1227,6 +1238,9 @@ void BuildingIsoScene::tilesetChanged(Tileset *tileset)
 {
     if (!mDocument)
         return;
+    if (mLoading) {
+        return;
+    }
     if (mBuildingMap->isTilesetUsed(tileset))
         update();
 }
