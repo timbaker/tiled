@@ -74,6 +74,19 @@
         <item>
          <layout class="QHBoxLayout" name="horizontalLayout_4">
           <item>
+           <widget class="QLabel" name="internalNameIcon">
+            <property name="toolTip">
+             <string>Not in RoomNames.txt</string>
+            </property>
+            <property name="text">
+             <string/>
+            </property>
+            <property name="pixmap">
+             <pixmap resource="buildingeditor.qrc">:/BuildingEditor/icons/caution-icon.png</pixmap>
+            </property>
+           </widget>
+          </item>
+          <item>
            <widget class="QLabel" name="label_3">
             <property name="text">
              <string>Internal name:</string>
@@ -287,11 +300,12 @@
   <customwidget>
    <class>Tiled::Internal::ColorButton</class>
    <extends>QToolButton</extends>
-   <header>colorbutton.h</header>
+   <header location="global">colorbutton.h</header>
   </customwidget>
  </customwidgets>
  <resources>
   <include location="../tiled.qrc"/>
+  <include location="buildingeditor.qrc"/>
  </resources>
  <connections>
   <connection>

@@ -61,5 +61,6 @@
         <file>icons/mode_attributes.png</file>
         <file>icons/icon_floor_grime.png</file>
         <file>icons/icon_roof_peakQuad.png</file>
+        <file>icons/caution-icon.png</file>
     </qresource>
 </RCC>

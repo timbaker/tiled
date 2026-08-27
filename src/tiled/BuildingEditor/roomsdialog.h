@@ -18,7 +18,9 @@
 #ifndef ROOMSDIALOG_H
 #define ROOMSDIALOG_H
 
-#include "BuildingEditor/buildingdocument.h"
+#include "buildingdocument.h"
+#include "roomnamesfile.h"
+
 #include <QDialog>
 #include <QMap>
 
@@ -35,14 +37,6 @@ namespace BuildingEditor {
 
 class BuildingTileEntry;
 class Room;
-
-class RoomName
-{
-public:
-    QString label;
-    QString internalName;
-    QColor color;
-};
 
 extern bool compareQColors(const QColor& a, const QColor& b);
 

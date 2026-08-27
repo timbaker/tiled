@@ -2,11 +2,13 @@
 #define OBJECTEDITMODE_P_H
 
 #include <QObject>
+#include <QSet>
 #include <QToolBar>
 
 class QComboBox;
 class QGraphicsScene;
 class QGraphicsView;
+class QLabel;
 class QToolButton;
 class QStackedWidget;
 
@@ -40,6 +42,9 @@ public:
     Building *currentBuilding() const;
     Room *currentRoom() const;
 
+private:
+    void readRoomsDotTxt();
+
 private slots:
     void currentDocumentChanged(BuildingEditor::BuildingDocument *doc);
 
@@ -62,6 +67,9 @@ private slots:
 
 private:
     BuildingDocument *mCurrentDocument;
+    QSet<QString> mRoomInternalNames;
+    QLabel *mUnknownRoomLabel;
+    QAction *mUnknownRoomLabelAction;
     QComboBox *mRoomComboBox;
     QToolButton *mFloorLabel;
 };

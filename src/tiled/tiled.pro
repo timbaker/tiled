@@ -72,6 +72,7 @@ SOURCES += aboutdialog.cpp \
     BuildingEditor/buildingkeyvaluesdialog.cpp \
     BuildingEditor/buildingtilesfile.cpp \
     BuildingEditor/exportbasementsdialog.cpp \
+    BuildingEditor/roomnamesfile.cpp \
     BuildingEditor/templatedocument.cpp \
     BuildingEditor/templateroomsdialog.cpp \
     BuildingEditor/templateundoredo.cpp \
@@ -306,6 +307,7 @@ HEADERS += aboutdialog.h \
     BuildingEditor/buildingkeyvaluesdialog.h \
     BuildingEditor/buildingtilesfile.h \
     BuildingEditor/exportbasementsdialog.h \
+    BuildingEditor/roomnamesfile.h \
     BuildingEditor/templatedocument.h \
     BuildingEditor/templateroomsdialog.h \
     BuildingEditor/templateundoredo.h \

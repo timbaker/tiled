@@ -77,6 +77,9 @@ public:
     bool levelIsometric() const
     { return mLevelIsometric; }
 
+    bool unknownRoomWarning() const
+    { return mUnknownRoomWarning; }
+
 signals:
     void mapsDirectoryChanged();
     void showGridChanged(bool show);
@@ -91,6 +94,7 @@ signals:
     void tileScaleChanged(qreal scale);
     void useOpenGLChanged(bool useOpenGL);
     void levelIsometricChanged(bool levels);
+    void unknownRoomWarningChanged(bool enabled);
 
 public slots:
     void setMapsDirectory(const QString &path);
@@ -106,6 +110,7 @@ public slots:
     void setTileScale(qreal scale);
     void setUseOpenGL(bool useOpenGL);
     void setLevelIsometric(bool levels);
+    void setUnknownRoomWarning(bool enabled);
 
 private:
     static BuildingPreferences *mInstance;
@@ -123,6 +128,7 @@ private:
     qreal mTileScale;
     bool mUseOpenGL;
     bool mLevelIsometric;
+    bool mUnknownRoomWarning;
 };
 
 } // namespace BuildingEditor

@@ -191,13 +191,6 @@ room
 
 room
 {
-    internal = baseballgiftstore
-    label = baseballgiftstore
-    color = #5AB78C
-}
-
-room
-{
     internal = baseballstorage
     label = baseballstorage
     color = #9AA512
@@ -755,13 +748,6 @@ room
     internal = dinerkitchen
     label = dinerkitchen
     color = #5E7EA6
-}
-
-room
-{
-    internal = dining
-    label = dining
-    color = #8CE880
 }
 
 room

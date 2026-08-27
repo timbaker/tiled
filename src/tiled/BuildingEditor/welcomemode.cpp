@@ -640,7 +640,7 @@ bool WelcomeMode::readRoomToneTxt()
         return false;
     }
 
-    for (const SimpleFileKeyValue &kv : simple.values) {
+    for (const SimpleFileKeyValue &kv : std::as_const(simple.values)) {
         QString str = kv.name.trimmed();
         if (str.compare(QLatin1String("version"), Qt::CaseInsensitive) == 0)
             continue;

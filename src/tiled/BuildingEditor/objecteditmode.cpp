@@ -32,13 +32,17 @@
 #include "categorydock.h"
 #include "editmodestatusbar.h"
 #include "embeddedmainwindow.h"
+#include "roomnamesfile.h"
 
+#include "preferences.h"
 #include "zoomable.h"
 
 #include <QAction>
 #include <QAbstractItemView>
 #include <QComboBox>
+#include <QDebug>
 #include <QDir>
+#include <QLabel>
 #include <QMainWindow>
 #include <QStackedWidget>
 #include <QTabWidget>
@@ -55,7 +59,8 @@ using namespace BuildingEditor;
 
 ObjectEditModeToolBar::ObjectEditModeToolBar(ObjectEditMode *mode, QWidget *parent) :
     QToolBar(parent),
-    mCurrentDocument(0)
+    mCurrentDocument(0),
+    mUnknownRoomLabel(new QLabel(this))
 {
     Q_UNUSED(mode)
 
@@ -84,10 +89,15 @@ ObjectEditModeToolBar::ObjectEditModeToolBar(ObjectEditMode *mode, QWidget *pare
     addAction(actions->actionDownLevel);
     addSeparator();
 
+    mUnknownRoomLabel->setPixmap(QStringLiteral(":/BuildingEditor/icons/caution-icon.png"));
+    mUnknownRoomLabel->setToolTip(tr("Not in RoomNames.txt"));
+    mUnknownRoomLabel->setVisible(false);
+
     mRoomComboBox = new QComboBox;
     mRoomComboBox->setIconSize(QSize(20, 20));
 //    mRoomComboBox->setSizeAdjustPolicy(QComboBox::AdjustToContents);
 
+    mUnknownRoomLabelAction = addWidget(mUnknownRoomLabel);
     addWidget(mRoomComboBox);
     addAction(actions->actionRooms);
 #if QT_VERSION < QT_VERSION_CHECK(6, 0, 0)
@@ -246,6 +256,7 @@ ObjectEditModeToolBar::ObjectEditModeToolBar(ObjectEditMode *mode, QWidget *pare
 
     connect(docman(), &BuildingDocumentMgr::currentDocumentChanged,
             this, &ObjectEditModeToolBar::currentDocumentChanged);
+    connect(BuildingPreferences::instance(), &BuildingPreferences::unknownRoomWarningChanged, this, &ObjectEditModeToolBar::currentRoomChanged);
 }
 
 Building *ObjectEditModeToolBar::currentBuilding() const
@@ -256,6 +267,32 @@ Building *ObjectEditModeToolBar::currentBuilding() const
 Room *ObjectEditModeToolBar::currentRoom() const
 {
     return mCurrentDocument ? mCurrentDocument->currentRoom() : 0;
+}
+
+void ObjectEditModeToolBar::readRoomsDotTxt()
+{
+    mRoomInternalNames.clear();
+    RoomNamesFile file;
+    QString filePath = Tiled::Internal::Preferences::instance()->appConfigPath(QStringLiteral("RoomNames.txt"));
+    if (file.read(filePath))
+    {
+        const QStringList internalNames = file.internalNames();
+        for (const QString &internalName : internalNames)
+        {
+            mRoomInternalNames += internalName.toLower();
+            qDebug() << internalName;
+        }
+    }
+    filePath = Tiled::Internal::Preferences::instance()->configPath(QStringLiteral("RoomNames.txt"));
+    if (file.read(filePath))
+    {
+        const QStringList internalNames = file.internalNames();
+        for (const QString &internalName : internalNames)
+        {
+            mRoomInternalNames += internalName.toLower();
+            qDebug() << internalName;
+        }
+    }
 }
 
 void ObjectEditModeToolBar::currentDocumentChanged(BuildingDocument *doc)
@@ -281,6 +318,7 @@ void ObjectEditModeToolBar::currentDocumentChanged(BuildingDocument *doc)
                 this, &ObjectEditModeToolBar::updateActions);
     }
 
+    readRoomsDotTxt();
     updateRoomComboBox();
     updateActions();
 }
@@ -290,8 +328,11 @@ void ObjectEditModeToolBar::currentRoomChanged()
     if (Room *room = currentRoom()) {
         int roomIndex = mCurrentDocument->building()->indexOf(room);
         mRoomComboBox->setCurrentIndex(roomIndex);
-    } else
+        mUnknownRoomLabelAction->setVisible(BuildingPreferences::instance()->unknownRoomWarning() && !mRoomInternalNames.contains(room->internalName.toLower()));
+    } else {
         mRoomComboBox->setCurrentIndex(-1);
+        mUnknownRoomLabelAction->setVisible(false);
+    }
 }
 
 void ObjectEditModeToolBar::updateRoomComboBox()
@@ -359,6 +400,7 @@ void ObjectEditModeToolBar::roomChanged(Room *room)
 {
     Q_UNUSED(room)
     updateRoomComboBox();
+    currentRoomChanged();
 }
 
 void ObjectEditModeToolBar::roofTypeChanged(QAction *action)

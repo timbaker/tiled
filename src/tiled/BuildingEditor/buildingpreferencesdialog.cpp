@@ -51,6 +51,8 @@ BuildingPreferencesDialog::BuildingPreferencesDialog(QWidget *parent) :
     ui->isometric->setChecked(!prefs()->levelIsometric());
     ui->levelIsometric->setChecked(prefs()->levelIsometric());
 
+    ui->unknownRoomCheckbox->setChecked(prefs()->unknownRoomWarning());
+
     ui->themeCombo->setCurrentText(Preferences::instance()->theme());
     connect(ui->themeCombo, qOverload<int>(&QComboBox::currentIndexChanged), this, &BuildingPreferencesDialog::themeChanged);
 }
@@ -90,5 +92,6 @@ void BuildingPreferencesDialog::accept()
     Preferences::instance()->setTilesetBackgroundColor(ui->tilesetColorButton->color());
     prefs()->setUseOpenGL(mUseOpenGL);
     prefs()->setLevelIsometric(ui->levelIsometric->isChecked());
+    prefs()->setUnknownRoomWarning(ui->unknownRoomCheckbox->isChecked());
     QDialog::accept();
 }

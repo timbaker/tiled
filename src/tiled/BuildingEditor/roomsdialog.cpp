@@ -27,7 +27,6 @@
 #include "choosebuildingtiledialog.h"
 
 #include "preferences.h"
-#include "simplefile.h"
 #include "tile.h"
 #include "utils.h"
 
@@ -84,7 +83,7 @@ RoomsDialog::RoomsDialog(BuildingDocument *doc, Room *initialRoom, QWidget *pare
 
     readRoomNamesDotTxt(mRoomNames);
     QStringList roomLabels, roomInternalNames;
-    for (const RoomName& roomName : mRoomNames) {
+    for (const RoomName& roomName : std::as_const(mRoomNames)) {
         roomLabels << roomName.label;
         roomInternalNames << roomName.internalName;
     }
@@ -190,43 +189,20 @@ void RoomsDialog::readRoomNamesDotTxt(QList<RoomName> &rooms)
 
 void RoomsDialog::readRoomNamesDotTxt(const QString &fileName, QList<RoomName> &rooms)
 {
-    SimpleFile simpleFile;
-    if (!simpleFile.read(fileName)) {
+    RoomNamesFile file;
+    if (!file.read(fileName)) {
         if (QFileInfo::exists(fileName)) {
             QMessageBox::warning(this, QStringLiteral("Error reading RoomNames.txt"),
-                                 QStringLiteral("Failed to open %1").arg(fileName));
+                                 QStringLiteral("Failed to read %1.\n%2").arg(fileName).arg(file.errorString()));
         }
         return;
     }
-
-    QRandomGenerator *generator = QRandomGenerator::global();
-    for (const SimpleFileBlock &block : simpleFile.blocks) {
-        if (block.name == QStringLiteral("room")) {
-            RoomName roomName;
-            roomName.internalName = block.value("internal").trimmed();
-            roomName.label = block.value("label").trimmed();
-            if (block.hasValue("color") && !block.value("color").trimmed().isEmpty()) {
-                QColor color = QColor(block.value("color").trimmed());
-                if (color.isValid()) {
-                    roomName.color = color;
-                }
-            }
-            if (!roomName.color.isValid()) {
-                QColor randomColor;
-                do {
-                    int red = generator->bounded(256); // 0 to 255
-                    int green = generator->bounded(256); // 0 to 255
-                    int blue = generator->bounded(256); // 0 to 255
-                    randomColor = QColor(red, green, blue);
-                } while (mRoomColorSet.find(randomColor) != mRoomColorSet.end());
-                roomName.color = randomColor;
-            }
-            mRoomColorSet.insert(roomName.color);
-            if (!roomName.label.isEmpty() && !roomName.internalName.isEmpty()) {
-                rooms += roomName;
-            }
+    for (const RoomName &roomName : file.roomNames()) {
+        if (!roomName.label.isEmpty() && !roomName.internalName.isEmpty()) {
+            rooms += roomName;
         }
     }
+    mRoomColorSet.insert(file.colorSet().cbegin(), file.colorSet().cend());
 }
 
 QListWidgetItem *RoomsDialog::itemFor(Room *room)
@@ -251,7 +227,7 @@ int RoomsDialog::findRoomNameByLabel(const QString &label) const
 int RoomsDialog::findRoomNameByInternalName(const QString &internalName) const
 {
     for (int i = 0; i < mRoomNames.size(); i++) {
-        if (mRoomNames[i].internalName.contains(internalName, Qt::CaseInsensitive)) {
+        if (mRoomNames[i].internalName.toLower() == internalName.toLower()) {
             return i;
         }
     }
@@ -458,19 +434,22 @@ void RoomsDialog::nameEdited(const QString &name)
 void RoomsDialog::internalNameEdited(const QString &name)
 {
     if (mRoom == nullptr) {
+        ui->internalNameIcon->setVisible(false);
         return;
     }
+    int roomNameIndex = findRoomNameByInternalName(name);
     if (mRoom->internalName == name) {
+        ui->internalNameIcon->setVisible(BuildingPreferences::instance()->unknownRoomWarning() && (roomNameIndex == -1));
         return;
     }
     Room editedRoom(mRoom);
     editedRoom.internalName = name;
-    int roomNameIndex = findRoomNameByInternalName(name);
     if (roomNameIndex != -1) {
         editedRoom.Color = mRoomNames[roomNameIndex].color.rgba();
 //        ui->color->setColor();
     }
     mDocument->undoStack()->push(new ChangeRoom(mDocument, mRoom, &editedRoom, ChangeRoom::Change::InternalName, -1));
+    ui->internalNameIcon->setVisible(roomNameIndex == -1);
 }
 
 void RoomsDialog::colorChanged(const QColor &color)
