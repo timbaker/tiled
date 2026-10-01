@@ -128,20 +128,6 @@ room
 
 room
 {
-    internal = bank
-    label = bank
-    color = #BDAF81
-}
-
-room
-{
-    internal = bankstorage
-    label = bankstorage
-    color = #F99830
-}
-
-room
-{
     internal = bar
     label = bar
     color = #A61EF6
@@ -201,13 +187,6 @@ room
     internal = baseballstore
     label = baseballstore
     color = #E4945F
-}
-
-room
-{
-    internal = basement
-    label = basement
-    color = #C9CF2B
 }
 
 room
@@ -759,8 +738,8 @@ room
 
 room
 {
-    internal = diningroom
-    label = diningroom
+    internal = dining
+    label = dining
     color = #FB5690
 }
 
@@ -860,13 +839,6 @@ room
     internal = elementaryschool
     label = elementaryschool
     color = #74ae2e
-}
-
-room
-{
-    internal = elevator
-    label = elevator
-    color = #17F17F
 }
 
 room
@@ -972,6 +944,13 @@ room
     internal = garagestorage
     label = garagestorage
     color = #5D4B89
+}
+
+room
+{
+    internal = garage_ranger
+    label = garage_ranger
+    color = #cc987b
 }
 
 room
@@ -1183,13 +1162,6 @@ room
 
 room
 {
-    internal = horsebox
-    label = horsebox
-    color = #7C6D19
-}
-
-room
-{
     internal = hospitalhallway
     label = hospitalhallway
     color = #070D24
@@ -1214,13 +1186,6 @@ room
     internal = hotdogstand
     label = hotdogstand
     color = #5EF97D
-}
-
-room
-{
-    internal = housewarestorage
-    label = housewarestorage
-    color = #07D21D
 }
 
 room
@@ -1641,6 +1606,13 @@ room
     internal = metalshop
     label = metalshop
     color = #382257
+}
+
+room
+{
+    internal = mexicankitchen
+    label = mexicankitchen
+    color = #61e905
 }
 
 room
@@ -2164,13 +2136,6 @@ room
 
 room
 {
-    internal = sodabottling
-    label = sodabottling
-    color = #E6FA83
-}
-
-room
-{
     internal = sodatruck
     label = sodatruck
     color = #A9DEF1
@@ -2377,13 +2342,6 @@ room
     internal = toystorestorage
     label = toystorestorage
     color = #27C5F6
-}
-
-room
-{
-    internal = traincar
-    label = traincar
-    color = #8DA641
 }
 
 room

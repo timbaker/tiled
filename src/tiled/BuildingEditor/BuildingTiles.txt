@@ -17257,9 +17257,9 @@ category
         WestWindow19 = 
         NorthWindow19 = 
     }
-    }
+}
 category
-    {
+{
     label = Trim - Exterior Walls
     name = exterior_wall_trim
     entry
@@ -21721,7 +21721,7 @@ category
         WestWindow19 = walls_interior_detailing_bathroom_03_154
         NorthWindow19 = walls_interior_detailing_bathroom_03_155
     }
-    }
+}
 category
 {
     label = Trim - Interior Walls
@@ -26192,54 +26192,6 @@ category
     name = floors
     entry
     {
-        Floor = floors_exterior_natural_01_008
-    }
-    entry
-    {
-        Floor = floors_exterior_natural_01_009
-    }
-    entry
-    {
-        Floor = floors_exterior_natural_01_010
-    }
-    entry
-    {
-        Floor = floors_exterior_natural_01_011
-    }
-    entry
-    {
-        Floor = floors_exterior_natural_01_012
-    }
-    entry
-    {
-        Floor = floors_exterior_natural_01_014
-    }
-    entry
-    {
-        Floor = floors_exterior_natural_01_016
-    }
-    entry
-    {
-        Floor = floors_exterior_natural_01_017
-    }
-    entry
-    {
-        Floor = floors_exterior_natural_01_018
-    }
-    entry
-    {
-        Floor = floors_exterior_natural_01_019
-    }
-    entry
-    {
-        Floor = floors_exterior_natural_01_020
-    }
-    entry
-    {
-        Floor = floors_exterior_natural_01_021
-    }
-    entry
-    {
         Floor = floors_interior_carpet_01_000
     }
     entry
@@ -26508,14 +26460,6 @@ category
     }
     entry
     {
-        Floor = floors_exterior_street_01_016
-    }
-    entry
-    {
-        Floor = floors_exterior_street_01_017
-    }
-    entry
-    {
         Floor = location_shop_mall_01_020
     }
     entry
@@ -26665,10 +26609,6 @@ category
     entry
     {
         Floor = carpentry_02_058
-    }
-    entry
-    {
-        Floor = floors_exterior_street_01_000
     }
     entry
     {
@@ -26905,6 +26845,30 @@ category
     entry
     {
         Floor = floors_exterior_tilesandstone_01_080
+    }
+    entry
+    {
+        Floor = blends_street_01_000
+    }
+    entry
+    {
+        Floor = blends_street_01_016
+    }
+    entry
+    {
+        Floor = blends_street_01_032
+    }
+    entry
+    {
+        Floor = blends_street_01_048
+    }
+    entry
+    {
+        Floor = blends_street_01_064
+    }
+    entry
+    {
+        Floor = blends_street_01_096
     }
 }
 category
@@ -27805,7 +27769,7 @@ category
         West = fixtures_windows_church_030
         North = fixtures_windows_church_031
     }
-    }
+}
 category
 {
     label = Curtains
@@ -27914,7 +27878,7 @@ category
         East = fixtures_windows_curtains_01_057
         North = fixtures_windows_curtains_01_058
         South = fixtures_windows_curtains_01_059
-}
+    }
     entry
     {
         West = fixtures_windows_curtains_01_060
@@ -28102,7 +28066,7 @@ category
         NorthLeft = fixtures_windows_detailing_01_034
         NorthRight = fixtures_windows_detailing_01_035
     }
-    }
+}
 category
 {
     label = Stairs
@@ -28294,7 +28258,7 @@ category
         NorthDoubleLeft = overlay_grime_wall_01_046
         NorthDoubleRight = overlay_grime_wall_01_047
     }
-    }
+}
 category
 {
     label = Roof Caps
@@ -32990,19 +32954,6 @@ category
     }
     entry
     {
-        West1 = floors_exterior_street_01_017
-        West2 = floors_exterior_street_01_017
-        West3 = floors_exterior_street_01_017
-        North1 = floors_exterior_street_01_017
-        North2 = floors_exterior_street_01_017
-        North3 = floors_exterior_street_01_017
-        offset = West1 -1 -1
-        offset = West2 -2 -2
-        offset = North1 -1 -1
-        offset = North2 -2 -2
-    }
-    entry
-    {
         West1 = floors_interior_tilesandwood_01_017
         West2 = floors_interior_tilesandwood_01_017
         West3 = floors_interior_tilesandwood_01_017
@@ -33137,19 +33088,6 @@ category
         North3 = 
         offset = West1 -1 -1
         offset = West2 -2 -2
-    }
-    entry
-    {
-        West1 = floors_exterior_street_01_016
-        West2 = floors_exterior_street_01_016
-        West3 = floors_exterior_street_01_016
-        North1 = floors_exterior_street_01_016
-        North2 = floors_exterior_street_01_016
-        North3 = floors_exterior_street_01_016
-        offset = West1 -1 -1
-        offset = West2 -2 -2
-        offset = North1 -1 -1
-        offset = North2 -2 -2
     }
     entry
     {
@@ -33328,19 +33266,6 @@ category
         North1 = roofs_04_055
         North2 = roofs_04_055
         North3 = roofs_04_055
-        offset = West1 -1 -1
-        offset = West2 -2 -2
-        offset = North1 -1 -1
-        offset = North2 -2 -2
-    }
-    entry
-    {
-        West1 = floors_exterior_street_01_000
-        West2 = floors_exterior_street_01_000
-        West3 = floors_exterior_street_01_000
-        North1 = floors_exterior_street_01_000
-        North2 = floors_exterior_street_01_000
-        North3 = floors_exterior_street_01_000
         offset = West1 -1 -1
         offset = West2 -2 -2
         offset = North1 -1 -1
@@ -33692,6 +33617,58 @@ category
         North1 = floors_exterior_tilesandstone_01_007
         North2 = floors_exterior_tilesandstone_01_007
         North3 = floors_exterior_tilesandstone_01_007
+        offset = West1 -1 -1
+        offset = West2 -2 -2
+        offset = North1 -1 -1
+        offset = North2 -2 -2
+    }
+    entry
+    {
+        West1 = blends_street_01_016
+        West2 = blends_street_01_016
+        West3 = blends_street_01_016
+        North1 = blends_street_01_016
+        North2 = blends_street_01_016
+        North3 = blends_street_01_016
+        offset = West1 -1 -1
+        offset = West2 -2 -2
+        offset = North1 -1 -1
+        offset = North2 -2 -2
+    }
+    entry
+    {
+        West1 = blends_street_01_048
+        West2 = blends_street_01_048
+        West3 = blends_street_01_048
+        North1 = blends_street_01_048
+        North2 = blends_street_01_048
+        North3 = blends_street_01_048
+        offset = West1 -1 -1
+        offset = West2 -2 -2
+        offset = North1 -1 -1
+        offset = North2 -2 -2
+    }
+    entry
+    {
+        West1 = blends_street_01_064
+        West2 = blends_street_01_064
+        West3 = blends_street_01_064
+        North1 = blends_street_01_064
+        North2 = blends_street_01_064
+        North3 = blends_street_01_064
+        offset = West1 -1 -1
+        offset = West2 -2 -2
+        offset = North1 -1 -1
+        offset = North2 -2 -2
+    }
+    entry
+    {
+        West1 = blends_street_01_096
+        West2 = blends_street_01_096
+        West3 = blends_street_01_096
+        North1 = blends_street_01_096
+        North2 = blends_street_01_096
+        North3 = blends_street_01_096
         offset = West1 -1 -1
         offset = West2 -2 -2
         offset = North1 -1 -1
