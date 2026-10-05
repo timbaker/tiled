@@ -175,6 +175,11 @@ tileset
 }
 tileset
 {
+    file = carpentry_02_on
+    size = 8,16
+}
+tileset
+{
     file = carpentry_03
     size = 8,16
 }

@@ -23,6 +23,13 @@ room
 
 room
 {
+    internal = antiquestore
+    label = antiquestore
+    color = #7585f2
+}
+
+room
+{
     internal = arenakitchen
     label = arenakitchen
     color = #CD91A0
@@ -128,6 +135,20 @@ room
 
 room
 {
+    internal = bank
+    label = bank
+    color = #c59f11
+}
+
+room
+{
+    internal = bankstorage
+    label = bankstorage
+    color = #e5368a
+}
+
+room
+{
     internal = bar
     label = bar
     color = #A61EF6
@@ -166,6 +187,13 @@ room
     internal = barstorage
     label = barstorage
     color = #07099E
+}
+
+room
+{
+    internal = baseballchangeroom
+    label = baseballchangeroom
+    color = #039179
 }
 
 room
@@ -247,6 +275,13 @@ room
 
 room
 {
+    internal = boathouse
+    label = boathouse
+    color = #a215b5
+}
+
+room
+{
     internal = bookstore
     label = bookstore
     color = #29CCF0
@@ -306,6 +341,13 @@ room
     internal = butcher
     label = butcher
     color = #5C18E3
+}
+
+room
+{
+    internal = butcherpork
+    label = butcherpork
+    color = #c66dea
 }
 
 room
@@ -409,6 +451,13 @@ room
 
 room
 {
+    internal = cardfactory
+    label = cardfactory
+    color = #6fb662
+}
+
+room
+{
     internal = carpentryworkshop
     label = carpentryworkshop
     color = #8cc743
@@ -468,6 +517,13 @@ room
     internal = changeroomjockey
     label = changeroomjockey
     color = #2384EB
+}
+
+room
+{
+    internal = chilikitchen
+    label = chilikitchen
+    color = #30ca25
 }
 
 room
@@ -633,6 +689,13 @@ room
 
 room
 {
+    internal = cultistbedroom
+    label = cultistbedroom
+    color = #636BFD
+}
+
+room
+{
     internal = cybercafe
     label = cybercafe
     color = #F98E62
@@ -738,8 +801,8 @@ room
 
 room
 {
-    internal = dining
-    label = dining
+    internal = diningroom
+    label = diningroom
     color = #FB5690
 }
 
@@ -822,7 +885,7 @@ room
 
 room
 {
-    internal = electronicstore
+    internal = electronicsstore
     label = electronicsstore
     color = #55EAE8
 }
@@ -836,8 +899,8 @@ room
 
 room
 {
-    internal = elementaryschool
-    label = elementaryschool
+    internal = elementaryhall
+    label = elementaryhall
     color = #74ae2e
 }
 
@@ -1088,6 +1151,13 @@ room
 
 room
 {
+    internal = guitarfactory
+    label = guitarfactory
+    color = #7af3c8
+}
+
+room
+{
     internal = gunstore
     label = gunstore
     color = #C024D7
@@ -1119,6 +1189,20 @@ room
     internal = hall
     label = hall
     color = #25E4E4
+}
+
+room
+{
+    internal = handlefactory
+    label = handlefactory
+    color = #285c1c
+}
+
+room
+{
+    internal = hingefactory
+    label = hingefactory
+    color = #a18481
 }
 
 room
@@ -1165,6 +1249,13 @@ room
     internal = hospitalhallway
     label = hospitalhallway
     color = #070D24
+}
+
+room
+{
+    internal = hospitalitystorage
+    label = hospitalitystorage
+    color = #963710
 }
 
 room
@@ -1417,6 +1508,13 @@ room
     internal = laboratory
     label = laboratory
     color = #B7B1BD
+}
+
+room
+{
+    internal = lampstore
+    label = lampstore
+    color = #a53d6b
 }
 
 room
@@ -1933,6 +2031,13 @@ room
 
 room
 {
+    internal = prisonkitchen
+    label = prisonkitchen
+    color = #efc2e7
+}
+
+room
+{
     internal = prisonerbelongings
     label = prisonerbelongings
     color = #0cf8c7
@@ -2136,6 +2241,13 @@ room
 
 room
 {
+    internal = sodafactory
+    label = sodafactory
+    color = #6e6f63
+}
+
+room
+{
     internal = sodatruck
     label = sodatruck
     color = #A9DEF1
@@ -2318,6 +2430,13 @@ room
 
 room
 {
+    internal = tofufactory
+    label = tofufactory
+    color = #7c1353
+}
+
+room
+{
     internal = toolstore
     label = toolstore
     color = #95CE25
@@ -2342,6 +2461,20 @@ room
     internal = toystorestorage
     label = toystorestorage
     color = #27C5F6
+}
+
+room
+{
+    internal = traincar
+    label = traincar
+    color = #ad929d
+}
+
+room
+{
+    internal = universityclassroom
+    label = universityclassroom
+    color = #1690f0
 }
 
 room
@@ -2468,6 +2601,13 @@ room
     internal = whittlerworkshop
     label = whittlerworkshop
     color = #2fc975
+}
+
+room
+{
+    internal = windowstore
+    label = windowstore
+    color = #803590
 }
 
 room
