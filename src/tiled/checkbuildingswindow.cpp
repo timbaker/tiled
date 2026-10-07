@@ -20,6 +20,8 @@
 #include "BuildingEditor/buildingroomdef.h"
 #include "BuildingEditor/buildingtemplates.h"
 #include "BuildingEditor/buildingwriter.h"
+#include "BuildingEditor/furnituregroups.h"
+#include "BuildingEditor/simplefile.h"
 
 #include "map.h"
 #include "tile.h"
@@ -44,6 +46,7 @@ CheckBuildingsWindow::CheckBuildingsWindow(QWidget *parent) :
     setAttribute(Qt::WA_DeleteOnClose);
 
     connect(ui->dirBrowse, &QAbstractButton::clicked, this, &CheckBuildingsWindow::browse);
+    connect(ui->buttonBrowseReplaceTiles, &QAbstractButton::clicked, this, &CheckBuildingsWindow::browseReplaceTiles);
     connect(ui->checkNow, &QAbstractButton::clicked, this, qOverload<>(&CheckBuildingsWindow::check));
     connect(ui->buttonFixSelected, &QPushButton::clicked, this, &CheckBuildingsWindow::fixSelected);
     connect(ui->treeWidget, &QTreeWidget::itemActivated, this, &CheckBuildingsWindow::itemActivated);
@@ -57,6 +60,7 @@ CheckBuildingsWindow::CheckBuildingsWindow(QWidget *parent) :
     connect(ui->checkRearrangeGrid, &QCheckBox::clicked, this, qOverload<>(&CheckBuildingsWindow::syncList));
     connect(ui->checkKidsBedroom, &QAbstractButton::clicked, this, qOverload<>(&CheckBuildingsWindow::syncList));
     connect(ui->checkReplaceRoom, &QCheckBox::clicked, this, qOverload<>(&CheckBuildingsWindow::syncList));
+    connect(ui->checkReplaceTiles, &QCheckBox::clicked, this, qOverload<>(&CheckBuildingsWindow::syncList));
 
     ui->dirEdit->setText(BuildingPreferences::instance()->mapsDirectory());
 //    ui->dirEdit->setText(QLatin1String("C:/Users/Tim/Desktop/ProjectZomboid/Buildings"));
@@ -125,8 +129,20 @@ void CheckBuildingsWindow::browse()
     }
 }
 
+void CheckBuildingsWindow::browseReplaceTiles()
+{
+    const QString f = QFileDialog::getOpenFileName(this, tr("Choose Replace-Tiles File"), ui->editReplaceTiles->text(), tr("Text files (*.txt)"));
+    if (!f.isEmpty()) {
+        ui->editReplaceTiles->setText(QDir::toNativeSeparators(f));
+    }
+}
+
 void CheckBuildingsWindow::check()
 {
+    if (!readReplaceTilesTxt()) {
+        return;
+    }
+
     mDirectory = QDir(ui->dirEdit->text());
 
     ui->treeWidget->clear();
@@ -154,6 +170,10 @@ void CheckBuildingsWindow::check()
 void CheckBuildingsWindow::checkNextFile()
 {
     if (mPaused) {
+        return;
+    }
+    if (mFileNames.isEmpty()) {
+        // Stopped.
         return;
     }
     const QString fileName = mFileNames.takeFirst();
@@ -203,6 +223,9 @@ void CheckBuildingsWindow::fixSelected()
         case Issue::Type::ReplaceRoomInternalName:
             fixRoomInternalName(fix.issue);
             break;
+        case Issue::Type::ReplaceTile:
+            fixReplaceTile(fix.issue);
+            break;
         default:
             break;
         }
@@ -228,6 +251,7 @@ void CheckBuildingsWindow::selectionChanged(const QItemSelection &selected, cons
                 case Issue::Type::RearrangeGrid:
                 case Issue::Type::KidsBedroom:
                 case Issue::Type::ReplaceRoomInternalName:
+                case Issue::Type::ReplaceTile:
                     ui->buttonFixSelected->setEnabled(true);
                     break;
                 default:
@@ -245,6 +269,7 @@ void CheckBuildingsWindow::selectionChanged(const QItemSelection &selected, cons
         case Issue::Type::RearrangeGrid:
         case Issue::Type::KidsBedroom:
         case Issue::Type::ReplaceRoomInternalName:
+        case Issue::Type::ReplaceTile:
             ui->buttonFixSelected->setEnabled(true);
             break;
         default:
@@ -305,6 +330,10 @@ void CheckBuildingsWindow::syncList(const IssueFile *file)
             if (issue.type == Issue::DoorInWall && !ui->checkDoorInWall->isChecked())
                 visible = false;
             if (issue.type == Issue::KidsBedroom && !ui->checkKidsBedroom->isChecked())
+                visible = false;
+            if (issue.type == Issue::ReplaceRoomInternalName && !ui->checkReplaceRoom->isChecked())
+                visible = false;
+            if (issue.type == Issue::ReplaceTile && !ui->checkReplaceTiles->isChecked())
                 visible = false;
             QTreeWidgetItem *issueItem = fileItem->child(i);
             issueItem->setHidden(!visible);
@@ -466,6 +495,190 @@ void CheckBuildingsWindow::fixRoomInternalName(const Issue &issue)
     delete building;
 }
 
+void CheckBuildingsWindow::fixReplaceTile(const Issue &issue)
+{
+    BuildingReader reader;
+    Building *building = reader.read(issue.file->path);
+    if (building == nullptr) {
+        QString error = reader.errorString();
+        QMessageBox::warning(this, tr("Error reading building"), error);
+        return;
+    }
+    reader.fix(building);
+
+    FurnitureGroup *missingGroup = nullptr;
+    for (auto *floor : building->floors()) {
+        for (auto *object : floor->objects()) {
+            if (auto *fo = object->asFurniture()) {
+                if (fo->furnitureTile()->owner()->group() == nullptr) {
+                    if (missingGroup == nullptr) {
+                        missingGroup = new FurnitureGroup();
+                        missingGroup->mLabel = tr("MISSING");
+                    }
+                    fo->furnitureTile()->owner()->setGroup(missingGroup);
+                    missingGroup->mTiles += fo->furnitureTile()->owner();
+                }
+            }
+        }
+    }
+
+    QMap<const BuildingTileEntry*, BuildingTileEntry*> doneEntries;
+
+    if (issue.replaceTileInfo.type == ReplaceTileInfo::Type::BuildingTileEntry) {
+        for (int i = 0; i < building->TileCount; i++) {
+            const BuildingTileEntry *bte = building->tile(i);
+            if (BuildingTileEntry *newEntry = doneEntries.value(bte)) {
+                building->setTile(i, newEntry);
+                continue;
+            }
+            if (BuildingTileEntry *newEntry = replaceTileInEntry(bte, issue.replaceTileInfo.tileNameOld, issue.replaceTileInfo.tileNameNew)) {
+                doneEntries.insert(bte, newEntry);
+                building->setTile(i, newEntry);
+            }
+        }
+    }
+
+    if (issue.replaceTileInfo.type == ReplaceTileInfo::Type::RoomTile) {
+        for (Room *room : building->rooms()) {
+            for (int i = 0; i < room->TileCount; i++) {
+                const BuildingTileEntry *bte = room->tile(i);
+                if (BuildingTileEntry *newEntry = doneEntries.value(bte)) {
+                    room->setTile(i, newEntry);
+                    continue;
+                }
+                if (BuildingTileEntry *newEntry = replaceTileInEntry(bte, issue.replaceTileInfo.tileNameOld, issue.replaceTileInfo.tileNameNew)) {
+                    doneEntries.insert(bte, newEntry);
+                    room->setTile(i, newEntry);
+                }
+            }
+        }
+    }
+
+    BuildingFloor *floor = building->floor(issue.z);
+
+    QMap<FurnitureGroup*,FurnitureGroup*> doneFurnitureGroups;
+    QMap<FurnitureTiles*,FurnitureTiles*> doneFurnitureTiles;
+    if (issue.replaceTileInfo.type == ReplaceTileInfo::Type::FurnitureTile) {
+        for (int i = 0; i < floor->objectCount(); i++) {
+            BuildingObject *object = floor->object(i);
+            if (FurnitureObject *fo = object->asFurniture()) {
+                FurnitureTiles *ftiles = fo->furnitureTile()->owner();
+                if (doneFurnitureTiles.contains(ftiles)) {
+                    continue;
+                }
+                if (FurnitureTiles *ftilesNew = replaceTileInFurniture(ftiles, issue.replaceTileInfo.tileNameOld, issue.replaceTileInfo.tileNameNew, doneFurnitureGroups)) {
+                    doneFurnitureTiles.insert(ftiles, ftilesNew);
+                    replaceFurnitureTilesInObjects(building, ftiles, ftilesNew);
+                }
+            }
+        }
+    }
+
+    if (issue.replaceTileInfo.type == ReplaceTileInfo::Type::ObjectTile) {
+        for (int i = 0; i < floor->objectCount(); i++) {
+            BuildingObject *object = floor->object(i);
+            if (object->asFurniture()) {
+                continue;
+            }
+            const QList<BuildingTileEntry*> tiles = object->tiles();
+            for (int j = 0; j < tiles.size(); j++) {
+                BuildingTileEntry *bte = tiles.at(j);
+                if (bte == nullptr || bte->isNone()) {
+                    continue;
+                }
+                if (BuildingTileEntry *newEntry = doneEntries.value(bte)) {
+                    object->setTile(newEntry, j);
+                    continue;
+                }
+                if (BuildingTileEntry *newEntry = replaceTileInEntry(bte, issue.replaceTileInfo.tileNameOld, issue.replaceTileInfo.tileNameNew)) {
+                    doneEntries.insert(bte, newEntry);
+                    object->setTile(newEntry, j);
+                }
+            }
+        }
+    }
+
+    if (issue.replaceTileInfo.type == ReplaceTileInfo::Type::GrimeTile) {
+        const QStringList layerNames = floor->grimeLayers();
+        for (const QString &layerName : layerNames) {
+            FloorTileGrid *tileGrid = floor->grime()[layerName];
+            if (tileGrid->at(issue.x, issue.y) == issue.replaceTileInfo.tileNameOld) {
+                tileGrid->replace(issue.x, issue.y, issue.replaceTileInfo.tileNameNew);
+            }
+        }
+    }
+
+    BuildingWriter w;
+    if (!w.write(building, issue.file->path)) {
+        QString error = w.errorString();
+        QMessageBox::warning(this, tr("Error saving building"), error);
+    }
+    delete building;
+
+    qDeleteAll(doneEntries.values());
+    qDeleteAll(doneFurnitureTiles.values());
+    QSet<FurnitureGroup*> uniqueGroups(doneFurnitureGroups.begin(), doneFurnitureGroups.end());
+    qDeleteAll(uniqueGroups);
+}
+
+BuildingTileEntry *CheckBuildingsWindow::replaceTileInEntry(const BuildingEditor::BuildingTileEntry *bte, const QString &tileOld, const QString &tileNew)
+{
+    BuildingTileEntry *newEntry = nullptr;
+    for (int i = 0; i < bte->tileCount(); i++) {
+        if (BuildingTile *bt = bte->tile(i)) {
+            if (bt->name() == tileOld) {
+                if (newEntry == nullptr) {
+                    newEntry = bte->createCopy(bte->category());
+                }
+                BuildingTile *bt2 = BuildingTilesMgr::instance()->get(tileNew);
+                newEntry->setTile(i, bt2);
+            }
+        }
+    }
+    return newEntry;
+}
+
+BuildingEditor::FurnitureTiles *CheckBuildingsWindow::replaceTileInFurniture(const BuildingEditor::FurnitureTiles *ftiles, const QString &tileOld, const QString &tileNew, QMap<BuildingEditor::FurnitureGroup*,BuildingEditor::FurnitureGroup*> &doneFurnitureGroups)
+{
+    FurnitureGroup *newGroup = doneFurnitureGroups.value(ftiles->group());
+    FurnitureTiles *newTiles = nullptr;
+    const int index = ftiles->group()->indexOf(ftiles);
+    for (FurnitureTile *ftile : ftiles->tiles()) {
+        for (int y = 0; y < ftile->size().height(); y++) {
+            for (int x = 0; x < ftile->size().width(); x++) {
+                if (BuildingTile *btile = ftile->tile(x, y)) {
+                    if (btile->name() == tileOld) {
+                        if (newTiles == nullptr) {
+                            if (newGroup == nullptr) {
+                                newGroup = ftiles->group()->createCopy();
+                                doneFurnitureGroups.insert(ftiles->group(), newGroup);
+                                doneFurnitureGroups.insert(newGroup, newGroup);
+                            }
+                            newTiles = newGroup->tiles(index);
+                        }
+                        BuildingTile *bt2 = BuildingTilesMgr::instance()->get(tileNew);
+                        newTiles->tile(ftile->orient())->setTile(x, y, bt2);
+                    }
+                }
+            }
+        }
+    }
+    return newTiles;
+}
+
+void CheckBuildingsWindow::replaceFurnitureTilesInObjects(BuildingEditor::Building *building, BuildingEditor::FurnitureTiles *ftilesOld, BuildingEditor::FurnitureTiles *ftilesNew)
+{
+    for (BuildingFloor *floor : building->floors()) {
+        for (BuildingObject *object : floor->objects()) {
+            if (FurnitureObject *fo = object->asFurniture()) {
+                if (fo->furnitureTile()->owner() == ftilesOld) {
+                    fo->setFurnitureTile(ftilesNew->tile(fo->furnitureTile()->orient()));
+                }
+            }
+        }
+    }
+}
+
 void CheckBuildingsWindow::check(const QString &filePath)
 {
     RearrangeTiles::instance()->readTxtIfNeeded();
@@ -518,12 +731,36 @@ void CheckBuildingsWindow::check(BuildingMap *bmap, Building *building, Map *map
     bool interiorFloor = false;
     MapInfo *mapInfo = MapManager::instance()->newFromMap(map);
     MapComposite mc(mapInfo);
+
+    if (!mReplaceTileLookup.isEmpty()) {
+        for (const BuildingTileEntry *bte : building->tiles()) {
+            for (int i = 0; i < bte->tileCount(); i++) {
+                if (BuildingTile *bt = bte->tile(i)) {
+                    if (mReplaceTileLookup.contains(bt->name())) {
+                        issue(ReplaceTileInfo(ReplaceTileInfo::Type::BuildingTileEntry, bt->name(), mReplaceTileLookup.value(bt->name())));
+                    }
+                }
+            }
+        }
+        for (const Room *room : building->rooms()) {
+            for (const BuildingTileEntry * bte : room->tiles()) {
+                for (int i = 0; i < bte->tileCount(); i++) {
+                    if (BuildingTile *bt = bte->tile(i)) {
+                        if (mReplaceTileLookup.contains(bt->name())) {
+                            issue(ReplaceTileInfo(ReplaceTileInfo::Type::RoomTile, bt->name(), mReplaceTileLookup.value(bt->name())));
+                        }
+                    }
+                }
+            }
+        }
+    }
+
     for (BuildingFloor *floor : building->floors()) {
-        int z = floor->level();
+        const int z = floor->level();
         QSet<Room*> roomWithSwitch;
         QSet<Room*> roomWithSink;
         for (BuildingObject *bo : floor->objects()) {
-            int x = bo->x(), y = bo->y();
+            const int x = bo->x(), y = bo->y();
             if (FurnitureObject *fo = bo->asFurniture()) {
                 for (BuildingTile *btile : fo->buildingTiles()) {
                     if (btile->mTilesetName == QLatin1String("fixtures_sinks_01")) {
@@ -572,6 +809,19 @@ void CheckBuildingsWindow::check(BuildingMap *bmap, Building *building, Map *map
                                 roomWithSwitch |= room;
                         }
                         break;
+                    }
+                    if (!mReplaceTileLookup.isEmpty()) {
+                        if (mReplaceTileLookup.contains(btile->name())) {
+                            issue(x, y, z, ReplaceTileInfo(ReplaceTileInfo::Type::FurnitureTile, btile->name(), mReplaceTileLookup.value(btile->name())));
+                        }
+                    }
+                }
+            } else {
+                if (!mReplaceTileLookup.isEmpty()) {
+                    for (BuildingTile *btile : bo->buildingTiles()) {
+                        if (mReplaceTileLookup.contains(btile->name())) {
+                            issue(x, y, z, ReplaceTileInfo(ReplaceTileInfo::Type::ObjectTile, btile->name(), mReplaceTileLookup.value(btile->name())));
+                        }
                     }
                 }
             }
@@ -709,6 +959,12 @@ void CheckBuildingsWindow::check(BuildingMap *bmap, Building *building, Map *map
                     if (RearrangeTiles::instance()->isRearranged(*tileGrid, x, y)) {
                         issue(Issue::RearrangeGrid, tr("RearrangeGrid"), x, y, z);
                     }
+                    if (!mReplaceTileLookup.isEmpty()) {
+                        const QString tileName = tileGrid->at(x, y);
+                        if (mReplaceTileLookup.contains(tileName)) {
+                            issue(x, y, z, ReplaceTileInfo(ReplaceTileInfo::Type::GrimeTile, tileName, mReplaceTileLookup.value(tileName)));
+                        }
+                    }
                 }
             }
         }
@@ -756,6 +1012,16 @@ void CheckBuildingsWindow::issue(Issue::Type type, const QRegion &roomRegion, in
 void CheckBuildingsWindow::issue(Issue::Type type, const QString &roomNameOld, const QString &roomNameNew, const QRegion &roomRegion, int z)
 {
     mCurrentIssueFile->issues += Issue(mCurrentIssueFile, type, roomNameOld, roomNameNew, roomRegion, z);
+}
+
+void CheckBuildingsWindow::issue(int x, int y, int z, const ReplaceTileInfo &replaceTileInfo)
+{
+    mCurrentIssueFile->issues += Issue(mCurrentIssueFile, x, y, z, replaceTileInfo);
+}
+
+void CheckBuildingsWindow::issue(const ReplaceTileInfo &replaceTileInfo)
+{
+    mCurrentIssueFile->issues += Issue(mCurrentIssueFile, replaceTileInfo);
 }
 
 void CheckBuildingsWindow::updateList(CheckBuildingsWindow::IssueFile *file)
@@ -835,6 +1101,43 @@ void CheckBuildingsWindow::selectNone()
     ui->treeWidget->clearSelection();
 }
 
+bool CheckBuildingsWindow::readReplaceTilesTxt()
+{
+    mReplaceTileLookup.clear();
+    const QString fileName = ui->editReplaceTiles->text().trimmed();
+    if (fileName.isEmpty()) {
+        return true;
+    }
+    SimpleFile file;
+    if (!file.read(fileName)) {
+        QMessageBox::StandardButton result = QMessageBox::question(this, tr("Replace Tiles Error"), file.errorString() + tr("\nContinue anyway?"));
+        return result == QMessageBox::StandardButton::Yes;
+    }
+    for (const SimpleFileKeyValue &kv : std::as_const(file.values)) {
+        if (kv.name.trimmed() == tr("version")) {
+            continue;
+        }
+        QString tileNameOld = kv.name.trimmed();
+        QString tileNameNew = kv.value.trimmed();
+        QString tilesetNameOld;
+        int tileIndexOld;
+        if (!BuildingTilesMgr::parseTileName(tileNameOld, tilesetNameOld, tileIndexOld)) {
+            QMessageBox::StandardButton result = QMessageBox::question(this, tr("Replace Tiles Error"), tr("Invalid tile \"%1\"\n while reading %2\n\nContinue anyway?").arg(tileNameOld).arg(QDir::toNativeSeparators(fileName)));
+            return result == QMessageBox::StandardButton::Yes;
+        }
+        QString tilesetNameNew;
+        int tileIndexNew;
+        if (!BuildingTilesMgr::parseTileName(tileNameNew, tilesetNameNew, tileIndexNew)) {
+            QMessageBox::StandardButton result = QMessageBox::question(this, tr("Replace Tiles Error"), tr("Invalid tile \"%1\"\n while reading %2\n\nContinue anyway?").arg(tileNameNew).arg(QDir::toNativeSeparators(fileName)));
+            return result == QMessageBox::StandardButton::Yes;
+        }
+        tileNameOld = BuildingTilesMgr::nameForTile(tilesetNameOld, tileIndexOld);
+        tileNameNew = BuildingTilesMgr::nameForTile(tilesetNameNew, tileIndexNew);
+        mReplaceTileLookup.insert(tileNameOld, tileNameNew);
+    }
+    return true;
+}
+
 CheckBuildingsWindow::Issue::Issue(IssueFile *file, Type type, const QString &detail, BuildingObject *object) :
     file(file),
     type(type),
@@ -844,4 +1147,28 @@ CheckBuildingsWindow::Issue::Issue(IssueFile *file, Type type, const QString &de
     z(object->floor()->level()),
     objectIndex(object->index())
 {
+}
+
+QString CheckBuildingsWindow::Issue::toString()
+{
+    if (type == Type::ReplaceRoomInternalName) {
+        return QStringLiteral("%1 : %2 -> %3 @ %4,%5,%6").arg(detail).arg(roomNameOld).arg(roomNameNew).arg(x).arg(y).arg(z);
+    }
+    if (type == Type::ReplaceTile) {
+        switch (replaceTileInfo.type) {
+        case ReplaceTileInfo::Type::BuildingTileEntry:
+            return QStringLiteral("replace (building) : %2 -> %3").arg(replaceTileInfo.tileNameOld).arg(replaceTileInfo.tileNameNew);
+        case ReplaceTileInfo::Type::RoomTile:
+            return QStringLiteral("replace (room) : %2 -> %3").arg(replaceTileInfo.tileNameOld).arg(replaceTileInfo.tileNameNew);
+        case ReplaceTileInfo::Type::FurnitureTile:
+            return QStringLiteral("replace (furniture) : %2 -> %3").arg(replaceTileInfo.tileNameOld).arg(replaceTileInfo.tileNameNew);
+        case ReplaceTileInfo::Type::ObjectTile:
+            return QStringLiteral("replace (object) : %2 -> %3").arg(replaceTileInfo.tileNameOld).arg(replaceTileInfo.tileNameNew);
+        case ReplaceTileInfo::Type::GrimeTile:
+            return QStringLiteral("replace (user-drawn) : %2 -> %3 @ %4,%5,%6").arg(replaceTileInfo.tileNameOld).arg(replaceTileInfo.tileNameNew).arg(x).arg(y).arg(z);
+        default:
+            return QStringLiteral("replace (???) : %2 -> %3 @ %4,%5,%6").arg(replaceTileInfo.tileNameOld).arg(replaceTileInfo.tileNameNew).arg(x).arg(y).arg(z);
+        }
+    }
+    return QString::fromLatin1("%1 @ %2,%3,%4").arg(detail).arg(x).arg(y).arg(z);
 }

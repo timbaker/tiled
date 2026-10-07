@@ -17,6 +17,9 @@ class Building;
 class BuildingFloor;
 class BuildingObject;
 class BuildingMap;
+class BuildingTileEntry;
+class FurnitureGroup;
+class FurnitureTiles;
 class Room;
 }
 
@@ -34,6 +37,7 @@ class CheckBuildingsWindow;
 
 class QTreeWidgetItem;
 
+
 class CheckBuildingsWindow : public QMainWindow
 {
     Q_OBJECT
@@ -44,6 +48,7 @@ public:
 
 private slots:
     void browse();
+    void browseReplaceTiles();
     void check();
     void checkNextFile();
     void fixSelected();
@@ -59,6 +64,39 @@ private slots:
 
 private:
     class IssueFile;
+
+    class ReplaceTileInfo
+    {
+    public:
+        enum class Type
+        {
+            None,
+            BuildingTileEntry,
+            RoomTile,
+            FurnitureTile,
+            ObjectTile,
+            GrimeTile,
+        };
+
+        ReplaceTileInfo() :
+            type(Type::None)
+        {
+
+        }
+
+        ReplaceTileInfo(const Type type, const QString &tileNameOld, const QString &tileNameNew) :
+            type(type),
+            tileNameOld(tileNameOld),
+            tileNameNew(tileNameNew)
+        {
+
+        }
+
+        Type type;
+        QString tileNameOld;
+        QString tileNameNew;
+    };
+
 
     class Issue
     {
@@ -76,6 +114,7 @@ private:
             DoorInWall,
             KidsBedroom,
             ReplaceRoomInternalName,
+            ReplaceTile,
         };
 
         Issue(IssueFile *file, Type type, const QString &detail, int x, int y, int z) :
@@ -120,14 +159,33 @@ private:
 
         }
 
-        QString toString()
+        Issue(IssueFile *file, int x, int y, int z, const ReplaceTileInfo &replaceTileInfo) :
+            file(file),
+            type(Type::ReplaceTile),
+            detail(QStringLiteral("replace")),
+            x(x),
+            y(y),
+            z(z),
+            objectIndex(-1),
+            replaceTileInfo(replaceTileInfo)
         {
-            if (type == Type::ReplaceRoomInternalName) {
 
-                return QStringLiteral("%1 : %2 -> %3 @ %4,%5,%6").arg(detail).arg(roomNameOld).arg(roomNameNew).arg(x).arg(y).arg(z);
-            }
-            return QString::fromLatin1("%1 @ %2,%3,%4").arg(detail).arg(x).arg(y).arg(z);
         }
+
+        Issue(IssueFile *file, const ReplaceTileInfo &replaceTileInfo) :
+            file(file),
+            type(Type::ReplaceTile),
+            detail(QStringLiteral("replace")),
+            x(-1),
+            y(-1),
+            z(-1),
+            objectIndex(-1),
+            replaceTileInfo(replaceTileInfo)
+        {
+
+        }
+
+        QString toString();
 
         IssueFile *file;
         Type type;
@@ -139,6 +197,7 @@ private:
         QRegion roomRegion;
         QString roomNameOld;
         QString roomNameNew;
+        ReplaceTileInfo replaceTileInfo;
     };
 
     class IssueFile
@@ -165,6 +224,7 @@ private:
         }
     };
 
+    bool readReplaceTilesTxt();
     void check(const QString &filePath);
     void check(BuildingEditor::BuildingMap *bmap, BuildingEditor::Building *building, Tiled::Map *map, const QString &fileName);
     void issue(Issue::Type type, const QString &detail, int x, int y, int z);
@@ -172,6 +232,8 @@ private:
     void issue(Issue::Type type, const char *detail, BuildingEditor::BuildingObject *object);
     void issue(Issue::Type type, const QRegion &roomRegion, int z);
     void issue(Issue::Type type, const QString &roomNameOld, const QString &roomNameNew, const QRegion &roomRegion, int z);
+    void issue(int x, int y, int z, const ReplaceTileInfo &replaceTileInfo);
+    void issue(const ReplaceTileInfo &replaceTileInfo);
     void updateList(IssueFile *file);
     void syncList(const IssueFile *file);
 
@@ -185,6 +247,11 @@ private:
 
     void checkRoomInternalName(BuildingEditor::BuildingFloor *floor, BuildingEditor::Room *room);
     void fixRoomInternalName(const Issue &issue);
+
+    void fixReplaceTile(const Issue &issue);
+    BuildingEditor::BuildingTileEntry *replaceTileInEntry(const BuildingEditor::BuildingTileEntry *bte, const QString &tileOld, const QString &tileNew);
+    BuildingEditor::FurnitureTiles *replaceTileInFurniture(const BuildingEditor::FurnitureTiles *ftiles, const QString &tileOld, const QString &tileNew, QMap<BuildingEditor::FurnitureGroup*,BuildingEditor::FurnitureGroup*> &doneFurnitureGroups);
+    void replaceFurnitureTilesInObjects(BuildingEditor::Building *building, BuildingEditor::FurnitureTiles *ftilesOld, BuildingEditor::FurnitureTiles *ftilesNew);
 
 private:
     Ui::CheckBuildingsWindow *ui;
@@ -200,6 +267,7 @@ private:
     QSet<QString> mChangedFiles;
     QTimer mChangedFilesTimer;
     QStringList mKidsBedroomTiles;
+    QMap<QString, QString> mReplaceTileLookup;
 };
 
 #endif // CHECKBUILDINGSWINDOW_H

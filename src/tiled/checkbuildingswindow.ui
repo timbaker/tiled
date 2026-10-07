@@ -152,17 +152,17 @@
     </item>
     <item row="6" column="0">
      <layout class="QGridLayout" name="gridLayout_2">
-      <item row="4" column="0">
-       <widget class="QCheckBox" name="checkKidsBedroom">
+      <item row="1" column="0">
+       <widget class="QCheckBox" name="checkSwitches">
         <property name="text">
-         <string>Kids Bedroom</string>
+         <string>Light switches</string>
         </property>
        </widget>
       </item>
-      <item row="3" column="1">
-       <widget class="QCheckBox" name="check2x">
+      <item row="5" column="0">
+       <widget class="QCheckBox" name="checkContainers">
         <property name="text">
-         <string>Rearrange.txt</string>
+         <string>Overlapping Containers</string>
         </property>
        </widget>
       </item>
@@ -187,34 +187,6 @@
         </property>
        </widget>
       </item>
-      <item row="5" column="0">
-       <widget class="QCheckBox" name="checkContainers">
-        <property name="text">
-         <string>Overlapping Containers</string>
-        </property>
-       </widget>
-      </item>
-      <item row="2" column="1">
-       <widget class="QCheckBox" name="checkGrime">
-        <property name="text">
-         <string>Grime</string>
-        </property>
-       </widget>
-      </item>
-      <item row="4" column="1">
-       <widget class="QCheckBox" name="checkRearrangeGrid">
-        <property name="text">
-         <string>RearrangeGrid.txt</string>
-        </property>
-       </widget>
-      </item>
-      <item row="1" column="0">
-       <widget class="QCheckBox" name="checkSwitches">
-        <property name="text">
-         <string>Light switches</string>
-        </property>
-       </widget>
-      </item>
       <item row="2" column="0">
        <widget class="QCheckBox" name="checkRoomLight">
         <property name="text">
@@ -222,7 +194,14 @@
         </property>
        </widget>
       </item>
-      <item row="6" column="0" colspan="2">
+      <item row="3" column="1">
+       <widget class="QCheckBox" name="check2x">
+        <property name="text">
+         <string>Rearrange.txt</string>
+        </property>
+       </widget>
+      </item>
+      <item row="7" column="0" colspan="2">
        <layout class="QHBoxLayout" name="replaceRoomDefLayout">
         <item>
          <widget class="QCheckBox" name="checkReplaceRoom">
@@ -242,6 +221,48 @@
          <widget class="QLineEdit" name="editRoomNew">
           <property name="placeholderText">
            <string>new room internal name</string>
+          </property>
+         </widget>
+        </item>
+       </layout>
+      </item>
+      <item row="2" column="1">
+       <widget class="QCheckBox" name="checkGrime">
+        <property name="text">
+         <string>Grime</string>
+        </property>
+       </widget>
+      </item>
+      <item row="4" column="1">
+       <widget class="QCheckBox" name="checkRearrangeGrid">
+        <property name="text">
+         <string>RearrangeGrid.txt</string>
+        </property>
+       </widget>
+      </item>
+      <item row="4" column="0">
+       <widget class="QCheckBox" name="checkKidsBedroom">
+        <property name="text">
+         <string>Kids Bedroom</string>
+        </property>
+       </widget>
+      </item>
+      <item row="6" column="0" colspan="2">
+       <layout class="QHBoxLayout" name="replaceTileLayout">
+        <item>
+         <widget class="QCheckBox" name="checkReplaceTiles">
+          <property name="text">
+           <string>Replace Tiles</string>
+          </property>
+         </widget>
+        </item>
+        <item>
+         <widget class="QLineEdit" name="editReplaceTiles"/>
+        </item>
+        <item>
+         <widget class="QToolButton" name="buttonBrowseReplaceTiles">
+          <property name="text">
+           <string>...</string>
           </property>
          </widget>
         </item>
