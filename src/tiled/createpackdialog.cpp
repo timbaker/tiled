@@ -57,7 +57,7 @@ CreatePackDialog::CreatePackDialog(QWidget *parent) :
     tb2->addAction(ui->actionRemoveTileDef);
     ui->tileDefToolbarLayout->addWidget(tb2);
 
-    connect(ui->packNameEdit, &QLineEdit::textChanged, this, &CreatePackDialog::syncUI);
+    connect(ui->packNameEdit, &QComboBox::editTextChanged, this, &CreatePackDialog::syncUI);
     connect(ui->packNameBrowse, &QAbstractButton::clicked, this, &CreatePackDialog::savePackAs);
     connect(ui->actionAddDirectory, &QAction::triggered, this, &CreatePackDialog::addDirectory);
     connect(ui->actionRemoveDirectory, &QAction::triggered, this, &CreatePackDialog::removeDirectory);
@@ -75,6 +75,7 @@ CreatePackDialog::CreatePackDialog(QWidget *parent) :
     connect(ui->jumboX, &QSpinBox::valueChanged, this, &CreatePackDialog::tileSizeChangedX);
     connect(ui->jumboY, &QSpinBox::valueChanged, this, &CreatePackDialog::tileSizeChangedY);
 #endif
+    connect(ui->buttonBox->button(QDialogButtonBox::StandardButton::Apply), &QAbstractButton::clicked, this, &CreatePackDialog::apply);
 
     ui->texSizeCombo->setCurrentIndex(1);
 
@@ -90,7 +91,9 @@ CreatePackDialog::~CreatePackDialog()
 
 void CreatePackDialog::settingsToUI(const TexturePackSettings &settings)
 {
-    ui->packNameEdit->setText(QDir::toNativeSeparators(settings.mPackFileName));
+    const QString packFileName = QDir::toNativeSeparators(settings.mPackFileName);
+    addComboItemIfAbsent(ui->packNameEdit, packFileName);
+    ui->packNameEdit->setCurrentText(packFileName);
 
     ui->dirList->clear();
     for (const TexturePackSettings::Directory &tpd : settings.mInputImageDirectories) {
@@ -134,7 +137,7 @@ void CreatePackDialog::settingsFromUI(TexturePackSettings &settings)
     else
         settings.mOutputImageSize = QSize(1024, 1024);
     settings.mScale50 = ui->scale50->isChecked();
-    settings.mPackFileName = ui->packNameEdit->text();
+    settings.mPackFileName = ui->packNameEdit->currentText();
     settings.padding = 2;
 
     for (int i = 0; i < ui->tileDefList->count(); i++) {
@@ -146,12 +149,14 @@ void CreatePackDialog::settingsFromUI(TexturePackSettings &settings)
 void CreatePackDialog::savePackAs()
 {
     QString fileName = QFileDialog::getSaveFileName(this, tr("Save .pack file As"),
-                                                ui->packNameEdit->text(),
+                                                ui->packNameEdit->currentText(),
                                                 QLatin1String("PZ .pack files (*.pack)"));
     if (fileName.isEmpty())
         return;
 
-    ui->packNameEdit->setText(QDir::toNativeSeparators(fileName));
+    const QString packFileName = QDir::toNativeSeparators(fileName);
+    addComboItemIfAbsent(ui->packNameEdit, packFileName);
+    ui->packNameEdit->setCurrentText(packFileName);
     syncUI();
 }
 
@@ -202,7 +207,7 @@ void CreatePackDialog::syncUI()
     QList<QListWidgetItem*> items = ui->dirList->selectedItems();
     ui->actionRemoveDirectory->setEnabled(items.size() == 1);
     ui->btnSave->setEnabled(!mSettingsFileName.isEmpty());
-    ui->buttonBox->button(QDialogButtonBox::Ok)->setEnabled(!ui->packNameEdit->text().isEmpty());
+    ui->buttonBox->button(QDialogButtonBox::Ok)->setEnabled(!ui->packNameEdit->currentText().isEmpty());
 
     if (items.size() == 1) {
         ui->jumboX->setEnabled(true);
@@ -277,7 +282,7 @@ void CreatePackDialog::saveSettingsAs()
 {
     QString suggested = mSettingsFileName;
     if (suggested.isEmpty()) {
-        suggested = ui->packNameEdit->text();
+        suggested = ui->packNameEdit->currentText();
         if (!suggested.isEmpty()) {
             QFileInfo fileInfo(suggested);
             suggested = fileInfo.absolutePath() + QLatin1String("/") +  fileInfo.baseName() + QLatin1String(".txt");
@@ -322,6 +327,13 @@ void CreatePackDialog::accept()
     QDialog::accept();
 }
 
+void CreatePackDialog::apply()
+{
+    const QString packFileName = QDir::toNativeSeparators(ui->packNameEdit->currentText());
+    addComboItemIfAbsent(ui->packNameEdit, packFileName);
+    writeSettings();
+}
+
 void CreatePackDialog::readSettings()
 {
     QSettings settings;
@@ -329,6 +341,9 @@ void CreatePackDialog::readSettings()
     QByteArray geom = settings.value(QLatin1String("geometry")).toByteArray();
     if (!geom.isEmpty())
         restoreGeometry(geom);
+    for (const QString &packFileName : settings.value(QStringLiteral("recentFiles")).toStringList()) {
+        addComboItemIfAbsent(ui->packNameEdit, packFileName);
+    }
     QString fileName = settings.value(QLatin1String("file")).toString();
     PackSettingsFile file;
     if (!fileName.isEmpty() && file.read(fileName)) {
@@ -345,7 +360,25 @@ void CreatePackDialog::writeSettings()
     settings.beginGroup(QLatin1String("CreatePackDialog"));
     settings.setValue(QLatin1String("geometry"), saveGeometry());
     settings.setValue(QLatin1String("file"), mSettingsFileName);
+    settings.setValue(QStringLiteral("recentFiles"), comboboxStringList(ui->packNameEdit));
     settings.endGroup();
+}
+
+void CreatePackDialog::addComboItemIfAbsent(QComboBox *comboBox, const QString &text)
+{
+    int index = comboBox->findText(text);
+    if (index == -1) {
+        comboBox->insertItem(0, text);
+    }
+}
+
+QStringList CreatePackDialog::comboboxStringList(QComboBox *comboBox) const
+{
+    QStringList items;
+    for (int i = 0; i < comboBox->count(); i++) {
+        items << comboBox->itemText(i);
+    }
+    return items;
 }
 
 /////

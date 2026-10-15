@@ -23,6 +23,8 @@
 #include <QCoreApplication>
 #include <QDialog>
 
+class QComboBox;
+
 namespace Ui {
 class CreatePackDialog;
 }
@@ -64,6 +66,8 @@ private:
     void settingsFromUI(TexturePackSettings &settings);
     void readSettings();
     void writeSettings();
+    void addComboItemIfAbsent(QComboBox *comboBox, const QString &text);
+    QStringList comboboxStringList(QComboBox *comboBox) const;
 
 private slots:
     void savePackAs();
@@ -79,7 +83,8 @@ private slots:
     void saveSettings();
     void saveSettingsAs();
 
-    void accept();
+    void accept() override;
+    void apply();
 
 private:
     Ui::CreatePackDialog *ui;
