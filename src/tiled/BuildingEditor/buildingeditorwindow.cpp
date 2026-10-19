@@ -243,6 +243,9 @@ void EditorWindowPerDocumentStuff::viewAddedForDocument(BuildingIsoView *view)
 void EditorWindowPerDocumentStuff::focusOn(int x, int y, int z, int objectIndex)
 {
     toIsoObject();
+    if (x == -1 && y == -1 && z == -1) {
+        return;
+    }
     BuildingFloor *floor = document()->building()->floor(z);
     if (document()->currentFloor() != floor)
         document()->setCurrentFloor(floor);

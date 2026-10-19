@@ -450,21 +450,14 @@ QString CheckBuildingsWindow::kidsBedroomName(Room *roomOld)
     return QStringLiteral("Kids %1").arg(roomOld->Name);
 }
 
-void CheckBuildingsWindow::checkRoomInternalName(BuildingEditor::BuildingFloor *floor, BuildingEditor::Room *room)
+void CheckBuildingsWindow::checkRoomInternalName(BuildingEditor::Room *room)
 {
     const QString roomNameOld = ui->editRoomOld->text().trimmed();
     if (room->internalName != roomNameOld) {
         return;
     }
-    BuildingRoomDefecator rd(floor, room);
-    rd.defecate();
-    if (rd.mRegions.isEmpty()) {
-        return;
-    }
     const QString roomNameNew = ui->editRoomNew->text().trimmed();
-    for (const QRegion& roomRegion : std::as_const(rd.mRegions)) {
-        issue(Issue::ReplaceRoomInternalName, roomNameOld, roomNameNew, roomRegion, floor->level());
-    }
+    issue(Issue::ReplaceRoomInternalName, roomNameOld, roomNameNew, room->Name);
 }
 
 void CheckBuildingsWindow::fixRoomInternalName(const Issue &issue)
@@ -478,9 +471,14 @@ void CheckBuildingsWindow::fixRoomInternalName(const Issue &issue)
     }
     reader.fix(building);
 
-    BuildingFloor *floor = building->floor(issue.z);
-    Room *room = floor->GetRoomAt(issue.roomRegion.cbegin()->topLeft());
-    if (room == nullptr || room->internalName != issue.roomNameOld) {
+    Room *room = nullptr;
+    for (Room *room1 : building->rooms()) {
+        if (room1->Name == issue.nonInternalName && room1->internalName == issue.roomNameOld) {
+            room = room1;
+            break;
+        }
+    }
+    if (room == nullptr) {
         QMessageBox::warning(this, tr("Rename Room"), tr("Room '%1' not found").arg(issue.roomNameOld));
         delete building;
         return;
@@ -978,8 +976,17 @@ void CheckBuildingsWindow::check(BuildingMap *bmap, Building *building, Map *map
 
         for (Room *room : building->rooms()) {
             checkKidsBedroom(floor, layers, room);
-            checkRoomInternalName(floor, room);
         }
+    }
+
+    QSet<QString> replaceRoomNonInternalNames;
+    const QString roomNameOld = ui->editRoomOld->text().trimmed();
+    for (Room *room : building->rooms()) {
+        if (room->internalName != roomNameOld || replaceRoomNonInternalNames.contains(room->Name)) {
+            continue;
+        }
+        replaceRoomNonInternalNames += room->Name;
+        checkRoomInternalName(room);
     }
 
     delete mapInfo;
@@ -1009,9 +1016,9 @@ void CheckBuildingsWindow::issue(Issue::Type type, const QRegion &roomRegion, in
     mCurrentIssueFile->issues += Issue(mCurrentIssueFile, type, roomRegion, z);
 }
 
-void CheckBuildingsWindow::issue(Issue::Type type, const QString &roomNameOld, const QString &roomNameNew, const QRegion &roomRegion, int z)
+void CheckBuildingsWindow::issue(Issue::Type type, const QString &roomNameOld, const QString &roomNameNew, const QString &nonInternalName)
 {
-    mCurrentIssueFile->issues += Issue(mCurrentIssueFile, type, roomNameOld, roomNameNew, roomRegion, z);
+    mCurrentIssueFile->issues += Issue(mCurrentIssueFile, type, roomNameOld, roomNameNew, nonInternalName);
 }
 
 void CheckBuildingsWindow::issue(int x, int y, int z, const ReplaceTileInfo &replaceTileInfo)
@@ -1152,7 +1159,7 @@ CheckBuildingsWindow::Issue::Issue(IssueFile *file, Type type, const QString &de
 QString CheckBuildingsWindow::Issue::toString()
 {
     if (type == Type::ReplaceRoomInternalName) {
-        return QStringLiteral("%1 : %2 -> %3 @ %4,%5,%6").arg(detail).arg(roomNameOld).arg(roomNameNew).arg(x).arg(y).arg(z);
+        return QStringLiteral("%1 : %2 / %3 -> %2 / %4 ").arg(detail).arg(nonInternalName).arg(roomNameOld).arg(roomNameNew);
     }
     if (type == Type::ReplaceTile) {
         switch (replaceTileInfo.type) {

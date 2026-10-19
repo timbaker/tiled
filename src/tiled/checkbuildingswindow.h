@@ -144,17 +144,18 @@ private:
 
         Issue(IssueFile *file, Type type, const QString &detail, BuildingEditor::BuildingObject *object);
 
-        Issue(IssueFile *file, Type type, const QString &roomNameOld, const QString &roomNameNew, const QRegion &roomRegion, int z) :
+        Issue(IssueFile *file, Type type, const QString &roomNameOld, const QString &roomNameNew, const QString &nonInternalName) :
             file(file),
             type(type),
             detail(QStringLiteral("room name")),
-            x(roomRegion.cbegin()->x()),
-            y(roomRegion.cbegin()->y()),
-            z(z),
+            x(-1),
+            y(-1),
+            z(-1),
             objectIndex(-1),
-            roomRegion(roomRegion),
+            roomRegion(),
             roomNameOld(roomNameOld),
-            roomNameNew(roomNameNew)
+            roomNameNew(roomNameNew),
+            nonInternalName(nonInternalName)
         {
 
         }
@@ -197,6 +198,7 @@ private:
         QRegion roomRegion;
         QString roomNameOld;
         QString roomNameNew;
+        QString nonInternalName;
         ReplaceTileInfo replaceTileInfo;
     };
 
@@ -231,7 +233,7 @@ private:
     void issue(Issue::Type type, const char *detail, int x, int y, int z);
     void issue(Issue::Type type, const char *detail, BuildingEditor::BuildingObject *object);
     void issue(Issue::Type type, const QRegion &roomRegion, int z);
-    void issue(Issue::Type type, const QString &roomNameOld, const QString &roomNameNew, const QRegion &roomRegion, int z);
+    void issue(Issue::Type type, const QString &roomNameOld, const QString &roomNameNew, const QString &nonInternalName);
     void issue(int x, int y, int z, const ReplaceTileInfo &replaceTileInfo);
     void issue(const ReplaceTileInfo &replaceTileInfo);
     void updateList(IssueFile *file);
@@ -245,7 +247,7 @@ private:
     BuildingEditor::Room *findExistingKidsBedroom(BuildingEditor::Building *building, BuildingEditor::Room *roomOld);
     QString kidsBedroomName(BuildingEditor::Room *roomOld);
 
-    void checkRoomInternalName(BuildingEditor::BuildingFloor *floor, BuildingEditor::Room *room);
+    void checkRoomInternalName(BuildingEditor::Room *room);
     void fixRoomInternalName(const Issue &issue);
 
     void fixReplaceTile(const Issue &issue);
