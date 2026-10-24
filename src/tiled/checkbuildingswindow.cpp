@@ -479,7 +479,6 @@ void CheckBuildingsWindow::fixRoomInternalName(const Issue &issue)
         }
     }
     if (room == nullptr) {
-        QMessageBox::warning(this, tr("Rename Room"), tr("Room '%1' not found").arg(issue.roomNameOld));
         delete building;
         return;
     }
