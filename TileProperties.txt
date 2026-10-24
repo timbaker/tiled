@@ -1419,6 +1419,23 @@ property
     ValueAsPropertyName = true
     ToolTip = <p>Defines tile as sheet rope.</p>
 }
+property
+{
+    Type = Enum
+    Name = Ladder
+    ShortName =
+    Enums
+    {
+        None =
+        North = ladderN
+        South = ladderS
+        West = ladderW
+        East = ladderE
+    }
+    Default = None
+    ValueAsPropertyName = true
+    ToolTip = <p>Defines tile as a ladder.</p>
+}
 separator
 {
 }
