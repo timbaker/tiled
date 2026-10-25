@@ -262,6 +262,7 @@ private:
     QTimer mCheckNextFileTimer;
     QList<IssueFile*> mFiles;
     IssueFile *mCurrentIssueFile;
+    bool mIgnoreSelectionChange = false;
     bool mPaused = false;
 
     Tiled::Internal::FileSystemWatcher *mFileSystemWatcher;

@@ -261,6 +261,10 @@ void CheckBuildingsWindow::fixSelected()
 
 void CheckBuildingsWindow::selectionChanged(const QItemSelection &selected, const QItemSelection &deselected)
 {
+    if (mIgnoreSelectionChange) {
+        return;
+    }
+
     Q_UNUSED(selected)
     Q_UNUSED(deselected)
 
@@ -1008,18 +1012,21 @@ void CheckBuildingsWindow::issue(const ReplaceTileInfo &replaceTileInfo)
 
 void CheckBuildingsWindow::updateList(CheckBuildingsWindow::IssueFile *file)
 {
+    mIgnoreSelectionChange = true;
     QTreeWidgetItem *fileItem = ui->treeWidget->topLevelItem(mFiles.indexOf(file));
     if (fileItem == nullptr) {
         fileItem = new QTreeWidgetItem(QStringList() << QFileInfo(file->path).fileName());
         ui->treeWidget->addTopLevelItem(fileItem);
         fileItem->setExpanded(true);
     }
-    while (fileItem->childCount() > 0)
+    while (fileItem->childCount() > 0) {
         delete fileItem->takeChild(0);
+    }
     for (int j = 0; j < file->issues.size(); j++) {
         QTreeWidgetItem *issueItem = new QTreeWidgetItem(QStringList() << file->issues[j].toString());
         fileItem->addChild(issueItem);
     }
+    mIgnoreSelectionChange = false;
 }
 
 void CheckBuildingsWindow::fileChanged(const QString &path)
