@@ -243,14 +243,14 @@ private:
     bool isKidsBedroomRegion(CompositeLayerGroup *layers, const QRegion &roomRegion);
     bool isKidsBedroomRect(CompositeLayerGroup *layers, const QRect &roomRect);
     bool isKidsBedroomTile(Tiled::Tile *tile);
-    void fixKidsBedroom(const QString &tbxPath, const QRegion &roomRegion, int z);
+    void fixKidsBedroom(BuildingEditor::Building *building, const QRegion &roomRegion, int z);
     BuildingEditor::Room *findExistingKidsBedroom(BuildingEditor::Building *building, BuildingEditor::Room *roomOld);
     QString kidsBedroomName(BuildingEditor::Room *roomOld);
 
     void checkRoomInternalName(BuildingEditor::Room *room);
-    void fixRoomInternalName(const Issue &issue);
+    void fixRoomInternalName(BuildingEditor::Building *building, const Issue &issue);
 
-    void fixReplaceTile(const Issue &issue);
+    void fixReplaceTile(BuildingEditor::Building *building, const Issue &issue);
     BuildingEditor::BuildingTileEntry *replaceTileInEntry(const BuildingEditor::BuildingTileEntry *bte, const QString &tileOld, const QString &tileNew);
     BuildingEditor::FurnitureTiles *replaceTileInFurniture(const BuildingEditor::FurnitureTiles *ftiles, const QString &tileOld, const QString &tileNew, QMap<BuildingEditor::FurnitureGroup*,BuildingEditor::FurnitureGroup*> &doneFurnitureGroups);
     void replaceFurnitureTilesInObjects(BuildingEditor::Building *building, BuildingEditor::FurnitureTiles *ftilesOld, BuildingEditor::FurnitureTiles *ftilesNew);

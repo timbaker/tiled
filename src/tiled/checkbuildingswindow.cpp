@@ -196,42 +196,66 @@ void CheckBuildingsWindow::fixSelected()
     const auto selected = ui->treeWidget->selectedItems();
     if (selected.isEmpty())
         return;
-    QList<FixSelected> fixList;
+    QList<IssueFile*> fixFiles;
+    QMap<const IssueFile*, QList<FixSelected>> fixList;
     for (QTreeWidgetItem *item : selected) {
         if (item->parent() == nullptr) {
             int rowFile = ui->treeWidget->indexOfTopLevelItem(item);
             IssueFile *file = mFiles[rowFile];
+            if (!fixList.contains(file)) {
+                fixFiles += file;
+            }
             for (const Issue &issue : std::as_const(file->issues)) {
-                fixList += FixSelected(issue);
+                fixList[file] += FixSelected(issue);
             }
             continue;
         }
         int rowFile = ui->treeWidget->indexOfTopLevelItem(item->parent());
         int rowIssue = item->parent()->indexOfChild(item);
-        const Issue &issue = mFiles[rowFile]->issues[rowIssue];
-        fixList += FixSelected(issue);
-    }
-    QMap<QString, QVector<int>> rearrangeGrid;
-    for (const FixSelected& fix : std::as_const(fixList)) {
-        switch (fix.issue.type) {
-        case Issue::Type::RearrangeGrid:
-            rearrangeGrid[fix.issue.file->path] << fix.issue.x << fix.issue.y << fix.issue.z;
-            break;
-        case Issue::Type::KidsBedroom:
-            fixKidsBedroom(fix.issue.file->path, fix.issue.roomRegion, fix.issue.z);
-            break;
-        case Issue::Type::ReplaceRoomInternalName:
-            fixRoomInternalName(fix.issue);
-            break;
-        case Issue::Type::ReplaceTile:
-            fixReplaceTile(fix.issue);
-            break;
-        default:
-            break;
+        IssueFile *file = mFiles[rowFile];
+        if (!fixList.contains(file)) {
+            fixFiles += file;
         }
+        const Issue &issue = file->issues[rowIssue];
+        fixList[file] += FixSelected(issue);
     }
-    for (const QString& filePath : rearrangeGrid.keys()) {
-        RearrangeTiles::instance()->fixBuilding(filePath, rearrangeGrid[filePath], this);
+    for (const IssueFile *file : std::as_const(fixFiles)) {
+        BuildingReader reader;
+        Building *building = reader.read(file->path);
+        if (building == nullptr) {
+            QString error = reader.errorString();
+            QMessageBox::warning(this, tr("Error reading building"), error);
+            continue;
+        }
+        reader.fix(building);
+        QVector<int> rearrangeGrid;
+        for (const FixSelected& fix : std::as_const(fixList[file])) {
+            switch (fix.issue.type) {
+            case Issue::Type::RearrangeGrid:
+                rearrangeGrid << fix.issue.x << fix.issue.y << fix.issue.z;
+                break;
+            case Issue::Type::KidsBedroom:
+                fixKidsBedroom(building, fix.issue.roomRegion, fix.issue.z);
+                break;
+            case Issue::Type::ReplaceRoomInternalName:
+                fixRoomInternalName(building, fix.issue);
+                break;
+            case Issue::Type::ReplaceTile:
+                fixReplaceTile(building, fix.issue);
+                break;
+            default:
+                break;
+            }
+        }
+        BuildingWriter w;
+        if (!w.write(building, file->path)) {
+            QString error = w.errorString();
+            QMessageBox::warning(this, tr("Error saving building"), error);
+        }
+        delete building;
+        if (!rearrangeGrid.isEmpty()) {
+            RearrangeTiles::instance()->fixBuilding(file->path, rearrangeGrid, this);
+        }
     }
 }
 
@@ -391,21 +415,11 @@ bool CheckBuildingsWindow::isKidsBedroomTile(Tiled::Tile *tile)
     return mKidsBedroomTiles.contains(tile->tileset()->name() + QStringLiteral("_%1").arg(tile->id()));
 }
 
-void CheckBuildingsWindow::fixKidsBedroom(const QString &tbxPath, const QRegion &roomRegion, int z)
+void CheckBuildingsWindow::fixKidsBedroom(Building *building, const QRegion &roomRegion, int z)
 {
-    // read tbx
     // create kidsbedroom duplicate of bedroom
     // assign kidsbedroom to each square in the room region
     // write tbx
-    BuildingReader reader;
-    Building *building = reader.read(tbxPath);
-    if (building == nullptr) {
-        QString error = reader.errorString();
-        QMessageBox::warning(this, tr("Error reading building"), error);
-        return;
-    }
-    reader.fix(building);
-
     BuildingFloor *floor = building->floor(z);
     Room *roomOld = floor->GetRoomAt(roomRegion.cbegin()->topLeft());
     Room *roomNew = findExistingKidsBedroom(building, roomOld);
@@ -422,12 +436,6 @@ void CheckBuildingsWindow::fixKidsBedroom(const QString &tbxPath, const QRegion 
             }
         }
     }
-    BuildingWriter w;
-    if (!w.write(building, tbxPath)) {
-        QString error = w.errorString();
-        QMessageBox::warning(this, tr("Error saving building"), error);
-    }
-    delete building;
 }
 
 Room *CheckBuildingsWindow::findExistingKidsBedroom(Building *building, BuildingEditor::Room *roomOld)
@@ -460,17 +468,8 @@ void CheckBuildingsWindow::checkRoomInternalName(BuildingEditor::Room *room)
     issue(Issue::ReplaceRoomInternalName, roomNameOld, roomNameNew, room->Name);
 }
 
-void CheckBuildingsWindow::fixRoomInternalName(const Issue &issue)
+void CheckBuildingsWindow::fixRoomInternalName(Building *building, const Issue &issue)
 {
-    BuildingReader reader;
-    Building *building = reader.read(issue.file->path);
-    if (building == nullptr) {
-        QString error = reader.errorString();
-        QMessageBox::warning(this, tr("Error reading building"), error);
-        return;
-    }
-    reader.fix(building);
-
     Room *room = nullptr;
     for (Room *room1 : building->rooms()) {
         if (room1->Name == issue.nonInternalName && room1->internalName == issue.roomNameOld) {
@@ -479,30 +478,13 @@ void CheckBuildingsWindow::fixRoomInternalName(const Issue &issue)
         }
     }
     if (room == nullptr) {
-        delete building;
         return;
     }
     room->internalName = issue.roomNameNew;
-
-    BuildingWriter w;
-    if (!w.write(building, issue.file->path)) {
-        QString error = w.errorString();
-        QMessageBox::warning(this, tr("Error saving building"), error);
-    }
-    delete building;
 }
 
-void CheckBuildingsWindow::fixReplaceTile(const Issue &issue)
+void CheckBuildingsWindow::fixReplaceTile(Building *building, const Issue &issue)
 {
-    BuildingReader reader;
-    Building *building = reader.read(issue.file->path);
-    if (building == nullptr) {
-        QString error = reader.errorString();
-        QMessageBox::warning(this, tr("Error reading building"), error);
-        return;
-    }
-    reader.fix(building);
-
     FurnitureGroup *missingGroup = nullptr;
     for (auto *floor : building->floors()) {
         for (auto *object : floor->objects()) {
@@ -604,18 +586,12 @@ void CheckBuildingsWindow::fixReplaceTile(const Issue &issue)
             }
         }
     }
-
-    BuildingWriter w;
-    if (!w.write(building, issue.file->path)) {
-        QString error = w.errorString();
-        QMessageBox::warning(this, tr("Error saving building"), error);
-    }
-    delete building;
-
+#if 0 // FIXME: delete this after building is saved
     qDeleteAll(doneEntries.values());
     qDeleteAll(doneFurnitureTiles.values());
     QSet<FurnitureGroup*> uniqueGroups(doneFurnitureGroups.begin(), doneFurnitureGroups.end());
     qDeleteAll(uniqueGroups);
+#endif
 }
 
 BuildingTileEntry *CheckBuildingsWindow::replaceTileInEntry(const BuildingEditor::BuildingTileEntry *bte, const QString &tileOld, const QString &tileNew)
