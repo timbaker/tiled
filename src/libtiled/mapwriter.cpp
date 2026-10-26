@@ -97,6 +97,7 @@ private:
     void writeBmpSettings(QXmlStreamWriter &w, const BmpSettings *settings);
     void writeBmpImage(QXmlStreamWriter &w, int index, const MapBmp &bmp);
     void writeNoBlend(QXmlStreamWriter &w, MapNoBlend *noBlend);
+    void removePZProperties(Properties &properties);
 #endif
 
     QDir mMapDir;     // The directory in which the map is being saved
@@ -310,7 +311,12 @@ void MapWriterPrivate::writeTileset(QXmlStreamWriter &w, const Tileset *tileset,
     // Write the properties for those tiles that have them
     for (int i = 0; i < tileset->tileCount(); ++i) {
         const Tile *tile = tileset->tileAt(i);
+#ifdef ZOMBOID
+        Properties properties = tile->properties();
+        removePZProperties(properties);
+#else
         const Properties properties = tile->properties();
+#endif
         if (!properties.isEmpty()) {
             w.writeStartElement(QLatin1String("tile"));
             w.writeAttribute(QLatin1String("id"), QString::number(i));
@@ -759,6 +765,12 @@ void MapWriterPrivate::writeNoBlend(QXmlStreamWriter &w, MapNoBlend *noBlend)
     w.writeEndElement(); // bits
 
     w.writeEndElement(); // bmp-noblend
+}
+
+void MapWriterPrivate::removePZProperties(Properties &properties)
+{
+    // The "invisible" property is a hack used to render invisible tiles.  It is set by TilesetManager.cachePZProperties().
+    properties.remove(QStringLiteral("invisible"));
 }
 #endif // ZOMBOID
 

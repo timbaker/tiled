@@ -320,7 +320,7 @@ void Map::replaceTileset(Tileset *oldTileset, Tileset *newTileset)
     const int index = mTilesets.indexOf(oldTileset);
     Q_ASSERT(index != -1);
 
-    for (MapLevel *level : mLevels) {
+    for (MapLevel *level : std::as_const(mLevels)) {
         for (Layer *layer : level->layers()) {
             layer->replaceReferencesToTileset(oldTileset, newTileset);
         }
