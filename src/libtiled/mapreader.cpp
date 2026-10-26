@@ -135,6 +135,8 @@ private:
 
     void readNoBlend();
     void decodeNoBlendBits(MapNoBlend *noBlend, QStringView text);
+
+    void fixDuplicateTilesets();
 #endif
 
     MapReader *p;
@@ -310,6 +312,12 @@ Map *MapReaderPrivate::readMap()
         delete mMap;
         mMap = 0;
     }
+
+#ifdef ZOMBOID
+    if (mMap != nullptr) {
+        fixDuplicateTilesets();
+    }
+#endif
 
     return mMap;
 }
@@ -1318,6 +1326,35 @@ void MapReaderPrivate::decodeNoBlendBits(MapNoBlend *noBlend, QStringView text)
         }
     }
 }
+
+void MapReaderPrivate::fixDuplicateTilesets()
+{
+    QMap<QString, Tileset*> tilesetLookup;
+    QMap<Tileset*, Tileset*> duplicates;
+    for (Tileset *tileset : mMap->tilesets()) {
+        if (Tileset *first = tilesetLookup.value(tileset->name())) {
+            if (first->tileCount() >= tileset->tileCount()) {
+                duplicates[tileset] = first;
+            }
+        } else {
+            tilesetLookup[tileset->name()] = tileset;
+        }
+    }
+    for (MapLevel *level : mMap->mapLevels()) {
+        for (Layer *layer : level->layers()) {
+            for (Tileset *dup : duplicates.keys()) {
+                layer->replaceReferencesToTileset(dup, duplicates[dup]);
+            }
+        }
+    }
+    for (Tileset *dup : duplicates.keys()) {
+        int index = mMap->indexOfTileset(dup);
+        Q_ASSERT(!mMap->isTilesetUsed(dup));
+        mMap->removeTilesetAt(index);
+        delete dup;
+    }
+}
+
 #endif // ZOMBOID
 
 
